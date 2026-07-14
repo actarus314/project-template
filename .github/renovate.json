@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitsDisabled"],
+
+  "description": [
+    "Renovate tient à jour LE TEMPLATE lui-même. C'est l'INVERSE de la config qu'on livre aux projets",
+    "(templates/repo/.github/renovate.json), et pour la MÊME raison — l'emplacement des versions décide.",
+    "",
+    "Dans un projet GÉNÉRÉ : les pins vivent dans .github/workflows/. Dependabot y couvre les `uses:`",
+    "et le pip ; Renovate n'y fait QUE les binaires curl-és (d'où `enabledManagers: custom.regex` là-bas).",
+    "",
+    "ICI : toutes les versions du template vivent sous `templates/` — un GABARIT, pas un workflow actif.",
+    "Dependabot `github-actions` est VERROUILLÉ sur `.github/workflows/` du repo : il n'atteint JAMAIS",
+    "`templates/workflows/`. Il n'y a donc PAS de dependabot.yml sur ce repo : il serait aveugle.",
+    "Renovate porte TOUT — actions + binaires + pip — parce que lui seul sait scanner un chemin arbitraire.",
+    "",
+    "⚠ `github-actions` ne scanne `.github/workflows/` QUE par défaut : les `managerFilePatterns` ci-dessous",
+    "ÉTENDENT sa portée à `templates/`. `pip_requirements` trouve requirements-ci.txt tout seul (Renovate",
+    "scanne le repo entier). `custom.regex` n'a aucun défaut : son pattern DOIT pointer sur templates/.",
+    "",
+    "⚠ MODE D'ÉCHEC : une clé inconnue fait Renovate REJETER la config et STOPPER TOUTES les PR, en",
+    "silence (le bug `_comment_role` de test003, 14/07). Valider toute modif : `renovate-config-validator`.",
+    "",
+    "⚠ Le préfixe `v` des `*_VERSION` (v8.30.1, PAS 8.30.1) est OBLIGATOIRE : la datasource",
+    "`github-release-attachments` résout le digest par GET /releases/tags/{currentValue}. Sans `v` → 404,",
+    "Renovate abandonne, aucune PR — sans rien casser de visible. (renovatebot/renovate#27317.)"
+  ],
+
+  "enabledManagers": ["github-actions", "pip_requirements", "custom.regex"],
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 3,
+  "labels": ["dependencies", "ci-tooling"],
+
+  "github-actions": {
+    "managerFilePatterns": [
+      "/^templates/workflows/.+\\.ya?ml$/",
+      "/^templates/repo/\\.github/workflows/.+\\.ya?ml$/"
+    ]
+  },
+
+  "packageRules": [
+    {
+      "description": "Minor/patch groupés en une PR. Les MAJEURES restent isolées : un major de scanner change les règles, donc les findings — ça se regarde seul.",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "template — outils CI (actions, binaires, pip)"
+    }
+  ],
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "GITLEAKS_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*GITLEAKS_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
+      ],
+      "depNameTemplate": "gitleaks/gitleaks",
+      "datasourceTemplate": "github-release-attachments"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "ACTIONLINT_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*ACTIONLINT_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
+      ],
+      "depNameTemplate": "rhysd/actionlint",
+      "datasourceTemplate": "github-release-attachments"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "OSV_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*OSV_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
+      ],
+      "depNameTemplate": "google/osv-scanner",
+      "datasourceTemplate": "github-release-attachments"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "TRIVY_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*TRIVY_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
+      ],
+      "depNameTemplate": "aquasecurity/trivy",
+      "datasourceTemplate": "github-release-attachments"
+    }
+  ]
+}
