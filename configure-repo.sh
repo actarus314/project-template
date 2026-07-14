@@ -139,12 +139,18 @@ fi
 command -v gh >/dev/null || { echo "✗ gh CLI requis"; exit 1; }
 command -v jq >/dev/null || { echo "✗ jq requis"; exit 1; }
 
-# Token Administration ÉPHÉMÈRE. Aucun stockage : ni keychain, ni fichier.
-# Saisie masquée pour ne pas le laisser dans l'historique du shell ni dans `ps`.
-if [ -z "${GH_TOKEN:-}" ]; then
+# PAT Administration ÉPHÉMÈRE — saisi À LA MAIN, jamais stocké (ni keychain, ni fichier).
+# On IGNORE délibérément GH_TOKEN de l'ENVIRONNEMENT : le .envrc de tout repo l'exporte = PAT
+# d'ÉCRITURE (sans Administration). Joué depuis le repo — ce que le RUNBOOK impose — le script
+# prenait ce PAT au lieu du bon et échouait en 403 obscur au 1er PATCH (project-template, 15/07 :
+# 2 essais perdus). ADMIN_PAT est la SEULE porte d'injection, EXPLICITE (tests/CI) — jamais un .envrc.
+if [ -n "${ADMIN_PAT:-}" ]; then
+  GH_TOKEN="$ADMIN_PAT"
+else
   printf 'PAT admin éphémère sur %s — Administration:write + Pages:write + Code scanning:read + Actions:read\n' "$SLUG" >&2
   printf 'Saisie masquée : ' >&2
-  read -rs GH_TOKEN < /dev/tty
+  GH_TOKEN=""                        # vider AVANT le read : un read sans tty laisserait le GH_TOKEN d'env (le PAT d'écriture)
+  read -rs GH_TOKEN < /dev/tty || true
   printf '\n' >&2
 fi
 export GH_TOKEN
@@ -164,12 +170,21 @@ if [ "$IS_PRIVATE" != "true" ] && [ "$IS_PRIVATE" != "false" ]; then
   exit 1
 fi
 
-# 1. Merge : squash SEUL + suppression de branche au merge (historique cohérent)
-mutate gh repo edit "$SLUG" \
-  --enable-squash-merge \
-  --enable-merge-commit=false \
-  --enable-rebase-merge=false \
-  --delete-branch-on-merge
+# 1. Merge : squash SEUL + suppression de branche au merge (historique cohérent). C'est AUSSI le
+#    PRÉFLIGHT Administration : ce PATCH est la 1ère écriture et exige Administration:write. En réel,
+#    un 403 ici = token sans Administration (mauvais token collé, ou « Read » au lieu de « Read and
+#    write ») — on le DIT, au lieu du 403 brut de gh qui ne montre pas la cause (vécu le 15/07).
+if [ "$DRY" -eq 1 ]; then
+  mutate gh repo edit "$SLUG" \
+    --enable-squash-merge --enable-merge-commit=false --enable-rebase-merge=false --delete-branch-on-merge
+elif ! gh repo edit "$SLUG" \
+    --enable-squash-merge --enable-merge-commit=false --enable-rebase-merge=false --delete-branch-on-merge; then
+  echo "✗ Le token fourni voit $SLUG mais n'a PAS Administration:write — écriture refusée."
+  echo "  → soit ce n'est pas le PAT admin (le PAT d'écriture a pu être collé par erreur),"
+  echo "    soit Administration est resté sur « Read » au lieu de « Read and write »."
+  echo "  Recrée le PAT admin (RUNBOOK §1 étape 7a : Administration = Read and write) puis relance."
+  exit 1
+fi
 [ -n "$HOMEPAGE" ] && mutate gh repo edit "$SLUG" --homepage "$HOMEPAGE"
 # La description compte dans le community health (100 % inatteignable sans elle) et exige
 # Administration : l'assistant reçoit un 403 — seul ce script peut la poser. Vérifié le 13/07.
