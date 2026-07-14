@@ -130,7 +130,7 @@ cd <dossier-projet>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓" || ec
 ### Étape 7b — Romain : jouer le script
 
 ```bash
-cd ~/Documents/Claude/template
+cd ~/Documents/Claude/template/repo
 ./configure-repo.sh <owner>/<repo> '' 'Description du projet en une ligne.' 'topic-a,topic-b'
 #                                   ↑ homepage : vide ici, le script la déduira de Pages au flip
 #                                                                            ↑ topics : csv, facultatif
