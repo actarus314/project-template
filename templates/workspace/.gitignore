@@ -1,0 +1,5 @@
+# Ce repo est LOCAL — il n'a pas de remote. Mais s'il en gagnait un un jour,
+# tout l'historique partirait d'un coup : les secrets n'y entrent jamais.
+secrets.md
+
+.DS_Store

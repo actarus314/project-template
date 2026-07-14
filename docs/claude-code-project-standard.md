@@ -101,7 +101,7 @@ Trois questions à se poser, dans l'ordre :
    → Non : on passe à la question 3.
 
 3. **C'est de la doc, des plans, des notes, des secrets personnels ?**
-   → `workspace/` (hors Git, hors repo).
+   → `workspace/` (hors du repo publié — mais **sous git**, dans son propre repo local : §2).
 
 ### Exemples concrets
 
@@ -758,7 +758,7 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 
 ### L'IMPLÉMENTATION — remplaçable
 
-**Par défaut**, `init-project.sh` pose dans `workspace/docs/` (hors Git) :
+**Par défaut**, `init-project.sh` pose dans `workspace/docs/` (jamais poussé) :
 - **`SUIVI.md`** — la reprise à froid *(état, environnements, historique, décisions de projet, pièges connus)* ;
 - **`BACKLOG.md`** — le travail courant *(en cours / à faire / notes ouvertes / idées)*.
 

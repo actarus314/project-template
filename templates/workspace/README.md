@@ -1,6 +1,7 @@
 # Workspace — <projet>
 
-Tout ce qui est personnel, **hors Git** (sauvegardé avec le dossier de travail, jamais poussé).
+Tout ce qui est personnel. **Ce dossier est un repo git à part, LOCAL : il n'a AUCUN remote et ne doit jamais en gagner.**
+C'est la mémoire du projet — sans git, toute suppression y serait irréversible.
 
 - `docs/`      : docs de vie (`SUIVI.md` = reprise-à-froid · `BACKLOG.md` = travail courant) + réflexions archi, schémas
                  ⚠️ Les **ADR** ne sont PAS ici : ils sont **versionnés** dans `repo/docs/adr/` (immuables, publics).

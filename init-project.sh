@@ -351,7 +351,20 @@ else
   echo "    reprise CONCISE qui RENVOIE au détail · backlog BREF qui POINTE vers un plan · livré PURGÉ."
 fi
 
-# Git
+# Git — workspace/ : SON PROPRE repo, LOCAL, sans remote (standard §2). Sans lui, le workspace n'est
+# versionné NULLE PART : toute suppression y est irréversible, et c'est la mémoire du projet qui part.
+cp "$TPL/templates/workspace/.gitignore" "$DEST/workspace/.gitignore"
+git -C "$DEST/workspace" init -q -b main
+git -C "$DEST/workspace" add -A       # `-A` ici, contrairement à repo/ : le contenu du workspace est LIBRE,
+                                      # une liste explicite serait périmée dès la première note ajoutée.
+git -C "$DEST/workspace" commit -q -m "initial workspace"
+# Filet : un secret entré dans un objet git y reste — même sans remote (le repo peut en gagner un).
+# C'est le SEUL garde-fou du `add -A` ci-dessus : si le .gitignore devient inopérant, on s'arrête ici.
+if git -C "$DEST/workspace" ls-files --error-unmatch secrets.md >/dev/null 2>&1; then
+  echo "✗ BUG DU TEMPLATE — secrets.md a été COMMITTÉ dans workspace/ (.gitignore inopérant)."; exit 1
+fi
+
+# Git — repo/
 cd "$DEST/repo"
 git init -q -b main
 

@@ -12,10 +12,10 @@
 > Ce fichier-ci ne garde que ce qui est **personnel** et n'a rien à faire sur GitHub.
 
 ## Standard d'organisation (perso)
-`/Users/romain/Documents/Claude/template/docs/claude-code-project-standard.md`
+`/Users/romain/Documents/Claude/template/repo/docs/claude-code-project-standard.md`
 (déjà imposé par `~/.claude/CLAUDE.md` — le relire en cas de doute).
 
-## Pointeurs workspace (hors Git)
+## Pointeurs workspace (repo git LOCAL — sans remote, jamais poussé)
 - Secrets / auth : `../workspace/secrets.md`
 - Docs / archi : `../workspace/docs/` — **`SUIVI.md` à lire en premier après un `/clear`**
 - Plans / roadmap : `../workspace/plans/`
