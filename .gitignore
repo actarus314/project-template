@@ -1,0 +1,18 @@
+# Secrets & config locale.
+#
+# Le `/` initial ANCRE le motif à la racine. Sans lui, les MODÈLES homonymes
+# de `templates/repo/` seraient ignorés — ce sont eux le produit de ce repo.
+#
+# Ça ne suffit pas : `templates/repo/.gitignore` est lui-même un .gitignore ACTIF,
+# et un .gitignore profond bat toujours celui de la racine. Il ignore donc ses
+# propres voisins `.envrc` et `CLAUDE.md`. Ils sont suivis via `git add -f` — un
+# fichier déjà suivi échappe au .gitignore. NE PAS les `git rm --cached`.
+/.env
+/.envrc
+/.claude/
+/CLAUDE.md
+
+.DS_Store
+*.log
+*.bak
+*.bak-*

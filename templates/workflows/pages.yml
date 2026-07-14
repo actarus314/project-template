@@ -1,0 +1,45 @@
+# Capability PAGES. Installed by `init-project.sh --pages` — NOT by `--type static`:
+# the toolchain and the hosting are independent (a `node` project can serve Pages too).
+# Deploys the site folder to GitHub Pages on push to main. Adjust <web-dir>.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['<web-dir>/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false   # never cancel an in-flight publish
+
+jobs:
+  deploy:
+    # GitHub Pages requires a paid plan on a PRIVATE repo: the deploy fails on every push
+    # ("Resource not accessible by integration"). Skipped while private, publishes on its own
+    # once the repo goes public. `!= 'private'` (not `== 'public'`) so a missing field means
+    # "run", never "silently stop deploying".
+    if: github.event.repository.visibility != 'private'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false   # the token has no reason to linger in .git/config
+      # If the entry file isn't index.html, copy it at deploy time (nothing committed):
+      # - run: cp <web-dir>/app.html <web-dir>/index.html
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: <web-dir>
+      - id: deployment
+        uses: actions/deploy-pages@v4

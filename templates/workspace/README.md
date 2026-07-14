@@ -1,0 +1,9 @@
+# Workspace — <projet>
+
+Tout ce qui est personnel, **hors Git** (sauvegardé avec le dossier de travail, jamais poussé).
+
+- `docs/`      : docs de vie (`SUIVI.md` = reprise-à-froid · `BACKLOG.md` = travail courant) + réflexions archi, schémas
+                 ⚠️ Les **ADR** ne sont PAS ici : ils sont **versionnés** dans `repo/docs/adr/` (immuables, publics).
+- `plans/`     : plans d'exécution, roadmap
+- `notes/`     : scratch, brouillons, captures de conversation
+- `secrets.md` : procédures d'auth, clés API, dates d'expiration — **NE JAMAIS committer**

@@ -1,0 +1,51 @@
+# Standalone secret scan — for a repository that has NO CI workflow of its own.
+#
+# WHY THIS FILE EXISTS: a repo created from this template gets gitleaks INSIDE its `ci.yml`
+# (job `checks`), so it does not need this file. But an EXISTING repo brought into conformance
+# may have no CI at all — and it still needs the enforced backstop. That is what this is for.
+# In use on dEURO, anyone and quatrecarre (runs green). Do NOT add it to a repo that already
+# runs gitleaks in its CI: two identical scans, twice the minutes, no extra signal.
+#
+# The pre-commit hook is bypassable (`git commit --no-verify`) and only exists on machines that
+# armed it. This runs server-side, on the FULL history, and cannot be skipped.
+#
+# Raw binary, pinned + checksum-verified — NOT `gitleaks/gitleaks-action`, which requires a
+# licence key on ORGANISATION-owned repositories: it would fail on day one, and a permanently
+# red CI stops being read. The binary needs no licence, on personal and org repos alike.
+name: gitleaks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 3 * * 1'   # weekly: catches a secret pushed with --no-verify
+
+permissions: {}
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: v8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false   # the token has no reason to linger in .git/config
+          fetch-depth: 0               # the full history, not just the tip
+      - name: Install gitleaks (pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          v="${GITLEAKS_VERSION#v}"   # the tag carries the `v`, the asset name does not
+          f="gitleaks_${v}_linux_x64.tar.gz"
+          curl -sSfL -o "$f" \
+            "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${f}"
+          echo "${GITLEAKS_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" gitleaks
+      # --redact: never print the secret value itself into the run log, which is readable
+      # by anyone who can see the repo — a leak scanner must not become the leak.
+      - name: Secret scan (full history)
+        run: ./gitleaks git --no-banner --redact

@@ -1,0 +1,32 @@
+# Common to every project. On a v* tag, create a GitHub Release with
+# auto-generated notes. Idempotent: skips if the release already exists.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the GitHub Release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false   # the token has no reason to linger in .git/config
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # The guard stays: pushing a tag twice, or re-running the workflow, must not fail.
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            echo "Release ${GITHUB_REF_NAME} already exists — skipping."
+            exit 0
+          fi
+          # `--generate-notes` calls the very same generate-notes API this step used to call by
+          # hand, then feeds the result into the release — in ONE command. The previous version
+          # did it in two (`gh api …/generate-notes --jq .body`, then `--notes "$notes"`), which
+          # is the same request with an extra shell variable and an extra way to get it wrong.
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes

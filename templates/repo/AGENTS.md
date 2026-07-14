@@ -1,0 +1,95 @@
+# AGENTS.md — instructions for coding agents
+
+Read this before changing anything in this repository.
+This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding
+agents. Claude Code reads it through the import in `CLAUDE.md` (local, untracked).
+
+## Project
+
+- **What it is**: <one line>
+- **Stack**: <technologies>
+
+## Commands
+
+```bash
+<run command>        # run locally
+<test command>       # tests
+<lint command>       # lint / typecheck
+```
+
+## Structure
+
+- `<dir>/` — <what lives there>
+
+<!-- BRANCHING -->
+
+## Conventions
+
+- **Everything committed is written in English** — code, code comments, docs, `README.md`,
+  `.env.example`. The only exception is `README.md`, which is bilingual (English, then French).
+- **Never use the second person** (`you`/`your`) in committed content or in the app's UI.
+  Write "the user", or use impersonal phrasing.
+- **i18n**: translations live in a separate dictionary — never inline ternaries in the markup.
+- **`CHANGELOG.md`**: update the `Unreleased` section for any user-facing change. The GitHub
+  Release carries the auto-generated list of merged pull requests; the changelog says what
+  actually changed for a user.
+- **Architecture decisions**: a non-trivial decision (stack, schema, boundary) gets a short
+  record in `docs/adr/`. The point is to preserve the *why*, which the code cannot express.
+
+## While the repository is PRIVATE — the rules are NOT enforced by the server
+
+A private repository on a Free plan has **no rulesets**. Every check below still runs, but
+**none of them is required**: GitHub would happily accept a direct push to `main`, and a
+red pull request can be merged. The safety net is local, and it is partly human.
+
+- **Never merge a pull request whose CI is not green.** Nothing on the server prevents it.
+  Check first, every time:
+
+  ```bash
+  sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
+  gh run list --commit "$sha"
+  ```
+
+  **Green means: every EXPECTED workflow is `completed / success`** — `CI`, plus `Publish image`
+  when `docker-publish.yml` exists, plus **`CodeQL` once the repository is public** (it does not
+  run while private: Advanced Security is unavailable there). **A workflow MISSING from that list
+  is not a green**: it has simply not reported yet. "Nothing is red" and "everything is green" are
+  not the same claim, and the gap between them is exactly where a broken change slips into `main`.
+
+  > ⚠️ **Match on `workflowName`, never on `name`.** CodeQL runs through GitHub's *default setup*,
+  > so it has no workflow file in the repository: its run is `dynamic`, and its `name` field reads
+  > `Push on main` — the run's *title*, not the workflow's. Only `workflowName` says `CodeQL`.
+  > A check filtering on `name` would never see CodeQL at all, and would call the pull request
+  > green while the security analysis had not reported.
+  >
+  > ```bash
+  > gh run list --commit "$sha" --json workflowName,status,conclusion
+  > ```
+
+  > `gh pr checks` cannot be used here. It reads `statusCheckRollup`, which needs the `Checks`
+  > permission — and that permission **does not exist** in the fine-grained token UI, so it cannot
+  > be granted (github/community#129512). The command above needs only `Actions: read`, which the
+  > repository token already has.
+
+- **Never push straight to `main` or `develop`.** The `pre-push` hook refuses it; that hook is
+  the stand-in for the ruleset that does not exist yet. Work through a pull request, always.
+- These constraints **disappear on their own** when the repository goes public: the rulesets
+  then require the checks, and the server enforces what discipline alone was holding.
+
+> A change that reaches `main` without review is how production broke once already: a direct push
+> removed a compose `user:` directive, the image shipped as `:latest`, the host pulled it, and
+> production went down — found only afterwards. The rule exists because of that.
+
+## Checks that run
+
+- **pre-commit hook** — `gitleaks` on staged files. A commit carrying a secret is rejected.
+- **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
+  Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
+- **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,
+  `actionlint` + `zizmor` on the workflows, then the project's own tests.
+- **CodeQL** — security analysis; a finding blocks the merge.
+
+## Do not touch
+
+- <vendored code, generated files, submodules…>
+- Never commit a secret. `.env` and `.envrc` are untracked, and must stay that way.
