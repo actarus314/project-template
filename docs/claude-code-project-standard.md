@@ -23,6 +23,10 @@ Le `.gitignore` est la frontière opérationnelle entre les deux.
 **Règle de langue & ton** :
 > Tout le contenu **versionné (envoyé sur GitHub)** est rédigé en **anglais** — code, **commentaires de code**, docs de `repo/`, `README.md`, `.env.example` — sauf contre-ordre explicite. **Exception** : le `README.md` du projet est en anglais (défaut) **et** en français. Les fichiers locaux/gitignorés (`workspace/`, `secrets.md`, `CLAUDE.md`) peuvent rester en français.
 >
+> 🔵 **CONTRE-ORDRE EXPLICITE — le template lui-même est EXEMPTÉ** *(décidé le 2026-07-15)*.
+> `template/repo/` reste **en français**, docs **et** commentaires de code. C'est un **outillage personnel qui a vocation à le rester** : son repo GitHub est **privé**, il ne cherche pas de contributeur, et l'anglais n'y achèterait rien qu'une traduction à maintenir.
+> **L'exemption s'arrête au template.** Tout projet qu'il **génère** applique la règle ci-dessus — c'est d'ailleurs pour ça que les gabarits de `templates/repo/` sont, eux, **en anglais**.
+>
 > **Ton** : jamais de **2ᵉ personne** (`you/your`, `vous/tu/ton`) dans le contenu versionné **ni dans l'UI de l'app** — écrire « the user / l'utilisateur » ou des tournures impersonnelles.
 
 ---

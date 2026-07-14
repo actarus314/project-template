@@ -35,6 +35,19 @@ Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voi
 
 **Le code dit ce qu'il FAIT. Le commentaire ne dit QUE ce que le code ne peut pas dire.**
 
+> **Le critère qui tranche, et il est mécanique : UN SCRIPT EST L'AUTOMATISATION D'UNE PRESCRIPTION ÉCRITE AILLEURS.**
+> Le geste existe **d'abord** dans le runbook, la règle **d'abord** dans les conventions. Le script ne les invente pas — **il les exécute**. D'où :
+>
+> | Le commentaire explique… | Verdict |
+> |---|---|
+> | **une règle, un pourquoi, un défaut GitHub** *(« le package ghcr est privé d'office en org »)* | **copie du doc → SUPPRIMER**, laisser un renvoi. Le fait vit **dans le doc**. |
+> | **une contrainte d'implémentation** *(« `gh api` écrit ses erreurs sur STDOUT »)* | **n'existe nulle part ailleurs, et n'a rien à faire dans le doc → GARDER.** |
+>
+> 🔴 **Et la contrainte marche dans l'AUTRE SENS — c'est là qu'est sa valeur.**
+> **Tout ce que le script APPREND doit REMONTER au doc.** Un fait découvert en exécutant *(le comportement ghcr perso/org, découvert en testant)* n'a pas le droit de vivre **uniquement** dans le script : le doc cesserait d'être suffisant pour faire **à la main**, et il deviendrait faux par omission.
+>
+> ⚠️ **Ce que ça ne veut PAS dire** : « le doc doit tout dire ». Ce serait la porte de l'obésité — exactement ce qu'on combat. Le **standard** dit les conventions, le **runbook** dit les gestes, le **script** garde ses contraintes techniques.
+
 ✅ **Garder** — une contrainte qui se rejouerait si on l'ignorait :
 ```bash
 # `gh api` écrit ses erreurs sur STDOUT : `$(gh api … || echo x)` produit '{"message":…}x'.

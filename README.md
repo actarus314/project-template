@@ -65,7 +65,7 @@ template/
 
 ### `../workspace/` — la construction
 
-- **`ORGANISATION.md`** — le journal de bord. **À ouvrir en premier** pour reprendre le chantier.
+- **`SUIVI.md`** — le journal de bord. **À ouvrir en premier** pour reprendre le chantier.
 - **`RECHERCHE-*.md`** — les trois recherches qui ont tranché : auth GitHub, config serveur, outils existants.
 
 ---
