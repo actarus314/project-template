@@ -40,21 +40,30 @@ Rulesets, secret scanning, Dependabot, immutable releases, Pages, description, *
 
 ## Ce qu'il y a dans ce dossier
 
+Le template s'applique à lui-même l'arborescence qu'il impose *(standard §2)* : **deux repos git distincts**, côte à côte.
+
+```
+template/
+├── repo/         ← CE dossier. Versionné → GitHub. Les outils et la référence.
+└── workspace/    ← La mémoire du projet. Repo git LOCAL, sans remote — jamais poussé.
+```
+
 | | Rôle |
 |---|---|
 | **`init-project.sh`** · **`configure-repo.sh`** | **Les outils.** Ce qu'on exécute. |
 | **`templates/`** | **Ce qui est COPIÉ dans un projet** — et rien d'autre. `repo/` (fichiers versionnés) · `workflows/` (CI) · `workspace/` (hors Git). |
-| **`docs/`** | **La référence, à lire à l'usage.** Le standard, la config GitHub, la carte des contrôles. |
-| **`meta/`** | **Comment ce template a été construit.** Journal de bord, décisions, recherches, les 30 défauts trouvés. À lire pour comprendre *pourquoi*, jamais pour *faire*. |
+| **`docs/`** | **La référence, à lire à l'usage.** La méthode, le standard, le runbook, la carte des contrôles. |
+| **`../workspace/`** | **Comment ce template a été construit.** Journal de bord, décisions, recherches, les défauts trouvés. À lire pour comprendre *pourquoi*, jamais pour *faire*. |
 
 ### `docs/` — la référence
 
 - 🎯 **`RUNBOOK.md`** — **le cycle de vie complet, de bout en bout** : créer · travailler · publier une version · basculer privé→public · faire évoluer · maintenir. **Il dit l'ORDRE DES GESTES et QUI les fait** ; le standard dit le *pourquoi*. **C'est le document opérationnel — commencer par lui.**
-- **`claude-code-project-standard.md`** — le standard. **Lu à chaque session** *(imposé par `~/.claude/CLAUDE.md`)*.
+- **`METHODE.md`** — **une seule source de vérité** : un fait vit à un seul endroit, partout ailleurs un lien. **Lue à chaque session** *(imposée par `~/.claude/CLAUDE.md`)*.
+- **`claude-code-project-standard.md`** — le standard. **Lu à chaque session** *(idem)*.
 - **`github-repo-config.md`** — contrôles serveur, matrice des PAT, checklist nouveau repo.
 - **`controles-repo.md`** / **`.html`** — quel contrôle tourne, où, avec quel outil. La version `.md` **fait foi** ; le `.html` en est la mise en page.
 
-### `meta/` — la construction
+### `../workspace/` — la construction
 
 - **`ORGANISATION.md`** — le journal de bord. **À ouvrir en premier** pour reprendre le chantier.
 - **`RECHERCHE-*.md`** — les trois recherches qui ont tranché : auth GitHub, config serveur, outils existants.
@@ -63,6 +72,6 @@ Rulesets, secret scanning, Dependabot, immutable releases, Pages, description, *
 
 ## Deux choses à ne pas casser
 
-**Le pointeur global.** `~/.claude/CLAUDE.md` référence `docs/claude-code-project-standard.md` **en chemin absolu**. Déplacer ce fichier casse toutes les sessions Claude Code, silencieusement.
+**Le pointeur global.** `~/.claude/CLAUDE.md` référence `docs/` **en chemin absolu**. Déplacer ces fichiers casse toutes les sessions Claude Code, silencieusement.
 
-**Ce dossier n'est pas versionné.** Il n'y a **pas de git ici** : une suppression est **irréversible**. Regarder avant d'écraser.
+**`workspace/` n'est pas dans ce repo — et il ne doit jamais y entrer.** Il porte la mémoire interne (noms de repos privés, incidents). Son propre git, **sans remote**, est ce qui protège ce repo-ci le jour où il passera public.

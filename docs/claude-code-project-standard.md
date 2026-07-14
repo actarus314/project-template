@@ -54,15 +54,33 @@ Le `.gitignore` est la frontière opérationnelle entre les deux.
 │   ├── node_modules/                     ← IGNORÉ — dépendances installées
 │   └── dist/, build/                     ← IGNORÉS — artefacts de build
 │
-└── workspace/                            ← TOUT ce qui est perso, hors Git
+└── workspace/                            ← TOUT ce qui est perso — SON PROPRE repo git, LOCAL
+    │
+    ├── .git/                             (historique local — AUCUN remote, jamais poussé)
+    ├── .gitignore                        ← `secrets.md`
     │
     ├── README.md                         ← index du workspace
-    ├── secrets.md                        ← PAT GitHub, API keys, procédures d'auth
+    ├── secrets.md                        ← IGNORÉ — PAT GitHub, API keys, procédures d'auth
     │
-    ├── docs/                             ← réflexions d'archi, ADR, schémas
+    ├── docs/                             ← SUIVI.md · BACKLOG.md · archives/ · réflexions, ADR
     ├── plans/                            ← plans phase 1, phase 2, roadmap
     └── notes/                            ← scratch, brouillons, captures de conv
 ```
+
+### **DEUX repos git par projet** — et un seul va sur GitHub
+
+| | `repo/` | `workspace/` |
+|---|---|---|
+| **Contenu** | l'app : ce qu'il faut pour cloner, builder, lancer | la mémoire : suivi, décisions, plans, archives |
+| **Remote** | ✅ GitHub *(privé ou public)* | ❌ **aucun — jamais poussé** |
+| **cwd de Claude Code** | ✅ | — *(accédé en `../workspace/`)* |
+| **Sauvegarde hors-site** | GitHub | le **backup NAS** du dossier de travail |
+
+**Pourquoi `workspace/` a son propre git.** Sans lui, il n'est versionné **nulle part** : toute suppression y est **irréversible**, et c'est la mémoire du projet qui part. Un `.gitignore` protège le repo du dossier — **il ne protège pas le dossier**.
+
+**Pourquoi il n'a PAS de remote.** *(a)* Il porte ce qui ne doit jamais devenir public — noms de repos privés, incidents, adresses de hosts. *(b)* Le jour où `repo/` passe public, il n'y a **rien à nettoyer** : la frontière a été posée au jour 1. *(c)* Git ne sait pas « versionner sans pousser » — il pousse des **commits**, pas des dossiers. **Deux repos est le seul mécanisme.**
+
+> ⚠️ **`secrets.md` est gitignoré dans `workspace/`.** Le repo n'a pas de remote *aujourd'hui* — mais s'il en gagnait un, **tout l'historique partirait d'un coup**. Un secret n'entre jamais dans un objet git. Conséquence assumée : ce fichier n'a **pas** de filet anti-suppression — la vérité du secret vit dans `.envrc`, `secrets.md` n'en est que la doc humaine.
 
 ---
 
@@ -235,7 +253,7 @@ Deux raisons, toutes deux constatées sur des projets réels :
 
 ### Mécanismes évalués puis écartés — ne pas rouvrir sans fait nouveau
 
-Le PAT fine-grained **1-repo** est l'optimum *(recherche complète : `meta/RECHERCHE-auth-github.md`)*. Ont été évalués puis **écartés** :
+Le PAT fine-grained **1-repo** est l'optimum *(recherche complète : `workspace/RECHERCHE-auth-github.md`)*. Ont été évalués puis **écartés** :
 
 | Mécanisme | Motif d'écartement (vérifié) |
 |---|---|
@@ -386,7 +404,7 @@ data/
 > 🔴 **Le présent document dit le POURQUOI ; le RUNBOOK dit l'ORDRE DES GESTES.**
 > En cas d'écart entre les deux : **le RUNBOOK fait foi sur la procédure**, ce document sur les **conventions** — et **l'écart est un défaut à corriger**, pas un arbitrage à faire en passant.
 
-**Une skill Claude Code le déroule** *(`new-project`)* : elle s'arrête à chaque geste de Romain, donne l'URL et les valeurs exactes, attend confirmation, puis vérifie. Voir `meta/SKILLS.md`.
+**Une skill Claude Code le déroule** *(`new-project`)* : elle s'arrête à chaque geste de Romain, donne l'URL et les valeurs exactes, attend confirmation, puis vérifie. Voir `workspace/SKILLS.md`.
 
 ## 11. Pièges classiques à éviter
 
@@ -731,7 +749,8 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 
 **Objectif** : qu'un humain **ou** une IA rouvrant le projet à 6 mois s'y retrouve **sans lire un pavé**.
 
-> **C'est la même règle que `docs/` vs `meta/` dans le template lui-même** : *le document qu'on lit souvent reste court et renvoie ; le détail vit ailleurs.* Un doc de suivi qu'on ne relit plus ne suit plus rien.
+> **C'est la même règle que `repo/docs/` vs `workspace/` dans le template lui-même** : *le document qu'on lit souvent reste court et renvoie ; le détail vit ailleurs.* Un doc de suivi qu'on ne relit plus ne suit plus rien.
+> **La règle générale, et le fait que l'outil de suivi soit un DÉFAUT remplaçable : `METHODE.md`.**
 
 ### L'IMPLÉMENTATION — remplaçable
 

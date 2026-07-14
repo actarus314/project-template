@@ -10,21 +10,24 @@
 **Un fait vit à UN SEUL endroit. Partout ailleurs : un lien — jamais une copie.**
 
 Le mal n'est pas la longueur d'un document : c'est **la concurrence entre plusieurs sources**.
-Quand le même fait est écrit dans le script, le runbook, le standard *et* le suivi, **les quatre copies divergent** — c'est mécanique. Et le jour où l'une d'elles ment, on tourne en rond en cherchant laquelle croire.
+Quand le même fait est écrit dans le script, le runbook, les conventions *et* le suivi, **les quatre copies divergent** — c'est mécanique. Et le jour où l'une d'elles ment, on tourne en rond en cherchant laquelle croire.
 
 > **Ce n'est pas une hypothèse.** `configure-repo.sh` a porté un commentaire affirmant *« CodeQL : via le workflow committé, rien à activer ici »* — **soixante lignes au-dessus du code qui fait précisément l'activation**. Le script se contredisait lui-même, et c'est ce commentaire qu'on relisait pour décider.
 
 ---
 
-## Où vit quoi
+## Où vit quoi — par RÔLE, pas par nom de fichier
 
-| Document | Contient | **Ne contient JAMAIS** |
+Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voir « L'outil de suivi est un défaut »)*.
+
+| Rôle | Contient | **Ne contient JAMAIS** |
 |---|---|---|
-| **`meta/ORGANISATION.md`** | **LE SUIVI.** Où on en est · ce qui reste · les décisions prises. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long |
-| **`meta/archives/*.md`** | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
-| **`docs/RUNBOOK.md`** | **LES GESTES**, dans l'ORDRE, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ standard)* · l'historique *(→ archives)* |
-| **`docs/claude-code-project-standard.md`** | **LES CONVENTIONS** et le **POURQUOI** des règles. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
-| **le CODE** *(scripts, workflows)* | **ce que le code NE PEUT PAS dire** : une contrainte non évidente, un piège qui se rejouerait. | **le récit historique.** Jamais *« constaté le 14/07 sur test003… »* |
+| **LE SUIVI** *(défaut : `workspace/docs/SUIVI.md`)* | Où on en est · les décisions prises · les pièges connus. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long |
+| **LE BACKLOG** *(défaut : `workspace/docs/BACKLOG.md`)* | Ce qui reste à faire. **Bref** — il **POINTE** vers un plan détaillé le cas échéant. | le livré *(à purger)* · les plans complets |
+| **LES ARCHIVES** *(défaut : `workspace/docs/archives/*.md`)* | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
+| **LES GESTES** *(`RUNBOOK.md`)* | Les gestes, dans l'**ORDRE**, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ conventions)* · l'historique *(→ archives)* |
+| **LES CONVENTIONS** *(`claude-code-project-standard.md`, les ADR)* | Les règles et le **POURQUOI** de chaque règle. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
+| **LE CODE** *(scripts, workflows)* | **ce que le code NE PEUT PAS dire** : une contrainte non évidente, un piège qui se rejouerait. | **le récit historique.** Jamais *« constaté le 14/07 sur test003… »* |
 
 ---
 
@@ -41,16 +44,25 @@ Quand le même fait est écrit dans le script, le runbook, le standard *et* le s
 ```bash
 # Ce piège a frappé QUATRE fois dans ce fichier, dont deux fois après avoir été documenté :
 #   · le run_id du PATCH → le script annonçait « ✓ CodeQL ACTIVÉ » sur un repo PRIVÉ…
-#   · topics → `[: {json} 0 : nombre entier attendu`…
 #   (Constaté sur test005, 2026-07-14.)
 ```
-→ **Ça va en archive.** Une ligne dans le code, le récit complet dans `meta/archives/`.
+→ **Ça va en archive.** Une ligne dans le code, le récit complet dans les archives.
 
 **Supprimer un commentaire n'est PAS perdre l'information** : elle vit dans l'archive, datée, avec sa preuve. **Elle est juste au bon endroit.**
 
 ---
 
-## Les quatre documents principaux restent COURTS
+## L'outil de suivi est un DÉFAUT, pas un dogme
+
+`SUIVI.md` / `BACKLOG.md` sont ce que le générateur pose **par défaut**. Ce sont les **rôles** qui comptent, pas les fichiers : le `.planning/` de GSD, un Linear, un Notion **satisfont la même règle** dès lors qu'un fait continue de vivre à **un seul endroit**.
+
+- Ce que doit porter chaque document : **`claude-code-project-standard.md` §16**.
+- Ne pas les vouloir du tout : `init-project.sh --no-lifecycle-docs`.
+- 🔴 **Deux systèmes de suivi en parallèle = deux sources concurrentes** — précisément ce que cette règle interdit. **On en choisit UN.**
+
+---
+
+## Les documents principaux restent COURTS
 
 **S'ils grossissent, le détail PART EN ARCHIVE — il ne se tasse pas.**
 
@@ -68,6 +80,6 @@ Avant d'ajouter une information, **une seule question** :
 > **« Ce fait existe-t-il déjà ailleurs ? »**
 
 - **Oui** → **mettre un lien**, et corriger l'endroit d'origine s'il est faux.
-- **Non** → **quel est son SEUL endroit ?** Le suivi, l'archive, le runbook, le standard, ou le code. **Un.**
+- **Non** → **quel est son SEUL endroit ?** Le suivi, le backlog, l'archive, le runbook, les conventions, ou le code. **Un.**
 
 **Et si un document grossit : on n'y tasse pas — on en sort le détail.**
