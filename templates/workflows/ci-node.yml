@@ -1,6 +1,5 @@
-# TOOLCHAIN `node` (npm, tests, types) — this is what `--type` decides, and the ONLY thing it
-# decides. Hosting and packaging are separate capabilities. Installed as .github/workflows/ci.yml by
-# `init-project.sh --type node`. Job name MUST stay `checks` (the ruleset requires it).
+# Installed as .github/workflows/ci.yml by `init-project.sh --type node`. Job name MUST stay
+# `checks` (the ruleset requires it).
 name: CI
 
 on:
@@ -25,8 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false   # the token has no reason to linger in .git/config
-          fetch-depth: 0     # gitleaks scans full history
+          persist-credentials: false
+          fetch-depth: 0
       # Blocks a vulnerable/badly-licensed dependency BEFORE the merge. Dependabot only alerts
       # AFTER it has landed on the default branch — the two are complementary, not redundant.
       # Requires the dependency graph, which on a PRIVATE repo needs GitHub Advanced Security:
@@ -58,12 +57,8 @@ jobs:
       # No `npm audit` here, and that is deliberate. It was a STRICT SUBSET of the osv-scanner step
       # further down: same advisory database (npm audit has been powered by the GitHub Advisory
       # Database since 2021; OSV aggregates GHSA too), same lockfile, same job, same moment — and
-      # `--omit=dev` made it narrower still. Measured on lodash@4.17.21 + minimist@1.2.5 (2026-07-14):
-      # `npm audit` reported 2 advisories, osv-scanner reported the SAME TWO — same GHSA ids — plus
-      # one more that `npm audit` missed entirely. A second scanner that finds a subset of the first
+      # `--omit=dev` made it narrower still. A second scanner that finds a subset of the first
       # adds no signal; it only adds a step to maintain, and a false sense of depth.
-      # Raw binary, not gitleaks/gitleaks-action: the action requires a licence key for
-      # ORGANISATION-owned repositories. The binary needs none — same for personal and org.
       - name: Install gitleaks (pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -75,9 +70,6 @@ jobs:
           tar -xzf "$f" gitleaks
       - name: Secret scan (full history)
         run: ./gitleaks git --no-banner --redact
-      # The workflows are code too, and the likeliest attack path here: a `${{ }}` expression
-      # interpolated straight into a `run:` block is a shell injection.
-      # actionlint = syntax + shellcheck; zizmor = security lint. Both pinned.
       - name: Lint workflows (actionlint, pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -104,8 +96,6 @@ jobs:
       #     fonctionne en privé, gratuitement. Mais il alerte APRÈS COUP, sur la branche par défaut —
       #     quand le code est DÉJÀ entré. osv-scanner, lui, BLOQUE LA PR. Rôle différent, pas doublon.
       #     (`dependency-review` est le gate NATIF — mais il exige un repo public, ou GHAS.)
-      #   Il n'y a PAS de `npm audit` à côté : c'était un SOUS-ENSEMBLE STRICT d'osv-scanner (même base
-      #   GHSA, même lockfile, même job) — retiré le 14/07 après mesure.
       #
       # --exclude=.github : les workflows ont leurs propres linters (actionlint + zizmor), qui appliquent
       #   LA POLITIQUE DE PIN DE CE REPO (SHA pour les actions tierces, tag majeur toléré pour actions/*
@@ -124,9 +114,6 @@ jobs:
           python3 -m pip install --quiet -r requirements-ci.txt
           semgrep scan --error --quiet --metrics=off --exclude=.github \
             --config p/security-audit --config p/owasp-top-ten .
-      # Same role as dependency-review, but works on a PRIVATE repo (no GHAS needed).
-      # Raw binary + checksum, never a third-party action — 75 of trivy-action's 76 tags were
-      # force-pushed in March 2026; a tag is mutable, a SHA is not.
       - name: Vulnerable dependencies (osv-scanner, pinned + checksum-verified)
         if: hashFiles('package-lock.json') != ''
         run: |
