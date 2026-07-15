@@ -42,7 +42,7 @@ jobs:
           fail-on-severity: high
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
       # A freshly scaffolded repo has no package.json yet. A REQUIRED check that cannot possibly
       # pass on the scaffold is a structural red — the very thing that makes a CI stop being read.
       # These steps wake up on their own as soon as the manifest exists.

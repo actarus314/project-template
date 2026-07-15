@@ -111,7 +111,7 @@ jobs:
           zizmor --persona regular --config .github/zizmor.yml .github/workflows/
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
       # Real check with no per-project wiring: syntax-check every JS file.
       - name: Syntax check (all JS)
         run: find . -name '*.js' -not -path './node_modules/*' -not -path './.git/*' -exec node --check {} +
