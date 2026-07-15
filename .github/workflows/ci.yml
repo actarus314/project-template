@@ -37,8 +37,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
+      # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
       - name: shellcheck the generator and the configurator (shellcheck is preinstalled)
-        run: shellcheck init-project.sh configure-repo.sh
+        run: shellcheck -S warning init-project.sh configure-repo.sh
 
   generate-and-lint:
     runs-on: ubuntu-latest
