@@ -240,10 +240,10 @@ if [ "$LIFECYCLE_DOCS" = 1 ]; then
 cat > "$DEST/workspace/docs/SUIVI.md" <<'EOF'
 # Suivi — __PROJ__
 
-> **Reprise à froid.** À lire en premier après un `/clear` ou 6 mois d'absence.
-> **RESTER COURT** : ce fichier est lu et édité très souvent. Il **RENVOIE** au détail, il ne l'absorbe pas.
-> Le détail vit ailleurs : `../repo/docs/adr/` (décisions) · `../plans/` (planification) · `../notes/`.
-> Ce qui est *stable et cadrant* va dans `repo/AGENTS.md` ; ce qui est *mouvant* reste ici.
+> **Le doc CHAUD — reprise à froid.** À lire en premier après un `/clear` ou 6 mois d'absence.
+> **RESTER COURT** : lu et édité très souvent, il **RENVOIE** au détail, il ne l'absorbe pas.
+> **Le SUIVI respire** : il grossit pendant une étape, puis **rétrécit à sa clôture** — on élague ici, et on écrit une **synthèse** (quoi/comment/pourquoi, jamais un dump) dans **`archives/`** (un dossier par étape close, froid et immuable).
+> Détail par ailleurs : `../repo/docs/adr/` (décisions) · `../plans/` (planification) · `../notes/`. Stable & cadrant → `repo/AGENTS.md` ; mouvant → ici.
 
 ## État actuel
 <Où en est le projet, en 3 lignes. Version en prod, ce qui tourne, ce qui est en chantier.>
