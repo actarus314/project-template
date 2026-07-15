@@ -408,7 +408,7 @@ data/
 > 🔴 **Le présent document dit le POURQUOI ; le RUNBOOK dit l'ORDRE DES GESTES.**
 > En cas d'écart entre les deux : **le RUNBOOK fait foi sur la procédure**, ce document sur les **conventions** — et **l'écart est un défaut à corriger**, pas un arbitrage à faire en passant.
 
-**Une skill Claude Code le déroule** *(`new-project`)* : elle s'arrête à chaque geste de Romain, donne l'URL et les valeurs exactes, attend confirmation, puis vérifie. Voir `workspace/SKILLS.md`.
+**Une skill Claude Code le déroule** *(`new-project`)* : elle s'arrête à chaque geste de Romain, donne l'URL et les valeurs exactes, attend confirmation, puis vérifie. Voir `workspace/archives/conception/SKILLS.md`.
 
 ## 11. Pièges classiques à éviter
 
