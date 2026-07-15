@@ -375,10 +375,6 @@ git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
 [ -n "$SLUG" ] && git remote add origin "https://github.com/$SLUG.git"   # URL nue, pas de PAT
 
-# Hook pre-commit gitleaks (standard §18). Config LOCALE : un clone frais doit la reposer.
-git config --local core.hooksPath .githooks
-command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks absent — 'brew install gitleaks' (sinon tout commit sera bloqué)"
-
 # direnv — le PAT vit dans .envrc (JAMAIS dans .env : cf. standard §5).
 # NB : éditer .envrc pour y coller le PAT invalidera cette autorisation → `direnv allow` à refaire.
 if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv absent — 'brew install direnv' puis 'direnv allow')"; fi
@@ -390,6 +386,15 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 git add .gitignore .env.example README.md .gitattributes LICENSE requirements-ci.txt \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 git commit -q -m "initial project structure"
+
+# Hook pre-commit gitleaks — ARMÉ APRÈS le commit initial (standard §18). Config LOCALE : un clone
+# frais doit la reposer. ⚠ APRÈS, et pas avant : le commit initial est propre par CONSTRUCTION
+# (liste EXPLICITE de fichiers, jamais .env/.envrc), donc rien à y scanner ; l'armer AVANT
+# exigerait gitleaks pour committer ce scaffolding, et le hook HARD-FAIL en son absence bloquerait
+# la génération elle-même — le script se sabordait après avoir prévenu « gitleaks absent ». Le hook
+# protège les commits de DEV, pas le scaffolding. (Bug révélé par la CI du template, 15/07.)
+git config --local core.hooksPath .githooks
+command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks absent — 'brew install gitleaks' (sinon tout commit sera bloqué)"
 
 # Filet : un fichier versionnable présent sur disque mais ABSENT du commit est un piège silencieux
 # — la CI échouera au premier push sur un fichier « manquant » qu'on voit pourtant en local.
