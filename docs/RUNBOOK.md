@@ -267,7 +267,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 | **Alertes Dependabot** et **code scanning** | Claude — **en autonomie** *(dismiss/reopen)* | à réception |
 | **Alertes SECRET SCANNING** | 🔴 **ROMAIN SEUL** | L'assistant est en **lecture seule** dessus *(pourquoi : §1 étape 3)*. |
 | **Rotation du PAT d'écriture** | Claude **alerte à J-14** · **Romain régénère** | tous les **90 j** |
-| **`SUIVI.md` / `BACKLOG.md`** | Claude — **de lui-même** | consolider · purger le livré |
+| **`SUIVI.md`** | Claude — **de lui-même** | consolider · purger le livré |
 
 ---
 

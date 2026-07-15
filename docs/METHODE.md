@@ -22,8 +22,7 @@ Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voi
 
 | Rôle | Contient | **Ne contient JAMAIS** |
 |---|---|---|
-| **LE SUIVI** *(défaut : `workspace/docs/SUIVI.md`)* | Où on en est · les décisions prises · les pièges connus. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long |
-| **LE BACKLOG** *(défaut : `workspace/docs/BACKLOG.md`)* | Ce qui reste à faire. **Bref** — il **POINTE** vers un plan détaillé le cas échéant. | le livré *(à purger)* · les plans complets |
+| **LE SUIVI** *(défaut : `workspace/docs/SUIVI.md`)* | Où on en est · les décisions · les pièges · **ce qui reste** *(bref — POINTE vers un plan si c'est lourd)*. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long · **le livré** *(purgé)* · les plans complets |
 | **LES ARCHIVES** *(défaut : `workspace/docs/archives/*.md`)* | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
 | **LES GESTES** *(`RUNBOOK.md`)* | Les gestes, dans l'**ORDRE**, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ conventions)* · l'historique *(→ archives)* |
 | **LES CONVENTIONS** *(`claude-code-project-standard.md`, les ADR)* | Les règles et le **POURQUOI** de chaque règle. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
@@ -67,7 +66,7 @@ Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voi
 
 ## L'outil de suivi est un DÉFAUT, pas un dogme
 
-`SUIVI.md` / `BACKLOG.md` sont ce que le générateur pose **par défaut**. Ce sont les **rôles** qui comptent, pas les fichiers : le `.planning/` de GSD, un Linear, un Notion **satisfont la même règle** dès lors qu'un fait continue de vivre à **un seul endroit**.
+`SUIVI.md` est ce que le générateur pose **par défaut** *(le suivi ET « ce qui reste » dans un seul doc vivant ; un chantier lourd bascule dans un plan)*. Ce sont les **rôles** qui comptent, pas les fichiers : le `.planning/` de GSD, un Linear, un Notion **satisfont la même règle** dès lors qu'un fait continue de vivre à **un seul endroit**.
 
 - Ce que doit porter chaque document : **`claude-code-project-standard.md` §16**.
 - Ne pas les vouloir du tout : `init-project.sh --no-lifecycle-docs`.
@@ -89,7 +88,7 @@ Un document qu'on ne relit plus ne sert plus à rien. Le runbook est lu **en fai
 ## Clôturer une étape — le geste récurrent *(le SUIVI respire)*
 
 **La doc est un chantier à part entière, à deux températures :**
-- **CHAUD** — `SUIVI.md` / `BACKLOG.md` : ce qui est *en cours* et *à venir*. Il **grossit** pendant une étape.
+- **CHAUD** — `SUIVI.md` : ce qui est *en cours* et *à venir*. Il **grossit** pendant une étape.
 - **FROID** — `archives/<étape>/` : ce qui est *clos*. **Un dossier par étape terminée, ses recherches et ses preuves dedans.**
 
 **À CHAQUE étape terminée** *(un chantier, une phase, un lot — pas chaque commit)* :
@@ -114,7 +113,7 @@ Avant d'ajouter une information, **une seule question** :
 > **« Ce fait existe-t-il déjà ailleurs ? »**
 
 - **Oui** → **mettre un lien**, et corriger l'endroit d'origine s'il est faux.
-- **Non** → **quel est son SEUL endroit ?** Le suivi, le backlog, l'archive, le runbook, les conventions, ou le code. **Un.**
+- **Non** → **quel est son SEUL endroit ?** Le suivi, l'archive, le runbook, les conventions, ou le code. **Un.**
 
 **Et si un document grossit : on n'y tasse pas — on en sort le détail.**
 

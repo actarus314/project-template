@@ -66,7 +66,7 @@ Le `.gitignore` est la frontière opérationnelle entre les deux.
     ├── README.md                         ← index du workspace
     ├── secrets.md                        ← IGNORÉ — PAT GitHub, API keys, procédures d'auth
     │
-    ├── docs/                             ← SUIVI.md · BACKLOG.md · archives/ · réflexions, ADR
+    ├── docs/                             ← SUIVI.md · archives/ · réflexions, ADR
     ├── plans/                            ← plans phase 1, phase 2, roadmap
     └── notes/                            ← scratch, brouillons, captures de conv
 ```
@@ -566,7 +566,7 @@ Pour un projet solo Mac+NUC, build local = chemin court. Le workflow CI ne sert 
 > ⚠️ **Le package ghcr PEUT être privé — même sur un repo public. Ça se VÉRIFIE, ça ne se suppose pas.**
 > **Compte PERSO** : un package publié depuis un repo **public** hérite de son accès → **tirable aussitôt**, aucun geste.
 > **ORGANISATION** : il peut être **PRIVÉ** *(défaut d'org)* → le `docker compose pull` du host reçoit **403**, et le pin ci-dessous ne sert à rien : **il n'y a rien à tirer**.
-> → **`configure-repo.sh` interroge le registre ANONYMEMENT**, exactement comme le host de prod, et ne réclame le geste *(Package settings → Change visibility, **aucune API**)* **que si le pull échoue**. *Un job « Publish image » vert ne prouve RIEN.*
+> → **`configure-repo.sh` interroge le registre ANONYMEMENT**, exactement comme le host de prod, et ne réclame le geste **que si le pull échoue** *(chemin UI exact : `github-repo-config.md` §2)*. *Un job « Publish image » vert ne prouve RIEN.*
 
 Sur les hosts de production (NUC, serveurs déployés), **épingler le tag d'image** dans le `.env` du host :
 
@@ -716,9 +716,8 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 
 | Rôle | La règle |
 |---|---|
-| **Un doc de REPRISE** | **CONCIS.** Il est lu et édité **très souvent** → il doit rester court. Il **RENVOIE** au détail *(ADR, plans, notes)*, **il ne l'absorbe pas**. |
-| **Un BACKLOG / TODO** | **BREF.** Il dit ce qu'on a prévu, et **POINTE** vers un plan détaillé le cas échéant. |
-| **Le livré est PURGÉ** | Un backlog qui accumule le fait n'est plus un backlog : **c'est un journal**. |
+| **Un doc de REPRISE** | **CONCIS.** Lu et édité **très souvent** → il doit rester court. Il **RENVOIE** au détail *(ADR, plans, notes)*, **il ne l'absorbe pas**. Il porte aussi **ce qui reste** *(bref — **POINTE** vers un plan si c'est lourd)*. |
+| **Le livré est PURGÉ** | Un doc de reprise qui accumule le livré n'est plus un suivi : **c'est un journal**. Le livré part dans son historique. |
 
 **Objectif** : qu'un humain **ou** une IA rouvrant le projet à 6 mois s'y retrouve **sans lire un pavé**.
 
@@ -727,12 +726,11 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 
 ### L'IMPLÉMENTATION — remplaçable
 
-**Par défaut**, `init-project.sh` pose dans `workspace/docs/` (jamais poussé) :
-- **`SUIVI.md`** — la reprise à froid *(état, environnements, historique, décisions de projet, pièges connus)* ;
-- **`BACKLOG.md`** — le travail courant *(en cours / à faire / notes ouvertes / idées)*.
+**Par défaut**, `init-project.sh` pose dans `workspace/docs/` (jamais poussé) **un seul doc vivant** :
+- **`SUIVI.md`** — la reprise à froid *(état, environnements, historique, décisions, pièges)* **et « ce qui reste »** *(bref)*. Un chantier lourd bascule dans un **plan** *(`workspace/plans/`)*.
 
-**Ces deux fichiers sont le DÉFAUT, pas un dogme.**
-→ **`init-project.sh --no-lifecycle-docs`** les omet, **quand un autre système prend le relais**.
+**Ce fichier est le DÉFAUT, pas un dogme.**
+→ **`init-project.sh --no-lifecycle-docs`** l'omet, **quand un autre système prend le relais**.
 
 > ⚠️ **AVANT de créer quoi que ce soit pour piloter un projet** — suivi, backlog, planification, reprise de contexte — **VÉRIFIER CE QUI EXISTE DÉJÀ** : skills et agents installés *(une centaine, dont tout **GSD** : `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, fonctionnalités natives.
 > **Si aucun système n'est explicitement en usage sur ce projet, le chercher AVANT d'en fabriquer un.** *(`find-skills` sert exactement à ça.)*
@@ -749,7 +747,7 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 | **`CHANGELOG.md`** | Ce qui a changé **pour un utilisateur** — format [Keep a Changelog](https://keepachangelog.com), **lien inline** par version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | La Release GitHub porte la liste **auto-générée des PR** ; le CHANGELOG porte le **sens**. *(Les sources jugent ce doublon superflu en solo — maintenu malgré tout, pour le sens qu'il apporte au-delà de la liste des PR.)* |
 | **`docs/adr/`** | Une fiche par décision **structurante** (stack, schéma, frontière) — format [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) | Préserve le **pourquoi**, que le code ne dit jamais. Validé même en solo (coût quasi nul). **Immuable** : une décision périmée n'est pas éditée, elle est *superseded*. |
 
-**Écartés délibérément** (théâtre en solo, vérifié) : `llms.txt` (mode SEO, pas un standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (le `BACKLOG.md` le couvre).
+**Écartés délibérément** (théâtre en solo, vérifié) : `llms.txt` (mode SEO, pas un standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (le `SUIVI.md` le couvre).
 
 **Autres defaults** : i18n eng/fr avec **dictionnaire séparé** (jamais de ternaires inline) + parité en CI.
 
