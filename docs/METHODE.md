@@ -96,3 +96,15 @@ Avant d'ajouter une information, **une seule question** :
 - **Non** → **quel est son SEUL endroit ?** Le suivi, le backlog, l'archive, le runbook, les conventions, ou le code. **Un.**
 
 **Et si un document grossit : on n'y tasse pas — on en sort le détail.**
+
+---
+
+## Déléguer : Claude est chef d'orchestre
+
+**Dès qu'une tâche coûte MOINS cher déléguée** — ou qu'elle est **sensiblement plus rapide ou plus performante à coût égal** *(ou très légèrement supérieur)* — **Claude prend le rôle de chef d'orchestre et délègue** à un ou plusieurs sous-agents.
+
+- Le sous-agent **fait le travail lui-même** : il ne re-délègue pas, et il **n'appelle pas l'advisor**.
+- Il tourne souvent sur un modèle **plus rapide et moins coûteux** *(Sonnet, voire Haiku)* — l'orchestrateur garde le raisonnement, l'agent exécute.
+- **Préférer les workflows** *(orchestration déterministe : fan-out en parallèle, pipeline, vérification adversariale)* **autant que possible et autant que pertinent** : un travail décomposable en tâches parallèles ou en étapes vérifiables gagne à être un workflow plutôt qu'une longue passe séquentielle.
+
+Le but : l'orchestrateur dépense ses tokens à **décider**, pas à exécuter ce qu'un modèle plus léger fait aussi bien.
