@@ -257,7 +257,7 @@ Deux raisons, toutes deux constatées sur des projets réels :
 
 ### Mécanismes évalués puis écartés — ne pas rouvrir sans fait nouveau
 
-Le PAT fine-grained **1-repo** est l'optimum *(recherche complète : `workspace/RECHERCHE-auth-github.md`)*. Ont été évalués puis **écartés** :
+Le PAT fine-grained **1-repo** est l'optimum *(recherche complète : `workspace/archives/conception/RECHERCHE-auth-github.md`)*. Ont été évalués puis **écartés** :
 
 | Mécanisme | Motif d'écartement (vérifié) |
 |---|---|

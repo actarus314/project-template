@@ -65,8 +65,8 @@ template/
 
 ### `../workspace/` — la construction
 
-- **`SUIVI.md`** — le journal de bord. **À ouvrir en premier** pour reprendre le chantier.
-- **`RECHERCHE-*.md`** — les trois recherches qui ont tranché : auth GitHub, config serveur, outils existants.
+- **`SUIVI.md`** — le journal de bord *(le chaud)*. **À ouvrir en premier** pour reprendre le chantier. Court, il **pointe** vers les archives.
+- **`archives/`** — *le froid* : un dossier par étape close *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, chacune **synthétisée** *(quoi/comment/pourquoi)*. Les trois recherches qui ont tranché vivent dans **`archives/conception/`**.
 
 ---
 
