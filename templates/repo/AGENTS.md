@@ -38,9 +38,9 @@ agents. Claude Code reads it through the import in `CLAUDE.md` (local, untracked
 
 ## While the repository is PRIVATE — the rules are NOT enforced by the server
 
-A private repository on a Free plan has **no rulesets**. Every check below still runs, but
-**none of them is required**: GitHub would happily accept a direct push to `main`, and a
-red pull request can be merged. The safety net is local, and it is partly human.
+A private repository on a Free plan has **no rulesets**: every check below still runs, but
+**none of them is required** — GitHub would accept a direct push to `main`, or the merge of a
+red pull request. The safety net is local, and partly human.
 
 - **Never merge a pull request whose CI is not green.** Nothing on the server prevents it.
   Check first, every time:
@@ -76,9 +76,8 @@ red pull request can be merged. The safety net is local, and it is partly human.
 - These constraints **disappear on their own** when the repository goes public: the rulesets
   then require the checks, and the server enforces what discipline alone was holding.
 
-> A change that reaches `main` without review is how production broke once already: a direct push
-> removed a compose `user:` directive, the image shipped as `:latest`, the host pulled it, and
-> production went down — found only afterwards. The rule exists because of that.
+> This is the failure mode these rules close: a config regression no build step catches reaches
+> `main`, ships as `:latest`, and a host pulls it before anyone notices.
 
 ## Checks that run
 
