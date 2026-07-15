@@ -86,6 +86,27 @@ Un document qu'on ne relit plus ne sert plus à rien. Le runbook est lu **en fai
 
 ---
 
+## Clôturer une étape — le geste récurrent *(le SUIVI respire)*
+
+**La doc est un chantier à part entière, à deux températures :**
+- **CHAUD** — `SUIVI.md` / `BACKLOG.md` : ce qui est *en cours* et *à venir*. Il **grossit** pendant une étape.
+- **FROID** — `archives/<étape>/` : ce qui est *clos*. **Un dossier par étape terminée, ses recherches et ses preuves dedans.**
+
+**À CHAQUE étape terminée** *(un chantier, une phase, un lot — pas chaque commit)* :
+
+1. **Élaguer le chaud.** Sortir de `SUIVI.md` tout ce que l'étape a clos. Il **rétrécit** — c'est le signe que l'étape est finie.
+2. **Écrire l'archive de l'étape — une SYNTHÈSE, JAMAIS un déplacement ni un dump** *(format ADR : contexte → décisions → conséquences)* :
+   on **lit les sources en ENTIER**, puis on distille le **QUOI** *(ce qui a été fait)* **+ le COMMENT** *(les pièges rencontrés)* **+ le POURQUOI** *(pourquoi ces choix, ce qu'on a écarté)*.
+   Objectif : **assez pour ne JAMAIS rouvrir un sujet clos faute d'info — et pas une ligne de plus.**
+3. **Y ranger les recherches et les preuves** de l'étape *(un `RECHERCHE-*` est froid une fois fait — il va dans SON dossier d'étape, pas à la racine du chaud)*.
+4. **Committer.** L'archive est immuable *(sauf renversement de paradigme du projet)*.
+
+**L'arborescence reste LÉGÈRE** : quelques dossiers d'étape, quelques fichiers utiles chacun — **ni un congélateur géant, ni 38 dossiers de deux fichiers de 90 lignes.**
+
+> 🔴 **Le piège — et il a été commis** *(15/07)* : **congeler le verbatim** du `SUIVI` dans un seul pavé de 114 Ko. Un congélateur qu'on **n'ouvre jamais** : si retrouver le *pourquoi* d'une ligne du chaud oblige à fouiller l'énorme archive, **on ne le fera pas**. L'archive se **synthétise** ; elle ne se **déverse** pas.
+
+---
+
 ## Le réflexe, à chaque écriture
 
 Avant d'ajouter une information, **une seule question** :
