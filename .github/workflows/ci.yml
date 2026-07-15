@@ -75,6 +75,19 @@ jobs:
           sudo mv actionlint /usr/local/bin/
       - name: Install zizmor (the version the template ships — single source)
         run: python3 -m pip install --quiet "$(grep '^zizmor==' templates/repo/requirements-ci.txt)"
+      # The template must eat its own food: it imposes actionlint + zizmor on every generated
+      # project, so it runs them on its OWN ci.yml too, under the very pin policy it ships
+      # (templates/repo/.github/zizmor.yml — single source, no second copy to drift). Only the
+      # workflow linters apply here: semgrep needs app code and osv-scanner a lockfile, neither
+      # of which this scripts-and-docs repo has.
+      # ponytail: gated to one matrix shard — the tools are already installed here; a dedicated
+      # job would duplicate the pinned install for a 2-second lint.
+      - name: Lint the template's OWN workflow (actionlint + zizmor, its shipped config)
+        if: matrix.name == 'node-full'
+        run: |
+          set -euo pipefail
+          actionlint -color
+          zizmor --persona regular --config templates/repo/.github/zizmor.yml .github/workflows/
       - name: Generate a project (${{ matrix.name }})
         run: |
           set -euo pipefail
