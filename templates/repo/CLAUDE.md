@@ -17,7 +17,7 @@
 
 ## Pointeurs workspace (repo git LOCAL — sans remote, jamais poussé)
 - Secrets / auth : `../workspace/secrets.md`
-- Docs / archi : `../workspace/docs/` — **`SUIVI.md` à lire en premier après un `/clear`**
+- Docs / archi : `../workspace/docs/` — **`SUIVI.md` à lire en premier après un `/clear`** *(le seul doc vivant : état + « ce qui reste »)*
 - Plans / roadmap : `../workspace/plans/`
 - Notes : `../workspace/notes/`
 
@@ -29,8 +29,7 @@
 - `gh` lancé **hors** du dossier retombe sur le PAT public-RO : une org peut le refuser.
 
 ## Docs de vie — à tenir de moi-même
-- `../workspace/docs/SUIVI.md` : consolider (état, décisions, reprise à froid).
-- `../workspace/docs/BACKLOG.md` : purger ce qui est livré.
+- `../workspace/docs/SUIVI.md` : consolider (état, décisions, ce qui reste) · purger le livré.
 - `CHANGELOG.md` (versionné) : section `Unreleased` à chaque change visible par l'utilisateur.
 
 > Aucun secret dans ce fichier (discipline zéro-secret sur tout fichier nommé).

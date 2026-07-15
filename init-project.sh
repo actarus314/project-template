@@ -10,7 +10,7 @@ set -euo pipefail
 #   [owner/repo]      si fourni, configure le remote GitHub en URL nue
 #   [dossier-parent]  défaut : ~/Documents/Claude
 #
-#   --no-lifecycle-docs  N'écrit PAS `SUIVI.md` / `BACKLOG.md`.
+#   --no-lifecycle-docs  N'écrit PAS `SUIVI.md`.
 #
 # Le script ne crée PAS le PAT (à faire sur github.com) ni ne push.
 
@@ -262,37 +262,22 @@ Ici : seulement les décisions **de projet** (priorités, arbitrages, renoncemen
 
 ## Pièges connus / cicatrices
 <Ce qui a déjà cassé une fois, et qu'on ne veut pas revivre.>
-EOF
 
-cat > "$DEST/workspace/docs/BACKLOG.md" <<'EOF'
-# Backlog — __PROJ__
-
-> **Ce qu'on a prévu de faire.** **RESTER BREF** : il **POINTE** vers un plan détaillé (`../plans/`) le cas échéant.
-> **PURGER LE LIVRÉ au fil de l'eau** — un backlog qui accumule le fait n'est plus un backlog, c'est un journal.
-> Ce qui est livré part dans l'historique de `SUIVI.md`, pas ici.
-
-## En cours
-- [ ] <ce qui est réellement commencé>
-
-## À faire (priorisé)
+## Ce qui reste
+> **Bref.** La prochaine chose à faire ; le livré est **PURGÉ** (il remonte dans l'Historique). Un chantier lourd → un **plan** dans `../plans/`, et on POINTE ici.
 - [ ] <la prochaine chose>
 
 ## Notes ouvertes / questions
 - <ce qui n'est pas tranché, et attend une décision>
-
-## Idées (non priorisées)
-- <ce qu'on ferait si le temps le permettait — jamais promis>
 EOF
 
-for f in SUIVI BACKLOG; do
-  sed "s/__PROJ__/$PROJ/" "$DEST/workspace/docs/$f.md" > "$DEST/workspace/docs/$f.tmp"
-  mv "$DEST/workspace/docs/$f.tmp" "$DEST/workspace/docs/$f.md"
-done
+sed "s/__PROJ__/$PROJ/" "$DEST/workspace/docs/SUIVI.md" > "$DEST/workspace/docs/SUIVI.tmp"
+mv "$DEST/workspace/docs/SUIVI.tmp" "$DEST/workspace/docs/SUIVI.md"
 
 else
-  echo "  ↳ SUIVI.md / BACKLOG.md NON créés (--no-lifecycle-docs)."
+  echo "  ↳ SUIVI.md NON créé (--no-lifecycle-docs)."
   echo "    Le PRINCIPE reste (standard §16), quel que soit l'outil qui le porte :"
-  echo "    reprise CONCISE qui RENVOIE au détail · backlog BREF qui POINTE vers un plan · livré PURGÉ."
+  echo "    un seul doc de reprise CONCIS qui RENVOIE au détail · ce qui reste, BREF · livré PURGÉ."
 fi
 
 # Git — workspace/
