@@ -49,7 +49,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
         "GITLEAKS_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*GITLEAKS_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
       ],
@@ -58,7 +58,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
         "ACTIONLINT_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*ACTIONLINT_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
       ],
@@ -67,7 +67,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
         "OSV_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*OSV_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
       ],
@@ -76,7 +76,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^templates/workflows/.+\\.ya?ml$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
         "TRIVY_VERSION:\\s*(?<currentValue>\\S+)\\s*\\n\\s*TRIVY_SHA256:\\s*(?<currentDigest>[a-f0-9]{64})"
       ],

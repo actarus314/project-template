@@ -1,0 +1,131 @@
+# CI of the TEMPLATE repo itself — NOT a shipped gabarit.
+# It validates the scripts and the Renovate config, and above all GENERATES projects to lint their
+# workflows in real conditions — the automation of the manual test00x runs. This is what gives the
+# PR-only switch its meaning: the pre-push hook points here ("check the CI is green").
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  validate-renovate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # renovate >= 43: the version npx resolves by default (37.x) IGNORES `managerFilePatterns`
+      # and reports a FALSE "invalid config" — a validator that lies is worse than none.
+      - name: Validate both Renovate configs
+        run: |
+          set -euo pipefail
+          for f in .github/renovate.json templates/repo/.github/renovate.json; do
+            npx --yes --package renovate@43 renovate-config-validator "$f"
+          done
+
+  lint-scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: shellcheck the generator and the configurator (shellcheck is preinstalled)
+        run: shellcheck init-project.sh configure-repo.sh
+
+  generate-and-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: static-pages,   flags: --type static --pages }
+          - { name: node-full,      flags: --type node }
+          - { name: rozo,           flags: --type static --pages --artefact }
+          - { name: static-nopages, flags: --type static --no-pages }
+    env:
+      # Same version+checksum the template ships (single source; Renovate keeps ci.yml and the
+      # gabarits aligned via the extended custom.regex in .github/renovate.json).
+      ACTIONLINT_VERSION: v1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install actionlint (pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          v="${ACTIONLINT_VERSION#v}"
+          f="actionlint_${v}_linux_amd64.tar.gz"
+          curl -sSfL -o "$f" \
+            "https://github.com/rhysd/actionlint/releases/download/${ACTIONLINT_VERSION}/${f}"
+          echo "${ACTIONLINT_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" actionlint
+          sudo mv actionlint /usr/local/bin/
+      - name: Install zizmor (the version the template ships — single source)
+        run: python3 -m pip install --quiet "$(grep '^zizmor==' templates/repo/requirements-ci.txt)"
+      - name: Generate a project (${{ matrix.name }})
+        run: |
+          set -euo pipefail
+          # Without an identity, the `git commit` inside init-project.sh fails ("empty ident").
+          git config --global user.email ci@example.com
+          git config --global user.name  ci
+          ./init-project.sh proj acme/proj "$RUNNER_TEMP" ${{ matrix.flags }}
+      - name: No SCRIPT placeholder left unsubstituted
+        run: |
+          set -euo pipefail
+          # SCRIPT placeholders (init-project.sh's "filet 1") MUST be gone. HUMAN placeholders
+          # (<contact>, <one line>, <web-dir>…) are expected — they are filled by hand, not the script.
+          proj="$RUNNER_TEMP/proj/repo"
+          if grep -rn '<owner>/<repo>\|<repo>\|<image-name>\|<!-- BRANCHING -->' "$proj"; then
+            echo "::error::init-project.sh left a script placeholder unsubstituted"
+            exit 1
+          fi
+      - name: Lint the generated workflows (actionlint + zizmor, with the project's own config)
+        run: |
+          set -euo pipefail
+          proj="$RUNNER_TEMP/proj/repo"
+          ( cd "$proj" && actionlint -color )
+          zizmor --persona regular --config "$proj/.github/zizmor.yml" "$proj/.github/workflows/"
+      - name: Generated repos are clean and secrets.md stays untracked
+        run: |
+          set -euo pipefail
+          p="$RUNNER_TEMP/proj"
+          [ -z "$(git -C "$p/repo" status --porcelain)" ]      || { echo "::error::repo/ is not clean"; exit 1; }
+          [ -z "$(git -C "$p/workspace" status --porcelain)" ] || { echo "::error::workspace/ is not clean"; exit 1; }
+          if git -C "$p/workspace" ls-files --error-unmatch secrets.md >/dev/null 2>&1; then
+            echo "::error::secrets.md is tracked in workspace/"; exit 1
+          fi
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: v8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install gitleaks (pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          v="${GITLEAKS_VERSION#v}"
+          f="gitleaks_${v}_linux_x64.tar.gz"
+          curl -sSfL -o "$f" \
+            "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${f}"
+          echo "${GITLEAKS_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" gitleaks
+      - name: Secret scan (full history)
+        run: ./gitleaks git --no-banner --redact
