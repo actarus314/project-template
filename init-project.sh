@@ -10,44 +10,13 @@ set -euo pipefail
 #   [owner/repo]      si fourni, configure le remote GitHub en URL nue
 #   [dossier-parent]  défaut : ~/Documents/Claude
 #
-#   --type            LA TOOLCHAIN, rien d'autre : `static` (aucun npm) | `node` (npm, tests, types).
-#                     Elle décide UNIQUEMENT quel `ci.yml` est posé.
-#
-# ── LES 3 CAPACITÉS — indépendantes, composables ──────────────────────────────
-#   --pages     Le site est servi par GitHub Pages          → pages.yml
-#   --artefact  Le repo PUBLIE une image que quelqu'un      → docker-publish.yml (build-check + Trivy),
-#               d'AUTRE déploie (auto-hébergeurs, NUC…)       Dependabot `docker`, ruleset tags,
-#                                                             immutable releases, package ghcr PUBLIC
-#   --staging   Il existe un host à VALIDER avant la prod   → branche `develop`, ruleset `develop`,
-#                                                             merge commit sur main, flux 3 étages
-#
-#   ⚠ POURQUOI CETTE REFONTE (2026-07-14) : `static`/`node` fusionnaient ces 3 questions, et cassaient
-#     dès qu'on en sortait. Deux cas réels que l'ancien modèle ne savait PAS décrire :
-#       · une page simple hébergée AILLEURS que Pages ;
-#       · rozo-bridge : page Pages que l'on veut AUSSI packager en image, pour que des tiers
-#         l'auto-hébergent → `--type static --pages --artefact`, et SURTOUT PAS de `develop`.
-#     `develop` ne découle PAS de Docker : il découle de l'existence d'un STAGING à valider.
-#
-#   Raccourcis (les 2 cas nominaux, rétro-compatibles) :
-#     --type static  (seul) ≡ --pages
-#     --type node    (seul) ≡ --artefact --staging
-#   Dès qu'une capacité est passée explicitement, le raccourci ne s'applique plus : on compose.
-#   `--no-pages` / `--no-artefact` / `--no-staging` retirent une capacité du raccourci.
-#
 #   --no-lifecycle-docs  N'écrit PAS `SUIVI.md` / `BACKLOG.md`.
-#     ⚠ POURQUOI CE FLAG EXISTE : tout projet, quel que soit le système qui le conduira ensuite
-#       (GSD, superpowers, ou rien), est initialisé par CE template. Si l'on IMPOSE nos fichiers de
-#       suivi, ils ENTRENT EN COLLISION avec le `.planning/` de GSD & co. — et deux systèmes de
-#       suivi dans un même projet, c'est un système qu'on n'entretient plus.
-#     → `SUIVI.md`/`BACKLOG.md` sont le DÉFAUT (projet sans système de gestion), pas un dogme.
-#       Le PRINCIPE, lui, reste vrai quel que soit l'outil (standard §16) : un doc de reprise
-#       CONCIS qui RENVOIE au détail · un backlog BREF qui POINTE vers un plan · le livré est PURGÉ.
 #
 # Le script ne crée PAS le PAT (à faire sur github.com) ni ne push.
 
 PROJ=""; SLUG=""; BASE="$HOME/Documents/Claude"; TYPE="static"
 PAGES=""; ARTEFACT=""; STAGING=""      # vide = « non dit » → le raccourci décidera
-LIFECYCLE_DOCS=1                       # SUIVI.md / BACKLOG.md : le DÉFAUT, pas un dogme
+LIFECYCLE_DOCS=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --type)        TYPE="${2:?--type nécessite une valeur: static|node}"; shift 2;;
@@ -77,8 +46,6 @@ else
   [ -n "$STAGING" ]  || STAGING=1
 fi
 
-# Un staging sans rien à y déployer est un rituel vide : la branche dériverait jusqu'à ce que
-# le merge cesse d'avoir lieu (standard §12). On refuse au lieu de le laisser passer.
 if [ "$STAGING" = 1 ] && [ "$ARTEFACT" = 0 ] && [ "$PAGES" = 1 ]; then
   echo "✗ --staging sans --artefact, sur un site Pages : Pages EST la prod, il n'y a rien à valider."
   echo "  Une 'develop' sans host à valider est un rituel vide — elle dérive et le merge cesse."
@@ -124,9 +91,6 @@ HOLDER="${SLUG%%/*}"; HOLDER="${HOLDER:-$PROJ}"   # sans fallback, LICENSE parta
 sed -e "s/<year>/$(date +%Y)/" -e "s/<copyright holder>/$HOLDER/" \
   "$TPL/templates/repo/LICENSE" > "$DEST/repo/LICENSE"   # MIT par défaut — VALIDER la licence (cf. repo/CLAUDE.md)
 
-# Politique de branches — DÉPEND DE LA CAPACITÉ *STAGING*, jamais de l'archétype (standard §12).
-# Le palier vient du DÉPLOIEMENT, pas du langage : `develop` n'a de sens que s'il existe un host
-# à VALIDER. Un projet node sans staging n'en a pas besoin ; rozo-bridge + Docker non plus.
 FRAG="$DEST/repo/.branching.frag"
 
 # Le bloc est COMPOSÉ, jamais figé : il est VERSIONNÉ et PUBLIÉ. Un texte en dur mentirait dès que
@@ -190,30 +154,19 @@ else
 fi
 
 
-# Workflows — chaque fichier suit LA CAPACITÉ qui le justifie ; seul ci.yml suit la TOOLCHAIN.
-#   ci.yml       ← la TOOLCHAIN ($TYPE) : c'est la seule chose que --type décide encore.
-#   pages.yml    ← capacité PAGES
-#   docker-*.yml ← capacité ARTEFACT   (⚠ PAS `--type node` : rozo-bridge est `static` + artefact)
-# release.yml est commun (déjà copié avec .github/).
 # ⚠ PAS de `codeql.yml` : CodeQL est activé par `configure-repo.sh` via le DEFAULT SETUP natif —
-#   il détecte les langages et les TIENT À JOUR tout seul. Notre ancien `codeql.yml` en déclarait
-#   UN SEUL, codé en dur : sur test004, il ratait l'analyse des workflows `actions`. (Standard §17.)
+#   il détecte les langages et les TIENT À JOUR tout seul.
 WT="$TPL/templates/workflows"
 cp "$WT/ci-$TYPE.yml" "$DEST/repo/.github/workflows/ci.yml"
 if [ "$PAGES" = 1 ]; then cp "$WT/pages.yml" "$DEST/repo/.github/workflows/pages.yml"; fi
 if [ "$ARTEFACT" = 1 ]; then
   cp "$WT/docker-publish.yml" "$DEST/repo/.github/workflows/docker-publish.yml"
-  # <image-name> n'était JAMAIS substitué : l'image serait publiée sous le nom littéral
-  # « ghcr.io/<owner>/<image-name> ». Même pourriture de placeholder que config.yml/SECURITY.md,
-  # jamais attrapée parce que le chemin node n'avait jamais tourné.
   IMG="${SLUG##*/}"; IMG="${IMG:-$PROJ}"
   DP="$DEST/repo/.github/workflows/docker-publish.yml"
   sed "s|<image-name>|$IMG|g" "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
 fi
 
 # ⚠ LES FILETS TOURNENT ICI, APRÈS la copie ET la substitution des workflows.
-#   Placés plus haut, ils contrôlaient un état qui n'existait pas encore : `pages.yml`
-#   n'était pas encore copié, donc son `<web-dir>` n'était JAMAIS signalé.
 # Filet 1/2 — placeholders que le SCRIPT doit substituer. En rester un = lien mort ou commande
 # cassée livrée à l'utilisateur. Sans ce contrôle, chaque NOUVEAU placeholder rejoue le bug en silence.
 LEFT=$(grep -rln '<owner>/<repo>\|<repo>\|<image-name>\|<!-- BRANCHING -->' "$DEST/repo" 2>/dev/null || true)
@@ -258,9 +211,6 @@ if [ "$TYPE" = node ]; then
 YAML
 fi
 if [ "$ARTEFACT" = 1 ]; then
-  # docker suit la CAPACITÉ, pas le langage : rozo-bridge (static) publie une image nginx et son
-  # image de BASE doit être bumpée. Sans ce bloc, Trivy bloque les PR sur une CVE de l'image…
-  # et RIEN ne propose le correctif : le contrôle détecte, personne ne répare.
   cat >> "$DEST/repo/.github/dependabot.yml" <<'YAML'
 
   - package-ecosystem: "docker"
@@ -282,12 +232,6 @@ cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
 # Un SQUELETTE, pas un titre : un fichier vide n'est pas rempli, il est ignoré. Les rubriques
 # ci-dessous sont exactement les questions que se pose quelqu'un — humain ou IA — qui rouvre le
 # projet à 6 mois et ne se souvient de rien.
-# Docs de vie — le DÉFAUT, PAS un dogme (standard §16).
-# ⚠ Tout projet est initialisé par CE template, quel que soit le système qui le conduira ensuite
-#   (GSD, superpowers, ou rien). Imposer nos fichiers de suivi les mettrait en COLLISION avec le
-#   `.planning/` de GSD & co. — et deux systèmes de suivi concurrents, c'est zéro système tenu.
-#   Le PRINCIPE, lui, vaut quel que soit l'outil : reprise CONCISE qui RENVOIE · backlog BREF qui
-#   POINTE · livré PURGÉ.  → `--no-lifecycle-docs` quand un autre système prend le relais.
 #
 # Heredoc QUOTÉ ('EOF') : sans les quotes, le shell interprète les backticks comme une substitution
 # de commande et VIDE tous les `chemins` du modèle. Le nom du projet est substitué après, par sed.
@@ -296,10 +240,10 @@ if [ "$LIFECYCLE_DOCS" = 1 ]; then
 cat > "$DEST/workspace/docs/SUIVI.md" <<'EOF'
 # Suivi — __PROJ__
 
-> **Reprise à froid.** À lire en premier après un `/clear` ou 6 mois d'absence.
-> **RESTER COURT** : ce fichier est lu et édité très souvent. Il **RENVOIE** au détail, il ne l'absorbe pas.
-> Le détail vit ailleurs : `../repo/docs/adr/` (décisions) · `../plans/` (planification) · `../notes/`.
-> Ce qui est *stable et cadrant* va dans `repo/AGENTS.md` ; ce qui est *mouvant* reste ici.
+> **Le doc CHAUD — reprise à froid.** À lire en premier après un `/clear` ou 6 mois d'absence.
+> **RESTER COURT** : lu et édité très souvent, il **RENVOIE** au détail, il ne l'absorbe pas.
+> **Le SUIVI respire** : il grossit pendant une étape, puis **rétrécit à sa clôture** — on élague ici, et on écrit une **synthèse** (quoi/comment/pourquoi, jamais un dump) dans **`archives/`** (un dossier par étape close, froid et immuable).
+> Détail par ailleurs : `../repo/docs/adr/` (décisions) · `../plans/` (planification) · `../notes/`. Stable & cadrant → `repo/AGENTS.md` ; mouvant → ici.
 
 ## État actuel
 <Où en est le projet, en 3 lignes. Version en prod, ce qui tourne, ce qui est en chantier.>
@@ -351,8 +295,7 @@ else
   echo "    reprise CONCISE qui RENVOIE au détail · backlog BREF qui POINTE vers un plan · livré PURGÉ."
 fi
 
-# Git — workspace/ : SON PROPRE repo, LOCAL, sans remote (standard §2). Sans lui, le workspace n'est
-# versionné NULLE PART : toute suppression y est irréversible, et c'est la mémoire du projet qui part.
+# Git — workspace/
 cp "$TPL/templates/workspace/.gitignore" "$DEST/workspace/.gitignore"
 git -C "$DEST/workspace" init -q -b main
 git -C "$DEST/workspace" add -A       # `-A` ici, contrairement à repo/ : le contenu du workspace est LIBRE,
@@ -368,8 +311,6 @@ fi
 cd "$DEST/repo"
 git init -q -b main
 
-# Helper credential local : l'outil Bash de Claude (shell non-interactif) lit GITHUB_PAT depuis l'env (standard §5).
-# Aucun secret stocké dans .git/config — juste le nom de variable. Remote toujours en URL nue.
 git config --local credential."https://github.com".helper ""
 git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
@@ -392,7 +333,7 @@ git commit -q -m "initial project structure"
 # (liste EXPLICITE de fichiers, jamais .env/.envrc), donc rien à y scanner ; l'armer AVANT
 # exigerait gitleaks pour committer ce scaffolding, et le hook HARD-FAIL en son absence bloquerait
 # la génération elle-même — le script se sabordait après avoir prévenu « gitleaks absent ». Le hook
-# protège les commits de DEV, pas le scaffolding. (Bug révélé par la CI du template, 15/07.)
+# protège les commits de DEV, pas le scaffolding.
 git config --local core.hooksPath .githooks
 command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks absent — 'brew install gitleaks' (sinon tout commit sera bloqué)"
 

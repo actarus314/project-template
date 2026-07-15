@@ -2,11 +2,6 @@
 # and the docker ecosystem for the ARTEFACT capability (a static site that ships an image gets it too);
 # declaring npm here unconditionally makes Dependabot fail on a static repo, which has no
 # package.json by definition ("Error during file fetching; aborting: /package.json not found").
-#
-# Grouping: minor and patch bumps land as ONE pull request per ecosystem. Ungrouped, a single
-# week opened five separate PRs on the test repo — noise that trains the eye to ignore them.
-# Majors stay on their own PR on purpose: a major can break, and it deserves to be looked at
-# alone rather than buried in a batch.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -19,8 +14,7 @@ updates:
         update-types: ["minor", "patch"]
 
 
-  # Les outils Python de la CI (requirements-ci.txt) : zizmor, semgrep.
-  # Sans ce bloc, un scanner de sécurité épinglé n'est mis à jour par PERSONNE.
+  # Sans ce bloc pip, les scanners de sécurité épinglés (requirements-ci.txt) ne sont bumpés par personne.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

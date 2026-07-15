@@ -1,6 +1,5 @@
-# TOOLCHAIN `static` (zero-build, no npm) — this is what `--type` decides, and the ONLY thing it
-# decides. A static project can still publish an image (--artefact). Installed as .github/workflows/ci.yml by
-# `init-project.sh --type static`. Job name MUST stay `checks` (the ruleset requires it).
+# Installed as .github/workflows/ci.yml by `init-project.sh --type static`. Job name MUST stay
+# `checks` (the ruleset requires it).
 name: CI
 
 on:
@@ -26,12 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false   # the token has no reason to linger in .git/config
-          fetch-depth: 0     # gitleaks scans the full history, not just the tip
+          persist-credentials: false
+          fetch-depth: 0
       # The pre-commit hook can be bypassed with --no-verify, and only exists on machines
       # that installed it. This is the enforced backstop.
-      # Raw binary, not gitleaks/gitleaks-action: the action requires a licence key for
-      # ORGANISATION-owned repositories. The binary needs none — same for personal and org.
       - name: Install gitleaks (pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -43,9 +40,6 @@ jobs:
           tar -xzf "$f" gitleaks
       - name: Secret scan (full history)
         run: ./gitleaks git --no-banner --redact
-      # The workflows are code too, and the likeliest attack path in a repo like this one:
-      # a `${{ }}` expression interpolated straight into a `run:` block is a shell injection.
-      # actionlint = syntax + shellcheck; zizmor = security lint. Both pinned.
       - name: Lint workflows (actionlint, pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -73,7 +67,7 @@ jobs:
       #     quand le code est DÉJÀ entré. osv-scanner, lui, BLOQUE LA PR. Rôle différent, pas doublon.
       #     (`dependency-review` est le gate NATIF — mais il exige un repo public, ou GHAS.)
       #   Il n'y a PAS de `npm audit` à côté : c'était un SOUS-ENSEMBLE STRICT d'osv-scanner (même base
-      #   GHSA, même lockfile, même job) — retiré le 14/07 après mesure.
+      #   GHSA, même lockfile, même job).
       #
       # --exclude=.github : les workflows ont leurs propres linters (actionlint + zizmor), qui appliquent
       #   LA POLITIQUE DE PIN DE CE REPO (SHA pour les actions tierces, tag majeur toléré pour actions/*

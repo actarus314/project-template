@@ -47,10 +47,7 @@ DRY=0
 # TABLEAU, et non une chaîne. Avec `ARGS="$ARGS $a"` puis `set -- $ARGS` (non quoté), le shell
 # refaisait un word splitting sur les arguments déjà découpés : l'argument VIDE (`''` pour « pas de
 # homepage ») DISPARAISSAIT — décalant tout d'un cran — et la description était COUPÉE à son premier
-# mot. Sur test003 (2026-07-14), `configure-repo.sh <slug> '' 'A minimal health-check service…'` a
-# donc posé `homepage="A"` (une URL cassée, PUBLIÉE) et `description="minimal"`.
-# Le script affichait ✓ sur les deux, et le community profile sortait à 100 % : les deux champs
-# étaient NON VIDES — ce qui est tout ce qu'il mesure. Un bug muet, qui n'abîme QUE le résultat.
+# mot.
 ARGS=()
 for a in "$@"; do
   case "$a" in
@@ -65,9 +62,6 @@ HOMEPAGE="${2:-}"
 DESCRIPTION="${3:-}"
 TOPICS="${4:-}"   # csv : « solana,bridge,web3 »
 
-# GARDE-FOU : une homepage qui n'est pas une URL est un LIEN MORT publié sur la page du repo.
-# C'est exactement ce qui serait passé inaperçu ci-dessus — le bug était muet parce que RIEN ne
-# vérifiait que la valeur reçue ressemblait à ce qu'elle prétend être. Échouer BRUYAMMENT ici.
 case "$HOMEPAGE" in
   ""|https://*|http://*) ;;
   *) echo "✗ homepage invalide : « $HOMEPAGE » — attendu une URL (https://…) ou une chaîne vide."
@@ -113,15 +107,6 @@ mutate() {
 #    cas, EN SILENCE : `[ "$x" = "configured" ]` est faux, `[ "$x" -eq 0 ]` explose, `[ -n "$x" ]`
 #    est VRAI alors que l'appel a ÉCHOUÉ.
 #
-#    Ce piège a frappé QUATRE fois dans ce seul fichier, dont deux fois APRÈS avoir été documenté :
-#      · le `run_id` du PATCH default-setup → le script annonçait « ✓ CodeQL ACTIVÉ » sur un repo
-#        PRIVÉ où CodeQL est indisponible, avec un JSON d'erreur en guise de run_id. UN FAUX ✓ —
-#        le pire défaut possible ici, et il rendait DEUX branches du code INATTEIGNABLES.
-#      · `topics` → `[: {"message":…} 0 : nombre entier attendu`, et l'avertissement sauté.
-#      · `releases` → « aucune release ⇒ aucune image ghcr » affirmé alors qu'une image existe.
-#      · `OWNER_TYPE` → l'URL du package sortait en `/orgs/…` sur un compte PERSO : le LIEN MORT
-#        que le commentaire d'à côté prétendait justement avoir corrigé.
-#
 #    La règle : `out=$(cmd)` GARDE la sortie même quand `cmd` échoue — mais l'AFFECTATION, elle,
 #    hérite du code de retour. On teste donc CE code, et on JETTE la sortie. C'est tout le remède.
 gh_val() {
@@ -141,9 +126,8 @@ command -v jq >/dev/null || { echo "✗ jq requis"; exit 1; }
 
 # PAT Administration ÉPHÉMÈRE — saisi À LA MAIN, jamais stocké (ni keychain, ni fichier).
 # On IGNORE délibérément GH_TOKEN de l'ENVIRONNEMENT : le .envrc de tout repo l'exporte = PAT
-# d'ÉCRITURE (sans Administration). Joué depuis le repo — ce que le RUNBOOK impose — le script
-# prenait ce PAT au lieu du bon et échouait en 403 obscur au 1er PATCH (project-template, 15/07 :
-# 2 essais perdus). ADMIN_PAT est la SEULE porte d'injection, EXPLICITE (tests/CI) — jamais un .envrc.
+# d'ÉCRITURE (sans Administration). ADMIN_PAT est la SEULE porte d'injection, EXPLICITE (tests/CI)
+# — jamais un .envrc.
 if [ -n "${ADMIN_PAT:-}" ]; then
   GH_TOKEN="$ADMIN_PAT"
 else
@@ -160,7 +144,6 @@ echo "→ Configuration serveur de $SLUG"
 
 # ⚠ Lire la visibilité AVANT tout diagnostic. Sans elle, le script accuse le PAT d'une permission
 #   manquante là où c'est le PLAN qui bloque (privé/Free) — et envoie chercher un droit déjà là.
-#   Deux messages faux sur test002 le 2026-07-14, pour cette exacte raison.
 #   Elle est le SOCLE du diagnostic : illisible, on s'arrête — sinon chaque message en aval
 #   accuse une mauvaise cause en silence. Mieux vaut un échec net qu'un rapport faux.
 IS_PRIVATE=$(gh api "repos/$SLUG" --jq '.private' 2>/dev/null || true)
@@ -173,7 +156,7 @@ fi
 # 1. Merge : squash SEUL + suppression de branche au merge (historique cohérent). C'est AUSSI le
 #    PRÉFLIGHT Administration : ce PATCH est la 1ère écriture et exige Administration:write. En réel,
 #    un 403 ici = token sans Administration (mauvais token collé, ou « Read » au lieu de « Read and
-#    write ») — on le DIT, au lieu du 403 brut de gh qui ne montre pas la cause (vécu le 15/07).
+#    write ») — on le DIT, au lieu du 403 brut de gh qui ne montre pas la cause.
 if [ "$DRY" -eq 1 ]; then
   mutate gh repo edit "$SLUG" \
     --enable-squash-merge --enable-merge-commit=false --enable-rebase-merge=false --delete-branch-on-merge
@@ -187,7 +170,7 @@ elif ! gh repo edit "$SLUG" \
 fi
 [ -n "$HOMEPAGE" ] && mutate gh repo edit "$SLUG" --homepage "$HOMEPAGE"
 # La description compte dans le community health (100 % inatteignable sans elle) et exige
-# Administration : l'assistant reçoit un 403 — seul ce script peut la poser. Vérifié le 13/07.
+# Administration : l'assistant reçoit un 403 — seul ce script peut la poser.
 # L'API rejette en 422 tout caractère de contrôle (« description control characters are not
 # allowed ») — un copier-coller depuis un terminal ou un doc en glisse facilement un, invisible.
 # On les retire, et on signale ce qui a été retiré plutôt que de le faire en silence.
@@ -195,7 +178,6 @@ if [ -n "$DESCRIPTION" ]; then
   # RETIRER un caractère de contrôle laisse un TROU à sa place : « organisation,··public » — deux
   # espaces là où le caractère invisible se tenait. Le garde-fou évitait bien le 422, mais il
   # PUBLIAIT une description abîmée, et personne ne relisait ce qui était réellement posé.
-  # (Constaté sur test004, 2026-07-14 : la description est sortie avec un double espace.)
   # → on nettoie, PUIS on recolle (`tr -s ' '` compresse les espaces), PUIS on RELIT à voix haute.
   # `tr ' '` et NON `tr -d` : SUPPRIMER un caractère de contrôle COLLE les mots qui l'entouraient —
   # une tabulation dans « A tool<TAB>for X » donnait « A toolfor X », publié tel quel. On le REMPLACE
@@ -211,11 +193,9 @@ if [ -z "$DESCRIPTION" ] && [ -z "$(gh api "repos/$SLUG" --jq '.description // "
   echo "  ⚠ aucune description sur le repo → community health plafonné à 85 %."
   echo "    La poser : ./configure-repo.sh $SLUG '' '<description>'"
 fi
-# Les topics EXIGENT Administration:write (`PUT /repos/{o}/{r}/topics` → `administration=write`,
-# vérifié sur l'en-tête X-Accepted-GitHub-Permissions le 14/07) — donc l'assistant, qui n'a JAMAIS
-# `Administration`, reçoit un 403 : SEUL ce script peut les poser. Ils étaient jusqu'ici listés
-# « à finir à la main, AUCUNE API », ce qui était faux — et la ligne se contredisait elle-même en
-# donnant… une commande `gh`. `--add-topic` AJOUTE, il n'écrase pas l'existant.
+# Les topics EXIGENT Administration:write (`PUT /repos/{o}/{r}/topics` → `administration=write`)
+# — donc l'assistant, qui n'a JAMAIS `Administration`, reçoit un 403 : SEUL ce script peut les poser.
+# `--add-topic` AJOUTE, il n'écrase pas l'existant.
 if [ -n "$TOPICS" ]; then
   mutate gh repo edit "$SLUG" --add-topic "$TOPICS"
 elif [ "$(gh_val '.names | length' 0 "repos/$SLUG/topics")" -eq 0 ]; then
@@ -291,17 +271,12 @@ mutate gh api -X PUT "repos/$SLUG/actions/permissions/workflow" \
   || echo "  ⚠ default_workflow_permissions : échec — vérifier Settings > Actions > General."
 
 # 4. CodeQL : ACTIVÉ PAR CE SCRIPT, en DEFAULT SETUP (voir le bloc « ═══ CodeQL » plus bas).
-#    ⚠ Ce commentaire disait EXACTEMENT L'INVERSE — « via le workflow committé codeql.yml,
-#      PAS le default setup, rien à activer ici » — alors que le code, 60 lignes plus bas,
-#      fait justement un `PATCH /code-scanning/default-setup`. Le script se CONTREDISAIT
-#      lui-même. (Trouvé le 14/07, en relisant le fichier qui portait le changement.)
-#      Un commentaire faux est PIRE qu'aucun : c'est lui qu'on relit pour décider la suite.
 
 # 5. GitHub Pages — CRÉER le site, source = GitHub Actions.
 #    ⚠ Le `enablement: true` de actions/configure-pages NE SUFFIT PAS : créer un site Pages exige
 #      Administration, que le GITHUB_TOKEN d'un workflow n'a pas → « Resource not accessible by
 #      integration », à CHAQUE déploiement, tant que le site n'existe pas. C'est donc un geste
-#      admin one-shot, sa place est ici. (Constaté sur test001 le 2026-07-13.)
+#      admin one-shot, sa place est ici.
 #    Déclenché tout seul si le repo a un pages.yml : rien à mémoriser, aucun drapeau à passer.
 # ⚠ Sur un repo PRIVÉ, GET /contents exige « Contents: read ». Sans elle, l'appel échoue et le
 #   bloc Pages entier (homepage comprise) serait sauté EN SILENCE. On distingue donc les 3 cas :
@@ -318,7 +293,7 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
   elif mutate gh api -X POST "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1; then
     echo "  ✓ Pages : site créé, source = GitHub Actions"
   else
-    # NE PAS imputer l'échec à la visibilité sans la lire : sur test001 (PUBLIC), le vrai motif
+    # NE PAS imputer l'échec à la visibilité sans la lire : le vrai motif
     # était que le PAT admin n'avait pas « Pages: write » — permission DISTINCTE d'Administration.
     if [ "$(gh api "repos/$SLUG" --jq '.visibility')" = "private" ]; then
       echo "  ⚠ Pages : indisponible sur un repo PRIVÉ en plan Free → sera créé au passage en public."
@@ -329,7 +304,7 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
   fi
 
   # La homepage alimente l'item « documentation » du community profile : sans elle, le score
-  # PUBLIC plafonne à 87 % (vérifié sur test001 — l'item n'existe pas sur un repo privé).
+  # PUBLIC plafonne à 87 % (l'item n'existe pas sur un repo privé).
   # On la dérive du site Pages qu'on vient de créer : la boucle se ferme toute seule.
   if [ -z "$HOMEPAGE" ]; then
     PAGES_URL=$(gh api "repos/$SLUG/pages" --jq '.html_url' 2>/dev/null || true)
@@ -342,7 +317,7 @@ fi
 
 # 6. Ruleset 'main' — idempotent : update si un ruleset du même nom existe, sinon create.
 #    Minimal robuste : PR obligatoire (0 review, squash), no force-push/delete, CI requise.
-#    ✅ REJOUABLE SANS DÉGÂT (corrigé le 2026-07-13) : les règles ajoutées à la main
+#    ✅ REJOUABLE SANS DÉGÂT : les règles ajoutées à la main
 #       (code_quality…) sont PRÉSERVÉES à la fusion. Auparavant, un PUT nu
 #       remplaçait le ruleset entier et les effaçait en silence.
 RULESET_NAME="main"
@@ -353,8 +328,7 @@ RULESET_NAME="main"
 #
 # ⚠ NE JAMAIS confondre « 0 analyse » et « je n'ai pas le droit de regarder ». Le PAT admin n'a
 #   PAS « Code scanning alerts: read » par défaut : l'appel renvoie alors 403, et lire ça comme
-#   « CodeQL n'a jamais tourné » fait SILENCIEUSEMENT sauter le contrôle. (Vécu sur test001,
-#   2026-07-13 : le script a annoncé « aucune analyse » alors qu'il y en avait une.)
+#   « CodeQL n'a jamais tourné » fait SILENCIEUSEMENT sauter le contrôle.
 # Checks REQUIS avant merge. `build-check` (capacité ARTEFACT) valide le Dockerfile ET scanne
 # l'image (Trivy, CRITICAL/HIGH). S'il n'est pas EXIGÉ, le scan est DÉCORATIF : une PR portant une
 # CVE critique passerait quand même. Détecté sur la présence du workflow — rien à mémoriser.
@@ -365,14 +339,10 @@ if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null
 fi
 
 # ═══ CodeQL : le DEFAULT SETUP natif, et NON PLUS un `codeql.yml` committé ═══════════════════
-# POURQUOI (2026-07-14, prouvé sur test004) : notre `codeql.yml` déclarait UN SEUL langage, codé
-# en dur, que personne ne remettait jamais à jour. Le default setup DÉTECTE les langages et SE
-# MET À JOUR TOUT SEUL quand le repo change (changelogs GitHub 2023-06-26 · 2023-10-23), scans
-# programmés inclus. Sur test004, il a trouvé `actions` EN PLUS de `javascript-typescript` :
-# NOTRE PROPRE TEMPLATE N'ANALYSAIT PAS SES WORKFLOWS. Le natif fait MIEUX que notre custom.
-# L'advanced setup ne se justifie que pour des query packs ou un `paths-ignore` — nulle part chez
-# nous. (Standard §17. Le check-run garde le nom « CodeQL » : la règle de ruleset ci-dessous est
-# inchangée.)
+# Le default setup DÉTECTE les langages et SE MET À JOUR TOUT SEUL quand le repo change (changelogs
+# GitHub 2023-06-26 · 2023-10-23), scans programmés inclus. L'advanced setup ne se justifie que
+# pour des query packs ou un `paths-ignore` — nulle part chez nous. (Standard §17. Le check-run
+# garde le nom « CodeQL » : la règle de ruleset ci-dessous est inchangée.)
 # ⚠ `gh api` écrit le corps JSON de l'erreur sur STDOUT, pas sur stderr. Un naïf
 #   `DS=$(gh api … || echo unreadable)` produit donc « {"message":"403…"}unreadable » — une chaîne
 #   qui n'est égale à RIEN, et tous les tests qui suivent partent dans le mauvais cas, en silence.
@@ -413,7 +383,7 @@ else
     #   Il disait « ✓ ACTIVÉ » MÊME SUR UN REPO PRIVÉ, où le PATCH est voué à échouer (Advanced
     #   Security requis) : le script se contredisait DEUX LIGNES PLUS BAS (« CodeQL indisponible en
     #   privé »). Un dry-run qui promet un réglage impossible est pire qu'un dry-run muet : on le
-    #   croit. (Constaté sur actarus314/anyone, 2026-07-14.)
+    #   croit.
     if [ "$IS_PRIVATE" = "true" ]; then
       echo "  ↳ CodeQL : le PATCH ÉCHOUERA — indisponible sur un repo PRIVÉ (Advanced Security requis)."
       echo "    ATTENDU. CodeQL s'activera au REJEU de ce script APRÈS le flip public (§4)."
@@ -472,12 +442,12 @@ else
   fi
 fi
 
-# TROIS cas distincts, à ne JAMAIS confondre (les trois se sont produits sur test002) :
+# TROIS cas distincts, à ne JAMAIS confondre :
 #   · liste JSON        → CodeQL a tourné : on sait combien d'analyses existent.
 #   · 404 « no analysis found » → l'endpoint RÉPOND, il n'y a simplement AUCUNE analyse encore.
 #   · 403 / autre       → on n'a PAS le droit de regarder (permission ou plan).
 # Traiter le 404 comme un 403 fait accuser le PAT d'une permission qu'il possède — et envoie
-# l'humain chercher un droit déjà présent. (Message faux servi 2 fois le 2026-07-14.)
+# l'humain chercher un droit déjà présent.
 CS_BODY=$(gh api "repos/$SLUG/code-scanning/analyses" 2>&1 || true)
 if printf '%s' "$CS_BODY" | jq -e 'type == "array"' >/dev/null 2>&1; then
   ANALYSES=$(printf '%s' "$CS_BODY" | jq 'length')
@@ -541,7 +511,7 @@ fi
 # ⚠ En cas d'erreur HTTP (403 « Upgrade to GitHub Pro » sur un repo PRIVÉ en Free), `gh api`
 # écrit le corps JSON de l'erreur sur STDOUT. Sans ce garde-fou, ce JSON était avalé comme si
 # c'était un ID de ruleset, puis recollé dans l'URL du PUT → erreur incompréhensible.
-# (Constaté sur test001 le 2026-07-13.) On exige donc une VRAIE liste JSON avant d'aller plus loin.
+# On exige donc une VRAIE liste JSON avant d'aller plus loin.
 RULESETS=$(gh api "repos/$SLUG/rulesets" 2>/dev/null || true)
 if ! printf '%s' "$RULESETS" | jq -e 'type == "array"' >/dev/null 2>&1; then
   echo "  ⚠ rulesets INDISPONIBLES sur ce repo — attendu sur un repo PRIVÉ en plan Free (standard §18)."
@@ -596,7 +566,7 @@ upsert_ruleset() {
 #   cycle (mêmes changements, SHA différents), et l'historique des `feat/*` est perdu.
 #   → Si `develop` existe, `main` accepte AUSSI le merge commit (c'est ce que prescrit le §12 pour
 #     la promotion staging → prod). `develop`, elle, reste en squash seul : les `feat/*` y sont
-#     écrasés en un commit propre. (Constaté sur test002 le 2026-07-14.)
+#     écrasés en un commit propre.
 HAS_DEVELOP=0
 gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 
@@ -605,7 +575,6 @@ gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 #   de TOUTE PR mergée — donc `develop` elle-même, au merge de la PR `develop → main` du §12.
 #   En PUBLIC, le ruleset 'develop' (règle `deletion`) l'en empêche. En PRIVÉ, il n'y a AUCUN
 #   ruleset : la 1ʳᵉ mise en production SUPPRIME la branche de staging, sans un mot.
-#   (Vécu sur test003, 2026-07-14.)
 #
 #   Le script déduisait le staging de l'EXISTENCE de `develop`. Disparue, il concluait « pas de
 #   staging » et alignait tout dessus : pas de ruleset 'develop', et `main` REPASSAIT en squash-only
@@ -638,8 +607,6 @@ fi
 upsert_ruleset "$RULESET_NAME" "$RULESET_JSON"
 
 # 6b. Ruleset 'develop' — SEULEMENT si la branche existe (capacité STAGING, standard §12).
-#     ⚠ `develop` ne découle NI de node NI de Docker : il découle de l'existence d'un host à VALIDER.
-#     Un site statique n'a pas de staging : lui imposer une `develop` serait un rituel vide.
 if [ -n "$RULESETS" ] && gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1; then
   DEV_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '.name = "develop"
@@ -667,7 +634,7 @@ upsert_ruleset "tags" "$TAGS_JSON"
 
 # 7. CONTRÔLE FINAL — community profile.
 #    Le score est le seul indicateur des réglages que l'API n'expose PAS (« Reported content » :
-#    ni REST ni GraphQL — vérifié par introspection du schéma le 2026-07-13). Sans ce contrôle,
+#    ni REST ni GraphQL). Sans ce contrôle,
 #    un item manquant reste invisible : le script dirait « tout est appliqué » et ce serait faux.
 PROFILE=$(gh api "repos/$SLUG/community/profile" 2>/dev/null || true)
 if printf '%s' "$PROFILE" | jq -e '.health_percentage' >/dev/null 2>&1; then
@@ -702,28 +669,15 @@ echo
 echo "  ⚠️  RÉVOQUER LE PAT ADMIN MAINTENANT — il n'a plus aucune raison d'exister :"
 echo "     https://github.com/settings/personal-access-tokens"
 echo
-# ⚠️ IL N'Y A PLUS DE LISTE « À FINIR À LA MAIN — AUCUNE API ». Elle a été SUPPRIMÉE le 14/07,
-# parce qu'elle était FAUSSE, et fausse de trois façons à la fois :
-#   - « Topics : AUCUNE API » — puis la ligne donnait… une commande `gh`. Elle se contredisait
-#     seule. L'API existe (`PUT /topics`, Administration:write) : le script les POSE désormais.
-#   - « 2FA du compte » — c'est un réglage de COMPTE, pas de repo. Le répéter à CHAQUE
-#     configuration de CHAQUE repo est du bruit, et le bruit finit par masquer le seul rappel qui
-#     compte vraiment ici : RÉVOQUER LE PAT ADMIN. → parti dans le RUNBOOK, en prérequis, une fois.
-#   - la visibilité ghcr y figurait comme une fatalité (« PRIVÉ PAR DÉFAUT ») — c'était FAUX sur un
-#     compte perso. Elle est désormais TESTÉE (ci-dessous), et on ne parle QUE si le test échoue.
-# La leçon : une liste de rappels qu'on affiche toujours n'est plus lue. On VÉRIFIE, et on ne parle
-# que quand il y a quelque chose à faire.
 if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null 2>&1; then
 # VERIFIER au lieu de RAPPELER. Un job "Publish image" VERT ne prouve PAS que l'image est
-# tirable : sur test002 il etait vert alors que le pull anonyme renvoyait 403 (package prive
-# par defaut). Le run mentait. Ce test interroge le registre EXACTEMENT comme le host de prod :
+# tirable. Ce test interroge le registre EXACTEMENT comme le host de prod :
 # anonymement, sans aucun token. C'est la seule preuve qui compte.
 # (L'API packages est hors de portee : les PAT fine-grained ne supportent PAS ghcr — classic only.)
 # TROIS états, pas deux. Un booléen `PULL_OK` confondait « testé et ÉCHOUÉ » avec « PAS TESTABLE »,
 # et réclamait donc de rendre public un package QUI N'EXISTE PAS ENCORE — sur un repo neuf, sans la
 # moindre release. Réclamer un geste sur un objet inexistant, c'est le défaut du BUG 4 qui se rejoue :
-# PARLER SANS SAVOIR. (Constaté sur test004, une ORG, 2026-07-14 : 0 release, 0 tag, et l'alerte
-# tombait quand même.) Et le bruit a un coût : il finit par noyer le rappel de RÉVOQUER LE PAT ADMIN.
+# PARLER SANS SAVOIR. Et le bruit a un coût : il finit par noyer le rappel de RÉVOQUER LE PAT ADMIN.
 PULL_STATE=untested
 if [ "$IS_PRIVATE" = "false" ] && [ "$(gh_val 'length' 0 "repos/$SLUG/releases")" -gt 0 ]; then
   TAG=$(gh api "repos/$SLUG/releases/latest" --jq '.tag_name' 2>/dev/null | sed 's/^v//')
@@ -754,19 +708,15 @@ if [ "$PULL_STATE" = "untested" ]; then
   fi
 fi
 # ⚠️ Le rappel « rendre le package public » ne s'affiche QUE si le pull anonyme n'est PAS prouvé.
-#   Avant, il tombait TOUJOURS — y compris juste après un « ✓ image TIRABLE anonymement » : le
-#   script se CONTREDISAIT dans la même sortie, et envoyait faire un geste déjà inutile.
 #   Le défaut N'EST PAS universel : sur un compte PERSO, un package publié depuis un repo PUBLIC
-#   hérite de son accès et est tirable AUSSITÔT (vérifié sur test003, 2026-07-14 — HTTP 200 sans
-#   aucun geste). Sur une ORG, il peut être PRIVÉ (défaut d'org) — c'est ce qu'on avait vu sur
-#   test002, et généralisé à tort. → On ne SUPPOSE plus : on TESTE, et on ne parle que si ça rate.
+#   hérite de son accès et est tirable AUSSITÔT. Sur une ORG, il peut être PRIVÉ (défaut d'org).
+#   → On ne SUPPOSE plus : on TESTE, et on ne parle que si ça rate.
 if [ "$PULL_STATE" = "ko" ]; then
   echo "  À FAIRE À LA MAIN — visibilité du package ghcr (aucune API : les PAT fine-grained ne"
   echo "  couvrent PAS ghcr, seuls les PAT classic le font)."
   echo "     -> Package settings > Danger Zone > Change visibility > Public"
   # L'URL des packages DIFFÈRE selon le type de compte : /orgs/<o>/… en organisation,
-  # /users/<o>/… sur un compte perso. Codée en dur au format org, elle était un LIEN MORT
-  # sur un compte perso — exactement là où on n'a jamais exécuté le script. (Trouvé le 14/07.)
+  # /users/<o>/… sur un compte perso.
   OWNER_TYPE=$(gh_val '.type' 'Organization' "users/${SLUG%%/*}")
   if [ "$OWNER_TYPE" = "User" ]; then PKG_NS="users"; else PKG_NS="orgs"; fi
   echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${SLUG##*/}/settings"
@@ -775,6 +725,3 @@ if [ "$PULL_STATE" = "ko" ]; then
   echo "     Org-wide : Settings > Packages > Package creation > default visibility."
 fi
 fi
-# Immutable releases : PLUS ICI — l'endpoint PUT /immutable-releases existe (Administration:write,
-# deja dans la recette) et le script le pose en 3d des que le repo est public. Le laisser dans
-# cette liste "non scriptable" etait un reste de la croyance fausse "UI, aucune API" (corrige 14/07).
