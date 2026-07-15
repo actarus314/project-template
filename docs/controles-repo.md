@@ -66,8 +66,7 @@ feat/…   ●────┘
 > Sans PR, on pousse sur `main` et la CI tourne **après** : elle devient une **autopsie**, pas un barrage.
 > Elle constate les dégâts sur la branche que l'on vient de déclarer « production ».
 > Avec une PR, elle tourne **avant** — c'est toute la différence entre **savoir** et **empêcher**.
->
-> **Ça s'est déjà produit** : sur dEURO, un push direct sur `main` a retiré une directive `user:` ; l'image est partie en `:latest`, le NUC l'a tirée, la production est tombée — découverte après coup.
+> *(L'incident qui l'illustre : standard §12.)*
 
 > ### Là où l'on ne serre PAS la vis — *trop de contrôles tue le contrôle*
 > - **Aucun lint au pre-commit** — aucun linter n'est universel aux deux toolchains ; en imposer un ferait échouer le hook dès le premier commit.
@@ -143,18 +142,6 @@ Tout ce qui dormait s'active **d'un seul coup** — c'est le moment le plus dang
 
 ## Le trou de la phase privée
 
-En privé, GitHub **accepterait** un push direct sur `main`, et une PR rouge **peut** être mergée.
-Une discipline qui n'est qu'écrite n'existe pas : elle est **outillée** partout où c'est possible.
+En privé, GitHub n'exige **rien** : push direct sur `main` accepté, PR rouge mergeable. La discipline est donc **outillée** (hooks `pre-commit` / `pre-push`, contournables par `--no-verify` — une décision, pas un accident). **Un seul point reste humain** : ne jamais merger une PR rouge — vérifier via `gh run list --commit <sha-de-tête-de-la-PR>`, **jamais** `gh pr checks` (permission `Checks` inaccordable en fine-grained).
 
-- Le hook `pre-commit` refuse un secret.
-- Le hook `pre-push` refuse l'écriture directe sur `main` — **le ruleset manquant, ramené sur la machine**.
-- Les deux se contournent avec `--no-verify` : **une décision, pas un accident**.
-
-**Un seul point reste humain** : ne jamais merger une PR rouge.
-Aucun hook ne l'intercepte (le merge se joue côté serveur) → règle écrite dans `AGENTS.md` et `CONTRIBUTING.md`, avec sa commande.
-
-⚠️ **Ce n'est PAS `gh pr checks <n>`** : elle exige la permission `Checks`, **absente de l'UI** des PAT fine-grained — donc impossible à accorder. La règle était écrite partout et **inapplicable partout**.
-→ `gh run list --commit <sha-de-tête-de-la-PR>`, et **VERT ⇔ tous les workflows attendus sont `completed / success`** *(un workflow **absent** n'est pas un vert : il n'a pas encore rapporté)*. **Détail et piège : standard §18.**
-
-**CodeQL n'a jamais tourné** pendant toute la phase privée (sa licence interdit même l'usage local sur du code privé).
-D'où `semgrep` + `osv-scanner`, qui **défrichent en continu** : au flip, il reste un **résidu**, pas une avalanche.
+**Détail complet** (licence CodeQL en privé, rôle permanent de Semgrep/osv-scanner, définition du vert, piège du faux vert, commande exacte) : **standard §18, « Le trou de la phase privée »**.

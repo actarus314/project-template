@@ -193,7 +193,7 @@ Corollaire assumé : depuis un terminal, Claude **ne voit ni les organisations n
 > **Symptôme déroutant** : le même `gh api` **réussit depuis `repo/`** (direnv y expose le PAT 1-repo, 90 j) et **échoue depuis ailleurs** (`gh` retombe sur `claude-ro`). Le token en cause n'est pas celui qu'on croit.
 > Le piège reste valable pour toute org qui l'active — la limite peut aussi être levée après coup côté org.
 
-> **`claude-ro` est volontairement SANS EXPIRATION** (vérifié : l'API ne renvoie aucun header `GitHub-Authentication-Token-Expiration`). Ce n'est pas un oubli.
+> **`claude-ro` est volontairement SANS EXPIRATION.** Ce n'est pas un oubli.
 > Une durée de vie courte ne protège que contre la **persistance après vol du secret** — or ce token est en lecture seule sur du **public** : un attaquant qui le vole n'obtient que ce qui est déjà public. Lui imposer une rotation serait une corvée récurrente pour un gain nul.
 > *(Seul garde-fou côté GitHub : révocation automatique après 1 an d'inactivité.)*
 > **Le raisonnement inverse s'applique aux PAT d'écriture** — eux touchent du code privé et publient : 90 jours, avec alerte J-14.
@@ -251,7 +251,7 @@ C'est ce qui rend les 90 jours indolores : la rotation est **annoncée**, pas su
 | Chargement de `.env` | `set -a; [ -f .env ] && . ./.env; set +a` | `dotenv` (builtin **direnv**) |
 | Où vit le PAT | `repo/.envrc` (`GITHUB_PAT`) | `repo/.env` |
 
-Deux raisons, toutes deux constatées sur des projets réels :
+Deux raisons :
 - **`dotenv` n'existe pas en shell non-interactif.** L'outil Bash de Claude Code fait `source ./.envrc` → `dotenv: command not found` → le PAT n'est **jamais chargé** → aucun push possible. Le `.envrc` doit rester **sourçable en bash pur**.
 - **Le PAT dans `.env` fuite dans les conteneurs.** Un `docker-compose.yaml` avec `env_file: .env` injecte `GITHUB_PAT` dans le conteneur — visible via `docker inspect`. Le `.env` est réservé aux clés **applicatives** ; le PAT vit dans `.envrc`, et **nulle part ailleurs**.
 
@@ -470,7 +470,7 @@ data/
 
 ⚠️ **`init-project.sh` REFUSE `--staging` sur un site Pages sans artefact** : Pages *est* la prod, il n'y a **rien à valider** — la branche serait un rituel vide qui dérive jusqu'à ce que le merge cesse d'avoir lieu.
 
-**Le triple filtre reste ce qui aurait arrêté l'incident dEURO** (raconté plus haut dans ce §12) — mais seulement là où il existe un host à valider. Ailleurs, il n'aurait rien filtré.
+**Le triple filtre attrape ce type de régression avant qu'elle n'atteigne la prod** (cf. « Pourquoi 3 étapes » plus bas) — mais seulement là où il existe un host à valider. Ailleurs, il n'aurait rien filtré.
 
 **Git Flow est mort** : `nvie/gitflow` a été **archivé par son auteur le 14/10/2025**. Ne pas le ressortir.
 
@@ -493,38 +493,13 @@ Les *environment branches* (une branche par environnement) sont un anti-pattern 
 
 ### Flux complet
 
-```bash
-# Étape 1 — démarrage du sujet, sur le poste de dev
-git checkout develop && git pull
-git checkout -b feat/<topic>
-# … commits …
-docker compose up --build -d  # validation locale
-# OK → on passe à l'étape 2
-
-# Étape 2 — staging, le code part sur develop
-git checkout develop
-git merge --no-ff feat/<topic> -m "<topic> → staging"
-git push origin develop
-# Sur le NUC : git checkout develop && git pull && docker compose up --build -d
-# … validation fonctionnelle …
-# OK → on passe à l'étape 3
-
-# Étape 3 — prod, on tag depuis main
-gh pr create --base main --head develop --title "vX.Y.Z: <changelog résumé>"
-gh pr merge --merge          # garde l'historique des commits feat/*
-# ⚠️ REPO PRIVÉ : ce merge vient de SUPPRIMER `develop` (delete-branch-on-merge, et aucun ruleset
-#    ne la protège tant que le repo est privé). La recréer AUSSITÔT — voir l'encadré ci-dessous.
-git checkout main && git pull
-git tag -a vX.Y.Z -m "vX.Y.Z — <résumé>"
-git push origin vX.Y.Z       # déclenche le workflow de release CI
-# Le NUC : DEURO_IMAGE_TAG=X.Y.Z dans .env, docker compose pull && up -d
-```
+Trois étapes : `feat/` validé **localement** → mergé `--no-ff` dans `develop`, validé sur l'**hôte de staging** → PR `develop → main` mergée **en merge commit** (jamais squash — ça garde l'historique des commits `feat/*` et évite de faire diverger `develop`) → tag `vX.Y.Z` poussé sur `main`, qui déclenche la release CI. **Commandes exactes, dans l'ordre : RUNBOOK §2-3.**
 
 > 🔴 **En PRIVÉ, la mise en production DÉTRUIT la branche de staging.**
-> `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop`**, au merge de la PR `develop → main` de l'étape 3. **En public**, le ruleset `develop` (règle `deletion`) le refuse ; **en privé, aucun ruleset n'existe** *(§18)* et la branche disparaît **en silence**.
+> `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop`**, au merge de la PR `develop → main`. **En public**, le ruleset `develop` (règle `deletion`) le refuse ; **en privé, aucun ruleset n'existe** *(§18)* et la branche disparaît **en silence**.
 > **Et le dégât est en cascade** : au rejeu suivant, `configure-repo.sh` ne voit plus `develop`, en déduit « pas de staging », **ne pose pas son ruleset** et **remet `main` en squash-only** — or **squasher `develop` dans `main` fait diverger les deux branches à chaque cycle**. La promotion suivante devient **impossible**. *Le succès de la mise en prod casse le cycle suivant.*
 > **→ Recréer `develop` immédiatement après la promotion :** `git switch -c develop main && git push -u origin develop`
-> *(Le script le détecte désormais : il compare ce que le repo **publie** — le bloc `## Branching` de `CONTRIBUTING.md` — à ce qui **existe**. Vécu sur test003, 2026-07-14.)*
+> *(Le script le détecte désormais : il compare ce que le repo **publie** — le bloc `## Branching` de `CONTRIBUTING.md` — à ce qui **existe**.)*
 
 Pour du trivial (typo doc, rename de variable, fix de query sans impact runtime) sur projet solo : main direct reste acceptable.
 
@@ -562,18 +537,12 @@ Nettoyage : `git worktree remove <chemin>` + suppression de la branche.
 **Déploiement / état partagé hors Git.**
 Un seul intervenant rebuild/déploie `main` HEAD à la fois.
 Et **ne jamais muter l'état partagé hors Git pendant qu'un service tourne.**
-Exemple vécu : ouvrir une SQLite **en WAL depuis l'hôte** alors que le conteneur l'utilise casse le mmap `-shm` sur virtiofs (Docker Desktop macOS) → `disk I/O error`.
-*(Données intactes ; correctif : `docker restart`.)*
+Exemple : ouvrir une SQLite **en WAL depuis l'hôte** alors que le conteneur l'utilise casse le mmap `-shm` sur virtiofs (Docker Desktop macOS) → `disk I/O error` (données intactes ; correctif : `docker restart`).
 Pour inspecter une base : passer par l'API ou `docker exec` — **jamais** une connexion directe depuis le Mac.
 
 ### Pourquoi 3 étapes
 
-**L'incident qui justifie tout ce qui précède — dEURO.**
-Un push **direct sur `main`** (commit `5b78811`) retire la directive compose `user:`, en croyant faire tourner le conteneur en root.
-Or l'image distroless `:nonroot` **impose** l'UID 65532.
-SQLite perd donc l'écriture sur le bind mount `./data` → `SQLITE_READONLY_DIRECTORY`, **en prod, sur le NUC**.
-Le bug atteint `main`, puis `:latest` sur ghcr.io, et **le NUC l'a pull avant qu'on le détecte**.
-Le triple filtre Mac → NUC/`develop` → NUC/`main` l'aurait arrêté **deux fois**.
+Un push **direct sur `main`** peut introduire une régression de configuration (ex. une directive `docker-compose` retirée par erreur, incompatible avec les contraintes de l'image runtime — UID non-root imposé, permissions de volume, etc.) qu'**aucune build ne détecte** : le code compile, l'image se construit, seul le **comportement en conditions réelles** la révèle. Sans palier intermédiaire, ce genre de bug atteint `main`, puis `:latest`, et un host de prod peut le **pull avant que quiconque le remarque**. Le triple filtre (Mac → NUC/`develop` → NUC/`main`) attrape ce type de régression **avant** qu'elle n'atteigne la prod — potentiellement deux fois.
 
 ### Build vs pull d'image
 
@@ -595,8 +564,8 @@ Pour un projet solo Mac+NUC, build local = chemin court. Le workflow CI ne sert 
 ## 13. Pin de version en production
 
 > ⚠️ **Le package ghcr PEUT être privé — même sur un repo public. Ça se VÉRIFIE, ça ne se suppose pas.**
-> **Compte PERSO** : un package publié depuis un repo **public** hérite de son accès → **tirable aussitôt**, aucun geste *(vérifié sur test003, 2026-07-14 : HTTP 200 sans rien faire)*.
-> **ORGANISATION** : il peut être **PRIVÉ** *(défaut d'org — constaté sur test002)* → le `docker compose pull` du host reçoit **403**, et le pin ci-dessous ne sert à rien : **il n'y a rien à tirer**.
+> **Compte PERSO** : un package publié depuis un repo **public** hérite de son accès → **tirable aussitôt**, aucun geste.
+> **ORGANISATION** : il peut être **PRIVÉ** *(défaut d'org)* → le `docker compose pull` du host reçoit **403**, et le pin ci-dessous ne sert à rien : **il n'y a rien à tirer**.
 > → **`configure-repo.sh` interroge le registre ANONYMEMENT**, exactement comme le host de prod, et ne réclame le geste *(Package settings → Change visibility, **aucune API**)* **que si le pull échoue**. *Un job « Publish image » vert ne prouve RIEN.*
 
 Sur les hosts de production (NUC, serveurs déployés), **épingler le tag d'image** dans le `.env` du host :
@@ -805,7 +774,7 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 | Scans planifiés | un `cron` qu'on maintient | **inclus** |
 | Maintenance | **la nôtre** | **celle de GitHub** |
 
-> 🔴 **Ce n'était pas une préférence, c'était un TROU.** Prouvé sur `test004` *(2026-07-14)* : notre `codeql.yml` ne déclarait que `javascript-typescript`. Le default setup, lui, a trouvé **`actions` EN PLUS** — autrement dit **le template n'analysait pas ses PROPRES workflows**. Le custom était du natif **dégradé**, et il dégradait un **contrôle de sécurité**.
+> 🔴 **Ce n'était pas une préférence, c'était un TROU** : un `codeql.yml` codé en dur sur un seul langage laisse **tout le reste du repo non analysé** — y compris ses propres workflows. Le custom était du natif **dégradé**, et il dégradait un **contrôle de sécurité**.
 
 **Ce que le default setup NE sait pas faire** *(la porte de sortie, si un projet en a un jour besoin)* : query packs personnalisés · `paths-ignore` · étapes de build sur mesure · upload depuis une CI externe.
 → **Alors seulement**, revenir à un `codeql.yml` committé — **et y déclarer TOUS les langages du repo**, à la main, pour de bon.
@@ -827,7 +796,7 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 | **`actionlint` + `zizmor`** (PR) | Que **les workflows eux-mêmes** soient le trou : un `${{ }}` interpolé dans un `run:` est une **injection de shell**. | `ci-*.yml` |
 | **`persist-credentials: false`** | Que le `GITHUB_TOKEN` **traîne dans `.git/config`** et fuite par un artefact (audit `artipacked`). | tous les `checkout` |
 | **`default_workflow_permissions: read`** | Qu'un workflow **futur**, écrit sans bloc `permissions:`, hérite d'un `GITHUB_TOKEN` **en écriture**. Nos workflows le déclarent tous — c'est un filet, pas un gain immédiat. | `configure-repo.sh` |
-| **Dependabot `groups`** | Le **bruit** : minor + patch groupés en **une** PR par écosystème (5 PR d'un coup constatées sans ça). Les **majors restent isolés** — un major peut casser, il mérite d'être regardé seul. | `dependabot.yml` |
+| **Dependabot `groups`** | Le **bruit** : minor + patch groupés en **une** PR par écosystème. Les **majors restent isolés** — un major peut casser, il mérite d'être regardé seul. | `dependabot.yml` |
 | **Trivy** sur l'image (PR) — *capacité **`artefact`*** | Qu'une image portant une CVE **CRITICAL/HIGH** atteigne `main`. Scanner **au déploiement est trop tard** : l'image est déjà taguée et la prod l'épingle. Le job **`build-check` est un check REQUIS** — sinon le scan est **décoratif**. | `docker-publish.yml` |
 
 ### Qui met à jour les outils épinglés — la frontière Dependabot / Renovate
@@ -891,7 +860,7 @@ Sur un repo privé/Free, **il n'y a aucun ruleset**. Tous les contrôles **tourn
 > ```
 >
 > **VERT ⇔ TOUS les workflows ATTENDUS sont `completed / success`** : `CI`, **+ `Publish image`** si `docker-publish.yml` existe — *le même ensemble que les checks requis du ruleset, dérivé de la même façon (la présence du workflow)*, pour que la barrière humaine et le serveur qui la remplacera au flip disent exactement la même chose.
-> ⚠️ **Un workflow ABSENT n'est PAS un vert.** GitHub enregistre les workflows **un par un** : pendant quelques secondes après un push, `CI` peut être `success` alors que `Publish image` n'est pas encore créé. Se contenter de « aucun échec » déclare alors la PR mergeable **en ratant un check** — *vérifié sur test003, faux vert reproduit à t+10 s*. **« Rien de rouge » ≠ « tout est vert ».**
+> ⚠️ **Un workflow ABSENT n'est PAS un vert.** GitHub enregistre les workflows **un par un** : pendant quelques secondes après un push, `CI` peut être `success` alors que `Publish image` n'est pas encore créé. Se contenter de « aucun échec » déclare alors la PR mergeable **en ratant un check**. **« Rien de rouge » ≠ « tout est vert ».**
 
 Le `pre-push` **laisse passer la création** d'une branche (sinon le 1ᵉʳ push d'un repo neuf serait impossible) et **reste actif en public** — le serveur refuse alors le même push, mais le message local est bien plus clair. *Défense en profondeur.*
 
@@ -953,21 +922,17 @@ git worktree remove --force /tmp/scan
 
 **C'est le chemin nominal** (§10) : tout repo naît privé et bascule public. Un repo privé en Free n'a **ni ruleset, ni CodeQL, ni secret scanning** — il les gagne **tous d'un coup** au flip.
 
-> ⚠️ **Le flip est le moment le plus dangereux du cycle de vie d'un repo** : **tout l'historique devient public d'un seul coup**, y compris un secret enfoui dans un commit vieux de six mois — et il aura été poussé pendant la phase où **aucun secret scanning côté serveur n'existait**. D'où l'étape 1, non négociable.
+> ⚠️ **Le flip est le moment le plus dangereux du cycle de vie d'un repo** : **tout l'historique devient public d'un seul coup**, y compris un secret enfoui dans un commit vieux de six mois — et il aura été poussé pendant la phase où **aucun secret scanning côté serveur n'existait**. D'où le passage gitleaks sur toutes les refs, ci-dessous, non négociable.
 
-| # | Qui | Geste |
-|---|---|---|
-| 1 | Claude | **`gitleaks` sur TOUTES les refs**, pas seulement `main` — un secret dans une vieille branche poussée devient public lui aussi. Depuis un **worktree détaché** (§18). |
-| 2 | Romain | Flipper la visibilité (UI). |
-| 3 | Romain | **Rejouer** `./configure-repo.sh <owner>/<repo> '' '<description>' '<topics>'` (PAT admin **éphémère**) → ruleset `main`, secret scanning + push protection, Dependabot, **immutable releases**, description, **topics**, **ACTIVATION DE CODEQL** *(default setup)*, et la **méthode de merge selon la capacité `staging`** (squash seul ; **+ merge commit si `develop` existe** — squash seul est incompatible avec une branche de staging, §12). Le script est **idempotent** : rejouable sans dégât. |
-| 4 | — | **Rien à faire pour les workflows.** `pages.yml` porte `if: github.event.repository.visibility != 'private'` : il est **`skipped`** en privé et **se réveille seul** au flip. ⚠️ **CodeQL, lui, n'est PLUS un workflow** *(plus de `codeql.yml` — §17)* : c'est **l'étape 3 qui l'active**, en *default setup*. Le script **attend sa 1ʳᵉ analyse** avant de poser la règle `code_scanning` — sans quoi `main` resterait non gardée. |
-| 5 | **Romain** | **Repo d'ORG — SYSTÉMATIQUE, jamais une exception** : Settings → **Moderation options** → **Reported content** → « Prior contributors and collaborators ». **Aucune API** (ni REST ni GraphQL). GitHub applique ce défaut aux repos **créés publics** — donc **jamais aux nôtres**, qui naissent privés. Sans ce clic, le community health **plafonne à 87 %**. `configure-repo.sh` le signale en fin de course. |
-| 6 | Claude | Vérifier en lecture : community health **100 %** · CodeQL **vert** · ruleset **actif** · secret scanning **on**. |
-| 7 | — | **Rien à faire pour la règle `code_scanning`** : à l'étape 3, le script **active CodeQL, ATTEND sa 1ʳᵉ analyse, PUIS pose la règle** — le tout en une seule exécution. *(Sans cette attente, il activerait CodeQL, lirait « 0 analyse », et ne poserait pas la règle : **`main` resterait NON PROTÉGÉE** jusqu'à ce que quelqu'un pense à rejouer le script — un trou ouvert par le script lui-même.)* |
+**Ce que la bascule exige, et pourquoi** *(déroulé exact — qui fait quoi, dans quel ordre : RUNBOOK §4)* :
 
-> **Pourquoi les workflows s'auto-gèrent au lieu d'être ajoutés au flip** : une procédure manuelle est un coût récurrent et *oubliable*. Un job qui échoue à chaque run sur un repo privé rend la CI rouge en permanence — et **une CI toujours rouge n'est plus lue**. La condition est écrite `!= 'private'` (jamais `== 'public'`) : si le champ venait à manquer du payload, le job **tourne** (du bruit) au lieu de **désactiver silencieusement un contrôle de sécurité**.
->
-> ⚠️ **CodeQL faisait exception à ce principe, et c'était le mauvais arbitrage.** Son `codeql.yml` s'auto-gérait, oui — mais au prix d'**un seul langage figé, que personne ne mettait jamais à jour**. On préférait l'auto-gestion d'un contrôle *incomplet* à un geste scripté d'un contrôle *complet*. Le geste, de toute façon, **existait déjà** : le rejeu de `configure-repo.sh` est obligatoire au flip. **On n'a rien ajouté — on a juste cessé de rater des langages.** *(§17.)*
+- **`gitleaks` sur TOUTES les refs**, pas seulement `main`, depuis un **worktree détaché** (§18) — un secret dans une vieille branche poussée devient public lui aussi.
+- **Rejouer `configure-repo.sh`** (PAT admin **éphémère**) : il pose le ruleset `main`, secret scanning + push protection, Dependabot, **immutable releases**, description, **topics**, **active CodeQL** *(default setup)*, et choisit la **méthode de merge selon la capacité `staging`** (squash seul ; + merge commit si `develop` existe — squash seul est incompatible avec une branche de staging, §12). Le script est **idempotent** : rejouable sans dégât.
+- **Rien à faire pour les workflows.** `pages.yml` porte `if: github.event.repository.visibility != 'private'` : il est **`skipped`** en privé et **se réveille seul** au flip. ⚠️ **CodeQL, lui, n'est PLUS un workflow** *(plus de `codeql.yml` — §17)* : c'est le rejeu de `configure-repo.sh` qui l'active, en *default setup*, et **attend sa 1ʳᵉ analyse** avant de poser la règle `code_scanning` — sans quoi `main` resterait non gardée.
+- **Repo d'ORG — SYSTÉMATIQUE, jamais une exception** : Settings → **Moderation options** → **Reported content** → « Prior contributors and collaborators ». **Aucune API** (ni REST ni GraphQL). GitHub applique ce défaut aux repos **créés publics** — donc **jamais aux nôtres**, qui naissent privés. Sans ce clic, le community health **plafonne à 87 %**.
+- **Vérifier ensuite, en lecture** : community health **100 %** · CodeQL **vert** · ruleset **actif** · secret scanning **on**.
+
+> **Pourquoi les workflows s'auto-gèrent au lieu d'être ajoutés au flip** : une procédure manuelle est un coût récurrent et *oubliable*. Un job qui échoue à chaque run sur un repo privé rend la CI rouge en permanence — et **une CI toujours rouge n'est plus lue**. La condition est écrite `!= 'private'` (jamais `== 'public'`) : si le champ venait à manquer du payload, le job **tourne** (du bruit) au lieu de **désactiver silencieusement un contrôle de sécurité**. **CodeQL faisait exception à ce principe, et c'était le mauvais arbitrage** — son `codeql.yml` s'auto-gérait, mais au prix d'un seul langage figé que personne ne mettait à jour (§17). Le geste existait déjà : le rejeu de `configure-repo.sh` est obligatoire au flip.
 
 ### Acquérir une CAPACITÉ sur un repo déjà vivant
 
@@ -982,25 +947,20 @@ Le repo garde tout le reste : on ne change pas de catégorie, on **ACQUIERT une 
 
 *Le cas `rozo-bridge` : une page Pages que l'on packagera en image pour que des tiers la déploient et suivent les updates. **Pages reste**, et il n'y a **aucun `develop` à créer** — il n'existe aucun host à valider.*
 
-| # | Qui | Geste |
-|---|---|---|
-| 1 | Claude | **Une seule PR** : `Dockerfile` + `docker-publish.yml` (image substituée : `ghcr.io/<owner>/<repo>`). Elle **passe** : `build-check` n'est **pas encore** requis.<br>**Page statique → `FROM nginx:alpine`** *(un serveur web, pas une toolchain — §14)*, **SUIVI DE `RUN apk upgrade --no-cache`.**<br>🔴 **Cette ligne n'est PAS cosmétique.** `nginx:alpine` est **en retard sur les paquets Alpine** : au 14/07/2026, l'image courante portait **8 CVE HIGH** *(c-ares, curl/libcurl, libexpat)* — **toutes DÉJÀ corrigées en amont**. Trivy tourne avec `--ignore-unfixed` : il les remonte donc **toutes**, et **`build-check` part ROUGE**. **Le scanner du template refuse alors l'image que le template recommande.** *(Mesuré sur test005 — C2.)* |
-| 2 | Claude | Dans la **même** PR : ajouter l'écosystème **`docker`** à `dependabot.yml`. ⚠️ **Pas optionnel** — sans lui l'**image de base** n'est **jamais** bumpée, et Trivy bloquerait les PR sur une CVE de l'image **sans que rien ne propose le correctif** : le contrôle détecte, personne ne répare. |
-| 3 | — | **Ne PAS toucher au bloc `## Branching`** ni créer `develop` : sans host à valider, ce serait un **rituel vide** (§12). |
-| 4 | Romain | Merger. `main` porte désormais `docker-publish.yml` — la condition de l'étape 5 est remplie. |
-| 5 | Romain | **Rejouer** `configure-repo.sh` → il détecte le workflow, exige **`build-check`**, pose le **ruleset `tags`** et les **immutable releases**, et **vérifie que l'image est tirable anonymement**. |
-| 6 | **Romain** | **VÉRIFIER que le package ghcr est tirable anonymement** — `configure-repo.sh` le teste. Sur un compte **perso** (repo public), il l'est **d'office** ; sur une **ORG**, il peut être **PRIVÉ** → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **Ne rendre public que si le test échoue** *(UI, aucune API)*. |
-| 7 | Romain | **Avant la v1** : les immutable releases sont **non rétroactives**. Après, il est trop tard. |
-| 8 | Claude | Documenter l'auto-hébergement dans le README (`docker run ghcr.io/<owner>/<repo>:X.Y.Z`) — **avec un tag épinglé, jamais `:latest`** (§13). |
+*(Déroulé exact — qui fait quoi, dans quel ordre : RUNBOOK §5.)*
+
+- `Dockerfile` + `docker-publish.yml` arrivent **par PR**, avant que `build-check` ne soit requis — c'est ce qui évite le piège de l'ordre (plus haut : « l'ordre est le piège »).
+- **Page statique → `FROM nginx:alpine`** *(un serveur web, pas une toolchain — §14)*, **suivi de `RUN apk upgrade --no-cache`.** 🔴 **Cette ligne n'est PAS cosmétique** : `nginx:alpine` est en retard sur les paquets Alpine et peut porter des CVE HIGH déjà corrigées en amont. Trivy tourne avec `--ignore-unfixed` : il les remonte **toutes**, et `build-check` part **ROUGE** — le scanner du template refuse alors l'image que le template recommande, sans cette ligne.
+- **Dans la même PR**, ajouter l'écosystème `docker` à `dependabot.yml`. Pas optionnel : sans lui, l'image de base n'est jamais bumpée, et Trivy bloquerait les PR sur une CVE **sans que rien ne propose le correctif** — le contrôle détecte, personne ne répare.
+- **Ne pas toucher au bloc `## Branching`** ni créer `develop` : sans host à valider, ce serait un rituel vide (§12).
+- Une fois le workflow sur `main`, rejouer `configure-repo.sh` : il détecte `docker-publish.yml`, exige `build-check`, pose le ruleset `tags` et les immutable releases, et **vérifie que l'image est tirable anonymement**.
+- **Le package ghcr peut être privé même si le repo est public** (§13) : sur un compte perso il est tirable d'office ; sur une org, il peut nécessiter un geste manuel (UI, aucune API) — ne le rendre public que si le test échoue.
+- **Immutable releases : avant la v1**, jamais après — elles ne sont pas rétroactives.
+- Documenter l'auto-hébergement dans le README avec un **tag épinglé, jamais `:latest`** (§13).
 
 #### Acquérir `--staging` — « un host apparaît, je veux le valider avant la prod »
 
-| # | Qui | Geste |
-|---|---|---|
-| 1 | Claude | **Une PR** : réécrire le bloc `## Branching` de **`CONTRIBUTING.md` ET `AGENTS.md`** en 3 étages (§12) — les deux publient encore GitHub Flow. |
-| 2 | Claude | Créer et pousser `develop` : `git push -u origin develop` *(le hook `pre-push` laisse passer la **création**)*. |
-| 3 | Romain | **Rejouer** `configure-repo.sh` → il détecte `develop`, pose son **ruleset**, et **autorise le merge commit** sur `main` (squash seul est **incompatible** avec une branche de staging). |
-| 4 | Claude | `docker-publish.yml` écoute déjà les PR vers `main` **et** `develop` — rien à faire. *(Sans ça, une PR vers `develop` resterait bloquée à jamais.)* |
+*(Déroulé exact : RUNBOOK §5.)* Le bloc `## Branching` de `CONTRIBUTING.md` **et** `AGENTS.md` doit être réécrit en 3 étages (§12) — sinon les deux publient encore GitHub Flow alors que `develop` existe. Pousser `develop` passe : le hook `pre-push` laisse passer la **création** de branche. Une fois `develop` détectée, `configure-repo.sh` pose son ruleset et **autorise le merge commit** sur `main` — squash seul est **incompatible** avec une branche de staging (§12). `docker-publish.yml` écoute déjà les PR vers `main` **et** `develop` : sans ça, une PR vers `develop` resterait bloquée à jamais.
 
 #### Acquérir / retirer `--pages`
 
@@ -1009,7 +969,7 @@ Le repo garde tout le reste : on ne change pas de catégorie, on **ACQUIERT une 
 
 #### Retirer une capacité — le sens inverse
 
-Il ne fait que **retirer** des contrôles : aucun risque de verrouillage… **sauf un**, symétrique de l'étape 1.
+Il ne fait que **retirer** des contrôles : aucun risque de verrouillage… **sauf un**, symétrique du piège d'ordre décrit plus haut (« l'ordre est le piège »).
 ⚠️ **Retirer `build-check` des checks requis AVANT de supprimer `docker-publish.yml`.** Dans l'autre sens, le check reste exigé alors que plus rien ne le produit → **toute PR est bloquée pour toujours**.
 
 ### Faux positifs : épingler par empreinte, jamais désactiver la règle

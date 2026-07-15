@@ -36,7 +36,6 @@
 
 - **Visibility : PRIVATE.** *(Le cycle nominal. Il passera public plus tard — §4.)*
 - **Ne rien cocher** : ni README, ni .gitignore, ni licence. `init-project.sh` les pose, et un fichier créé par GitHub ferait diverger le premier commit.
-- *(La création exige un droit à portée de **compte** : elle reste dans l'UI. C'est justement ce qui permet à l'assistant de n'avoir **jamais** ce droit.)*
 
 ### Étape 2 — Claude : générer le projet
 
@@ -46,7 +45,7 @@
 
 Crée l'arborescence, le premier commit, le remote en **URL nue**, et un **`.envrc` VIDE** *(le PAT n'existe pas encore)*.
 
-> ⚠️ **C'est pour ça que le PAT vient MAINTENANT et pas avant** : `repo/.envrc` **n'existe pas** tant que ce script n'a pas tourné. On ne peut rien y coller.
+> ⚠️ `repo/.envrc` **n'existe pas** tant que ce script n'a pas tourné : rien à y coller avant l'étape 3.
 
 ### 🔴 Étape 3 — Romain : créer le PAT d'écriture (celui de l'assistant)
 
@@ -100,7 +99,7 @@ cd <dossier-projet>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓" || ec
 
 | # | Geste |
 |---|---|
-| 5 | **Remplir ce que le script signale** : `<contact>` dans `SECURITY.md` *(sans lui, personne ne peut signaler une faille)* · les champs de `AGENTS.md` · le titulaire de `LICENSE`. |
+| 5 | **Remplir ce que le script signale** : `<contact>` dans `SECURITY.md` · les champs de `AGENTS.md` · le titulaire de `LICENSE`. |
 | 6 | Premier push : `git push -u origin main` *(le hook `pre-push` laisse passer la **création** d'une branche)*. Puis `git push -u origin develop` **si `--staging`**. |
 
 ### 🔴 Étape 7a — Romain : créer le PAT ADMIN **ÉPHÉMÈRE**
@@ -151,8 +150,7 @@ Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran,
 **→ https://github.com/settings/personal-access-tokens**
 
 > **C'est l'étape qu'on oublie, et c'est la plus dangereuse à oublier.**
-> Ce token peut **supprimer le repo** et **changer sa visibilité**. Il n'a **plus aucune raison d'exister** dès que le script a fini.
-> **Le révoquer est BINAIRE ; dégrader ses droits ne l'est pas** — c'est précisément pourquoi on ne garde pas un PAT unique dont on retirerait `Administration` après coup : ce retrait serait manuel, **donc oubliable**, et laisserait un token admin vivant 90 jours.
+> Ce token peut **supprimer le repo** et **changer sa visibilité** — il n'a **plus aucune raison d'exister** dès que le script a fini. *(Pourquoi révoquer plutôt que dégrader → §7 en bas.)*
 >
 > *(Le script le rappelle en fin de course — **un rappel n'est pas une révocation**.)*
 
@@ -160,17 +158,17 @@ Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran,
 
 **→ https://github.com/apps/renovate** — *« Install » → Only select repositories → ce repo.*
 
-> **Sans elle, `renovate.json` est INERTE** : les 4 binaires épinglés *(gitleaks, actionlint, osv-scanner, trivy)* **gèlent en silence**, et **un scanner de sécurité figé finit par rater ce qu'il est censé trouver** *(§17)*.
+> **Sans elle, `renovate.json` est INERTE** : les 4 binaires épinglés *(gitleaks, actionlint, osv-scanner, trivy)* **gèlent en silence** *(pourquoi ça compte : §17)*.
 
 > 🔴 **L'ORDRE EST UN PIÈGE — `renovate.json` DOIT être sur `main` AVANT que l'app ne soit installée.**
 > Renovate regarde s'il trouve une config sur la branche par défaut.
 > **Il en trouve une → il se met au travail directement.**
 > **Il n'en trouve pas → il ouvre une PR d'onboarding « Configure Renovate ».**
 >
-> Ici, l'ordre est bon **par construction** : le template pose `.github/renovate.json` dès l'étape 1, donc à l'étape 8 le fichier est déjà sur `main` — **aucune PR d'onboarding n'apparaît**. *(Vérifié sur test003, 2026-07-14.)*
+> Ici, l'ordre est bon **par construction** : le template pose `.github/renovate.json` dès l'étape 1, donc à l'étape 8 le fichier est déjà sur `main` — **aucune PR d'onboarding n'apparaît**.
 >
 > **⚠️ Sur un repo EXISTANT** *(mise en conformité, §7)*, **l'ordre s'inverse tout seul** : l'app est souvent installée avant que le fichier n'arrive → **la PR d'onboarding surgit**.
-> **NE JAMAIS LA MERGER.** Elle poserait la config par défaut de Renovate — **tous les managers activés** — et Renovate ouvrirait alors **les mêmes PR que Dependabot, en DOUBLE**. *(La frontière : Dependabot = les écosystèmes déclarés · Renovate = les 4 binaires. §17.)*
+> **NE JAMAIS LA MERGER** *(tous les managers Renovate s'activeraient → PR en double avec Dependabot ; frontière Dependabot/Renovate : §17)*.
 > **Conduite à tenir : FERMER la PR d'onboarding** *(Renovate s'arrête, et il ne la rouvre pas)*, **puis commiter `.github/renovate.json`** — Renovate redémarre de lui-même dès qu'il voit le fichier. Le geste est **réversible dans les deux sens**.
 
 ---
@@ -197,10 +195,8 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 > **VERT ⇔ TOUS les workflows ATTENDUS sont `completed / success`** : `CI`, **+ `Publish image`** si `docker-publish.yml` existe *(le même ensemble que les checks requis du ruleset — `configure-repo.sh` le dérive de la présence du workflow)*.
 > ⚠️ **Un workflow ABSENT de la liste n'est PAS un vert** : il n'a simplement pas encore rapporté. GitHub enregistre les workflows **un par un** après un push — pendant quelques secondes, `CI` peut être `success` alors que `Publish image` n'existe pas encore. *« Rien de rouge » et « tout est vert » ne sont pas la même affirmation*, et l'écart entre les deux est exactement là où un change cassé passe.
 
-> 🔴 **Pourquoi PAS `gh pr checks <n>`** *(et pourquoi `gh pr view <n>` tout court échoue aussi)*.
-> Les deux lisent `statusCheckRollup`, qui exige la permission **`Checks`** — or cette permission **N'EXISTE PAS** dans l'UI des PAT fine-grained : elle est documentée par GitHub, mais **impossible à accorder** *(github/community#129512, cli/cli#12597)*. Avec le PAT du standard *(fine-grained, 1 repo — §5)*, la commande renvoie **`Resource not accessible by personal access token`**.
-> **Il n'y a RIEN à ajouter au PAT.** La commande ci-dessus n'a besoin que d'`Actions: read`, **déjà** dans la matrice. *(`gh pr view --json headRefOid` passe : en ciblant un champ, il ne demande plus le rollup.)*
-> **Constaté sur test003 le 2026-07-14** — la règle était écrite partout, et **inapplicable partout**.
+> 🔴 **Ne PAS utiliser `gh pr checks <n>`** *(ni `gh pr view <n>` tout court)* : les deux lisent `statusCheckRollup`, qui exige la permission **`Checks`** — **absente de l'UI des PAT fine-grained**, impossible à accorder *(github/community#129512, cli/cli#12597)*. Avec le PAT du standard, la commande renvoie **`Resource not accessible by personal access token`**.
+> **Rien à ajouter au PAT** : la commande ci-dessus n'a besoin que d'`Actions: read`, déjà dans la matrice. *(`gh pr view --json headRefOid` passe : en ciblant un champ, il ne demande plus le rollup.)*
 
 **Avec `--staging`** : les `feat/` s'accumulent dans `develop`. `develop → main` n'arrive **qu'au moment de publier une version** — **une seule PR pour N changements**, pas deux PR par changement.
 
@@ -213,7 +209,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 | 1 | Claude | `CHANGELOG.md` : passer `Unreleased` en `X.Y.Z` *(ce que la release raconte à l'utilisateur ; les notes GitHub listent les PR — les deux sont complémentaires)*. |
 | 2 | Claude | *(si `--staging`)* PR `develop → main`, CI verte, merge **en merge commit** *(jamais squash — §12)*. ⚠️ **PUIS : voir l'encadré ci-dessous — ce merge SUPPRIME `develop` tant que le repo est privé.** |
 | 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → `release.yml` crée la **Release**, `docker-publish.yml` pousse l'**image ghcr** *(si `--artefact`)*. |
-| 4 | **Romain** | ⚠️ **1ʳᵉ release — VÉRIFIER que le package ghcr est tirable, et n'agir QUE s'il ne l'est pas.** Sur un compte **PERSO**, un package publié depuis un repo **public** hérite de son accès : il est tirable **aussitôt**, aucun geste *(vérifié sur test003)*. Sur une **ORG**, il peut être **PRIVÉ** *(défaut d'org — constaté sur test002)* → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **`configure-repo.sh` fait le test lui-même** et ne réclame le geste que s'il échoue. |
+| 4 | **Romain** | ⚠️ **1ʳᵉ release — VÉRIFIER que le package ghcr est tirable, et n'agir QUE s'il ne l'est pas.** Sur un compte **PERSO**, un package publié depuis un repo **public** hérite de son accès : il est tirable **aussitôt**, aucun geste. Sur une **ORG**, il peut être **PRIVÉ** *(défaut d'org)* → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **`configure-repo.sh` fait le test lui-même** et ne réclame le geste que s'il échoue. |
 | 5 | Claude | Vérifier que l'image est **réellement tirable** — `configure-repo.sh` le teste **anonymement**, comme le fait le host de prod. ⚠️ **Un job « Publish image » VERT ne prouve RIEN** : il peut réussir alors que l'image reste **intirable** (package privé). |
 
 > 🔴 **LA MISE EN PRODUCTION DÉTRUIT LE STAGING — tant que le repo est PRIVÉ.**
@@ -224,7 +220,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 > ```bash
 > git switch -c develop main && git push -u origin develop
 > ```
-> *(Le script le détecte désormais et le crie : il compare ce que le repo **PUBLIE** — le bloc `## Branching` de `CONTRIBUTING.md` — à ce qui **existe**. Vécu sur test003, 2026-07-14.)*
+> *(Le script le détecte et le signale : il compare le bloc `## Branching` de `CONTRIBUTING.md` à ce qui **existe** réellement.)*
 
 > ⚠️ **Les immutable releases ne sont PAS rétroactives.** Elles doivent être posées **avant la v1** *(`configure-repo.sh` s'en charge au flip)*. Après, il est trop tard pour les releases déjà publiées.
 
@@ -242,10 +238,10 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 | 4 | **Romain** | **Rejouer `configure-repo.sh`** *(PAT admin éphémère)* → rulesets `main`/`develop`/`tags`, secret scanning + push protection, **private vulnerability reporting**, **immutable releases**, Pages, description, topics, et **L'ACTIVATION DE CODEQL** *(default setup — il attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`)*. **Le script est idempotent : c'est fait pour.** |
 | 5 | **Romain** | **Repo d'ORG uniquement** — Settings → **Moderation options** → **Reported content** → « Prior contributors and collaborators ». **Aucune API.** Sans ce clic, le community health **plafonne à 87 %**. |
 | 6 | — | **Rien à faire pour les workflows** : `pages.yml` porte `if: visibility != 'private'` — il est `skipped` en privé et **se réveille seul**. ⚠️ **CodeQL n'est PLUS un workflow** *(il n'y a plus de `codeql.yml`)* : il est activé **par le script**, à l'**étape 4**, en ***default setup*** — GitHub y détecte les langages et **les tient à jour tout seul** *(standard §17)*. |
-| 7 | — | **Rien à faire pour la règle `code_scanning`** : à l'**étape 4**, le script **active CodeQL, ATTEND sa 1ʳᵉ analyse, PUIS pose la règle** — en **une seule** exécution. *(Sans cette attente, il activerait CodeQL, lirait « 0 analyse », ne poserait pas la règle, et **`main` resterait NON gardée** jusqu'à un rejeu que personne n'a demandé.)* |
+| 7 | — | **Rien à faire pour la règle `code_scanning`** : à l'**étape 4**, le script **active CodeQL, ATTEND sa 1ʳᵉ analyse, PUIS pose la règle** — en **une seule** exécution *(sinon `main` resterait NON gardée jusqu'à un rejeu — conséquence détaillée §1 étape 7a)*. |
 | 8 | Claude | Vérifier en lecture : community health **100 %** · CodeQL **vert** · rulesets **actifs** · secret scanning **on**. |
 
-> **CodeQL analyse tout l'historique d'un coup** au flip. C'est pour ça que `semgrep` + `osv-scanner` tournent **depuis le premier jour** : au flip, il reste un **résidu**, pas une avalanche *(§18)*.
+> **CodeQL analyse tout l'historique d'un coup** au flip — `semgrep` + `osv-scanner` tournent donc **depuis le premier jour** *(détail : §18)*.
 
 ---
 
@@ -269,7 +265,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 | **PR Dependabot** *(actions, npm, docker, pip)* | Claude — **en autonomie** | hebdo. Minor/patch groupés ; **les majeures se regardent seules**. |
 | **PR Renovate** *(les 4 binaires épinglés + leur checksum)* | Claude — **en autonomie** | hebdo. ⚠️ **Si le checksum est faux, `sha256sum -c` fait échouer la CI** — bruyamment. Une PR rouge se ferme. |
 | **Alertes Dependabot** et **code scanning** | Claude — **en autonomie** *(dismiss/reopen)* | à réception |
-| **Alertes SECRET SCANNING** | 🔴 **ROMAIN SEUL** | Rejeter à tort une vraie fuite a trop d'impact. L'assistant est en **lecture seule** dessus. |
+| **Alertes SECRET SCANNING** | 🔴 **ROMAIN SEUL** | L'assistant est en **lecture seule** dessus *(pourquoi : §1 étape 3)*. |
 | **Rotation du PAT d'écriture** | Claude **alerte à J-14** · **Romain régénère** | tous les **90 j** |
 | **`SUIVI.md` / `BACKLOG.md`** | Claude — **de lui-même** | consolider · purger le livré |
 
@@ -280,10 +276,10 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 *(Ce ne sont pas des oublis : c'est le modèle de sécurité — §5, `github-repo-config.md` §2.)*
 
 - **Créer** ou **supprimer** un repo · **changer la visibilité** → droit à portée de **compte**.
-- **Tout ce qui exige `Administration`** : rulesets, secret scanning, Pages, immutable releases, description, **topics** → **PAT admin éphémère, joué par Romain**. ⚠️ **Ce sont des gestes du SCRIPT, pas des gestes « à la main »** : `configure-repo.sh` les pose tous. *(Les topics y étaient longtemps listés « non scriptable, aucune API » — c'était **faux** : `PUT /repos/{o}/{r}/topics` existe, il exige `administration=write`. Corrigé le 14/07.)*
-- **Rendre un package ghcr public** → **UI, aucune API** *(les PAT fine-grained ne couvrent pas ghcr — seuls les PAT `classic` le font)*. Le script **le TESTE** *(pull anonyme réel)* et **ne le réclame que si le test échoue** — sur un compte perso, un package publié depuis un repo public est tirable **sans aucun geste**.
+- **Tout ce qui exige `Administration`** : rulesets, secret scanning, Pages, immutable releases, description, **topics** → **PAT admin éphémère, joué par Romain**. ⚠️ **Ce sont des gestes du SCRIPT, pas des gestes « à la main »** : `configure-repo.sh` les pose tous *(topics inclus : `PUT /repos/{o}/{r}/topics` exige `administration=write`)*.
+- **Rendre un package ghcr public** → **UI, aucune API** *(les PAT fine-grained ne couvrent pas ghcr — seuls les PAT `classic` le font)*. Le script **le TESTE** *(pull anonyme réel)* et **ne le réclame que si le test échoue** *(détail : §3 étape 4)*.
 - **Reported content** → UI, aucune API.
-- **2FA** → **UI, aucune API.** ✅ **DÉJÀ ACTIF sur le compte de Romain** *(confirmé le 14/07)*. Réglage de **COMPTE**, **une fois pour toutes** — **pas** un geste par repo, et **plus rien à faire**. *(Il figurait dans la sortie de `configure-repo.sh`, réaffiché à CHAQUE configuration de CHAQUE repo — en réclamant un geste **déjà fait depuis toujours**. Du bruit, et du bruit FAUX, qui finissait par noyer le seul rappel qui compte vraiment là : **révoquer le PAT admin**.)*
+- **2FA** → **UI, aucune API.** ✅ **DÉJÀ ACTIF sur le compte de Romain.** Réglage de **COMPTE**, **une fois pour toutes** — **pas** un geste par repo, et **plus rien à faire**.
 - **Dismiss une alerte secret scanning** → **Romain seul.**
 
 > **Pourquoi le PAT admin est JETABLE plutôt que dégradé après coup** → `github-repo-config.md` §2. *(En un mot : **révoquer est binaire ; dégrader des droits ne l'est pas** — et un retrait manuel est oubliable.)*

@@ -30,7 +30,7 @@
 | **Secret scanning + push protection** | natif, gratuit en **public** (indisponible en privé/Free). | chaque push |
 | **Ruleset `main`** | PR obligatoire · checks requis (**`checks`** + CodeQL + **`build-check` si capacité artefact**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continu |
 | **Ruleset `tags` + immutable releases** | un tag `v*` ni déplaçable ni supprimable, des assets non remplaçables. **Sans les deux, le pin de prod du §13 ne vaut RIEN.** | continu |
-| **Actions tierces** | **SHA complet** (`# vX.Y.Z` en commentaire) ; `actions/*` et `github/*` : tag majeur toléré. *(75 des 76 tags de `trivy-action` force-pushés en mars 2026.)* | — |
+| **Actions tierces** | **SHA complet** (`# vX.Y.Z` en commentaire) ; `actions/*` et `github/*` : tag majeur toléré. | — |
 | **`permissions:` workflows** | minimal : `{}` deny-all + write scopé **par job** · `persist-credentials: false` sur tout `checkout`. | — |
 
 ### En plus — TOOLCHAIN `node`
@@ -45,7 +45,7 @@
 | `dependabot.yml` → **docker** | **Pas optionnel** : sans lui l'**image de base n'est JAMAIS bumpée**, et Trivy bloquerait les PR sur une CVE **sans que rien ne propose le correctif** — le contrôle détecte, personne ne répare. |
 | **Trivy en gate PR** | job **`build-check`** de `docker-publish.yml` : build (`load: true`) puis `trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1`. **Binaire épinglé + checksum.** `configure-repo.sh` en fait un **check REQUIS** — *un scan non exigé ne bloque rien.* |
 | **Durcissement Docker** | base image pin par **digest** SHA256 · runtime **sans gestionnaire de paquets** (§14) · `tmpfs` `noexec,nosuid,nodev,size=` · healthcheck · `:latest` bloqué sur pré-release. |
-| **Package ghcr PUBLIC** | ⚠️ **UI, aucune API** *(les PAT fine-grained ne couvrent PAS ghcr — seuls les PAT `classic` le font)*. 🔴 **Le défaut DÉPEND DU PROPRIÉTAIRE, et le confondre coûte cher :** sur un compte **PERSO**, un package publié depuis un repo **public** est tirable **anonymement, SANS AUCUN GESTE** *(HTTP 200 — vérifié sur test003)*. Sur une **ORGANISATION**, il est **PRIVÉ d'office** → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger** *(vérifié sur test004)*. → **`configure-repo.sh` TESTE le pull anonyme** et ne réclame le geste **QUE si le test échoue**. *(Org-wide : Settings → Packages → Package creation → default visibility.)* |
+| **Package ghcr PUBLIC** | 🔴 Défaut dépend du **propriétaire** : compte **perso** → tirable anonymement (**HTTP 200**) ; **organisation** → privé d'office (**403**), personne ne peut auto-héberger. `configure-repo.sh` **teste le pull anonyme** et ne réclame le geste que si le test échoue. **Détail, provenance des tests, procédure UI : §4 « Visibilité du package ghcr ».** |
 
 ### En plus — CAPACITÉ `staging`
 | Contrôle | Réglage |
@@ -79,8 +79,7 @@ Miroir du one-shot/récurrent : **l'assistant gère tout le récurrent en autono
 **Vérifié** : traiter (dismiss/reopen) une alerte Dependabot ou code scanning ne demande **que** la permission dédiée en *write* — **aucune Administration**. Ouvrir une PR = Contents + Pull requests write ; merger = Contents write.
 Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Contents R/W`, `PR R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`) **+** les 3 alertes ci-dessus. **Jamais d'Administration.**
 
-> 🔴 **`Checks` n'est PAS dans cette liste — et ne peut PAS y être.** La permission est **documentée** par GitHub mais **absente de l'UI** des PAT fine-grained *(github/community#129512)*. Conséquence : **`gh pr checks` et `gh pr view` échouent** (`Resource not accessible by personal access token`) — ils lisent `statusCheckRollup`.
-> **Ne pas chercher à l'ajouter : elle n'existe pas.** La vérification « la CI est-elle verte ? » passe par `gh run list --commit <sha>` (`Actions: read`, déjà là). **Commande exacte + piège du faux vert : standard §18.**
+> 🔴 **`Checks` n'est PAS dans cette liste — et ne peut PAS y être.** Documentée par GitHub, **absente de l'UI** des PAT fine-grained → `gh pr checks` et `gh pr view` échouent (ils lisent `statusCheckRollup`). Vérifier la CI verte via `gh run list --commit <sha>` (`Actions: read`, déjà là) à la place. **Détail, citations, commande exacte, piège du faux vert : standard §18.**
 
 > **Admin one-shot — token ÉPHÉMÈRE, aucun token dormant**
 >
@@ -126,7 +125,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 | 2FA | **UI-only** (pas d'endpoint) |
 | **Lecture de l'API packages / ghcr** | ❌ **IMPOSSIBLE en fine-grained** — GitHub Packages n'est **pas supporté** par les PAT fine-grained (classic `read:packages` uniquement). N'essaie pas d'ajouter la permission : **elle n'existe pas**. → **Sans objet** : le bon test est le **pull ANONYME** du registre (`ghcr.io/token` + `/v2/<img>/manifests/<tag>` → **200 = tirable**), qui vérifie *exactement* ce que fait le host de prod, **sans aucun token**. Posé par `configure-repo.sh`. |
 | **Visibilité du package ghcr** | ⚠️ **UI, aucune API** *(les PAT fine-grained ne couvrent PAS ghcr — seuls les PAT `classic` le font)*. 🔴 **Le défaut DÉPEND DU PROPRIÉTAIRE, et le confondre coûte cher :** sur un compte **PERSO**, un package publié depuis un repo **public** est tirable **anonymement, SANS AUCUN GESTE** *(HTTP 200 — vérifié sur test003)*. Sur une **ORGANISATION**, il est **PRIVÉ d'office** → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger** *(vérifié sur test004)*. → **`configure-repo.sh` TESTE le pull anonyme** et ne réclame le geste **QUE si le test échoue**. *(Org-wide : Settings → Packages → Package creation → default visibility.)* **Quand le geste EST nécessaire** *(org)* : Package settings → Danger Zone → *Change visibility* → **Public**. Sans lui, ni le host de prod ni un utilisateur ne peuvent tirer l'image — et **le pin de version en production ne vaut plus rien** : il désigne une image que personne ne peut récupérer. |
-| **Reported content** (modération) | **UI-only — AUCUNE API** (vérifié : aucun endpoint de modération n'existe). Repo → Settings → **Moderation options** → **Reported content** → **« Prior contributors and collaborators »**. ⚠️ La case **ne se coche pas** sur « All users ». |
+| **Reported content** (modération) | **UI-only — AUCUNE API** (vérifié : aucun endpoint de modération n'existe). Chemin exact, portée (org uniquement) et compte d'items : **§5, point 6**. ⚠️ La case **ne se coche pas** sur « All users ». |
 
 > **Dry-run d'abord** : sur compte perso, certaines sous-clés `security_and_analysis` (`advanced_security`, `code_security`) sont probablement no-op hors GHAS/org. Tester sur le repo cible avant de graver dans `configure-repo.sh`.
 
