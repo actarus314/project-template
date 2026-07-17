@@ -85,7 +85,8 @@ red pull request. The safety net is local, and partly human.
 - **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
   Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
 - **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,
-  `actionlint` + `zizmor` on the workflows, then the project's own tests.
+  `actionlint` + `zizmor` on the workflows, `semgrep` static analysis, `osv-scanner` on the
+  lockfile, then the project's own tests.
 - **CodeQL** — security analysis; a finding blocks the merge.
 
 ## Do not touch
