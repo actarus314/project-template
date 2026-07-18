@@ -64,7 +64,7 @@ gh api repos/<owner>/<un-repo-prive>   # doit renvoyer 404 (privé inaccessible 
   export GH_TOKEN="$GITHUB_PAT"
   ```
 - `direnv allow` une fois. En entrant dans le dossier → `GH_TOKEN` chargé → `git push`/`gh` utilisent le PAT du repo. En sortant → retour au public-RO.
-- **Outil Bash de Claude (non-interactif)** : direnv ne charge pas → `set -a; source ./.envrc; set +a` à chaque session avant le push.
+- **Outil Bash de Claude (non-interactif)** : direnv ne charge pas seul → **préfixer par `direnv exec <repo> git -C <repo> …`** (charge le `.envrc` pour la commande ; requiert `direnv allow`).
 
 **Usage :** plus besoin de `source .env` — direnv charge tout automatiquement dans le dossier.
 ```bash

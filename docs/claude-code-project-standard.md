@@ -206,7 +206,7 @@ Corollaire assumé : depuis un terminal, Claude **ne voit ni les organisations n
   *(Matrice détaillée : `github-repo-config.md` §2.)*
   **Tout le reste : No access** — et **jamais** `Administration`.
 - Stocké dans `repo/.envrc` comme `GITHUB_PAT`. **Remote en URL nue** (jamais de PAT dans l'URL).
-- Exposé à git/gh **uniquement dans le dossier** par direnv. `repo/.envrc` (gitignoré) contient le PAT et reste **sourçable en bash** (pas de builtin `dotenv`, pour l'outil Bash non-interactif — cf. plus bas) :
+- Exposé à git/gh **uniquement dans le dossier** par direnv. `repo/.envrc` (gitignoré) contient le PAT et reste **sourçable en bash** *(pas de builtin `dotenv` — filet si un `source` remplace le `direnv exec`, cf. §5)* :
   ```
   set -a; [ -f .env ] && . ./.env; set +a   # charge les vars app de .env (équivalent bash de `dotenv`)
   export GITHUB_PAT=<PAT 1-repo>
@@ -252,7 +252,7 @@ C'est ce qui rend les 90 jours indolores : la rotation est **annoncée**, pas su
 | Où vit le PAT | `repo/.envrc` (`GITHUB_PAT`) | `repo/.env` |
 
 Deux raisons :
-- **`dotenv` n'existe pas en shell non-interactif.** L'outil Bash de Claude Code fait `source ./.envrc` → `dotenv: command not found` → le PAT n'est **jamais chargé** → aucun push possible. Le `.envrc` doit rester **sourçable en bash pur**.
+- **Garder l'`.envrc` sourçable en bash pur.** Le push passe par `direnv exec` *(qui, lui, gère `dotenv`)* ; on garde le `.envrc` bash-pur comme **filet** : si quelqu'un retombe sur `source ./.envrc`, un `dotenv` y casse *(`dotenv: command not found`)*. Le bash pur marche partout.
 - **Le PAT dans `.env` fuite dans les conteneurs.** Un `docker-compose.yaml` avec `env_file: .env` injecte `GITHUB_PAT` dans le conteneur — visible via `docker inspect`. Le `.env` est réservé aux clés **applicatives** ; le PAT vit dans `.envrc`, et **nulle part ailleurs**.
 
 ### Mécanismes évalués puis écartés — ne pas rouvrir sans fait nouveau
@@ -289,12 +289,13 @@ git config --local credential."https://github.com".helper ""
 git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
 ```
-Puis, **à chaque session, depuis `repo/`**, charger l'env manuellement (direnv ne le fait pas ici) :
+Puis **préfixer chaque `git`/`gh` par `direnv exec`** : direnv évalue l'`.envrc` *(garde-fou `allow` respecté)* et lance la commande avec `GITHUB_PAT`/`GH_TOKEN` dans son env — le helper lit `GITHUB_PAT`.
 ```bash
-set -a; source ./.envrc; set +a      # GITHUB_PAT + GH_TOKEN dans l'env (le helper lira GITHUB_PAT)
-git push origin <ref>                  # URL NUE — token fourni par le helper depuis l'env
-gh pr create / gh pr merge ...         # gh via GH_TOKEN
+direnv exec . git push origin <ref>       # depuis repo/ — URL NUE, token via le helper
+direnv exec . gh pr create / gh pr merge   # gh via GH_TOKEN
 ```
+> ⚠️ `direnv exec` **ne change pas le CWD** : hors de `repo/`, viser le repo → `direnv exec <repo> git -C <repo> …`.
+> Sans `direnv allow`, `direnv exec` **refuse** l'`.envrc` *(« …is blocked. Run `direnv allow` »)* et ne lance rien — plus de 403 déroutant.
 > Alternative équivalente si `gh auth setup-git` est configuré **globalement** sur la machine : le simple `export GH_TOKEN="$GITHUB_PAT"` suffit (git délègue à `gh auth git-credential` qui renvoie `GH_TOKEN`). Le helper local ci-dessus est plus robuste car il ne dépend pas de l'état global de la machine.
 
 ---
@@ -419,12 +420,12 @@ data/
 - **Renommer le dossier sans fusionner la mémoire Claude Code** → perte de l'historique `/resume`.
 - **Faire `gh auth login` en flow web/OAuth** → ça réinstalle le scope `repo` (RW sur TOUS tes repos), exactement ce qu'on évite. Toujours `gh auth login --with-token` avec le PAT public-RO.
 - **Mettre le PAT dans l'URL du remote** (`https://<PAT>@github.com/...`) → secret en clair dans `.git/config`. Remote en URL nue, PAT exposé par direnv uniquement.
-- **Oublier `direnv allow`** (ou le hook dans `~/.zshrc`) → `GH_TOKEN` non chargé → `git push` retombe sur le public-RO et échoue. Symptôme : push refusé alors que le PAT est bien dans `.env`.
+- **Oublier `direnv allow`** → `direnv exec` **refuse** l'`.envrc` *(« …is blocked. Run `direnv allow` »)* et ne lance rien — auto-diagnostiquant. *(En interactif : le hook ne charge pas → `git push` retombe sur le public-RO.)*
 - **Croire que direnv charge le PAT dans l'outil Bash de Claude Code.**
   Il lance des shells **non-interactifs** : le hook direnv ne tourne pas → `git`/`gh` renvoient **403, même en lecture**.
-  Fix : helper credential local lisant `$GITHUB_PAT`, + `source ./.envrc` une fois par session (§5, « Shell non-interactif »).
+  Fix : helper credential local lisant `$GITHUB_PAT`, + **préfixer git/gh par `direnv exec`** (§5, « Shell non-interactif »).
   ⚠️ **Ne jamais** dépanner en mettant le PAT dans l'URL du remote — c'est une fuite en clair dans `.git/config`.
-- **Utiliser `dotenv` (builtin direnv) dans `.envrc`** → le fichier n'est plus **sourçable en bash** : `source ./.envrc` en shell non-interactif donne `dotenv: command not found`, le PAT n'est jamais chargé, aucun push possible. Toujours `set -a; [ -f .env ] && . ./.env; set +a`.
+- **Utiliser `dotenv` (builtin direnv) dans `.envrc`** → il n'est plus **sourçable en bash** : le fallback `source ./.envrc` casse alors en `dotenv: command not found`. Garder le `.envrc` bash-pur ; charger `.env` par `set -a; [ -f .env ] && . ./.env; set +a`.
 - **Mettre le PAT dans `.env` au lieu de `.envrc`** → un `docker-compose.yaml` avec `env_file: .env` **injecte le PAT GitHub dans le conteneur** (visible en `docker inspect`). `.env` = clés **applicatives** uniquement ; le PAT vit dans `.envrc`, nulle part ailleurs.
 - **Laisser un PAT expirer sans le voir venir** → panne surprise en plein `git push`. L'alerte J-14 du `.envrc` (§5) le signale à l'avance : ne pas la retirer en copiant le fichier.
 - **Lancer deux sessions Claude Code (ou deux personnes) sur le même `repo/`.**
