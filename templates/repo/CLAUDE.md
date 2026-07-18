@@ -24,7 +24,7 @@
 ## Auth GitHub — le piège du shell non-interactif
 - L'outil Bash de Claude Code lance un shell **non-interactif** : le hook direnv **ne charge rien**.
   → **préfixer `git push` / `gh` par `direnv exec .`** (depuis `repo/`) ; il charge `.envrc` pour la commande.
-  ⚠️ `direnv exec` **ne change pas le CWD** : hors de `repo/`, `direnv exec <repo> git -C <repo> …`. Requiert `direnv allow` (fait au setup).
+  ⚠️ `direnv exec` **ne change pas le CWD** : depuis un autre dossier, viser `repo/` via `git -C repo`. Requiert `direnv allow` (fait au setup).
 - Le PAT vit dans **`.envrc`** (`GITHUB_PAT`), jamais dans `.env` (fuite conteneur via `env_file`).
 - Remote en **URL nue** — un PAT dans l'URL du remote est une fuite en clair dans `.git/config`.
 - Sans `direnv exec`, `git`/`gh` retombent sur le PAT public-RO : une org peut le refuser.
