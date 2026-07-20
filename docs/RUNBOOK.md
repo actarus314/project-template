@@ -140,7 +140,7 @@ cd ~/Documents/Claude/template/repo
 
 Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran, ni dans l'historique, ni dans `ps`)*.
 
-- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts** *(security updates OFF — Renovate)*, description, méthode de merge, `default_workflow_permissions`.
+- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)*, description, méthode de merge, `default_workflow_permissions`.
 - **Il annonce que rulesets / secret scanning / CodeQL sont indisponibles** — **c'est ATTENDU, pas un échec** : ils arrivent au flip *(§4)*.
 - ⚠️ **La description ne doit contenir aucun caractère de contrôle** *(l'API renvoie 422)* — le script les retire et le signale. **Éviter aussi les tirets cadratins collés d'un copier-coller.**
 - 💡 **`--dry-run`** : lit tout, **n'écrit rien**. À utiliser sur un repo **vivant** dont on n'est pas sûr.

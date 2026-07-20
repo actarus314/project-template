@@ -207,16 +207,20 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
-#    dependabot_security_updates est DÉSACTIVÉ à dessein : Renovate est le seul bot d'update et ouvre
-#    les PR de remédiation sécu (vulnerabilityAlerts) — laisser Dependabot les ouvrir AUSSI ferait des
-#    PR EN DOUBLE. Les Dependabot ALERTS (la détection, activées en 3. plus bas) restent : Renovate
-#    les LIT pour ses PR sécu. (Bascule full-Renovate — cf. workspace/CHANTIER-AUTODETECTION.md.)
+#    dependabot_security_updates RESTE activé — c'est le FILET, à dessein. Renovate ouvre AUSSI des PR
+#    de remédiation sécu (vulnerabilityAlerts, auto-mergées) ; garder Dependabot ON garantit DEUX choses :
+#    (1) le dependency graph est actif (prérequis des security updates) DONC Renovate a bien la donnée
+#        d'alerte à LIRE — sans quoi son chemin sécu serait vide, en silence ;
+#    (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
+#    Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
+#    Renovate VUE sur un repo PRIVÉ, basculer cette clé à 'disabled' (fin de la bascule full-Renovate —
+#    cf. workspace/CHANTIER-AUTODETECTION.md).
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
-  -f 'security_and_analysis[dependabot_security_updates][status]=disabled' \
+  -f 'security_and_analysis[dependabot_security_updates][status]=enabled' \
   >/dev/null 2>&1 \
-  && echo "  ✓ secret scanning + push protection (Dependabot security updates OFF — Renovate s'en charge)" \
+  && echo "  ✓ secret scanning + push protection + Dependabot security updates (filet, jusqu'à vérif Renovate en privé)" \
   || { echo "  ⚠ secret scanning / push protection : NON activés."; \
        echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"; \
        echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."; \

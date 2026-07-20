@@ -804,14 +804,14 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 
 **Renovate est le SEUL bot d'update, et il AUTO-DÉTECTE tout.** Il découvre chaque écosystème depuis les manifestes du repo *(npm, pip, docker, actions, gradle, cargo, go, conan…)* **sans liste à tenir**, et sait AUSSI lire un binaire `curl`-é dans un `run:` — ce que Dependabot ne fait pas. C'est ce qui rend le périmètre **universel** : un langage ajouté demain est couvert **sans toucher au template**. Dependabot, lui, exige de déclarer chaque `package-ecosystem` **à la main** *(aucune auto-découverte — l'inverse de CodeQL)* : le retenir comme bot d'update, c'était une liste manuelle qui rote en silence. **On l'a donc retiré du rôle d'update.**
 
-> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse donc les **alerts** actives et **désactive** les Dependabot *security updates* *(sinon PR sécu en double)*.
+> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse les **alerts ET les security updates** de Dependabot actives : c'est le **filet**, et ça garantit le **dependency graph** que Renovate lit *(sans lui, son chemin sécu serait vide, en silence)*. Le double-emploi avec les PR sécu de Renovate est **transitoire** — Dependabot passera `disabled` **une fois une PR sécu Renovate observée sur un repo privé** *(un doublon de PR = bruit toléré ; un trou silencieux = non)*.
 
 | Quoi | Comment Renovate le bumpe |
 |---|---|
 | `uses:` (actions) · npm · docker (`FROM`) · pip *(`requirements-ci.txt` → zizmor, semgrep)* · tout autre manifeste | **manager natif auto-détecté** — aucune déclaration |
 | `gitleaks` · `actionlint` · `osv-scanner` · `trivy` *(binaires épinglés VERSION + SHA256 dans un `run:`)* | **`customManagers` regex** — datasource `github-release-attachments` : bumpe **version ET checksum dans la même PR** |
 
-> 🟢 **Pas d'`enabledManagers` : Renovate auto-détecte TOUS les managers.** *(Retiré à la bascule full-Renovate — c'était l'inverse tant que Dependabot coexistait, pour éviter les PR en double. Sans Dependabot, plus de doublon possible.)* Les `customManagers` couvrent les 4 binaires en plus ; ils tournent quoi qu'il arrive.
+> 🟢 **Pas d'`enabledManagers` : Renovate auto-détecte TOUS les managers.** *(Retiré à la bascule full-Renovate — c'était l'inverse tant que Dependabot faisait les version-updates, pour éviter les PR en double. Sans `dependabot.yml`, plus de doublon de version-updates possible.)* Les `customManagers` couvrent les 4 binaires en plus ; ils tournent quoi qu'il arrive.
 
 **Politique d'update** *(être à jour, mais par gestes revus)* : version de **routine = PR revue par un humain** *(`automerge` top-level à false)* ; **SÉCURITÉ = auto-merge** *(`vulnerabilityAlerts.automerge`)*. Les PR de sécu **bypassent nativement `minimumReleaseAge`** — le délai de 3 j anti-release-vérolée reste sur la routine, **jamais** sur un fix de CVE.
 

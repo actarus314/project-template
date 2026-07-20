@@ -26,7 +26,7 @@
 | **`osv-scanner`** | dépendances vulnérables (lockfile, base OSV). **L'équivalent de `dependency-review` qui, lui, marche en privé.** | chaque PR |
 | **`actionlint` + `zizmor`** | les workflows sont du code : un `${{ }}` dans un `run:` est une **injection shell**. | chaque PR |
 | **CodeQL** | **default setup** natif, activé par `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Détecte les langages et les TIENT À JOUR tout seul** — notre ancien `codeql.yml` n'en déclarait qu'UN, et ratait les workflows `actions` (§17). **Indisponible en privé** (GHAS) → arrive au flip. Les deux modes sont **exclusifs**. | push/PR `main` + hebdo |
-| **Dependabot alerts** | **détection de CVE seulement** — natif, gratuit même en privé. **Ni version updates, ni security updates** : c'est Renovate qui ouvre TOUTES les PR (routine ET remédiation sécu). | continu |
+| **Dependabot alerts** | **détection de CVE** — natif, gratuit même en privé. Version updates → **Renovate**. Les **security updates** restent **ON (filet)** tant que le chemin sécu privé de Renovate n'est pas *observé* — ils garantissent aussi le dependency graph que Renovate lit ; Renovate ajoute l'auto-merge par-dessus. | continu |
 | **Renovate** | **seul bot d'update.** Auto-détecte **tous** les écosystèmes du repo (npm, docker, actions, pip…) **sans aucune déclaration**, + les 4 binaires épinglés VERSION+SHA256 (gitleaks, actionlint, osv-scanner, trivy). Lit les Dependabot alerts (`vulnerabilityAlerts`) pour ses PR sécu. Routine = PR revue par un **humain** ; **sécurité = auto-merge**. Minor/patch groupés. | continu / hebdo |
 | **Secret scanning + push protection** | natif, gratuit en **public** (indisponible en privé/Free). | chaque push |
 | **Ruleset `main`** | PR obligatoire · checks requis (**`checks`** + CodeQL + **`build-check` si capacité artefact**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continu |
@@ -68,7 +68,7 @@ Miroir du one-shot/récurrent : **l'assistant gère tout le récurrent en autono
 
 | RÉCURRENT → PAT assistant (fine-grained, 1 repo) | ONE-SHOT → Romain (Administration: write) |
 |---|---|
-| Contents: **write** | Activer les features sécu (secret scanning, push protection ; **Dependabot alerts ON**, **security updates OFF** — Renovate fait les PR sécu) |
+| Contents: **write** | Activer les features sécu (secret scanning, push protection ; **Dependabot alerts + security updates ON** — filet ; Renovate ajoute l'auto-merge sécu) |
 | Pull requests: **write** | Créer/éditer rulesets & branch protection |
 | Issues: **write** | `PATCH /repos` : visibilité, merge-methods, delete-branch, topics, homepage |
 | Actions: **read/write** (relancer/annuler runs) | Activer **CodeQL default setup** *(`configure-repo.sh` le fait)* |
@@ -119,7 +119,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 |---|---|
 | CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, et DANS `configure-repo.sh`** |
 | Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
-| Secret scanning / push protection **=enabled** · `dependabot_security_updates` **=disabled** *(Renovate fait les PR sécu — sinon doublon ; les **alerts** restent, cf. ligne au-dessus)* | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=…` |
+| Secret scanning / push protection · `dependabot_security_updates` **=enabled** *(filet ; Renovate ajoute l'auto-merge — bascule à `disabled` une fois une PR sécu Renovate vue en privé)* | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
 | Rulesets | `gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json` (`gh ruleset` = lecture seule) |
 | Topics / homepage / merge-methods / delete-branch | `gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge` |
 | Updates Renovate · gitleaks · npm audit · CI | **fichiers committés** (`.github/renovate.json`, `.github/workflows/*.yml`), pas d'API |
@@ -137,7 +137,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
    Puis : `./init-project.sh <projet> <owner/repo> [--type static|node] [--pages] [--artefact] [--staging]`.
    *Raccourcis : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging`.*
 1. Créer le repo — **PRIVÉ** (le cas nominal), remote en **URL nue**, PAT 1-repo dans `.envrc` (standard §5) — avec les **3 permissions d'alertes** du §2.
-2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts** *(security updates OFF — Renovate)* · **immutable releases** · topics · homepage · delete-branch-on-merge · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
+2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)* · **immutable releases** · topics · homepage · delete-branch-on-merge · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
 3. Fichiers présents dès le 1er commit : `LICENSE` · `README` (double-cible, standard §15) · `SECURITY.md` (advisories privées) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` si lib vendorée.
 4. **Avant de passer public** : `gitleaks detect` sur l'**historique complet** (pas juste HEAD) — un secret dans un vieux commit fuite au flip de visibilité.
 5. Activer **2FA** du compte (UI).
