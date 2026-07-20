@@ -9,7 +9,7 @@
   Version AUTONOME : ouvrable hors ligne, imprimable en PDF (Cmd+P).
   Aucune ressource externe, aucun hébergement : ces deux fichiers se suffisent.
 
-  SOURCE DE VÉRITÉ du contenu : workspace/controles-repo.md
+  SOURCE DE VÉRITÉ du contenu : docs/controles-repo.md
   Ce fichier-ci n'en est que la MISE EN PAGE. Toute correction se fait dans le .md,
   puis se reporte ici — sinon les deux divergent, et on ne sait plus lequel croire.
 
@@ -520,7 +520,7 @@
         <li><span class="dot on st"></span><span>hook pre-push : pas d'écriture directe sur <code>main</code></span></li>
         <li><span class="dot on st"></span><span>semgrep · osv-scanner</span></li>
         <li><span class="dot on st"></span><span>actionlint · zizmor · trivy</span></li>
-        <li><span class="dot on st"></span><span>tests · typecheck · Dependabot</span></li>
+        <li><span class="dot on st"></span><span>tests · typecheck · Renovate + Dependabot alerts</span></li>
         <li><span class="dot off st"></span><span><strong>Aucun ruleset</strong> — une PR rouge peut être mergée</span></li>
       </ul>
     </div>
@@ -668,13 +668,13 @@
           <td class="p"><span class="pill on">actif</span></td>
         </tr>
         <tr>
-          <td class="w">Hebdomadaire</td><td>Mises à jour npm · docker · actions</td>
-          <td class="t">Dependabot version updates</td><td class="h"><code>dependabot.yml</code>, minor/patch groupés</td>
+          <td class="w">Hebdomadaire</td><td>Mises à jour de toutes les dépendances (npm · docker · actions · pip…)</td>
+          <td class="t">Renovate</td><td class="h"><code>renovate.json</code> — auto-détecté, minor/patch groupés</td>
           <td class="p"><span class="pill on">actif</span></td>
         </tr>
         <tr>
-          <td class="w">Continu</td><td>CVE des dépendances</td>
-          <td class="t">Dependabot alerts + security updates</td><td class="h">natif — gratuit même en privé</td>
+          <td class="w">Continu</td><td>CVE des dépendances (<strong>détection</strong>)</td>
+          <td class="t">Dependabot alerts</td><td class="h">natif — gratuit même en privé ; Renovate <strong>lit</strong> ces alertes et ouvre la PR de fix</td>
           <td class="p"><span class="pill on">actif</span></td>
         </tr>
       </tbody>

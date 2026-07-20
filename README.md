@@ -31,7 +31,7 @@ La règle qui structure tout : **ce qui SERT à créer un projet** et **ce qui R
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ```
 
-Rulesets, secret scanning, Dependabot, immutable releases, Pages, description, **topics**, et **l'activation de CodeQL** *(default setup natif — il détecte les langages et les tient à jour tout seul ; il n'y a **plus** de `codeql.yml`)*. **Joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a jamais `Administration`.
+Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, description, **topics**, et **l'activation de CodeQL** *(default setup natif — il détecte les langages et les tient à jour tout seul ; il n'y a **plus** de `codeql.yml`)*. **Joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a jamais `Administration`.
 
 ⚠️ **Se rejoue au passage en public** : un repo privé en plan Free n'a **ni ruleset, ni secret scanning, ni CodeQL**. Le script est **idempotent**, c'est fait pour — et c'est ce rejeu qui **active CodeQL** au flip.
 `--dry-run` lit tout et **n'écrit rien** — à utiliser sur un repo vivant.

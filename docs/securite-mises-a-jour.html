@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Processus sécu & mises à jour du template : trois canaux de montée en version, six contrôles à chaque PR, et qui a décidé quoi.">
+<title>Processus sécu & mises à jour du template</title>
+<!--
+  Version AUTONOME : ouvrable hors ligne, imprimable en PDF (Cmd+P).
+  Aucune ressource externe, aucun hébergement : ce fichier se suffit.
+
+  SOURCE DE VÉRITÉ du contenu : docs/securite-mises-a-jour.md
+  Ce fichier-ci n'en est que la MISE EN PAGE. Toute correction se fait dans le .md,
+  puis se reporte ici — sinon les deux divergent, et on ne sait plus lequel croire.
+
+  Thème clair/sombre : suit la préférence système (prefers-color-scheme).
+-->
+<style>
+  :root{
+    --bg:#f5f7f9; --surface:#ffffff; --surface-2:#eef1f5;
+    --ink:#172029; --ink-2:#48566a; --ink-3:#7b8798; --line:#dce2ea;
+    --accent:#3d5a9e; --accent-2:#2c4478; --accent-bg:#e9edf6;
+    --auto:#237a48; --auto-bg:#e4f3ea;
+    --manual:#9c6a12; --manual-bg:#f7eeda;
+    --gap:#b43a31; --gap-bg:#f8e6e4;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e131a; --surface:#151d27; --surface-2:#1b2530; --ink:#e7edf4; --ink-2:#a7b4c4; --ink-3:#6f7e8e; --line:#293440;
+      --accent:#82a0da; --accent-2:#a9c0ef; --accent-bg:#182233;
+      --auto:#5ec489; --auto-bg:#14301e; --manual:#e2ad4c; --manual-bg:#322510; --gap:#e2726b; --gap-bg:#331b19;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e131a; --surface:#151d27; --surface-2:#1b2530; --ink:#e7edf4; --ink-2:#a7b4c4; --ink-3:#6f7e8e; --line:#293440;
+    --accent:#82a0da; --accent-2:#a9c0ef; --accent-bg:#182233;
+    --auto:#5ec489; --auto-bg:#14301e; --manual:#e2ad4c; --manual-bg:#322510; --gap:#e2726b; --gap-bg:#331b19;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;margin:0;padding:0 20px 72px}
+  .wrap{max-width:var(--maxw);margin:0 auto}
+
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  code,.tok{font-family:var(--mono);font-size:.86em;background:var(--surface-2);color:var(--ink);
+    padding:.08em .38em;border-radius:4px;border:1px solid var(--line)}
+
+  /* masthead */
+  header.mast{padding:56px 0 28px;border-bottom:1px solid var(--line)}
+  header.mast h1{font-size:clamp(1.7rem,4vw,2.5rem);font-weight:800;letter-spacing:-.02em;
+    line-height:1.08;margin:.5rem 0 .4rem;text-wrap:balance}
+  header.mast .thesis{font-size:1.06rem;color:var(--ink-2);max-width:60ch;margin:0}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;font-family:var(--mono);font-size:.76rem}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--ink-2)}
+  .dot{width:9px;height:9px;border-radius:2px;flex:none}
+
+  section{padding:38px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:1.28rem;font-weight:750;letter-spacing:-.01em;margin:.2rem 0 .3rem}
+  .lead{color:var(--ink-2);max-width:66ch;margin:0 0 22px}
+
+  /* flow tracks */
+  .track{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:16px;overflow:hidden}
+  .track-head{display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);
+    border-left:4px solid var(--tc,var(--accent))}
+  .track-head .n{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tc,var(--accent));font-weight:600}
+  .track-head .d{font-size:.86rem;color:var(--ink-3)}
+  .steps{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:16px;scrollbar-width:thin}
+  .step{flex:0 0 auto;width:172px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+    padding:11px 12px;display:flex;flex-direction:column;gap:5px}
+  .step .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .step .act{font-weight:650;font-size:.9rem;line-height:1.25}
+  .step .sub{font-size:.78rem;color:var(--ink-2);line-height:1.35}
+  .arrow{flex:0 0 auto;align-self:center;width:26px;text-align:center;color:var(--ink-3);font-size:1.1rem}
+  .step.human{border-color:var(--manual);background:var(--manual-bg)}
+  .step.human .who{color:var(--manual)}
+  .step.auto{border-color:var(--auto);background:var(--auto-bg)}
+  .step.auto .who{color:var(--auto)}
+  .step.win{border-style:dashed}
+
+  .band{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;background:var(--accent-bg);
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:4px}
+  .band .lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2);font-weight:600;flex:none}
+  .band p{margin:0;font-size:.9rem;color:var(--ink-2);max-width:74ch}
+  .safety{margin-top:16px;font-size:.9rem;color:var(--ink-2);display:flex;gap:10px;align-items:baseline}
+  .safety b{color:var(--ink)}
+
+  /* controls table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  tbody tr:last-child td{border-bottom:none}
+  td .tool{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .chip{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:.03em;
+    padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .chip.a{background:var(--auto-bg);color:var(--auto);border:1px solid var(--auto)}
+  .chip.m{background:var(--manual-bg);color:var(--manual);border:1px solid var(--manual)}
+  .chip.g{background:var(--gap-bg);color:var(--gap);border:1px solid var(--gap)}
+
+  /* decisions */
+  .decks{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px}
+  .dec{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:14px 15px}
+  .dec .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .dec .what{font-weight:700;font-size:.96rem}
+  .dec .by{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent-2);background:var(--accent-bg);padding:2px 8px;border-radius:999px;flex:none}
+  .dec .why{font-size:.85rem;color:var(--ink-2);margin:0}
+
+  footer{padding:26px 0 0;color:var(--ink-3);font-size:.82rem;font-family:var(--mono)}
+  footer a{color:var(--accent)}
+
+  @media (max-width:560px){
+    .track-head{flex-direction:column;gap:3px}
+    .band{flex-direction:column;gap:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Template de projet · sécurité &amp; dépendances</p>
+    <h1>Comment une mise à jour entre dans le repo — et ce qui la contrôle</h1>
+    <p class="thesis">Trois canaux distincts font monter les versions ; six outils vérifient le code à chaque PR. Un <b>seul bot d'update — Renovate</b> — auto-détecte tout ce qui doit monter, sans liste à tenir. Le principe : <b>toujours à jour, mais par gestes revus</b> — jamais de dérive silencieuse, jamais d'adoption au jour zéro.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--accent)"></i>système / pin</span>
+      <span><i class="dot" style="background:var(--auto)"></i>automatique</span>
+      <span><i class="dot" style="background:var(--manual)"></i>geste humain</span>
+      <span><i class="dot" style="background:var(--gap)"></i>trou / manuel</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">Le flux</p>
+    <h2>Trois canaux de montée en version</h2>
+    <p class="lead">Chaque canal a son déclencheur, son délai, sa porte (la CI) et son décideur au merge. Ils divergent au moment clé : <b>version → un humain merge</b>, <b>sécurité → auto-merge</b>.</p>
+
+    <div class="track" style="--tc:var(--accent)">
+      <div class="track-head"><span class="n">Canal 1 — dépendance du code</span><span class="d">déclenché par toi · décidé par toi · impact : l'app</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Dev · local</span><span class="act">Bump d'une dep</span><span class="sub"><code>npm install x@2</code> pendant le dev</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Automatique</span><span class="act">Lockfile écrit</span><span class="sub">version exacte <b>+ hash d'intégrité</b> dans <code>package-lock.json</code></span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Git</span><span class="act">Push</span><span class="sub">le lockfile part sur GitHub</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Scan</span><span class="sub"><code>npm ci</code> + osv sur les versions <b>exactes</b> du lockfile</span></div>
+        <div class="arrow">→</div>
+        <div class="step win auto"><span class="who">Impact</span><span class="act">local == CI garanti</span><span class="sub">les deux lisent le même lockfile → pas de boucle</span></div>
+      </div>
+    </div>
+
+    <div class="track" style="--tc:var(--manual)">
+      <div class="track-head"><span class="n">Canal 2 — Renovate · update de version (routine)</span><span class="d">déclenché par le bot · décidé par un humain · impact : deps + outillage</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Renovate · planifié</span><span class="act">Auto-détecte + propose</span><span class="sub">lundi — tout écosystème <b>+</b> les 4 binaires épinglés</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Délai</span><span class="act">Maturation 3 j</span><span class="sub">la release doit vieillir — le temps qu'une vérolée soit repérée</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Renovate</span><span class="act">PR ouverte</span><span class="sub">minor/patch groupés, les majeures isolées</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Porte</span><span class="sub">verte ? un bump qui casse reste rouge, ici</span></div>
+        <div class="arrow">→</div>
+        <div class="step human"><span class="who">Humain · toi</span><span class="act">Merge revu</span><span class="sub">tu vois passer chaque update — pas d'auto-merge sur la routine</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Impact</span><span class="act">Le pin avance</span><span class="sub">main + local se réalignent au <code>pull</code></span></div>
+      </div>
+    </div>
+
+    <div class="track" style="--tc:var(--auto)">
+      <div class="track-head"><span class="n">Canal 3 — Renovate · update de sécurité</span><span class="d">déclenché par une alerte CVE · décidé par la politique · impact : ferme une faille</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Alerte</span><span class="act">CVE publiée</span><span class="sub">les <b>Dependabot alerts</b> la lèvent (détection native)</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Renovate</span><span class="act">Security PR</span><span class="sub">lit l'alerte (<code>vulnerabilityAlerts</code>) — <b>pas de délai</b>, bypasse la maturation</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Porte</span><span class="sub">verte ?</span></div>
+        <div class="arrow">→</div>
+        <div class="step auto"><span class="who">Auto</span><span class="act">Auto-merge</span><span class="sub"><code>vulnerabilityAlerts.automerge</code> — seule exception au geste humain</span></div>
+        <div class="arrow">→</div>
+        <div class="step win auto"><span class="who">Impact</span><span class="act">Faille fermée</span><span class="sub">sans attendre ta prochaine session</span></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <span class="lab">En continu — détection &amp; donnée de scan</span>
+      <p>Les <b>Dependabot alerts</b> (détection de CVE, native, gratuite même en privé) tournent en fond — c'est elles que Renovate lit pour le canal 3. En parallèle, la <b>base OSV</b> et les <b>packs semgrep</b> <code>p/…</code> sont tirés <b>à chaque run</b>, sans PR — déjà toujours à jour. On épingle le <b>moteur</b> (pour <code>local == CI</code>), pas la <b>donnée</b> qu'on veut fraîche. Une faille inconnue reste un zero-day : aucun scanner ne l'attrape, épinglé ou non.</p>
+    </div>
+    <p class="safety"><span class="dot" style="background:var(--auto);margin-top:.4em"></span><span><b>Filet</b> — un bump qui introduit un finding fait échouer <b>sa propre PR</b>. CI rouge → pas de merge → <code>main</code> n'est jamais cassé pour l'équipe.</span></p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Les contrôles</p>
+    <h2>Ce que la CI lance sur chaque PR</h2>
+    <p class="lead">Chaque outil <b>auto-détecte son périmètre</b> et suit la dérive du code sans mémoire humaine (modèle CodeQL). Depuis la bascule full-Renovate, même les mises à jour suivent cette règle : Renovate auto-détecte les écosystèmes — plus aucune liste à tenir à la main.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Outil</th><th>Ce qu'il regarde</th><th>Détection</th><th>Ce qu'il attrape</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tool">CodeQL</span></td><td>les langages présents</td><td><span class="chip a">auto</span></td><td>failles de code — <span style="color:var(--ink-3)">le modèle</span></td></tr>
+          <tr><td><span class="tool">gitleaks</span></td><td>toute l'histoire git</td><td><span class="chip a">auto</span></td><td>secrets commités</td></tr>
+          <tr><td><span class="tool">actionlint</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>erreurs de workflow</td></tr>
+          <tr><td><span class="tool">zizmor</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>sécu des workflows (politique de pin)</td></tr>
+          <tr><td><span class="tool">semgrep</span></td><td>le code · packs curés</td><td><span class="chip a">quasi-auto</span></td><td>anti-patterns sécu (phase privée)</td></tr>
+          <tr><td><span class="tool">osv-scanner</span></td><td><b>tous</b> les manifestes <code>-r .</code></td><td><span class="chip a">auto ✓</span></td><td>deps vulnérables (bloque la PR)</td></tr>
+          <tr><td><span class="tool">Dependabot alerts</span></td><td>les deps installées</td><td><span class="chip a">auto · natif</span></td><td>détection de CVE — <span style="color:var(--ink-3)">lue par Renovate</span></td></tr>
+          <tr><td><span class="tool">Renovate</span></td><td><b>tous</b> les manifestes <b>+</b> 4 binaires</td><td><span class="chip a">auto ✓</span></td><td>deps + outils à bumper (version + sécu)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Les décisions</p>
+    <h2>Qui a décidé quoi, et pourquoi</h2>
+    <p class="lead">Le fil de ce chantier, figé pour la reprise.</p>
+    <div class="decks">
+      <div class="dec"><div class="top"><span class="what">Full-Renovate</span><span class="by">Romain · 20/07</span></div><p class="why">Un seul bot d'update qui <b>auto-détecte tout</b> depuis les manifestes, C++ compris. Dependabot retiré du rôle d'update (il exigeait une liste manuelle par écosystème) ; ses <b>alerts</b> restent (détection), Renovate les lit. Preuve : <b>8/8</b> managers détectés sans déclaration.</p></div>
+      <div class="dec"><div class="top"><span class="what">Garder le pin</span><span class="by">Romain</span></div><p class="why">Ce n'est pas « rester vieux » : c'est ce qui garantit <code>local == github</code>. Sans lui, chacun prend « latest » à un instant différent → boucle sans fin.</p></div>
+      <div class="dec"><div class="top"><span class="what">Version = geste humain</span><span class="by">Romain</span></div><p class="why">Voir passer les updates. Un projet de 6 mois recevrait sinon des dizaines de bumps invisibles.</p></div>
+      <div class="dec"><div class="top"><span class="what">Sécurité = auto</span><span class="by">Romain</span></div><p class="why">Seule exception à l'humain : un fix de CVE doit passer vite. Auto-merge déclaratif (<code>vulnerabilityAlerts.automerge</code>), qui bypasse nativement le délai de maturation.</p></div>
+      <div class="dec"><div class="top"><span class="what">Maturation 3 jours</span><span class="by">Romain</span></div><p class="why">Le <code>SHA256</code> ne protège que le transport, pas une release <b>vérolée</b>. Le délai laisse la communauté la repérer. Sur la routine, jamais sur un fix sécu.</p></div>
+      <div class="dec"><div class="top"><span class="what">semgrep tel quel</span><span class="by">analyse</span></div><p class="why"><code>--config auto</code> rallumerait la télémétrie et rendrait les règles imprévisibles, sans gain de sécu. On garde les packs curés + <code>--metrics=off</code>.</p></div>
+      <div class="dec"><div class="top"><span class="what">osv <code>scan -r .</code></span><span class="by">analyse + Romain</span></div><p class="why">Le scope suit le code au lieu d'être câblé sur npm — un test local prouvait <b>7 CVE Python</b> ratées.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Reste à construire — chacun sa session : <code>local == github</code> pour l'outillage (runner local aux versions épinglées) · stub build/test universel (les contrôles-sécu sont déjà agnostiques ; seul le build/test reste à remplir par langage).
+  </footer>
+</div>
+</body>
+</html>
