@@ -10,7 +10,7 @@ La règle qui structure tout : **ce qui SERT à créer un projet** et **ce qui R
 
 ```bash
 ./init-project.sh <projet> <owner>/<repo> [dossier-parent] \
-    [--type static|node] [--pages] [--artefact] [--staging]
+    [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
 `--type` décide **uniquement la toolchain** (quel `ci.yml`). Tout le reste suit **trois capacités indépendantes** :
@@ -23,7 +23,7 @@ La règle qui structure tout : **ce qui SERT à créer un projet** et **ce qui R
 
 > **`develop` découle du `staging`** — jamais de Docker, jamais du langage. Un projet `node` sans host à valider n'en a pas ; un site Pages packagé en image non plus.
 
-**Raccourcis** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging`.
+**Raccourcis** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(toute autre toolchain — Android, C/C++, Rust… : contrôles-sécu seuls, build/test à remplir)*.
 
 ## Configurer le repo côté serveur
 

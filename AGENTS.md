@@ -22,7 +22,7 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 ## Commandes
 
 ```bash
-./init-project.sh <projet> <owner>/<repo> [parent] [--type static|node] [--pages] [--artefact] [--staging]
+./init-project.sh <projet> <owner>/<repo> [parent] [--type static|node|generic] [--pages] [--artefact] [--staging]
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ```
 

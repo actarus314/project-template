@@ -466,8 +466,11 @@ data/
 | Page hébergée **hors** Pages | static | — | ✅ | selon | selon le staging |
 | App Docker → NUC *(raccourci `--type node`)* | node | — | ✅ | ✅ | **3 étages** — `feat/` → `develop` → `main` + tag |
 | Projet node **sans** staging | node | — | ✅ | — | **GitHub Flow** + tag |
+| **Autre toolchain** *(Android/Kotlin, C/C++, Rust, Go…)* | generic | — | — | — | **GitHub Flow** — contrôles-sécu seuls, build/test à remplir |
 
-**Raccourcis rétro-compatibles** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging`. Dès qu'une capacité est passée explicitement, on **compose** (`--no-staging` retire du raccourci).
+**Raccourcis rétro-compatibles** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(opt-in par flag)*. Dès qu'une capacité est passée explicitement, on **compose** (`--no-staging` retire du raccourci).
+
+> **`--type generic`** *(universalité)* : la toolchain que le template ne pré-câble pas. Il livre les **contrôles de sécurité** *(agnostiques : gitleaks, actionlint, zizmor, semgrep, osv `-r .`, + CodeQL au public, + Trivy si `--artefact`)* et un **stub build/test commenté** à remplir. Un projet Android ou C++ est ainsi **sécurisé dès le jour 1** ; on n'ajoute que le `./gradlew`/`cmake`/`cargo` du langage. ⚠️ Rappel osv : orienté **lockfile** — pour Gradle, activer le dependency-locking *(`gradle.lockfile`)*, sinon les deps ne sont pas scannées.
 
 ⚠️ **`init-project.sh` REFUSE `--staging` sur un site Pages sans artefact** : Pages *est* la prod, il n'y a **rien à valider** — la branche serait un rituel vide qui dérive jusqu'à ce que le merge cesse d'avoir lieu.
 

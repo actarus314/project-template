@@ -52,6 +52,7 @@ jobs:
         include:
           - { name: static-pages,   flags: --type static --pages }
           - { name: node-full,      flags: --type node }
+          - { name: generic,        flags: --type generic }
           - { name: rozo,           flags: --type static --pages --artefact }
           - { name: static-nopages, flags: --type static --no-pages }
     env:
