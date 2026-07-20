@@ -4,7 +4,7 @@ set -euo pipefail
 # Initialise un projet Claude Code selon le standard d'organisation.
 #
 # Usage : ./init-project.sh <projet> [owner/repo] [dossier-parent]
-#              [--type static|node] [--pages] [--artefact] [--staging] [--no-…]
+#              [--type static|node|generic] [--pages] [--artefact] [--staging] [--no-…]
 #
 #   <projet>          nom du projet (dossier créé)
 #   [owner/repo]      si fourni, configure le remote GitHub en URL nue
@@ -32,19 +32,17 @@ while [ $# -gt 0 ]; do
     *)             if [ -z "$PROJ" ]; then PROJ="$1"; elif [ -z "$SLUG" ]; then SLUG="$1"; else BASE="$1"; fi; shift;;
   esac
 done
-[ -n "$PROJ" ] || { echo "Usage: init-project.sh <projet> [owner/repo] [dossier-parent] [--type static|node] [--pages] [--artefact] [--staging]"; exit 1; }
-case "$TYPE" in static|node) ;; *) echo "✗ --type doit être 'static' (défaut) ou 'node' — c'est la TOOLCHAIN, pas l'hébergement"; exit 1;; esac
+[ -n "$PROJ" ] || { echo "Usage: init-project.sh <projet> [owner/repo] [dossier-parent] [--type static|node|generic] [--pages] [--artefact] [--staging]"; exit 1; }
+case "$TYPE" in static|node|generic) ;; *) echo "✗ --type doit être 'static' (défaut), 'node' ou 'generic' — c'est la TOOLCHAIN, pas l'hébergement"; exit 1;; esac
 
 # Raccourcis : ils ne remplissent QUE ce qui n'a pas été dit explicitement.
-if [ "$TYPE" = static ]; then
-  [ -n "$PAGES" ]    || PAGES=1
-  [ -n "$ARTEFACT" ] || ARTEFACT=0
-  [ -n "$STAGING" ]  || STAGING=0
-else
-  [ -n "$PAGES" ]    || PAGES=0
-  [ -n "$ARTEFACT" ] || ARTEFACT=1
-  [ -n "$STAGING" ]  || STAGING=1
-fi
+# generic = toolchain non pré-câblée (Android, C/C++, Rust, Go…) : contrôles-sécu seuls, aucune
+# capacité imposée — l'utilisateur opte via --pages/--artefact/--staging selon les 3 questions.
+case "$TYPE" in
+  static)  [ -n "$PAGES" ] || PAGES=1; [ -n "$ARTEFACT" ] || ARTEFACT=0; [ -n "$STAGING" ] || STAGING=0;;
+  node)    [ -n "$PAGES" ] || PAGES=0; [ -n "$ARTEFACT" ] || ARTEFACT=1; [ -n "$STAGING" ] || STAGING=1;;
+  generic) [ -n "$PAGES" ] || PAGES=0; [ -n "$ARTEFACT" ] || ARTEFACT=0; [ -n "$STAGING" ] || STAGING=0;;
+esac
 
 if [ "$STAGING" = 1 ] && [ "$ARTEFACT" = 0 ] && [ "$PAGES" = 1 ]; then
   echo "✗ --staging sans --artefact, sur un site Pages : Pages EST la prod, il n'y a rien à valider."
