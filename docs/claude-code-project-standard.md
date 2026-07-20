@@ -449,7 +449,7 @@ data/
 | Capacité | La question à se poser | Ce qu'elle déclenche |
 |---|---|---|
 | **`--pages`** | Le site est-il servi par **GitHub Pages** ? | `pages.yml` |
-| **`--artefact`** | Le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? *(auto-hébergeurs, NUC…)* | `docker-publish.yml` (**`build-check` + Trivy**) · Dependabot `docker` · **ruleset tags** · **immutable releases** · **package ghcr PUBLIC** |
+| **`--artefact`** | Le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? *(auto-hébergeurs, NUC…)* | `docker-publish.yml` (**`build-check` + Trivy**) · **ruleset tags** · **immutable releases** · **package ghcr PUBLIC** *(l'image de base est bumpée par Renovate, auto-détectée — rien à déclarer)* |
 | **`--staging`** | Existe-t-il un **host à VALIDER** avant la prod ? | branche **`develop`** · ruleset `develop` · merge commit sur `main` · **flux 3 étages** |
 
 > 🔴 **`develop` ne découle PAS de Docker — il découle du STAGING.**
@@ -795,26 +795,29 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 | **`actionlint` + `zizmor`** (PR) | Que **les workflows eux-mêmes** soient le trou : un `${{ }}` interpolé dans un `run:` est une **injection de shell**. | `ci-*.yml` |
 | **`persist-credentials: false`** | Que le `GITHUB_TOKEN` **traîne dans `.git/config`** et fuite par un artefact (audit `artipacked`). | tous les `checkout` |
 | **`default_workflow_permissions: read`** | Qu'un workflow **futur**, écrit sans bloc `permissions:`, hérite d'un `GITHUB_TOKEN` **en écriture**. Nos workflows le déclarent tous — c'est un filet, pas un gain immédiat. | `configure-repo.sh` |
-| **Dependabot `groups`** | Le **bruit** : minor + patch groupés en **une** PR par écosystème. Les **majors restent isolés** — un major peut casser, il mérite d'être regardé seul. | `dependabot.yml` |
+| **Renovate `groupName`** | Le **bruit** : minor + patch groupés en **une** PR. Les **majors restent isolés** — un major peut casser, il mérite d'être regardé seul. | `renovate.json` |
 | **Trivy** sur l'image (PR) — *capacité **`artefact`*** | Qu'une image portant une CVE **CRITICAL/HIGH** atteigne `main`. Scanner **au déploiement est trop tard** : l'image est déjà taguée et la prod l'épingle. Le job **`build-check` est un check REQUIS** — sinon le scan est **décoratif**. | `docker-publish.yml` |
 
-### Qui met à jour les outils épinglés — la frontière Dependabot / Renovate
+### Qui met à jour les dépendances et les outils épinglés — Renovate, bot unique auto-détectant
 
-**Le pin protège de la supply chain ET pourrit la détection.** Les deux sont vrais en même temps : un `gitleaks` gelé rate les nouveaux formats de secrets, un `semgrep` gelé n'a jamais les nouvelles règles. **Un scanner de sécurité figé finit par rater ce qu'il est censé trouver.**
+**Le pin protège de la supply chain ET pourrit la détection.** Les deux sont vrais en même temps : un `gitleaks` gelé rate les nouveaux formats de secrets, un `semgrep` gelé n'a jamais les nouvelles règles. **Un scanner de sécurité figé finit par rater ce qu'il est censé trouver.** D'où un bot qui bumpe — mais lequel, et sur quel périmètre ?
 
-⚠️ **Dependabot ne lit JAMAIS une commande shell.** Il ne voit que les `uses:`, `package.json`, `FROM` et les fichiers de dépendances déclarés. Un outil `curl`-é dans un `run:`, ou un `pip install X==Y` inline, **n'est surveillé par personne**.
+**Renovate est le SEUL bot d'update, et il AUTO-DÉTECTE tout.** Il découvre chaque écosystème depuis les manifestes du repo *(npm, pip, docker, actions, gradle, cargo, go, conan…)* **sans liste à tenir**, et sait AUSSI lire un binaire `curl`-é dans un `run:` — ce que Dependabot ne fait pas. C'est ce qui rend le périmètre **universel** : un langage ajouté demain est couvert **sans toucher au template**. Dependabot, lui, exige de déclarer chaque `package-ecosystem` **à la main** *(aucune auto-découverte — l'inverse de CodeQL)* : le retenir comme bot d'update, c'était une liste manuelle qui rote en silence. **On l'a donc retiré du rôle d'update.**
 
-| Quoi | Qui le bumpe | Comment |
-|---|---|---|
-| `uses:` (actions) · npm · docker (`FROM`) | **Dependabot** | écosystèmes de `dependabot.yml` |
-| **`zizmor` · `semgrep`** (Python) | **Dependabot** | → sortis du YAML vers **`requirements-ci.txt`**, écosystème `pip` : **natif, zéro custom** |
-| **`gitleaks` · `actionlint` · `osv-scanner` · `trivy`** (binaires + SHA256) | **Renovate** | `.github/renovate.json` — datasource **`github-release-attachments`** : lit le `SHA256SUMS` de la release et bumpe **version ET checksum dans la même PR** |
+> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse les **alerts ET les security updates** de Dependabot actives : c'est le **filet**, et ça garantit le **dependency graph** que Renovate lit *(sans lui, son chemin sécu serait vide, en silence)*. Le double-emploi avec les PR sécu de Renovate est **transitoire** — Dependabot passera `disabled` **une fois une PR sécu Renovate observée sur un repo privé** *(un doublon de PR = bruit toléré ; un trou silencieux = non)*.
 
-> 🔴 **`"enabledManagers": ["custom.regex"]` — NE PAS RETIRER.** Sans cette ligne, Renovate ouvrirait **aussi** des PR pour npm, docker, pip et les actions — que Dependabot gère déjà : **toutes les PR en double**. La frontière est nette : *Dependabot = les écosystèmes déclarés · Renovate = les binaires que Dependabot ne peut pas voir.*
+| Quoi | Comment Renovate le bumpe |
+|---|---|
+| `uses:` (actions) · npm · docker (`FROM`) · pip *(`requirements-ci.txt` → zizmor, semgrep)* · tout autre manifeste | **manager natif auto-détecté** — aucune déclaration |
+| `gitleaks` · `actionlint` · `osv-scanner` · `trivy` *(binaires épinglés VERSION + SHA256 dans un `run:`)* | **`customManagers` regex** — datasource `github-release-attachments` : bumpe **version ET checksum dans la même PR** |
 
-**Filet** : si Renovate proposait un checksum erroné, le `sha256sum -c` **fait échouer la CI** — bruyamment, jamais en silence. Une PR rouge se ferme ; elle ne peut pas empoisonner `main`.
+> 🟢 **Pas d'`enabledManagers` : Renovate auto-détecte TOUS les managers.** *(Retiré à la bascule full-Renovate — c'était l'inverse tant que Dependabot faisait les version-updates, pour éviter les PR en double. Sans `dependabot.yml`, plus de doublon de version-updates possible.)* Les `customManagers` couvrent les 4 binaires en plus ; ils tournent quoi qu'il arrive.
 
-**Prérequis** : l'app **Renovate** doit être installée sur le repo (UI GitHub, gratuite). Sans elle, `renovate.json` est **inerte** — et les 4 binaires gèlent sans que rien ne le signale.
+**Politique d'update** *(être à jour, mais par gestes revus)* : version de **routine = PR revue par un humain** *(`automerge` top-level à false)* ; **SÉCURITÉ = auto-merge** *(`vulnerabilityAlerts.automerge`)*. Les PR de sécu **bypassent nativement `minimumReleaseAge`** — le délai de 3 j anti-release-vérolée reste sur la routine, **jamais** sur un fix de CVE.
+
+**Filet** : un checksum erroné fait échouer le `sha256sum -c` **en CI** — bruyamment, jamais en silence. Une PR rouge se ferme ; elle ne peut pas empoisonner `main`.
+
+**Prérequis** : l'app **Renovate** doit être installée sur le repo *(UI GitHub, gratuite)*. Sans elle, `renovate.json` est **inerte**. En repli, le self-host `renovatebot/github-action` *(AGPL-3.0, gratuit à vie)* fait tourner la même config — au prix d'un **PAT classique `repo`** *(les fine-grained ne marchent pas avec Renovate)*.
 
 > **Politique de pin — `.github/zizmor.yml`** : SHA complet obligatoire pour **toute action tierce** ; **tag majeur toléré pour `actions/*` et `github/*`** (les compromettre = compromettre GitHub). Ce n'est pas de la coquetterie : en **mars 2026, 75 des 76 tags de `aquasecurity/trivy-action` ont été force-pushés**. Un tag est mutable ; un SHA ne l'est pas.
 
@@ -832,7 +835,7 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 | **Push** *(serveur)* | **secret scanning push protection** | à chaque push | GitHub |
 | **PR** *(CI)* | **gitleaks** (historique **complet**) · **actionlint** + **zizmor** (les workflows) · **Semgrep** + **osv-scanner** *(les seuls qui tournent en PRIVÉ — voir ci-dessous)* · **CodeQL** *(public seulement)* · tests + typecheck + `npm audit` + **dependency-review** *(public seulement)* + **Trivy sur l'image** (*capacité `artefact`* — **pas** « node » : un site `static` qui publie une image l'a aussi) · syntax-check (toolchain `static`) | à chaque PR | GitHub Actions |
 | **Serveur** | ruleset `main` (+ `develop` si elle existe) : PR obligatoire, **checks requis (`checks` + CodeQL + `build-check` si image Docker)**, no force-push/deletion · **ruleset tags `v*`** (ni suppression ni déplacement) **+ immutable releases** (ni remplacement des assets) — *les deux, sinon le pin du §13 se contourne* · secret scanning · **private vulnerability reporting** | en continu | GitHub |
-| **Planifié** | CodeQL · Dependabot alerts + security updates + version updates | hebdomadaire | GitHub |
+| **Planifié** | CodeQL · **Dependabot alerts** *(détection CVE)* · **Renovate** *(updates de version + remédiation sécu auto-mergée)* | hebdomadaire | GitHub · Renovate |
 | **Rotation** | PAT d'écriture — **alerte J-14** dans `.envrc` (§5) | tous les 90 j | Claude alerte · Romain régénère |
 
 > **Trois barrières bloquent réellement, et elles sont redondantes à dessein** : le **hook** attrape tôt mais est *local*, contournable (`--no-verify`) et **absent d'un clone frais** ; la **push protection** n'attrape que les patterns GitHub *connus* ; la **CI** scanne tout l'historique et **garantit** — c'est la seule que personne ne peut sauter, parce que le ruleset l'exige avant merge.
@@ -891,7 +894,7 @@ Le `pre-push` **laisse passer la création** d'une branche (sinon le 1ᵉʳ push
 | PR (CI) | ✅ | ✅ |
 | Serveur (ruleset, secret scanning) | ✅ | ❌ **indisponible** |
 | Planifié — CodeQL | ✅ | ❌ **indisponible** |
-| Planifié — Dependabot | ✅ | ✅ *(gratuit sur privé)* |
+| Planifié — Renovate + Dependabot alerts | ✅ | ✅ *(gratuit sur privé)* |
 
 **Conséquence, à ne pas manquer** : sur un repo **privé**, les étages *serveur* et *CodeQL* sont **vides**. Le **pre-commit devient le seul filet anti-secret** — `gitleaks` n'y est pas un confort, c'est la seule barrière. C'est ce qui fait du pre-commit le **socle**, et non un raffinement.
 
@@ -950,7 +953,7 @@ Le repo garde tout le reste : on ne change pas de catégorie, on **ACQUIERT une 
 
 - `Dockerfile` + `docker-publish.yml` arrivent **par PR**, avant que `build-check` ne soit requis — c'est ce qui évite le piège de l'ordre (plus haut : « l'ordre est le piège »).
 - **Page statique → `FROM nginx:alpine`** *(un serveur web, pas une toolchain — §14)*, **suivi de `RUN apk upgrade --no-cache`.** 🔴 **Cette ligne n'est PAS cosmétique** : `nginx:alpine` est en retard sur les paquets Alpine et peut porter des CVE HIGH déjà corrigées en amont. Trivy tourne avec `--ignore-unfixed` : il les remonte **toutes**, et `build-check` part **ROUGE** — le scanner du template refuse alors l'image que le template recommande, sans cette ligne.
-- **Dans la même PR**, ajouter l'écosystème `docker` à `dependabot.yml`. Pas optionnel : sans lui, l'image de base n'est jamais bumpée, et Trivy bloquerait les PR sur une CVE **sans que rien ne propose le correctif** — le contrôle détecte, personne ne répare.
+- **L'image de base est bumpée automatiquement** : Renovate auto-détecte le `FROM` du `Dockerfile` dès qu'il arrive — **rien à déclarer**. *(Sans un bot qui la bumpe, Trivy bloquerait les PR sur une CVE de l'image sans que rien ne propose le correctif — le contrôle détecte, personne ne répare. Renovate ferme ce trou par construction.)*
 - **Ne pas toucher au bloc `## Branching`** ni créer `develop` : sans host à valider, ce serait un rituel vide (§12).
 - Une fois le workflow sur `main`, rejouer `configure-repo.sh` : il détecte `docker-publish.yml`, exige `build-check`, pose le ruleset `tags` et les immutable releases, et **vérifie que l'image est tirable anonymement**.
 - **Le package ghcr peut être privé même si le repo est public** (§13) : sur un compte perso il est tirable d'office ; sur une org, il peut nécessiter un geste manuel (UI, aucune API) — ne le rendre public que si le test échoue.

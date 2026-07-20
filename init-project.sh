@@ -193,36 +193,9 @@ if [ -n "$HUMAN" ]; then
   echo "     ⚠ '<contact>' dans SECURITY.md : sans lui, personne ne peut signaler une faille."
 fi
 
-# Dependabot : l'écosystème npm n'existe QUE pour la TOOLCHAIN node. Le déclarer sur un projet
-# statique (sans package.json) fait échouer Dependabot à chaque run — « /package.json not found ».
-if [ "$TYPE" = node ]; then
-  # npm suit la TOOLCHAIN.
-  cat >> "$DEST/repo/.github/dependabot.yml" <<'YAML'
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    groups:
-      npm-minor-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-YAML
-fi
-if [ "$ARTEFACT" = 1 ]; then
-  cat >> "$DEST/repo/.github/dependabot.yml" <<'YAML'
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      docker-minor-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-YAML
-fi
+# Pas de bloc Dependabot : Renovate (renovate.json) est le seul bot d'update et AUTO-DÉTECTE
+# npm/docker/actions/pip depuis les manifestes — aucune liste d'écosystèmes à tenir par toolchain.
+# (Bascule full-Renovate, 2026-07 — cf. workspace/CHANTIER-AUTODETECTION.md.)
 
 # Modèles workspace/
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
