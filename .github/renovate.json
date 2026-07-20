@@ -31,6 +31,11 @@
   "prConcurrentLimit": 3,
   "labels": ["dependencies", "ci-tooling"],
 
+  "vulnerabilityAlerts": {
+    "labels": ["dependencies", "ci-tooling", "security"],
+    "automerge": true
+  },
+
   "github-actions": {
     "managerFilePatterns": [
       "/^templates/workflows/.+\\.ya?ml$/",

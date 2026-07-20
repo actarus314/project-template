@@ -207,20 +207,25 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
+#    dependabot_security_updates est DÉSACTIVÉ à dessein : Renovate est le seul bot d'update et ouvre
+#    les PR de remédiation sécu (vulnerabilityAlerts) — laisser Dependabot les ouvrir AUSSI ferait des
+#    PR EN DOUBLE. Les Dependabot ALERTS (la détection, activées en 3. plus bas) restent : Renovate
+#    les LIT pour ses PR sécu. (Bascule full-Renovate — cf. workspace/CHANTIER-AUTODETECTION.md.)
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
-  -f 'security_and_analysis[dependabot_security_updates][status]=enabled' \
+  -f 'security_and_analysis[dependabot_security_updates][status]=disabled' \
   >/dev/null 2>&1 \
-  && echo "  ✓ secret scanning + push protection + Dependabot security updates" \
+  && echo "  ✓ secret scanning + push protection (Dependabot security updates OFF — Renovate s'en charge)" \
   || { echo "  ⚠ secret scanning / push protection : NON activés."; \
        echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"; \
        echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."; \
        echo "    → REJOUER ce script au passage en public."; }
 
-# 3. Dependabot alerts
+# 3. Dependabot alerts — la DÉTECTION de CVE (native, gratuite en privé). Gardée : Renovate la LIT
+#    (vulnerabilityAlerts) pour ouvrir ses PR de remédiation. Sans elle, pas de PR sécu Renovate.
 mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
-  && echo "  ✓ Dependabot alerts" \
+  && echo "  ✓ Dependabot alerts (détection — Renovate les lit pour ses PR sécu)" \
   || echo "  ⚠ vulnerability-alerts : échec — vérifier dans l'UI"
 
 # 3b. Private vulnerability reporting — SANS LUI, LE LIEN DE SECURITY.md EST MORT.
