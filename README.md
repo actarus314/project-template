@@ -36,6 +36,14 @@ Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, descrip
 ⚠️ **Se rejoue au passage en public** : un repo privé en plan Free n'a **ni ruleset, ni secret scanning, ni CodeQL**. Le script est **idempotent**, c'est fait pour — et c'est ce rejeu qui **active CodeQL** au flip.
 `--dry-run` lit tout et **n'écrit rien** — à utiliser sur un repo vivant.
 
+## Vérifier en local — `local == github`
+
+```bash
+./check.sh
+```
+
+Rejoue **les checks de sécurité de la CI** aux **versions épinglées** (auto-détectées depuis `ci.yml`, donc rien à maintenir à la main) : ce qui passe ici passe la CI. Il est **copié dans chaque projet généré**, et un hook `pre-commit` le relance tout seul — throttlé (24 h) et **consultatif** (il n'a jamais bloqué un commit).
+
 ---
 
 ## Ce qu'il y a dans ce dossier
@@ -50,7 +58,7 @@ template/
 
 | | Rôle |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** | **Les outils.** Ce qu'on exécute. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** | **Les outils.** Ce qu'on exécute. |
 | **`templates/`** | **Ce qui est COPIÉ dans un projet** — et rien d'autre. `repo/` (fichiers versionnés) · `workflows/` (CI) · `workspace/` (hors Git). |
 | **`docs/`** | **La référence, à lire à l'usage.** La méthode, le standard, le runbook, la carte des contrôles. |
 | **`../workspace/`** | **Comment ce template a été construit.** Journal de bord, décisions, recherches, les défauts trouvés. À lire pour comprendre *pourquoi*, jamais pour *faire*. |

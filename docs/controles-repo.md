@@ -69,7 +69,7 @@ feat/…   ●────┘
 > *(L'incident qui l'illustre : standard §12.)*
 
 > ### Là où l'on ne serre PAS la vis — *trop de contrôles tue le contrôle*
-> - **Aucun lint au pre-commit** — aucun linter n'est universel aux deux toolchains ; en imposer un ferait échouer le hook dès le premier commit.
+> - **Aucun lint au pre-commit** — aucun linter n'est universel aux trois toolchains ; en imposer un ferait échouer le hook dès le premier commit.
 > - **Un seul contrôle bloquant en local : les secrets.** Vital, instantané, et **irréversible une fois poussé** — les trois critères qui justifient de bloquer. Le reste attend la CI, où l'attente ne coûte rien.
 > - **Zéro relecture obligatoire** (`required_approving_review_count = 0`) : en solo, s'auto-approuver serait un théâtre.
 
@@ -90,7 +90,7 @@ feat/…   ●────┘
 |---|---|---|---|---|
 | Pull request | Secrets sur l'historique **complet** | `gitleaks` | binaire épinglé + checksum | ✅ |
 | Pull request | Failles du **code applicatif** | `semgrep` | `p/security-audit`, `p/owasp-top-ten`, `--exclude=.github` | ✅ |
-| Pull request | Dépendances vulnérables (lockfile) | `osv-scanner` | binaire épinglé + checksum | ✅ |
+| Pull request | Dépendances vulnérables (tous manifestes, `-r .`) | `osv-scanner` | binaire épinglé + checksum | ✅ |
 | Pull request | Workflows : syntaxe + shell | `actionlint` | binaire épinglé + checksum | ✅ |
 | Pull request | Workflows : injection `${{ }}`, pinning | `zizmor` | config `.github/zizmor.yml` | ✅ |
 | Pull request | Tests · types · audit npm | `npm test` · `npm run typecheck` · `npm audit` | toolchain `node` | ✅ |

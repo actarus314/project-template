@@ -40,7 +40,7 @@
 ### Étape 2 — Claude : générer le projet
 
 ```bash
-./init-project.sh <projet> <owner>/<repo> [--type static|node] [--pages] [--artefact] [--staging]
+./init-project.sh <projet> <owner>/<repo> [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
 Crée l'arborescence, le premier commit, le remote en **URL nue**, et un **`.envrc` VIDE** *(le PAT n'existe pas encore)*.

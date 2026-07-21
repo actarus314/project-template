@@ -23,7 +23,7 @@
 |---|---|---|
 | **`gitleaks`** | **hook `pre-commit`** (fichiers stagés) **+ CI sur l'historique COMPLET**. **Jamais optionnel** : c'est le **seul** filet anti-secret pendant toute la phase privée (aucun secret scanning serveur en Free). Binaire épinglé + checksum — **pas** `gitleaks-action`, qui exige une **licence** sur un repo d'ORG. | commit + chaque PR |
 | **`semgrep`** | analyse statique du **code applicatif** (`p/security-audit`, `p/owasp-top-ten`, `--exclude=.github`). Existe parce que **CodeQL est indisponible en privé** — il le **précède**, ne le remplace pas (analyse fichier par fichier). | chaque PR |
-| **`osv-scanner`** | dépendances vulnérables (lockfile, base OSV). **L'équivalent de `dependency-review` qui, lui, marche en privé.** | chaque PR |
+| **`osv-scanner`** | dépendances vulnérables (tous manifestes, `-r .`, base OSV). **L'équivalent de `dependency-review` qui, lui, marche en privé.** | chaque PR |
 | **`actionlint` + `zizmor`** | les workflows sont du code : un `${{ }}` dans un `run:` est une **injection shell**. | chaque PR |
 | **CodeQL** | **default setup** natif, activé par `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Détecte les langages et les TIENT À JOUR tout seul** — notre ancien `codeql.yml` n'en déclarait qu'UN, et ratait les workflows `actions` (§17). **Indisponible en privé** (GHAS) → arrive au flip. Les deux modes sont **exclusifs**. | push/PR `main` + hebdo |
 | **Dependabot alerts** | **détection de CVE** — natif, gratuit même en privé. Version updates → **Renovate**. Les **security updates** restent **ON (filet)** tant que le chemin sécu privé de Renovate n'est pas *observé* — ils garantissent aussi le dependency graph que Renovate lit ; Renovate ajoute l'auto-merge par-dessus. | continu |
@@ -134,7 +134,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 
 0. **Choisir la toolchain et les capacités** — *les trois questions, dans cet ordre* :
    **(a)** le site est-il servi par **Pages** ? → `--pages` · **(b)** le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? → `--artefact` · **(c)** existe-t-il un **host à VALIDER** avant la prod ? → `--staging`.
-   Puis : `./init-project.sh <projet> <owner/repo> [--type static|node] [--pages] [--artefact] [--staging]`.
+   Puis : `./init-project.sh <projet> <owner/repo> [--type static|node|generic] [--pages] [--artefact] [--staging]`.
    *Raccourcis : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ aucune capacité (toute autre toolchain — contrôles-sécu seuls, build/test à remplir).*
 1. Créer le repo — **PRIVÉ** (le cas nominal), remote en **URL nue**, PAT 1-repo dans `.envrc` (standard §5) — avec les **3 permissions d'alertes** du §2.
 2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)* · **immutable releases** · topics · homepage · delete-branch-on-merge · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
