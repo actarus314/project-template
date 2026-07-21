@@ -24,9 +24,12 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 ```bash
 ./init-project.sh <projet> <owner>/<repo> [parent] [--type static|node|generic] [--pages] [--artefact] [--staging]
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
+./check.sh   # rejoue les checks de la CI EN LOCAL, aux versions épinglées (local == github)
 ```
 
 `configure-repo.sh` est **joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a **jamais** `Administration`.
+
+`check.sh` lit les versions épinglées dans `ci.yml` *(source unique)*, tire les binaires sous `.ci-tools/` *(gitignoré)* et rejoue shellcheck · actionlint · zizmor · gitleaks · renovate-config-validator. Ce qui passe en local passe la CI — mais **la CI reste l'autorité** *(elle seule vérifie le SHA256 des assets Linux et tourne en conditions réelles)*.
 
 ## Discipline — PR-only
 
