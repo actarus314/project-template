@@ -31,6 +31,8 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 
 `check.sh` lit les versions épinglées dans `ci.yml` *(source unique)*, tire les binaires sous `.ci-tools/` *(gitignoré)* et rejoue shellcheck · actionlint · zizmor · gitleaks · renovate-config-validator. Ce qui passe en local passe la CI — mais **la CI reste l'autorité** *(elle seule vérifie le SHA256 des assets Linux et tourne en conditions réelles)*.
 
+Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** : au 1er commit d'une fenêtre il rejoue `check.sh` et affiche le résultat sans **jamais** bloquer *(le seul blocage du hook reste gitleaks sur les fichiers stagés)*. Régler le délai : `CHECK_MAX_AGE_HOURS`. But : ne plus avoir à y penser, sans transformer un lint sans rapport en commit coincé.
+
 ## Discipline — PR-only
 
 **`repo/` est PR-only.** On n'écrit **jamais** sur `main` directement : le hook `pre-push` le refuse *(il est le substitut du ruleset, absent tant que le repo est privé)*.
