@@ -65,7 +65,7 @@ Chaque outil **auto-détecte son périmètre** et suit la dérive du code sans m
 | `actionlint` | `.github/workflows/` | auto | erreurs de workflow |
 | `zizmor` | `.github/workflows/` | auto | sécu des workflows (politique de pin) |
 | `semgrep` | le code · packs curés | quasi-auto | anti-patterns sécu (phase privée) |
-| `osv-scanner` | **tous** les manifestes `-r .` | auto ✓ | deps vulnérables (bloque la PR) |
+| `osv-scanner` | **tous** les manifestes `-r .` *(hors outillage CI)* | auto ✓ | deps vulnérables (bloque la PR) |
 | `Dependabot alerts` | les deps installées | auto (natif) | détection de CVE → **lue par Renovate** |
 | `Renovate` | **tous** les manifestes **+** 4 binaires | auto ✓ | deps + outils à bumper (version + sécu) |
 
@@ -82,6 +82,7 @@ Le fil de ce chantier, figé pour la reprise.
 - **Maturation 3 jours** *(Romain)* — le `SHA256` ne protège que le transport, pas une release **vérolée**. Le délai laisse la communauté la repérer. S'applique à la routine, jamais à un fix sécu.
 - **semgrep tel quel** *(analyse)* — `--config auto` rallumerait la télémétrie et rendrait les règles imprévisibles, sans gain de sécu. On garde les packs curés + `--metrics=off`.
 - **osv `scan -r .`** *(analyse + Romain)* — le scope suit le code au lieu d'être câblé sur npm ; un test local prouvait **7 CVE Python** ratées.
+- **Outillage CI hors périmètre osv** *(analyse + Romain — 21/07)* — `requirements-ci.txt` (semgrep, zizmor) est gitignoré **+** `git add -f` : osv respecte les patterns du `.gitignore`, donc ne résout pas le graphe transitif d'outils de **dev jamais expédiés** — que du bruit (CVE de `python-multipart`, `mcp`…), pas la surface d'attaque du produit. Renovate indexe les fichiers **suivis**, pas le `.gitignore` : il continue de les bumper. Prouvé des deux côtés. Le *pourquoi* complet vit dans le `.gitignore`.
 
 ---
 

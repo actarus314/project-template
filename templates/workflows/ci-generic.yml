@@ -59,7 +59,9 @@ jobs:
       # semgrep = the only static analysis of CODE that runs while PRIVATE (CodeQL is public-only).
       # osv-scanner = the pre-merge gate for vulnerable dependencies; `-r .` AUTO-DISCOVERS every
       # manifest/lockfile in the repo (npm, pip, go, cargo, gradle, conan…), so the scope follows the
-      # code with no hand-kept list. `--exclude=.github`: workflows have their own linters (actionlint
+      # code with no hand-kept list. The lone carve-out is also NOT a per-target list: CI-only tooling
+      # (requirements-ci.txt) is subtracted in .gitignore, which osv honours (dev tools, never shipped
+      # — see that file). `--exclude=.github`: workflows have their own linters (actionlint
       # + zizmor) enforcing THIS repo's pin policy, which semgrep's workflow rules would contradict.
       # Full rationale (and the warnings not to overstate what each tool does): standard §17-18.
       - name: Static analysis (semgrep, pinned)

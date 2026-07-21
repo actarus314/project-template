@@ -206,7 +206,7 @@
           <tr><td><span class="tool">actionlint</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>erreurs de workflow</td></tr>
           <tr><td><span class="tool">zizmor</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>sécu des workflows (politique de pin)</td></tr>
           <tr><td><span class="tool">semgrep</span></td><td>le code · packs curés</td><td><span class="chip a">quasi-auto</span></td><td>anti-patterns sécu (phase privée)</td></tr>
-          <tr><td><span class="tool">osv-scanner</span></td><td><b>tous</b> les manifestes <code>-r .</code></td><td><span class="chip a">auto ✓</span></td><td>deps vulnérables (bloque la PR)</td></tr>
+          <tr><td><span class="tool">osv-scanner</span></td><td><b>tous</b> les manifestes <code>-r .</code> <em>(hors outillage CI)</em></td><td><span class="chip a">auto ✓</span></td><td>deps vulnérables (bloque la PR)</td></tr>
           <tr><td><span class="tool">Dependabot alerts</span></td><td>les deps installées</td><td><span class="chip a">auto · natif</span></td><td>détection de CVE — <span style="color:var(--ink-3)">lue par Renovate</span></td></tr>
           <tr><td><span class="tool">Renovate</span></td><td><b>tous</b> les manifestes <b>+</b> 4 binaires</td><td><span class="chip a">auto ✓</span></td><td>deps + outils à bumper (version + sécu)</td></tr>
         </tbody>
@@ -226,6 +226,7 @@
       <div class="dec"><div class="top"><span class="what">Maturation 3 jours</span><span class="by">Romain</span></div><p class="why">Le <code>SHA256</code> ne protège que le transport, pas une release <b>vérolée</b>. Le délai laisse la communauté la repérer. Sur la routine, jamais sur un fix sécu.</p></div>
       <div class="dec"><div class="top"><span class="what">semgrep tel quel</span><span class="by">analyse</span></div><p class="why"><code>--config auto</code> rallumerait la télémétrie et rendrait les règles imprévisibles, sans gain de sécu. On garde les packs curés + <code>--metrics=off</code>.</p></div>
       <div class="dec"><div class="top"><span class="what">osv <code>scan -r .</code></span><span class="by">analyse + Romain</span></div><p class="why">Le scope suit le code au lieu d'être câblé sur npm — un test local prouvait <b>7 CVE Python</b> ratées.</p></div>
+      <div class="dec"><div class="top"><span class="what">Outillage CI hors périmètre osv</span><span class="by">analyse + Romain — 21/07</span></div><p class="why"><code>requirements-ci.txt</code> (semgrep, zizmor) est gitignoré <b>+</b> <code>git add -f</code> : osv respecte les patterns du <code>.gitignore</code>, donc ne résout pas le graphe transitif d'outils de <b>dev jamais expédiés</b> — que du bruit (CVE de <code>python-multipart</code>, <code>mcp</code>…), pas la surface d'attaque du produit. Renovate indexe les fichiers <b>suivis</b>, pas le <code>.gitignore</code> : il continue de les bumper. Le <em>pourquoi</em> complet vit dans le <code>.gitignore</code>.</p></div>
     </div>
   </section>
 
