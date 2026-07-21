@@ -19,7 +19,7 @@ PAGES=""; ARTEFACT=""; STAGING=""      # vide = « non dit » → le raccourci d
 LIFECYCLE_DOCS=1
 while [ $# -gt 0 ]; do
   case "$1" in
-    --type)        TYPE="${2:?--type nécessite une valeur: static|node}"; shift 2;;
+    --type)        TYPE="${2:?--type nécessite une valeur: static|node|generic}"; shift 2;;
     --type=*)      TYPE="${1#*=}"; shift;;
     --pages)       PAGES=1;    shift;;
     --no-pages)    PAGES=0;    shift;;
@@ -303,7 +303,7 @@ command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks absent — 'brew ins
 
 # Filet : un fichier versionnable présent sur disque mais ABSENT du commit est un piège silencieux
 # — la CI échouera au premier push sur un fichier « manquant » qu'on voit pourtant en local.
-UNTRACKED=$(git ls-files --others --exclude-standard | grep -v '^\.env$\|^\.envrc$\|^\.branching\.frag$' || true)
+UNTRACKED=$(git ls-files --others --exclude-standard | grep -v '^\.env$\|^\.envrc$' || true)
 if [ -n "$UNTRACKED" ]; then
   echo "  ⚠ NON COMMITÉ alors que versionnable — à ajouter au 'git add' de init-project.sh :"
   printf '     %s\n' $UNTRACKED

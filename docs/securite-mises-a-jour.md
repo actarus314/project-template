@@ -1,6 +1,7 @@
 # Processus sécu & mises à jour du template
 
-> Référence. Comment une mise à jour entre dans le repo — et ce qui la contrôle.
+> **Vue d'ensemble de terrain** — les **règles** et leur pourquoi font foi dans le **standard §17-18** ; ce doc en est la lecture lisible (les 3 canaux, les 6 contrôles) et **n'introduit aucune règle nouvelle**.
+> Comment une mise à jour entre dans le repo — et ce qui la contrôle.
 > Le principe : **toujours à jour, mais par gestes revus** — jamais de dérive silencieuse, jamais d'adoption au jour zéro.
 
 Trois canaux distincts font monter les versions ; six outils vérifient le code à chaque PR.
