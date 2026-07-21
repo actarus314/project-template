@@ -198,7 +198,7 @@ fi
 
 # Pas de bloc Dependabot : Renovate (renovate.json) est le seul bot d'update et AUTO-DÉTECTE
 # npm/docker/actions/pip depuis les manifestes — aucune liste d'écosystèmes à tenir par toolchain.
-# (Bascule full-Renovate, 2026-07 — cf. workspace/CHANTIER-AUTODETECTION.md.)
+# (Bascule full-Renovate, 2026-07 — cf. workspace/archives/2026-07-autodetection/SYNTHESE.md.)
 
 # Modèles workspace/
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"

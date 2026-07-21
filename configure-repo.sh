@@ -214,7 +214,7 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 #    (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
 #    Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
 #    Renovate VUE sur un repo PRIVÉ, basculer cette clé à 'disabled' (fin de la bascule full-Renovate —
-#    cf. workspace/CHANTIER-AUTODETECTION.md).
+#    cf. workspace/archives/2026-07-autodetection/SYNTHESE.md).
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
