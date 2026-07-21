@@ -1,0 +1,104 @@
+# Installed as .github/workflows/ci.yml by `init-project.sh --type generic`. Job name MUST stay
+# `checks` (the ruleset requires it).
+#
+# WHAT THIS IS: the language-AGNOSTIC security controls, pre-wired, plus a BUILD/TEST STUB you fill
+# in. Use it for any toolchain the template has no dedicated `--type` for — Android/Kotlin (Gradle),
+# C/C++ (CMake), Rust, Go, .NET… The project is secure on day 1; you only add the build/test steps.
+# The security block below is identical to the other CI templates (single behaviour, kept in sync by
+# Renovate's version pins). Rationale for semgrep + osv-scanner lives in the standard, §17-18.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: v8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+      ACTIONLINT_VERSION: v1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+      OSV_VERSION: v2.4.0
+      OSV_SHA256: 15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      # The pre-commit hook can be bypassed with --no-verify, and only exists on machines
+      # that installed it. This is the enforced backstop.
+      - name: Install gitleaks (pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          v="${GITLEAKS_VERSION#v}"   # the tag carries the `v`, the asset name does not
+          f="gitleaks_${v}_linux_x64.tar.gz"
+          curl -sSfL -o "$f" \
+            "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${f}"
+          echo "${GITLEAKS_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" gitleaks
+      - name: Secret scan (full history)
+        run: ./gitleaks git --no-banner --redact
+      - name: Lint workflows (actionlint, pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          v="${ACTIONLINT_VERSION#v}"
+          f="actionlint_${v}_linux_amd64.tar.gz"
+          curl -sSfL -o "$f" \
+            "https://github.com/rhysd/actionlint/releases/download/${ACTIONLINT_VERSION}/${f}"
+          echo "${ACTIONLINT_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" actionlint
+          ./actionlint -color
+      # semgrep = the only static analysis of CODE that runs while PRIVATE (CodeQL is public-only).
+      # osv-scanner = the pre-merge gate for vulnerable dependencies; `-r .` AUTO-DISCOVERS every
+      # manifest/lockfile in the repo (npm, pip, go, cargo, gradle, conan…), so the scope follows the
+      # code with no hand-kept list. The lone carve-out is also NOT a per-target list: CI-only tooling
+      # (requirements-ci.txt) is subtracted in .gitignore, which osv honours (dev tools, never shipped
+      # — see that file). `--exclude=.github`: workflows have their own linters (actionlint
+      # + zizmor) enforcing THIS repo's pin policy, which semgrep's workflow rules would contradict.
+      # Full rationale (and the warnings not to overstate what each tool does): standard §17-18.
+      - name: Static analysis (semgrep, pinned)
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet -r requirements-ci.txt
+          semgrep scan --error --quiet --metrics=off --exclude=.github \
+            --config p/security-audit --config p/owasp-top-ten .
+      - name: Vulnerable dependencies (osv-scanner, pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o osv-scanner \
+            "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_amd64"
+          echo "${OSV_SHA256}  osv-scanner" | sha256sum -c -
+          chmod +x osv-scanner
+          ./osv-scanner scan source -r . --allow-no-lockfiles
+      - name: Audit workflows (zizmor)
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet -r requirements-ci.txt
+          zizmor --persona regular --config .github/zizmor.yml .github/workflows/
+      # ──────────────────────────────────────────────────────────────────────────────────────────
+      # PROJECT BUILD & TEST — add the steps YOUR toolchain needs. Everything above is language-
+      # agnostic and already protects the repo; a `checks` job with no build step is valid and green.
+      # ⚠ osv-scanner reads LOCKFILES: for Gradle, enable dependency locking so a `gradle.lockfile`
+      #   is committed, otherwise your dependencies are not scanned. (Go/pip manifests need no lock.)
+      # Uncomment and adapt ONE (or add your own):
+      #   - uses: actions/setup-java@v5
+      #     with: { distribution: temurin, java-version: '21' }
+      #   - run: ./gradlew build test            # Android / Kotlin / Java
+      #
+      #   - run: cmake -B build && cmake --build build && ctest --test-dir build   # C / C++
+      #
+      #   - uses: dtolnay/rust-toolchain@stable   # (pin to a SHA — see zizmor pin policy)
+      #   - run: cargo build --locked && cargo test
+      #
+      #   - uses: actions/setup-go@v5
+      #     with: { go-version: 'stable' }
+      #   - run: go build ./... && go test ./...
+      # ──────────────────────────────────────────────────────────────────────────────────────────

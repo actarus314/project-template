@@ -4,7 +4,7 @@ set -euo pipefail
 # Initialise un projet Claude Code selon le standard d'organisation.
 #
 # Usage : ./init-project.sh <projet> [owner/repo] [dossier-parent]
-#              [--type static|node] [--pages] [--artefact] [--staging] [--no-…]
+#              [--type static|node|generic] [--pages] [--artefact] [--staging] [--no-…]
 #
 #   <projet>          nom du projet (dossier créé)
 #   [owner/repo]      si fourni, configure le remote GitHub en URL nue
@@ -32,19 +32,17 @@ while [ $# -gt 0 ]; do
     *)             if [ -z "$PROJ" ]; then PROJ="$1"; elif [ -z "$SLUG" ]; then SLUG="$1"; else BASE="$1"; fi; shift;;
   esac
 done
-[ -n "$PROJ" ] || { echo "Usage: init-project.sh <projet> [owner/repo] [dossier-parent] [--type static|node] [--pages] [--artefact] [--staging]"; exit 1; }
-case "$TYPE" in static|node) ;; *) echo "✗ --type doit être 'static' (défaut) ou 'node' — c'est la TOOLCHAIN, pas l'hébergement"; exit 1;; esac
+[ -n "$PROJ" ] || { echo "Usage: init-project.sh <projet> [owner/repo] [dossier-parent] [--type static|node|generic] [--pages] [--artefact] [--staging]"; exit 1; }
+case "$TYPE" in static|node|generic) ;; *) echo "✗ --type doit être 'static' (défaut), 'node' ou 'generic' — c'est la TOOLCHAIN, pas l'hébergement"; exit 1;; esac
 
 # Raccourcis : ils ne remplissent QUE ce qui n'a pas été dit explicitement.
-if [ "$TYPE" = static ]; then
-  [ -n "$PAGES" ]    || PAGES=1
-  [ -n "$ARTEFACT" ] || ARTEFACT=0
-  [ -n "$STAGING" ]  || STAGING=0
-else
-  [ -n "$PAGES" ]    || PAGES=0
-  [ -n "$ARTEFACT" ] || ARTEFACT=1
-  [ -n "$STAGING" ]  || STAGING=1
-fi
+# generic = toolchain non pré-câblée (Android, C/C++, Rust, Go…) : contrôles-sécu seuls, aucune
+# capacité imposée — l'utilisateur opte via --pages/--artefact/--staging selon les 3 questions.
+case "$TYPE" in
+  static)  [ -n "$PAGES" ] || PAGES=1; [ -n "$ARTEFACT" ] || ARTEFACT=0; [ -n "$STAGING" ] || STAGING=0;;
+  node)    [ -n "$PAGES" ] || PAGES=0; [ -n "$ARTEFACT" ] || ARTEFACT=1; [ -n "$STAGING" ] || STAGING=1;;
+  generic) [ -n "$PAGES" ] || PAGES=0; [ -n "$ARTEFACT" ] || ARTEFACT=0; [ -n "$STAGING" ] || STAGING=0;;
+esac
 
 if [ "$STAGING" = 1 ] && [ "$ARTEFACT" = 0 ] && [ "$PAGES" = 1 ]; then
   echo "✗ --staging sans --artefact, sur un site Pages : Pages EST la prod, il n'y a rien à valider."
@@ -73,6 +71,11 @@ cp -R "$TPL/templates/repo/.githooks"        "$DEST/repo/.githooks"
 # non exécutable. Un `chmod +x pre-commit` en dur aurait rendu muet tout hook ajouté ensuite —
 # un contrôle absent qui ne se voit pas, exactement ce que ce template passe son temps à traquer.
 chmod +x "$DEST/repo/.githooks/"*
+
+# Runner local == github : le MÊME check.sh que le template, auto-détectant (il lit le ci.yml du
+# projet et ne rejoue QUE ce que sa CI lance). Le hook pre-commit le relance throttlé (consultatif).
+cp "$TPL/check.sh" "$DEST/repo/check.sh"
+chmod +x "$DEST/repo/check.sh"
 
 # Fichiers versionnés GitHub (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -193,36 +196,9 @@ if [ -n "$HUMAN" ]; then
   echo "     ⚠ '<contact>' dans SECURITY.md : sans lui, personne ne peut signaler une faille."
 fi
 
-# Dependabot : l'écosystème npm n'existe QUE pour la TOOLCHAIN node. Le déclarer sur un projet
-# statique (sans package.json) fait échouer Dependabot à chaque run — « /package.json not found ».
-if [ "$TYPE" = node ]; then
-  # npm suit la TOOLCHAIN.
-  cat >> "$DEST/repo/.github/dependabot.yml" <<'YAML'
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    groups:
-      npm-minor-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-YAML
-fi
-if [ "$ARTEFACT" = 1 ]; then
-  cat >> "$DEST/repo/.github/dependabot.yml" <<'YAML'
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      docker-minor-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-YAML
-fi
+# Pas de bloc Dependabot : Renovate (renovate.json) est le seul bot d'update et AUTO-DÉTECTE
+# npm/docker/actions/pip depuis les manifestes — aucune liste d'écosystèmes à tenir par toolchain.
+# (Bascule full-Renovate, 2026-07 — cf. workspace/archives/2026-07-autodetection/SYNTHESE.md.)
 
 # Modèles workspace/
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
@@ -309,8 +285,11 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # Liste EXPLICITE (jamais `git add -A` : `.env` et `.envrc` portent des secrets et sont gitignorés,
 # mais on ne parie pas là-dessus). ⚠ Corollaire : tout fichier AJOUTÉ au template doit être ajouté
 # ICI — sinon il est créé sur disque et JAMAIS committé. Le filet ci-dessous le rend bruyant.
-git add .gitignore .env.example README.md .gitattributes LICENSE requirements-ci.txt \
+git add .gitignore .env.example README.md .gitattributes LICENSE check.sh \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
+# requirements-ci.txt est gitignoré EXPRÈS (soustrait au scan osv, cf. .gitignore) : un `git add` simple
+# le sauterait EN SILENCE → CI cassée (`pip install -r`). `-f` le versionne quand même (motif .envrc).
+git add -f requirements-ci.txt
 git commit -q -m "initial project structure"
 
 # Hook pre-commit gitleaks — ARMÉ APRÈS le commit initial (standard §18). Config LOCALE : un clone

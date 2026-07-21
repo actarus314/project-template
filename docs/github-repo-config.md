@@ -26,7 +26,8 @@
 | **`osv-scanner`** | dépendances vulnérables (lockfile, base OSV). **L'équivalent de `dependency-review` qui, lui, marche en privé.** | chaque PR |
 | **`actionlint` + `zizmor`** | les workflows sont du code : un `${{ }}` dans un `run:` est une **injection shell**. | chaque PR |
 | **CodeQL** | **default setup** natif, activé par `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Détecte les langages et les TIENT À JOUR tout seul** — notre ancien `codeql.yml` n'en déclarait qu'UN, et ratait les workflows `actions` (§17). **Indisponible en privé** (GHAS) → arrive au flip. Les deux modes sont **exclusifs**. | push/PR `main` + hebdo |
-| **Dependabot** | alerts + security updates + **version updates** (`github-actions` toujours). | continu / hebdo |
+| **Dependabot alerts** | **détection de CVE** — natif, gratuit même en privé. Version updates → **Renovate**. Les **security updates** restent **ON (filet)** tant que le chemin sécu privé de Renovate n'est pas *observé* — ils garantissent aussi le dependency graph que Renovate lit ; Renovate ajoute l'auto-merge par-dessus. | continu |
+| **Renovate** | **seul bot d'update.** Auto-détecte **tous** les écosystèmes du repo (npm, docker, actions, pip…) **sans aucune déclaration**, + les 4 binaires épinglés VERSION+SHA256 (gitleaks, actionlint, osv-scanner, trivy). Lit les Dependabot alerts (`vulnerabilityAlerts`) pour ses PR sécu. Routine = PR revue par un **humain** ; **sécurité = auto-merge**. Minor/patch groupés. | continu / hebdo |
 | **Secret scanning + push protection** | natif, gratuit en **public** (indisponible en privé/Free). | chaque push |
 | **Ruleset `main`** | PR obligatoire · checks requis (**`checks`** + CodeQL + **`build-check` si capacité artefact**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continu |
 | **Ruleset `tags` + immutable releases** | un tag `v*` ni déplaçable ni supprimable, des assets non remplaçables. **Sans les deux, le pin de prod du §13 ne vaut RIEN.** | continu |
@@ -36,13 +37,13 @@
 ### En plus — TOOLCHAIN `node`
 | Contrôle | Réglage |
 |---|---|
-| `dependabot.yml` → **npm** | hebdo, minor/patch **groupés**, majors isolés. |
 | `npm audit --audit-level=high --omit=dev` · `npm test` · `npm run typecheck` | gate PR. |
+
+*(Les mises à jour npm **et** docker ne sont plus des lignes par toolchain : Renovate les auto-détecte — voir la ligne **Renovate** de la baseline.)*
 
 ### En plus — CAPACITÉ `artefact` *(⚠️ PAS « node » : `rozo-bridge` est `static` et publie une image)*
 | Contrôle | Réglage |
 |---|---|
-| `dependabot.yml` → **docker** | **Pas optionnel** : sans lui l'**image de base n'est JAMAIS bumpée**, et Trivy bloquerait les PR sur une CVE **sans que rien ne propose le correctif** — le contrôle détecte, personne ne répare. |
 | **Trivy en gate PR** | job **`build-check`** de `docker-publish.yml` : build (`load: true`) puis `trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1`. **Binaire épinglé + checksum.** `configure-repo.sh` en fait un **check REQUIS** — *un scan non exigé ne bloque rien.* |
 | **Durcissement Docker** | base image pin par **digest** SHA256 · runtime **sans gestionnaire de paquets** (§14) · `tmpfs` `noexec,nosuid,nodev,size=` · healthcheck · `:latest` bloqué sur pré-release. |
 | **Package ghcr PUBLIC** | 🔴 Défaut dépend du **propriétaire** : compte **perso** → tirable anonymement (**HTTP 200**) ; **organisation** → privé d'office (**403**), personne ne peut auto-héberger. `configure-repo.sh` **teste le pull anonyme** et ne réclame le geste que si le test échoue. **Détail, provenance des tests, procédure UI : §4 « Visibilité du package ghcr ».** |
@@ -67,7 +68,7 @@ Miroir du one-shot/récurrent : **l'assistant gère tout le récurrent en autono
 
 | RÉCURRENT → PAT assistant (fine-grained, 1 repo) | ONE-SHOT → Romain (Administration: write) |
 |---|---|
-| Contents: **write** | Activer les features sécu (secret scanning, push protection, Dependabot security updates) |
+| Contents: **write** | Activer les features sécu (secret scanning, push protection ; **Dependabot alerts + security updates ON** — filet ; Renovate ajoute l'auto-merge sécu) |
 | Pull requests: **write** | Créer/éditer rulesets & branch protection |
 | Issues: **write** | `PATCH /repos` : visibilité, merge-methods, delete-branch, topics, homepage |
 | Actions: **read/write** (relancer/annuler runs) | Activer **CodeQL default setup** *(`configure-repo.sh` le fait)* |
@@ -108,7 +109,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 
 ## 3. OpenSSF Scorecard — garder / jeter (solo, public, petit)
 
-- **Garder** (coût ~nul) : Token-Permissions · Branch-Protection · Pinned-Dependencies · Dangerous-Workflow (pas de `pull_request_target` + checkout de PR) · Security-Policy (`SECURITY.md`) · SAST (CodeQL) · Dependency-Update-Tool (Dependabot).
+- **Garder** (coût ~nul) : Token-Permissions · Branch-Protection · Pinned-Dependencies · Dangerous-Workflow (pas de `pull_request_target` + checkout de PR) · Security-Policy (`SECURITY.md`) · SAST (CodeQL) · Dependency-Update-Tool (Renovate).
 - **Jeter** (overkill solo) : Signed-Releases · Fuzzing · CII-Best-Practices badge · signed commits (friction sans gain contre soi-même).
 - **2FA** : oui, non négociable — mais réglage de **compte**, à activer en UI.
 
@@ -118,10 +119,10 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 |---|---|
 | CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, et DANS `configure-repo.sh`** |
 | Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
-| Secret scanning / push protection / Dependabot security updates | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
+| Secret scanning / push protection · `dependabot_security_updates` **=enabled** *(filet ; Renovate ajoute l'auto-merge — bascule à `disabled` une fois une PR sécu Renovate vue en privé)* | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
 | Rulesets | `gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json` (`gh ruleset` = lecture seule) |
 | Topics / homepage / merge-methods / delete-branch | `gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge` |
-| Dependabot version updates · gitleaks · npm audit · CI | **fichiers committés** (`dependabot.yml`, `.github/workflows/*.yml`), pas d'API |
+| Updates Renovate · gitleaks · npm audit · CI | **fichiers committés** (`.github/renovate.json`, `.github/workflows/*.yml`), pas d'API |
 | 2FA | **UI-only** (pas d'endpoint) |
 | **Lecture de l'API packages / ghcr** | ❌ **IMPOSSIBLE en fine-grained** — GitHub Packages n'est **pas supporté** par les PAT fine-grained (classic `read:packages` uniquement). N'essaie pas d'ajouter la permission : **elle n'existe pas**. → **Sans objet** : le bon test est le **pull ANONYME** du registre (`ghcr.io/token` + `/v2/<img>/manifests/<tag>` → **200 = tirable**), qui vérifie *exactement* ce que fait le host de prod, **sans aucun token**. Posé par `configure-repo.sh`. |
 | **Visibilité du package ghcr** | ⚠️ **UI, aucune API** *(les PAT fine-grained ne couvrent PAS ghcr — seuls les PAT `classic` le font)*. 🔴 **Le défaut DÉPEND DU PROPRIÉTAIRE, et le confondre coûte cher :** sur un compte **PERSO**, un package publié depuis un repo **public** est tirable **anonymement, SANS AUCUN GESTE** *(HTTP 200 — vérifié sur test003)*. Sur une **ORGANISATION**, il est **PRIVÉ d'office** → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger** *(vérifié sur test004)*. → **`configure-repo.sh` TESTE le pull anonyme** et ne réclame le geste **QUE si le test échoue**. *(Org-wide : Settings → Packages → Package creation → default visibility.)* **Quand le geste EST nécessaire** *(org)* : Package settings → Danger Zone → *Change visibility* → **Public**. Sans lui, ni le host de prod ni un utilisateur ne peuvent tirer l'image — et **le pin de version en production ne vaut plus rien** : il désigne une image que personne ne peut récupérer. |
@@ -134,10 +135,10 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 0. **Choisir la toolchain et les capacités** — *les trois questions, dans cet ordre* :
    **(a)** le site est-il servi par **Pages** ? → `--pages` · **(b)** le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? → `--artefact` · **(c)** existe-t-il un **host à VALIDER** avant la prod ? → `--staging`.
    Puis : `./init-project.sh <projet> <owner/repo> [--type static|node] [--pages] [--artefact] [--staging]`.
-   *Raccourcis : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging`.*
+   *Raccourcis : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ aucune capacité (toute autre toolchain — contrôles-sécu seuls, build/test à remplir).*
 1. Créer le repo — **PRIVÉ** (le cas nominal), remote en **URL nue**, PAT 1-repo dans `.envrc` (standard §5) — avec les **3 permissions d'alertes** du §2.
-2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · Dependabot · **immutable releases** · topics · homepage · delete-branch-on-merge · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
-3. Fichiers présents dès le 1er commit : `LICENSE` · `README` (double-cible, standard §15) · `SECURITY.md` (advisories privées) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `dependabot.yml`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` si lib vendorée.
+2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)* · **immutable releases** · topics · homepage · delete-branch-on-merge · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
+3. Fichiers présents dès le 1er commit : `LICENSE` · `README` (double-cible, standard §15) · `SECURITY.md` (advisories privées) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` si lib vendorée.
 4. **Avant de passer public** : `gitleaks detect` sur l'**historique complet** (pas juste HEAD) — un secret dans un vieux commit fuite au flip de visibilité.
 5. Activer **2FA** du compte (UI).
 6. **Repos d'ORG uniquement** — *« Repository admins accept content reports »* : Settings → **Moderation options** → **Reported content** → **« Prior contributors and collaborators »** (UI, **aucune API**).

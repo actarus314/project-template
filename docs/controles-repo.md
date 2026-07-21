@@ -120,8 +120,8 @@ feat/…   ●────┘
 | Où / quand | Quoi | Avec quoi | Comment | Privé |
 |---|---|---|---|---|
 | Push tag `v*` | Publication de l'image sur ghcr | `docker-publish.yml` › `build-push` | déclenché par le tag | ✅ |
-| Hebdomadaire | Mises à jour npm · docker · actions | Dependabot version updates | `dependabot.yml`, minor/patch groupés | ✅ |
-| Continu | CVE des dépendances | Dependabot alerts + security updates | natif — gratuit même en privé | ✅ |
+| Hebdomadaire | Mises à jour de toutes les dépendances (npm · docker · actions · pip…) | Renovate | `renovate.json` — auto-détecté, minor/patch groupés | ✅ |
+| Continu | CVE des dépendances (**détection**) | Dependabot alerts | natif — gratuit même en privé ; Renovate **lit** ces alertes et ouvre la PR de fix (**réparation**) | ✅ |
 
 ---
 
@@ -136,7 +136,7 @@ Tout ce qui dormait s'active **d'un seul coup** — c'est le moment le plus dang
 | ✅ hook `pre-push` : pas d'écriture directe sur `main` | ✅ Checks **requis** avant merge |
 | ✅ semgrep · osv-scanner | ✅ Secret scanning + push protection |
 | ✅ actionlint · zizmor · trivy | ✅ CodeQL — *analyse tout l'historique d'un coup* |
-| ✅ tests · typecheck · Dependabot | ✅ dependency-review · immutable releases |
+| ✅ tests · typecheck · Renovate + Dependabot alerts | ✅ dependency-review · immutable releases |
 | ❌ **Aucun ruleset** — une PR rouge peut être mergée | ✅ Private vulnerability reporting |
 
 

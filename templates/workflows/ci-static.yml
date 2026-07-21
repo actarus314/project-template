@@ -87,7 +87,9 @@ jobs:
           semgrep scan --error --quiet --metrics=off --exclude=.github \
             --config p/security-audit --config p/owasp-top-ten .
       # osv-scanner AUTO-DISCOVERS every lockfile/manifest in the repo (`-r .`): npm, pip, go, cargo…
-      # — the scope follows the code, never a hand-kept list. `--allow-no-lockfiles` exits 0 when a
+      # — the scope follows the code, never a hand-kept list. The one carve-out is likewise NOT a
+      # per-target list: CI-only tooling (requirements-ci.txt) is subtracted in .gitignore, which osv
+      # honours (dev tools, never shipped — see that file). `--allow-no-lockfiles` exits 0 when a
       # repo has none (a pure static site) instead of erroring. No `hashFiles` guard: the step always
       # runs and always reports (a required check that never reports leaves every PR stuck on
       # "Expected — waiting for status").

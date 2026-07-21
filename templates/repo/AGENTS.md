@@ -81,12 +81,14 @@ red pull request. The safety net is local, and partly human.
 
 ## Checks that run
 
-- **pre-commit hook** — `gitleaks` on staged files. A commit carrying a secret is rejected.
+- **pre-commit hook** — `gitleaks` on staged files (a commit carrying a secret is rejected), then a
+  throttled, CONSULTATIVE replay of `./check.sh` (≤ once / 24 h) — it surfaces drift, never blocks.
 - **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
   Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
+- **`./check.sh`** — replays the CI's security checks locally at the pinned versions, so `local == github`.
 - **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,
-  `actionlint` + `zizmor` on the workflows, `semgrep` static analysis, `osv-scanner` on the
-  lockfile, then the project's own tests.
+  `actionlint` + `zizmor` on the workflows, `semgrep` static analysis, `osv-scanner` on every
+  manifest it discovers (`-r .`; CI-only tooling is out of scope via .gitignore), then the project's own tests.
 - **CodeQL** — security analysis; a finding blocks the merge.
 
 ## Do not touch

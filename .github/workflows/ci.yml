@@ -39,8 +39,8 @@ jobs:
           persist-credentials: false
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
-      - name: shellcheck the generator and the configurator (shellcheck is preinstalled)
-        run: shellcheck -S warning init-project.sh configure-repo.sh
+      - name: shellcheck the scripts, the local runner and the hooks (shellcheck is preinstalled)
+        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh .githooks/pre-commit .githooks/pre-push
 
   generate-and-lint:
     runs-on: ubuntu-latest
@@ -52,6 +52,7 @@ jobs:
         include:
           - { name: static-pages,   flags: --type static --pages }
           - { name: node-full,      flags: --type node }
+          - { name: generic,        flags: --type generic }
           - { name: rozo,           flags: --type static --pages --artefact }
           - { name: static-nopages, flags: --type static --no-pages }
     env:
@@ -59,6 +60,11 @@ jobs:
       # gabarits aligned via the extended custom.regex in .github/renovate.json).
       ACTIONLINT_VERSION: v1.7.12
       ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+      # osv n'est pas utilisé pour linter CE repo (pas de manifeste applicatif) — il sert à la GARDE
+      # anti-régression plus bas (rejouer l'étape osv d'un projet généré). Suivi par Renovate au même
+      # titre qu'actionlint (custom.regex cible aussi `.github/workflows/` — voir .github/renovate.json).
+      OSV_VERSION: v2.4.0
+      OSV_SHA256: 15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0
     steps:
       - uses: actions/checkout@v7
         with:
@@ -111,6 +117,23 @@ jobs:
           proj="$RUNNER_TEMP/proj/repo"
           ( cd "$proj" && actionlint -color )
           zizmor --persona regular --config "$proj/.github/zizmor.yml" "$proj/.github/workflows/"
+      # Regression guard for the osv fix (PR #23). The steps above lint a generated project's WORKFLOWS,
+      # but never replay its osv step — which is exactly where the "CI-only tooling out of scope" fix
+      # lives (requirements-ci.txt subtracted via .gitignore). So replay that project's EXACT osv step on
+      # the freshly generated tree: if the gabarit .gitignore ever stops subtracting requirements-ci.txt
+      # (or a bump reintroduces tooling CVEs), THIS job goes red — before any real project ships a red
+      # osv CI. The `git add -f` itself is already guarded by the "repo clean" check below (an uncommitted
+      # file leaves `git status` dirty). One shard suffices: the fix is driven by the shared gabarit
+      # .gitignore, identical across every --type.
+      - name: Generated project passes its own osv step (regression guard, PR #23)
+        if: matrix.name == 'node-full'
+        run: |
+          set -euo pipefail
+          curl -sSfL -o "$RUNNER_TEMP/osv-scanner" \
+            "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_amd64"
+          echo "${OSV_SHA256}  $RUNNER_TEMP/osv-scanner" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/osv-scanner"
+          ( cd "$RUNNER_TEMP/proj/repo" && "$RUNNER_TEMP/osv-scanner" scan source -r . --allow-no-lockfiles )
       - name: Generated repos are clean and secrets.md stays untracked
         run: |
           set -euo pipefail

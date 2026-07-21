@@ -207,20 +207,29 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
+#    dependabot_security_updates RESTE activé — c'est le FILET, à dessein. Renovate ouvre AUSSI des PR
+#    de remédiation sécu (vulnerabilityAlerts, auto-mergées) ; garder Dependabot ON garantit DEUX choses :
+#    (1) le dependency graph est actif (prérequis des security updates) DONC Renovate a bien la donnée
+#        d'alerte à LIRE — sans quoi son chemin sécu serait vide, en silence ;
+#    (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
+#    Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
+#    Renovate VUE sur un repo PRIVÉ, basculer cette clé à 'disabled' (fin de la bascule full-Renovate —
+#    cf. workspace/archives/2026-07-autodetection/SYNTHESE.md).
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
   -f 'security_and_analysis[dependabot_security_updates][status]=enabled' \
   >/dev/null 2>&1 \
-  && echo "  ✓ secret scanning + push protection + Dependabot security updates" \
+  && echo "  ✓ secret scanning + push protection + Dependabot security updates (filet, jusqu'à vérif Renovate en privé)" \
   || { echo "  ⚠ secret scanning / push protection : NON activés."; \
        echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"; \
        echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."; \
        echo "    → REJOUER ce script au passage en public."; }
 
-# 3. Dependabot alerts
+# 3. Dependabot alerts — la DÉTECTION de CVE (native, gratuite en privé). Gardée : Renovate la LIT
+#    (vulnerabilityAlerts) pour ouvrir ses PR de remédiation. Sans elle, pas de PR sécu Renovate.
 mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
-  && echo "  ✓ Dependabot alerts" \
+  && echo "  ✓ Dependabot alerts (détection — Renovate les lit pour ses PR sécu)" \
   || echo "  ⚠ vulnerability-alerts : échec — vérifier dans l'UI"
 
 # 3b. Private vulnerability reporting — SANS LUI, LE LIEN DE SECURITY.md EST MORT.

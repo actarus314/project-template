@@ -140,7 +140,7 @@ cd ~/Documents/Claude/template/repo
 
 Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran, ni dans l'historique, ni dans `ps`)*.
 
-- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : Dependabot, description, méthode de merge, `default_workflow_permissions`.
+- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)*, description, méthode de merge, `default_workflow_permissions`.
 - **Il annonce que rulesets / secret scanning / CodeQL sont indisponibles** — **c'est ATTENDU, pas un échec** : ils arrivent au flip *(§4)*.
 - ⚠️ **La description ne doit contenir aucun caractère de contrôle** *(l'API renvoie 422)* — le script les retire et le signale. **Éviter aussi les tirets cadratins collés d'un copier-coller.**
 - 💡 **`--dry-run`** : lit tout, **n'écrit rien**. À utiliser sur un repo **vivant** dont on n'est pas sûr.
@@ -168,7 +168,7 @@ Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran,
 > Ici, l'ordre est bon **par construction** : le template pose `.github/renovate.json` dès l'étape 1, donc à l'étape 8 le fichier est déjà sur `main` — **aucune PR d'onboarding n'apparaît**.
 >
 > **⚠️ Sur un repo EXISTANT** *(mise en conformité, §7)*, **l'ordre s'inverse tout seul** : l'app est souvent installée avant que le fichier n'arrive → **la PR d'onboarding surgit**.
-> **NE JAMAIS LA MERGER** *(tous les managers Renovate s'activeraient → PR en double avec Dependabot ; frontière Dependabot/Renovate : §17)*.
+> **NE JAMAIS LA MERGER** *(la merger activerait la config **par DÉFAUT** de Renovate, pas la `renovate.json` **accordée** du template)*.
 > **Conduite à tenir : FERMER la PR d'onboarding** *(Renovate s'arrête, et il ne la rouvre pas)*, **puis commiter `.github/renovate.json`** — Renovate redémarre de lui-même dès qu'il voit le fichier. Le geste est **réversible dans les deux sens**.
 
 ---
@@ -262,8 +262,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 
 | Quoi | Qui | Quand |
 |---|---|---|
-| **PR Dependabot** *(actions, npm, docker, pip)* | Claude — **en autonomie** | hebdo. Minor/patch groupés ; **les majeures se regardent seules**. |
-| **PR Renovate** *(les 4 binaires épinglés + leur checksum)* | Claude — **en autonomie** | hebdo. ⚠️ **Si le checksum est faux, `sha256sum -c` fait échouer la CI** — bruyamment. Une PR rouge se ferme. |
+| **PR Renovate** *(TOUT : écosystèmes auto-détectés — actions, npm, docker, pip… — **et** les 4 binaires épinglés VERSION+SHA256)* | Claude — **en autonomie** | hebdo. Minor/patch groupés, **majeures seules**. **Routine = PR revue par un humain ; SÉCURITÉ = auto-mergée** *(aucun geste)*. ⚠️ **Si le checksum d'un binaire est faux, `sha256sum -c` fait échouer la CI** — bruyamment. Une PR rouge se ferme. |
 | **Alertes Dependabot** et **code scanning** | Claude — **en autonomie** *(dismiss/reopen)* | à réception |
 | **Alertes SECRET SCANNING** | 🔴 **ROMAIN SEUL** | L'assistant est en **lecture seule** dessus *(pourquoi : §1 étape 3)*. |
 | **Rotation du PAT d'écriture** | Claude **alerte à J-14** · **Romain régénère** | tous les **90 j** |
