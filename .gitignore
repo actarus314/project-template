@@ -16,3 +16,6 @@
 *.log
 *.bak
 *.bak-*
+
+# Binaires épinglés que `check.sh` télécharge pour aligner le local sur la CI.
+/.ci-tools/
