@@ -72,6 +72,11 @@ cp -R "$TPL/templates/repo/.githooks"        "$DEST/repo/.githooks"
 # un contrôle absent qui ne se voit pas, exactement ce que ce template passe son temps à traquer.
 chmod +x "$DEST/repo/.githooks/"*
 
+# Runner local == github : le MÊME check.sh que le template, auto-détectant (il lit le ci.yml du
+# projet et ne rejoue QUE ce que sa CI lance). Le hook pre-commit le relance throttlé (consultatif).
+cp "$TPL/check.sh" "$DEST/repo/check.sh"
+chmod +x "$DEST/repo/check.sh"
+
 # Fichiers versionnés GitHub (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
 cp "$TPL/templates/repo/.gitattributes"      "$DEST/repo/.gitattributes"
@@ -280,8 +285,11 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # Liste EXPLICITE (jamais `git add -A` : `.env` et `.envrc` portent des secrets et sont gitignorés,
 # mais on ne parie pas là-dessus). ⚠ Corollaire : tout fichier AJOUTÉ au template doit être ajouté
 # ICI — sinon il est créé sur disque et JAMAIS committé. Le filet ci-dessous le rend bruyant.
-git add .gitignore .env.example README.md .gitattributes LICENSE requirements-ci.txt \
+git add .gitignore .env.example README.md .gitattributes LICENSE check.sh \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
+# requirements-ci.txt est gitignoré EXPRÈS (soustrait au scan osv, cf. .gitignore) : un `git add` simple
+# le sauterait EN SILENCE → CI cassée (`pip install -r`). `-f` le versionne quand même (motif .envrc).
+git add -f requirements-ci.txt
 git commit -q -m "initial project structure"
 
 # Hook pre-commit gitleaks — ARMÉ APRÈS le commit initial (standard §18). Config LOCALE : un clone

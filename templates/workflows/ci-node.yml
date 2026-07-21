@@ -116,6 +116,8 @@ jobs:
             --config p/security-audit --config p/owasp-top-ten .
       # osv-scanner auto-discovers every lockfile/manifest (`-r .`), not just package-lock.json;
       # `--allow-no-lockfiles` keeps it green if none are present. No guard: always runs and reports.
+      # One exception, and it is NOT a hand-kept list: CI-only tooling (requirements-ci.txt) is
+      # subtracted in .gitignore, which osv honours — see that file for why (dev tools, never shipped).
       - name: Vulnerable dependencies (osv-scanner, pinned + checksum-verified)
         run: |
           set -euo pipefail
