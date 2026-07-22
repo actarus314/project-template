@@ -107,8 +107,7 @@
         "renovate-config-validator, épinglé EXACT. Il vient de npm et non d'une release GitHub :",
         "pas de `currentDigest` ici — une version npm est IMMUABLE, le checksum n'ajoute rien.",
         "Le pin, lui, est nécessaire : `renovate@43` résolvait la dernière 43.x À CHAQUE RUN, donc",
-        "`main` pouvait rougir sans qu'une ligne bouge (vécu le 22/07 : la 43.278.0 venait d'être",
-        "publiée et n'était pas encore résolvable). Un flottement ne donne PAS que les correctifs :",
+        "`main` pouvait rougir sans qu'une ligne bouge. Un flottement ne donne PAS que les correctifs :",
         "il donne aussi les régressions, tout de suite, et SANS version connue-bonne où revenir.",
         "⚠ `check.sh` porte la même version — il est DANS les managerFilePatterns pour ça."
       ],
