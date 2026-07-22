@@ -24,10 +24,10 @@ jobs:
       # `check.sh` carries the same version and is covered by the same manager).
       # The floor matters: the version npx resolves by default (37.x) IGNORES `managerFilePatterns`
       # and reports a FALSE "invalid config" — a validator that lies is worse than none.
-      # The ceiling matters just as much: `renovate@43` re-resolved the newest 43.x ON EVERY RUN,
-      # so `main` could go red without a line changing (22/07: 43.278.0 had just been published and
-      # was not resolvable yet). A floating range does not only hand you the fixes — it hands you
-      # the regressions too, instantly, with NO known-good version to fall back to.
+      # The ceiling matters just as much: a floating major re-resolves the newest release ON EVERY
+      # RUN, so `main` can go red without a line changing. A floating range does not only hand you
+      # the fixes — it hands you the regressions too, instantly, with NO known-good version to fall
+      # back to.
       - name: Validate both Renovate configs
         run: |
           set -euo pipefail
