@@ -164,7 +164,11 @@ cp "$WT/ci-$TYPE.yml" "$DEST/repo/.github/workflows/ci.yml"
 if [ "$PAGES" = 1 ]; then cp "$WT/pages.yml" "$DEST/repo/.github/workflows/pages.yml"; fi
 if [ "$ARTEFACT" = 1 ]; then
   cp "$WT/docker-publish.yml" "$DEST/repo/.github/workflows/docker-publish.yml"
-  IMG="${SLUG##*/}"; IMG="${IMG:-$PROJ}"
+  # ghcr rejette une référence d'image non minuscule ; le nom du repo, lui, peut porter des
+  # majuscules (ex. DecantFi). metadata-action minuscule l'image POUSSÉE, mais pas la référence
+  # écrite en clair dans les notes de release (bloc `image:`) — sans ça, elle annonce un `docker
+  # pull` non tirable. configure-repo.sh minuscule déjà de son côté ; on s'aligne à la source.
+  IMG="$(printf '%s' "${SLUG##*/}" | tr '[:upper:]' '[:lower:]')"; IMG="${IMG:-$PROJ}"
   DP="$DEST/repo/.github/workflows/docker-publish.yml"
   sed "s|<image-name>|$IMG|g" "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
   # `docker-publish.yml` porte SON PROPRE job `release` (`needs: build-push`) : la release annonce
