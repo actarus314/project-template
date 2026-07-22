@@ -641,6 +641,24 @@ read -r -d '' TAGS_JSON <<'JSON' || true
 JSON
 upsert_ruleset "tags" "$TAGS_JSON"
 
+# 6c. BRANCH PROTECTION *CLASSIQUE* — l'AUTRE système, que `GET /rulesets` NE MONTRE PAS.
+#     Un repo existant peut en porter une, héritée, qui exige des checks nommés d'après SES anciens
+#     jobs. En adoptant les workflows du template, ces checks CESSENT D'EXISTER : la règle survit et
+#     réclame pour toujours un statut que plus rien ne produira — la branche est VERROUILLÉE, CI
+#     verte ou pas, et `gh pr merge` répond seulement « base branch policy prohibits the merge ».
+#     Les deux systèmes se CUMULENT : poser le ruleset ne neutralise pas l'ancienne règle.
+# ⚠ On DÉTECTE et on DIT — on ne supprime pas : la règle classique peut porter des réglages que le
+#   ruleset ne réplique pas, et détruire une protection est un geste de Romain (comme la visibilité).
+for BR in main develop; do
+  gh api "repos/$SLUG/branches/$BR/protection" >/dev/null 2>&1 || continue
+  CTX=$(gh api "repos/$SLUG/branches/$BR/protection" \
+          --jq '[.required_status_checks.contexts[]?] | join(", ")' 2>/dev/null || true)
+  echo "  ⚠ branch protection CLASSIQUE encore active sur '$BR'${CTX:+ — checks exigés : $CTX}."
+  echo "    Elle s'AJOUTE au ruleset qu'on vient de poser. Si elle exige un check DISPARU"
+  echo "    (jobs renommés en adoptant les workflows du template), AUCUNE PR ne passera JAMAIS."
+  echo "    → la retirer maintenant que le ruleset protège : https://github.com/$SLUG/settings/branches"
+done
+
 # 7. CONTRÔLE FINAL — community profile.
 #    Le score est le seul indicateur des réglages que l'API n'expose PAS (« Reported content » :
 #    ni REST ni GraphQL). Sans ce contrôle,
@@ -690,7 +708,19 @@ if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null
 PULL_STATE=untested
 if [ "$IS_PRIVATE" = "false" ] && [ "$(gh_val 'length' 0 "repos/$SLUG/releases")" -gt 0 ]; then
   TAG=$(gh api "repos/$SLUG/releases/latest" --jq '.tag_name' 2>/dev/null | sed 's/^v//')
-  IMG="${SLUG%%/*}/${SLUG##*/}"
+  # Le nom du package ghcr N'EST PAS déductible du slug. Il coïncide sur un projet GÉNÉRÉ
+  # (init-project.sh substitue `<image-name>` par le nom du repo) — d'où un bug longtemps invisible.
+  # Un repo MIGRÉ publie sous le nom qu'il veut (`DecantFi` → `decantfi-collector`) : le déduire
+  # faisait tester un package INEXISTANT, donc annoncer « image NON TIRABLE, le pin de prod ne vaut
+  # rien » et réclamer de rendre public un objet qui n'existe pas. On LIT la source de vérité — le
+  # `images:` du workflow — et on retombe sur le slug si elle est illisible (fix strictement additif).
+  # `Accept: raw` évite un décodage base64 (`-d` GNU vs `-D` BSD ne sont pas portables).
+  IMG_NAME=$(gh api -H "Accept: application/vnd.github.raw" \
+      "repos/$SLUG/contents/.github/workflows/docker-publish.yml" 2>/dev/null \
+    | sed -n 's|^[[:space:]]*images:[[:space:]]*ghcr\.io/[^/]*/\([A-Za-z0-9._-][A-Za-z0-9._-]*\).*|\1|p' \
+    | head -1)
+  # ghcr n'accepte QUE des minuscules : `actarus314/DecantFi` interroge un chemin qui n'existe pas.
+  IMG=$(printf '%s/%s' "${SLUG%%/*}" "${IMG_NAME:-${SLUG##*/}}" | tr '[:upper:]' '[:lower:]')
   ATOK=$(curl -s "https://ghcr.io/token?scope=repository:${IMG}:pull&service=ghcr.io" \
     | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
   ACODE=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ATOK}" \

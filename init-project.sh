@@ -167,6 +167,11 @@ if [ "$ARTEFACT" = 1 ]; then
   IMG="${SLUG##*/}"; IMG="${IMG:-$PROJ}"
   DP="$DEST/repo/.github/workflows/docker-publish.yml"
   sed "s|<image-name>|$IMG|g" "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
+  # `docker-publish.yml` porte SON PROPRE job `release` (`needs: build-push`) : la release annonce
+  # une image, elle ne doit pas exister si la publication a échoué — et `needs` ne traverse pas les
+  # workflows. Garder les deux fichiers ne les départagerait PAS : ils démarrent ensemble sur le tag
+  # et le plus rapide gagne. Un seul domicile pour la release.
+  rm -f "$DEST/repo/.github/workflows/release.yml"
 fi
 
 # ⚠ LES FILETS TOURNENT ICI, APRÈS la copie ET la substitution des workflows.

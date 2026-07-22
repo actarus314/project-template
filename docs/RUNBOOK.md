@@ -135,6 +135,9 @@ cd ~/Documents/Claude/template/repo
 #                                                                            ↑ topics : csv, facultatif
 ```
 
+> 🔴 **Sur un repo qui EXISTAIT déjà, le script peut signaler une « branch protection CLASSIQUE encore active ».** C'est l'**ancien** système de protection, que l'API `rulesets` **ne montre pas** — et il se **cumule** avec le ruleset. S'il exige un check nommé d'après un job qui a disparu *(ce qui arrive dès qu'on adopte les workflows du template)*, **plus aucune PR ne peut jamais être mergée**, CI verte ou pas, avec le seul message « base branch policy prohibits the merge ».
+> **→ La retirer MAINTENANT** *(le ruleset vient d'être posé : la branche n'est jamais sans protection)* : https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/branches — section **« Branch protection rules »**, à distinguer de la section **« Rulesets »** juste en dessous. *(Le badge « Protected » s'allume pour les deux : regarder la SECTION, pas le badge.)*
+
 > **La description ET les topics exigent `Administration:write`** — l'assistant, qui n'a **jamais** cette permission, reçoit un **403**. **Seul ce script peut les poser.**
 > Sans description, le community health **plafonne à 85 %**. Sans topic, le repo **ne remonte dans aucune recherche GitHub par sujet**. Le script **le signale** dans les deux cas au lieu de laisser le trou passer.
 
@@ -208,7 +211,7 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 |---|---|---|
 | 1 | Claude | `CHANGELOG.md` : passer `Unreleased` en `X.Y.Z` *(ce que la release raconte à l'utilisateur ; les notes GitHub listent les PR — les deux sont complémentaires)*. |
 | 2 | Claude | *(si `--staging`)* PR `develop → main`, CI verte, merge **en merge commit** *(jamais squash — §12)*. ⚠️ **PUIS : voir l'encadré ci-dessous — ce merge SUPPRIME `develop` tant que le repo est privé.** |
-| 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → `release.yml` crée la **Release**, `docker-publish.yml` pousse l'**image ghcr** *(si `--artefact`)*. |
+| 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → la **Release** est créée, et l'**image ghcr** poussée *(si `--artefact`)*. ⚠️ **Avec `--artefact`, la Release est le job `release` de `docker-publish.yml`** *(`needs: build-push` — pas de Release si l'image n'a pas été publiée)* ; **sans** cette capacité, c'est `release.yml`. **Un seul des deux existe**, jamais les deux. |
 | 4 | **Romain** | ⚠️ **1ʳᵉ release — VÉRIFIER que le package ghcr est tirable, et n'agir QUE s'il ne l'est pas.** Sur un compte **PERSO**, un package publié depuis un repo **public** hérite de son accès : il est tirable **aussitôt**, aucun geste. Sur une **ORG**, il peut être **PRIVÉ** *(défaut d'org)* → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **`configure-repo.sh` fait le test lui-même** et ne réclame le geste que s'il échoue. |
 | 5 | Claude | Vérifier que l'image est **réellement tirable** — `configure-repo.sh` le teste **anonymement**, comme le fait le host de prod. ⚠️ **Un job « Publish image » VERT ne prouve RIEN** : il peut réussir alors que l'image reste **intirable** (package privé). |
 
