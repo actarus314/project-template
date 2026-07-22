@@ -48,6 +48,20 @@
       "description": "Minor/patch groupés en une PR. Les MAJEURES restent isolées : un major de scanner change les règles, donc les findings — ça se regarde seul.",
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "template — outils CI (actions, binaires, pip)"
+    },
+    {
+      "description": [
+        "renovate-config-validator : auto-mergé. Il publie ~6 fois par JOUR — épinglé exact, il",
+        "produirait une PR mécanique chaque lundi, à réviser pour rien. C'est un outil de LINT CI,",
+        "jamais livré au runtime, et son auto-merge est GARDÉ par la CI qui l'exécute : si une",
+        "version amont régresse, `validate-renovate` rougit et la PR ne passe pas. C'est justement",
+        "le mode d'échec (un validateur qui MENT) que le plancher `>= 43` visait — ici on le voit",
+        "AVANT `main`, au lieu de le subir dessus."
+      ],
+      "matchDepNames": ["renovate"],
+      "matchDatasources": ["npm"],
+      "groupName": null,
+      "automerge": true
     }
   ],
 
@@ -87,6 +101,25 @@
       ],
       "depNameTemplate": "aquasecurity/trivy",
       "datasourceTemplate": "github-release-attachments"
+    },
+    {
+      "description": [
+        "renovate-config-validator, épinglé EXACT. Il vient de npm et non d'une release GitHub :",
+        "pas de `currentDigest` ici — une version npm est IMMUABLE, le checksum n'ajoute rien.",
+        "Le pin, lui, est nécessaire : `renovate@43` résolvait la dernière 43.x À CHAQUE RUN, donc",
+        "`main` pouvait rougir sans qu'une ligne bouge (vécu le 22/07 : la 43.278.0 venait d'être",
+        "publiée et n'était pas encore résolvable). Un flottement ne donne PAS que les correctifs :",
+        "il donne aussi les régressions, tout de suite, et SANS version connue-bonne où revenir.",
+        "⚠ `check.sh` porte la même version — il est DANS les managerFilePatterns pour ça."
+      ],
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/",
+        "/^check\\.sh$/"
+      ],
+      "matchStrings": ["renovate@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "renovate",
+      "datasourceTemplate": "npm"
     }
   ]
 }
