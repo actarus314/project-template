@@ -46,7 +46,7 @@ jobs:
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
       - name: shellcheck the scripts, the local runner and the hooks (shellcheck is preinstalled)
-        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh .githooks/pre-commit .githooks/pre-push
+        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh open-pr.sh .githooks/pre-commit .githooks/pre-push
 
   generate-and-lint:
     runs-on: ubuntu-latest

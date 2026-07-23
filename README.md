@@ -58,7 +58,7 @@ template/
 
 | | Rôle |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** | **Les outils.** Ce qu'on exécute. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **Les outils.** Ce qu'on exécute. |
 | **`templates/`** | **Ce qui est COPIÉ dans un projet** — et rien d'autre. `repo/` (fichiers versionnés) · `workflows/` (CI) · `workspace/` (hors Git). |
 | **`docs/`** | **La référence, à lire à l'usage.** La méthode, le standard, le runbook, la carte des contrôles. |
 | **`../workspace/`** | **Comment ce template a été construit.** Journal de bord, décisions, recherches, les défauts trouvés. À lire pour comprendre *pourquoi*, jamais pour *faire*. |
