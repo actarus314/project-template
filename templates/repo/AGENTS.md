@@ -42,6 +42,10 @@ A private repository on a Free plan has **no rulesets**: every check below still
 **none of them is required** — GitHub would accept a direct push to `main`, or the merge of a
 red pull request. The safety net is local, and partly human.
 
+- **Open PRs with `./open-pr.sh <base> <title> <body-file>`** — it pushes, opens the PR, and
+  confirms a `pull_request` run actually starts. GitHub intermittently fails to dispatch the CI
+  run; a PR with **0 runs** looks like a pass but was never checked. If none appears it
+  close/reopens the PR to re-fire the event. **"0 runs" is never green.**
 - **Never merge a pull request whose CI is not green.** Nothing on the server prevents it.
   Check first, every time:
 
@@ -86,6 +90,7 @@ red pull request. The safety net is local, and partly human.
 - **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
   Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
 - **`./check.sh`** — replays the CI's security checks locally at the pinned versions, so `local == github`.
+- **`./open-pr.sh`** — opens a PR and makes sure CI starts on it (GitHub sometimes drops the dispatch).
 - **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,
   `actionlint` + `zizmor` on the workflows, `semgrep` static analysis, `osv-scanner` on every
   manifest it discovers (`-r .`; CI-only tooling is out of scope via .gitignore), then the project's own tests.

@@ -77,6 +77,12 @@ chmod +x "$DEST/repo/.githooks/"*
 cp "$TPL/check.sh" "$DEST/repo/check.sh"
 chmod +x "$DEST/repo/check.sh"
 
+# Same shared-script model: open-pr.sh opens a PR and makes sure CI actually starts on
+# it (GitHub intermittently fails to dispatch the pull_request run — a PR with 0 runs
+# reads as a pass but was never checked). English, copied verbatim like check.sh.
+cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
+chmod +x "$DEST/repo/open-pr.sh"
+
 # Fichiers versionnés GitHub (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
 cp "$TPL/templates/repo/.gitattributes"      "$DEST/repo/.gitattributes"
@@ -294,7 +300,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # Liste EXPLICITE (jamais `git add -A` : `.env` et `.envrc` portent des secrets et sont gitignorés,
 # mais on ne parie pas là-dessus). ⚠ Corollaire : tout fichier AJOUTÉ au template doit être ajouté
 # ICI — sinon il est créé sur disque et JAMAIS committé. Le filet ci-dessous le rend bruyant.
-git add .gitignore .env.example README.md .gitattributes LICENSE check.sh \
+git add .gitignore .env.example README.md .gitattributes LICENSE check.sh open-pr.sh \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 # requirements-ci.txt est gitignoré EXPRÈS (soustrait au scan osv, cf. .gitignore) : un `git add` simple
 # le sauterait EN SILENCE → CI cassée (`pip install -r`). `-f` le versionne quand même (motif .envrc).

@@ -4,7 +4,7 @@
 Ce fichier suit la convention [AGENTS.md](https://agents.md) ; Claude Code le lit via l'import `@AGENTS.md` de `CLAUDE.md` (local, non suivi).
 
 > **Exemption de langue** : ce repo est en **français** *(standard §1)*. Les projets qu'il **génère**, eux, restent en **anglais** — les gabarits de `templates/repo/` le sont déjà.
-> **Seule exception à l'exemption : `check.sh` est en anglais.** `init-project.sh` le copie **verbatim** dans chaque projet généré *(anglais)* — un seul fichier partagé, donc écrit dans la langue des générés, pas celle de ce repo. Ne pas le « re-franciser » au nom de §1.
+> **Seule exception à l'exemption : `check.sh` ET `open-pr.sh` sont en anglais.** `init-project.sh` les copie **verbatim** dans chaque projet généré *(anglais)* — fichiers partagés, donc écrits dans la langue des générés, pas celle de ce repo. Ne pas les « re-franciser » au nom de §1.
 
 ## Ce que c'est
 
@@ -26,6 +26,7 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 ./init-project.sh <projet> <owner>/<repo> [parent] [--type static|node|generic] [--pages] [--artefact] [--staging]
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ./check.sh   # rejoue les checks de la CI EN LOCAL, aux versions épinglées (local == github)
+./open-pr.sh <base> <titre> <fichier-corps>   # ouvre une PR ET s'assure que la CI démarre (via direnv exec)
 ```
 
 `configure-repo.sh` est **joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a **jamais** `Administration`.
@@ -38,7 +39,7 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
 
 **`repo/` est PR-only.** On n'écrit **jamais** sur `main` directement : le hook `pre-push` le refuse *(il est le substitut du ruleset, absent tant que le repo est privé)*.
 
-- Brancher `feat/…` → pousser → ouvrir la PR.
+- Brancher `feat/…` → **ouvrir la PR avec `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`** : il pousse, ouvre la PR, ET **vérifie qu'un run `pull_request` démarre** — GitHub omet parfois de dispatcher la CI *(vu #117, #33)*, et une PR à **0 run** se lit comme un vert alors qu'elle n'a **jamais** été testée. S'il manque, il close/reopen pour re-tirer l'event *(seul re-déclencheur qui reproduit les checks REQUIS `pull_request`)*. 🔴 **« 0 run » n'est JAMAIS un vert.**
 - Une **CI** *(`.github/workflows/ci.yml`)* valide chaque PR : elle lint ses **propres** workflows, génère des projets et linte **leurs** workflows en conditions réelles.
 - **Merger seulement CI verte.** Vérifier, à chaque fois — jamais `gh pr checks` *(permission `Checks` non accordable)* :
   ```bash
