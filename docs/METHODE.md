@@ -23,7 +23,7 @@ Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voi
 | Rôle | Contient | **Ne contient JAMAIS** |
 |---|---|---|
 | **LE SUIVI** *(défaut : `workspace/docs/SUIVI.md`)* | Où on en est · les décisions · les pièges · **ce qui reste** *(bref — POINTE vers un plan si c'est lourd)*. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long · **le livré** *(purgé)* · les plans complets |
-| **LES ARCHIVES** *(défaut : `workspace/docs/archives/*.md`)* | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
+| **LES ARCHIVES** *(défaut : `workspace/docs/archives/<étape>/`)* | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
 | **LES GESTES** *(`RUNBOOK.md`)* | Les gestes, dans l'**ORDRE**, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ conventions)* · l'historique *(→ archives)* |
 | **LES CONVENTIONS** *(`claude-code-project-standard.md`, les ADR)* | Les règles et le **POURQUOI** de chaque règle. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
 | **LE CODE** *(scripts, workflows)* | **ce que le code NE PEUT PAS dire** : une contrainte non évidente, un piège qui se rejouerait. | **le récit historique.** Jamais *« constaté le 14/07 sur test003… »* |
