@@ -758,7 +758,10 @@ if [ "$PULL_STATE" = "ko" ]; then
   # /users/<o>/… sur un compte perso.
   OWNER_TYPE=$(gh_val '.type' 'Organization' "users/${SLUG%%/*}")
   if [ "$OWNER_TYPE" = "User" ]; then PKG_NS="users"; else PKG_NS="orgs"; fi
-  echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${SLUG##*/}/settings"
+  # Le nom du package vient d'`images:` (cf. plus haut), JAMAIS du slug : `DecantFi` publie
+  # sous `decantfi-collector`. Le déduire donnait une URL 404 — précisément au moment où ce
+  # rappel compte. `IMG` est en portée : PULL_STATE=ko n'est posé que là où il est calculé.
+  echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${IMG#*/}/settings"
   echo "     Sans ce geste, le pull anonyme renvoie 403 : ni le host de prod ni un"
   echo "     utilisateur ne peuvent tirer l'image. (Constate sur test002 — une ORG.)"
   echo "     Org-wide : Settings > Packages > Package creation > default visibility."
