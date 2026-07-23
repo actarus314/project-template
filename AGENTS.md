@@ -4,6 +4,7 @@
 Ce fichier suit la convention [AGENTS.md](https://agents.md) ; Claude Code le lit via l'import `@AGENTS.md` de `CLAUDE.md` (local, non suivi).
 
 > **Exemption de langue** : ce repo est en **français** *(standard §1)*. Les projets qu'il **génère**, eux, restent en **anglais** — les gabarits de `templates/repo/` le sont déjà.
+> **Seule exception à l'exemption : `check.sh` est en anglais.** `init-project.sh` le copie **verbatim** dans chaque projet généré *(anglais)* — un seul fichier partagé, donc écrit dans la langue des générés, pas celle de ce repo. Ne pas le « re-franciser » au nom de §1.
 
 ## Ce que c'est
 
