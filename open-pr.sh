@@ -17,7 +17,7 @@
 #
 # Usage:  ./open-pr.sh <base-branch> <title> <body-file>
 #   Head = the current branch (already committed). Needs gh + git authenticated;
-#   in this template's flow, run it under `direnv exec <repo>` so the .envrc PAT loads.
+#   in this template's flow, run it under `direnv exec` from the repo dir so the .envrc PAT loads.
 #
 # This is a SHARED file: init-project.sh copies it verbatim into every generated
 # project (like check.sh), so it is written in English regardless of the repo's language.
