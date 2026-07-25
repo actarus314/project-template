@@ -174,6 +174,12 @@ Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran,
 > **NE JAMAIS LA MERGER** *(la merger activerait la config **par DÉFAUT** de Renovate, pas la `renovate.json` **accordée** du template)*.
 > **Conduite à tenir : FERMER la PR d'onboarding** *(Renovate s'arrête, et il ne la rouvre pas)*, **puis commiter `.github/renovate.json`** — Renovate redémarre de lui-même dès qu'il voit le fichier. Le geste est **réversible dans les deux sens**.
 
+### Étape 9 — Romain, **si le repo a un arbre npm** : activer Dependabot malware alerts (UI)
+
+> **npm-only · AUCUNE API → `configure-repo.sh` NE PEUT PAS le poser** *(cf. §7)*. Disponible **dès le privé Free** *(pas gaté par le plan)*.
+> **→ Settings → Advanced Security → *Dependabot malware alerts* → Enable.**
+> Détecte les versions npm **malveillantes** *(paquet compromis, typosquat)* — un angle que **Renovate ne couvre pas** : Renovate remédie aux **CVE** par montée de version, or un paquet malveillant n'a souvent **aucune version saine** où bumper. **Inutile sur un repo sans `package.json`.**
+
 ---
 
 ## 2 · Travailler au quotidien
@@ -225,7 +231,8 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 > ```
 > *(Le script le détecte et le signale : il compare le bloc `## Branching` de `CONTRIBUTING.md` à ce qui **existe** réellement.)*
 
-> ⚠️ **Les immutable releases ne sont PAS rétroactives.** Elles doivent être posées **avant la v1** *(`configure-repo.sh` s'en charge au flip)*. Après, il est trop tard pour les releases déjà publiées.
+> ⚠️ **Les immutable releases ne sont PAS rétroactives.** Elles doivent être posées **avant la v1** — après, il est trop tard pour les releases déjà publiées.
+> `configure-repo.sh` s'en charge **dès le privé** *(le réglage y est disponible)* : rien à attendre, et un repo qui ne bascule jamais en public est couvert lui aussi.
 
 ---
 
@@ -281,7 +288,21 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 - **Tout ce qui exige `Administration`** : rulesets, secret scanning, Pages, immutable releases, description, **topics** → **PAT admin éphémère, joué par Romain**. ⚠️ **Ce sont des gestes du SCRIPT, pas des gestes « à la main »** : `configure-repo.sh` les pose tous *(topics inclus : `PUT /repos/{o}/{r}/topics` exige `administration=write`)*.
 - **Rendre un package ghcr public** → **UI, aucune API** *(les PAT fine-grained ne couvrent pas ghcr — seuls les PAT `classic` le font)*. Le script **le TESTE** *(pull anonyme réel)* et **ne le réclame que si le test échoue** *(détail : §3 étape 4)*.
 - **Reported content** → UI, aucune API.
-- **2FA** → **UI, aucune API.** ✅ **DÉJÀ ACTIF sur le compte de Romain.** Réglage de **COMPTE**, **une fois pour toutes** — **pas** un geste par repo, et **plus rien à faire**.
+- **Activer Dependabot malware alerts** *(repos npm)* → **UI, aucune API** — npm-only, dispo dès le privé Free *(détail : §1 étape 9)*.
+- **2FA** → **UI, aucune API.** ✅ **DÉJÀ ACTIF sur le compte de Romain.** Réglage de **COMPTE**, **une fois pour toutes** — **pas** un geste par repo. ⚠️ **Ne pas le confondre avec le 2FA OBLIGATOIRE d'une ORG**, qui est un réglage **distinct** *(imposer le 2FA aux membres)* — voir l'encart ci-dessous.
 - **Dismiss une alerte secret scanning** → **Romain seul.**
+
+> ### Si le repo vit dans une ORGANISATION — 4 réglages, une seule fois par org
+> **Aucun n'est scriptable sans un PAT `Organization Administration`** *(permission sans granularité : qui peut lire peut tout écrire)* — donc **UI, geste de Romain**.
+> ✅ **Déjà posés sur `bayalis` et `quatrecarre`** *(25/07)* — c'est l'**état attendu** de toute org :
+>
+> | Réglage | Où | Valeur |
+> |---|---|---|
+> | **2FA obligatoire** | `/settings/security` | activé |
+> | **PAT classiques** | `/settings/personal-access-tokens?tab=classic` | **Restrict** *(bloqués)* |
+> | **PAT fine-grained** | `/settings/personal-access-tokens` | approbation admin **requise** + durée de vie max **90 j** |
+> | **Visibilité par défaut des packages** | `/settings/packages` | ⚠️ sur une **org**, un package ghcr est **privé d'office** *(§3 étape 4)* |
+>
+> ⛔ **Ce que l'org n'apporte PAS, malgré les apparences** : les **rulesets d'org** exigent **Team** *(bandeau explicite sur `/settings/rules`)* · une **code security configuration** ne remplace le geste repo qu'à partir de **plusieurs** repos *(en dessous, `configure-repo.sh` fait déjà tout)* · l'écran **« Advanced Security »** laisse croire que **Dependabot** est derrière le mur payant : **c'est faux**, il est gratuit, privé compris — c'est `/settings/security_analysis` qui dit vrai.
 
 > **Pourquoi le PAT admin est JETABLE plutôt que dégradé après coup** → `github-repo-config.md` §2. *(En un mot : **révoquer est binaire ; dégrader des droits ne l'est pas** — et un retrait manuel est oubliable.)*

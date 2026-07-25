@@ -51,7 +51,7 @@
 ### En plus — CAPACITÉ `staging`
 | Contrôle | Réglage |
 |---|---|
-| **Ruleset `develop`** | mêmes exigences que `main`. |
+| **Ruleset `develop`** | les exigences de `main`, **moins deux, à dessein** : ❌ pas de `code_scanning` *(CodeQL n'analyse que `main` — l'exiger ici bloquerait toute PR sur un check qui n'arrivera jamais)* · ❌ **squash SEUL** *(le merge commit est réservé à `main`, pour les promotions)*. |
 | **Merge commit autorisé sur `main`** | squash seul est **incompatible** avec une branche de staging. |
 
 > **Note plan** : sur compte perso (non-org), le secret scanning public n'a que les **patterns par défaut** — pas de regex custom ni validity checks (réservés à GitHub Secret Protection, payant/org). D'où l'intérêt de gitleaks pour des secrets non standards.
@@ -115,11 +115,26 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 
 ## 4. Mise en place — scriptable vs UI (pour `configure-repo.sh`)
 
+> 🔴 **La VISIBILITÉ décide plus que le plan.** Cinq contrôles sont **impossibles** sur un repo **privé** — et **pas achetables** : il faut d'abord passer l'org en Team, *puis* acheter le produit. Sur un repo **public**, ils sont **gratuits**, même en Free.
+>
+> | Au FLIP public seulement | Dès la CRÉATION, privé compris |
+> |---|---|
+> | secret scanning · push protection · CodeQL · **rulesets** · PVR *(gate de VISIBILITÉ, pas de plan)* | cœur repo · merge · `GITHUB_TOKEN=read` · Dependabot alerts + security updates · **immutable releases** · fork-PR · rétention |
+>
+> ➡️ **Conséquence pratique** : rendre un repo public est une décision de **sécurité**, pas seulement d'ouverture. Et `configure-repo.sh` **lit `visibility`** pour appliquer cette partition — il est donc **fait pour être rejoué au flip**.
+>
+> ⚠️ **Ne jamais lire un champ absent comme « désactivé »** : sans `Administration`, `security_and_analysis` n'erreure pas — la clé est **omise**. « Vide » ≠ « off ».
+
 | Réglage | Comment |
 |---|---|
+| **Immutable releases** | `gh api -X PUT repos/{o}/{r}/immutable-releases` (`Administration: write` — **déjà** dans la recette du PAT admin). 🔴 **NON RÉTROACTIF** → posé **dès le privé** *(le réglage y est disponible)*, jamais reporté au flip : ce qui n'est pas couvert à la publication d'une release ne le sera **jamais**. |
+| **Private vulnerability reporting** | `gh api -X PUT repos/{o}/{r}/private-vulnerability-reporting` — **public-only** *(sans objet en privé : aucun chercheur externe n'y accède)*. |
+| **`sha_pinning_required`** *(« Require actions to be pinned to a full-length commit SHA »)* | `PUT /repos/{o}/{r}/actions/permissions` — scriptable, dispo privé Free. ⏸️ **Délibérément NON posé** : le toggle natif est **plus strict que notre convention**, qui tolère le tag majeur pour `actions/*` et `github/*`. L'activer forcerait tout en SHA complet, first-party compris. *(zizmor couvre déjà le tiers.)* |
+| **Dependabot malware alerts** | ⚠️ **UI, aucune API** *(ni champ `security_and_analysis`, ni endpoint)* — **npm-only**, dispo dès le privé Free. Détecte le paquet **malveillant**, angle que Renovate ne couvre pas *(il remédie aux CVE par montée de version ; un paquet malveillant n'a souvent aucune version saine)*. → geste de Romain, RUNBOOK §1 étape 9. |
 | CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, et DANS `configure-repo.sh`** |
 | Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
-| Secret scanning / push protection · `dependabot_security_updates` **=enabled** *(filet ; Renovate ajoute l'auto-merge — bascule à `disabled` une fois une PR sécu Renovate vue en privé)* | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
+| Secret scanning / push protection | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
+| **Dependabot security updates** *(le filet ; Renovate ajoute l'auto-merge — `DELETE` une fois une PR sécu Renovate vue en privé)* | `gh api -X PUT repos/{o}/{r}/automated-security-fixes` — 🔴 **endpoint DÉDIÉ, PAS une sous-clé de `security_and_analysis`** : `dependabot_security_updates` est dans le schéma de **réponse** du GET, **pas** dans les body-params du PATCH. Le passer au PATCH **ne lève aucune erreur** — il est ignoré, **en silence**. |
 | Rulesets | `gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json` (`gh ruleset` = lecture seule) |
 | Topics / homepage / merge-methods / delete-branch | `gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge` |
 | Updates Renovate · gitleaks · npm audit · CI | **fichiers committés** (`.github/renovate.json`, `.github/workflows/*.yml`), pas d'API |
