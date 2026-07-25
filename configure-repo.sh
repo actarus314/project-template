@@ -207,20 +207,11 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
-#    dependabot_security_updates RESTE activé — c'est le FILET, à dessein. Renovate ouvre AUSSI des PR
-#    de remédiation sécu (vulnerabilityAlerts, auto-mergées) ; garder Dependabot ON garantit DEUX choses :
-#    (1) le dependency graph est actif (prérequis des security updates) DONC Renovate a bien la donnée
-#        d'alerte à LIRE — sans quoi son chemin sécu serait vide, en silence ;
-#    (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
-#    Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
-#    Renovate VUE sur un repo PRIVÉ, basculer cette clé à 'disabled' (fin de la bascule full-Renovate —
-#    cf. workspace/archives/2026-07-autodetection/SYNTHESE.md).
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
-  -f 'security_and_analysis[dependabot_security_updates][status]=enabled' \
   >/dev/null 2>&1 \
-  && echo "  ✓ secret scanning + push protection + Dependabot security updates (filet, jusqu'à vérif Renovate en privé)" \
+  && echo "  ✓ secret scanning + push protection" \
   || { echo "  ⚠ secret scanning / push protection : NON activés."; \
        echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"; \
        echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."; \
@@ -231,6 +222,23 @@ mutate gh api -X PATCH "repos/$SLUG" \
 mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
   && echo "  ✓ Dependabot alerts (détection — Renovate les lit pour ses PR sécu)" \
   || echo "  ⚠ vulnerability-alerts : échec — vérifier dans l'UI"
+
+# 3a. Dependabot security updates — c'est le FILET, à dessein. Renovate ouvre AUSSI des PR de
+#     remédiation sécu (vulnerabilityAlerts, auto-mergées) ; garder Dependabot ON garantit DEUX choses :
+#     (1) le dependency graph est actif (prérequis des security updates) DONC Renovate a bien la donnée
+#         d'alerte à LIRE — sans quoi son chemin sécu serait vide, en silence ;
+#     (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
+#     Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
+#     Renovate VUE sur un repo PRIVÉ, DELETE sur cet endpoint (fin de la bascule full-Renovate —
+#     cf. workspace/archives/2026-07-autodetection/SYNTHESE.md).
+#     ⚠ ENDPOINT DÉDIÉ, et non une sous-clé de `security_and_analysis` : `dependabot_security_updates`
+#       apparaît dans le schéma de RÉPONSE du GET /repos, mais PAS dans les body-params du PATCH.
+#       Le passer au PATCH ne lève aucune erreur — il est simplement ignoré, EN SILENCE. Un réglage
+#       qu'on croit posé parce que l'appel a répondu 200 est pire qu'un réglage absent.
+#     Doit suivre `vulnerability-alerts` : les security updates n'ont rien à remédier sans la détection.
+mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
+  && echo "  ✓ Dependabot security updates (filet, jusqu'à vérif Renovate en privé)" \
+  || echo "  ⚠ automated-security-fixes : échec — vérifier Settings → Advanced Security."
 
 # 3b. Private vulnerability reporting — SANS LUI, LE LIEN DE SECURITY.md EST MORT.
 #     SECURITY.md pointe vers /security/advisories/new : si la fonctionnalité est désactivée,
@@ -250,22 +258,23 @@ fi
 #     Le ruleset 'tags' fige le tag ; celui-ci fige les ASSETS de la release. Sans les deux,
 #     le pin de prod `APP_IMAGE_TAG=1.2.3` reste contournable : on ne bouge pas le tag,
 #     on remplace le binaire attaché sous le même tag.
-#     ⚠ NON RÉTROACTIF : « immutability will only apply to future releases ». Posé ici, donc
-#       AVANT la v1 — c'est le seul moment où ça sert. Une release déjà publiée reste mutable.
-#     Gaté sur le PUBLIC : la release est coupée après la bascule (cycle nominal), et les features
-#     supply-chain sont indisponibles en privé/Free — appeler en privé ne ferait que produire un
-#     faux diagnostic (cf. défauts 19-22 : `gh api` écrit ses erreurs sur STDOUT).
+#     🔴 NON RÉTROACTIF : « immutability will only apply to future releases ». C'est ce qui dicte
+#       le moment : on le pose AU PLUS TÔT, sans attendre, car ce qui n'est pas couvert à la
+#       publication d'une release ne le sera JAMAIS.
+#     ⚠ POSÉ DÈS LE PRIVÉ — et surtout PAS gaté sur le public. Le réglage EST disponible sur un
+#       repo privé Free : la case « Enable release immutability » y est présente et actionnable
+#       (Settings → General → Releases), sans l'encart « Upgrade or make this repository public »
+#       que GitHub affiche sur les features réellement gatées (Wikis, juste en dessous).
+#       Le gater reviendrait à laisser DÉFINITIVEMENT nues les releases d'un repo qui ne bascule
+#       jamais en public — et l'arbitrage est asymétrique : poser tôt ne coûte rien (idempotent),
+#       poser trop tard ne se rattrape pas.
 #     PUT sans corps → 204. GET renvoie { enabled, enforced_by_owner }.
-if [ "$IS_PRIVATE" = "false" ]; then
-  if mutate gh api -X PUT "repos/$SLUG/immutable-releases" >/dev/null 2>&1; then
-    echo "  ✓ immutable releases (les assets d'une release ne peuvent plus être remplacés)"
-  else
-    echo "  ⚠ immutable releases : ÉCHEC → une release publiée pourra voir ses assets REMPLACÉS."
-    echo "    Le pin du §13 devient contournable sans toucher au tag. Activer dans l'UI :"
-    echo "    Settings → Releases → Enable release immutability (NON rétroactif : avant la v1)."
-  fi
+if mutate gh api -X PUT "repos/$SLUG/immutable-releases" >/dev/null 2>&1; then
+  echo "  ✓ immutable releases (les assets d'une release ne peuvent plus être remplacés)"
 else
-  echo "  ↳ immutable releases : reporté à la bascule publique (non rétroactif → posé avant la v1)."
+  echo "  ⚠ immutable releases : ÉCHEC → une release publiée pourra voir ses assets REMPLACÉS."
+  echo "    Le pin du §13 devient contournable sans toucher au tag. Activer dans l'UI :"
+  echo "    Settings → Releases → Enable release immutability (NON rétroactif : avant la v1)."
 fi
 
 # 3c. GITHUB_TOKEN en LECTURE SEULE par défaut (check OpenSSF « Token-Permissions »).
