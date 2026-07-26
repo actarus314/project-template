@@ -207,15 +207,28 @@ echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
+SS_OK=0
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
-  >/dev/null 2>&1 \
-  && echo "  ✓ secret scanning + push protection" \
-  || { echo "  ⚠ secret scanning / push protection : NON activés."; \
-       echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"; \
-       echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."; \
-       echo "    → REJOUER ce script au passage en public."; }
+  >/dev/null 2>&1 || SS_OK=1
+# 🔴 EN DRY-RUN, LE VERDICT NE PEUT PAS VENIR DU CODE DE RETOUR : `mutate` réussit TOUJOURS (il
+#    n'appelle rien). Le ✓ s'afficherait donc même là où l'appel est VOUÉ à échouer — et sur un repo
+#    privé Free, secret scanning est INDISPONIBLE. Or le dry-run est justement l'outil qui sert à
+#    auditer un repo VIVANT sans rien risquer : le laisser annoncer « posé » produit un FAUX RAPPORT
+#    DE CONFORMITÉ, exactement sur les repos privés qu'on audite. On tranche donc sur la VISIBILITÉ.
+#    (Même garde que CodeQL plus bas — elle y avait été posée pour ce seul appel, jamais généralisée.)
+if [ "$DRY" -eq 1 ]; then
+  [ "$IS_PRIVATE" = "true" ] && SS_OK=1 || SS_OK=0
+fi
+if [ "$SS_OK" -eq 0 ]; then
+  echo "  ✓ secret scanning + push protection"
+else
+  echo "  ⚠ secret scanning / push protection : NON activés."
+  echo "    Attendu sur un repo PRIVÉ en plan Free (indisponibles — standard §18) :"
+  echo "    le hook pre-commit gitleaks est alors le SEUL filet anti-secret."
+  echo "    → REJOUER ce script au passage en public."
+fi
 
 # 3. Dependabot alerts — la DÉTECTION de CVE (native, gratuite en privé). Gardée : Renovate la LIT
 #    (vulnerabilityAlerts) pour ouvrir ses PR de remédiation. Sans elle, pas de PR sécu Renovate.
@@ -244,7 +257,14 @@ mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
 #     SECURITY.md pointe vers /security/advisories/new : si la fonctionnalité est désactivée,
 #     un chercheur externe n'a AUCUN moyen de signaler une faille en privé… et la publiera
 #     donc en issue publique, avant tout correctif. Gratuit, aucun entretien.
-if mutate gh api -X PUT "repos/$SLUG/private-vulnerability-reporting" >/dev/null 2>&1; then
+#     PVR est **public-only** : c'est un gate de VISIBILITÉ, pas de plan. En dry-run le `✓`
+#     ci-dessous serait donc annoncé à tort sur un repo privé — même garde qu'au §2.
+PVR_OK=0
+mutate gh api -X PUT "repos/$SLUG/private-vulnerability-reporting" >/dev/null 2>&1 || PVR_OK=1
+# ⚠ `[ a ] && [ b ] && x=1` SEUL sur sa ligne renverrait 1 quand le test est faux — et `set -e`
+#   tuerait le script. Le `if` n'est pas du style : c'est ce qui l'empêche de mourir en mode réel.
+if [ "$DRY" -eq 1 ] && [ "$IS_PRIVATE" = "true" ]; then PVR_OK=1; fi
+if [ "$PVR_OK" -eq 0 ]; then
   echo "  ✓ private vulnerability reporting (le lien de SECURITY.md fonctionne)"
 elif [ "$IS_PRIVATE" = "true" ]; then
   echo "  ↳ private vulnerability reporting : SANS OBJET en privé (aucun chercheur externe n'y accède)."
@@ -308,12 +328,19 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
     mutate gh api -X PUT "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1 \
       && echo "  ✓ Pages : déjà créé, source confirmée = GitHub Actions" \
       || echo "  ⚠ Pages : site existant, source non modifiable — vérifier Settings → Pages"
-  elif mutate gh api -X POST "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1; then
-    echo "  ✓ Pages : site créé, source = GitHub Actions"
+  # 3ᵉ appel gaté par la VISIBILITÉ (après secret scanning et PVR) : Pages est indisponible sur un
+  # repo privé Free. Même garde de dry-run — sans elle, `mutate` réussit et le script annonce un site
+  # « créé » là où il ne peut pas exister. (La branche « déjà créé » ci-dessus n'en a PAS besoin :
+  # que la LECTURE ait réussi prouve que ce repo peut porter des Pages.)
   else
+    PAGES_OK=0
+    mutate gh api -X POST "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1 || PAGES_OK=1
+    if [ "$DRY" -eq 1 ] && [ "$IS_PRIVATE" = "true" ]; then PAGES_OK=1; fi
+    if [ "$PAGES_OK" -eq 0 ]; then
+      echo "  ✓ Pages : site créé, source = GitHub Actions"
     # NE PAS imputer l'échec à la visibilité sans la lire : le vrai motif
     # était que le PAT admin n'avait pas « Pages: write » — permission DISTINCTE d'Administration.
-    if [ "$(gh api "repos/$SLUG" --jq '.visibility')" = "private" ]; then
+    elif [ "$IS_PRIVATE" = "true" ]; then
       echo "  ⚠ Pages : indisponible sur un repo PRIVÉ en plan Free → sera créé au passage en public."
     else
       echo "  ⚠ Pages : création refusée sur un repo PUBLIC → le PAT admin manque « Pages: write »"
