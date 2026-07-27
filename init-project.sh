@@ -176,7 +176,10 @@ if [ "$ARTEFACT" = 1 ]; then
   # pull` non tirable. configure-repo.sh minuscule déjà de son côté ; on s'aligne à la source.
   IMG="$(printf '%s' "${SLUG##*/}" | tr '[:upper:]' '[:lower:]')"; IMG="${IMG:-$PROJ}"
   DP="$DEST/repo/.github/workflows/docker-publish.yml"
-  sed "s|<image-name>|$IMG|g" "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
+  # `<owner>/<repo>` AUSSI, et pas seulement `<image-name>` : ce fichier est copié APRÈS la passe de
+  # substitution globale plus haut, donc il ne la voit pas. Le `cosign verify` que porte son
+  # commentaire cite le slug — non substitué, il apprendrait à vérifier une identité qui n'existe pas.
+  sed -e "s|<image-name>|$IMG|g" ${SLUG:+-e "s|<owner>/<repo>|$SLUG|g"} "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
   # `docker-publish.yml` porte SON PROPRE job `release` (`needs: build-push`) : la release annonce
   # une image, elle ne doit pas exister si la publication a échoué — et `needs` ne traverse pas les
   # workflows. Garder les deux fichiers ne les départagerait PAS : ils démarrent ensemble sur le tag
