@@ -204,6 +204,14 @@ elif [ "$(gh_val '.names | length' 0 "repos/$SLUG/topics")" -eq 0 ]; then
 fi
 echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on-merge${HOMEPAGE:+, homepage}${DESCRIPTION:+, description}${TOPICS:+, topics}"
 
+# Discussions — le gabarit `.github/ISSUE_TEMPLATE/config.yml` renvoie vers `/discussions` sur
+# CHAQUE repo généré. Sans cette activation, ce lien est un 404 : le premier tiers qui cherche à
+# poser une question tombe sur une page morte, et rien ne le signale au mainteneur. Le poser ici
+# plutôt que dans le runbook — le script tient déjà le PAT admin que l'activation exige.
+mutate gh api -X PATCH "repos/$SLUG" -F has_discussions=true >/dev/null 2>&1 \
+  && echo "  ✓ Discussions ouvertes (sans elles, le lien 'Question / Discussion' du template d'issue est un 404)" \
+  || echo "  ⚠ Discussions : échec — les ouvrir dans l'UI (Settings → General → Features), sinon le lien du template d'issue est mort"
+
 # 2. Fonctionnalités de sécurité (ADMINISTRATION).
 #    ⚠ Sur compte perso (non-org), certaines sous-clés peuvent être no-op —
 #      confirmer ensuite dans Settings → Code security.
