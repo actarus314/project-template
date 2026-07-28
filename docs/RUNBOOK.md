@@ -221,8 +221,10 @@ gh pr merge --squash                # SEULEMENT si tous les workflows attendus s
 | 4 | **Romain** | ⚠️ **1ʳᵉ release — VÉRIFIER que le package ghcr est tirable, et n'agir QUE s'il ne l'est pas.** Sur un compte **PERSO**, un package publié depuis un repo **public** hérite de son accès : il est tirable **aussitôt**, aucun geste. Sur une **ORG**, il peut être **PRIVÉ** *(défaut d'org)* → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **`configure-repo.sh` fait le test lui-même** et ne réclame le geste que s'il échoue. |
 | 5 | Claude | Vérifier que l'image est **réellement tirable** — `configure-repo.sh` le teste **anonymement**, comme le fait le host de prod. ⚠️ **Un job « Publish image » VERT ne prouve RIEN** : il peut réussir alors que l'image reste **intirable** (package privé). |
 
-> 🔴 **LA MISE EN PRODUCTION DÉTRUIT LE STAGING — tant que le repo est PRIVÉ.**
-> `delete-branch-on-merge` *(posé par `configure-repo.sh`, et utile pour les `feat/*`)* supprime la branche **source** de **toute** PR mergée — donc **`develop` elle-même**, au merge de la PR `develop → main`.
+> 🔴 **LA MISE EN PRODUCTION DÉTRUISAIT LE STAGING — tant que le repo est PRIVÉ.**
+> ✅ **Corrigé à la racine** : sur un repo **privé** qui publie un flux à 3 étages, `configure-repo.sh` **RETIRE** `delete-branch-on-merge`. On perd le nettoyage automatique des `feat/*` *(un clic)* ; on garde la branche de staging. Le flip en public le **rétablit** *(rejouer le script — le ruleset prend le relais)*.
+> ⚠️ **Un repo configuré AVANT ce correctif porte encore le réglage** : rejouer `configure-repo.sh` avant sa prochaine promotion, sinon ce qui suit s'applique toujours.
+> `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop` elle-même**, au merge de la PR `develop → main`.
 > **En PUBLIC**, le ruleset `develop` (règle `deletion`) **l'en empêche**. **En PRIVÉ, il n'existe aucun ruleset : la branche est supprimée, sans un mot.**
 > **Le dégât est en cascade** : au rejeu suivant, `configure-repo.sh` ne voit plus `develop`, en conclut « pas de staging », **ne pose pas son ruleset** et **repasse `main` en squash-only** → **la promotion suivante devient IMPOSSIBLE** *(squasher `develop` dans `main` fait diverger les deux branches à chaque cycle — §12)*.
 > **→ Après une promotion sur un repo PRIVÉ, RECRÉER `develop` immédiatement :**
