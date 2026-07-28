@@ -16,6 +16,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté
+
+- **`AGENTS.md` apprend à vérifier le run `push` sur `main` APRÈS un merge** — autre event, donc
+  autre run : le vert d'une PR ne dit rien de celui-là, et c'est `main` qui ship. Le contrôle
+  n'était prescrit **nulle part** dans le versionné. Avec le piège qui va avec, **mesuré sur 5 SHA
+  de merge** (3 squash, 2 merge commits) : `gh run list --commit <sha>` rend **0 run** là où
+  `--branch main` rend le run vert portant ce même `headSha`. Jouée après un merge, la commande
+  déjà documentée rend donc « 0 run » — le motif exact que ce fichier apprend à lire comme un
+  échec de dispatch. Elle reste juste pour vérifier une PR, où `--commit` fonctionne.
+
 ### Corrigé
 
 - **Sur un projet `--staging`, Renovate visait la PRODUCTION.** Faute de `baseBranchPatterns`, le
