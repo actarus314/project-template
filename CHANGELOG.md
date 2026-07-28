@@ -16,6 +16,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Non publié]
 
+### Corrigé
+
+- **Sur un projet `--staging`, Renovate visait la PRODUCTION.** Faute de `baseBranchPatterns`, le
+  bot cible la branche **par défaut** : chacune de ses PR — les **sécurité** comprises — atterrissait
+  donc sur `main`, en sautant le host que le troisième étage existe pour valider. `init-project.sh`
+  pose désormais la clé sur `develop`, **et seulement quand la branche existe** : un gabarit qui la
+  porterait en dur désignerait une `develop` inexistante sur un projet à deux étages, et Renovate
+  sans base valide n'ouvre plus **aucune** PR, en silence. *(Vu en vrai sur `dEURO-dashboard` : sa
+  PR #25 `react-router [SECURITY]` visait `main`.)*
+
 ### Modifié
 
 - **`configure-repo.sh` ne pose plus `delete-branch-on-merge` sur un repo PRIVÉ à trois étages.**
