@@ -52,6 +52,7 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
 
 - **Français** dans ce repo *(exemption §1)* ; **anglais** dans tout ce qui est généré.
 - **Doc** : une idée par phrase, une phrase par ligne. Un fait vit à **un seul endroit** — partout ailleurs, un lien *(voir `docs/METHODE.md`)*.
+- **`CHANGELOG.md`** : une ligne dans `Non publié` dès qu'un changement se voit **de qui se sert du repo** *(un gabarit qui change, un geste du RUNBOOK qui bouge, un comportement de script)*. Pas de section versionnée — ce repo n'a ni tag ni release. Un refactor interne ou une correction de typo n'y va pas.
 
 ## Ne pas casser
 
