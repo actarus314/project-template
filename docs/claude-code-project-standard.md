@@ -499,7 +499,8 @@ Les *environment branches* (une branche par environnement) sont un anti-pattern 
 
 Trois étapes : `feat/` validé **localement** → mergé `--no-ff` dans `develop`, validé sur l'**hôte de staging** → PR `develop → main` mergée **en merge commit** (jamais squash — ça garde l'historique des commits `feat/*` et évite de faire diverger `develop`) → tag `vX.Y.Z` poussé sur `main`, qui déclenche la release CI. **Commandes exactes, dans l'ordre : RUNBOOK §2-3.**
 
-> 🔴 **En PRIVÉ, la mise en production DÉTRUIT la branche de staging.**
+> 🔴 **En PRIVÉ, la mise en production DÉTRUISAIT la branche de staging.**
+> ✅ **Corrigé à la racine** : sur un repo **privé** à 3 étages, `configure-repo.sh` **ne pose plus** `delete-branch-on-merge` — les `feat/*` se suppriment à la main, la branche de staging survit. Le passage en public le rétablit *(rejouer le script)*. ⚠️ **Un repo configuré avant ce correctif le porte encore.**
 > `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop`**, au merge de la PR `develop → main`. **En public**, le ruleset `develop` (règle `deletion`) le refuse ; **en privé, aucun ruleset n'existe** *(§18)* et la branche disparaît **en silence**.
 > **Et le dégât est en cascade** : au rejeu suivant, `configure-repo.sh` ne voit plus `develop`, en déduit « pas de staging », **ne pose pas son ruleset** et **remet `main` en squash-only** — or **squasher `develop` dans `main` fait diverger les deux branches à chaque cycle**. La promotion suivante devient **impossible**. *Le succès de la mise en prod casse le cycle suivant.*
 > **→ Recréer `develop` immédiatement après la promotion :** `git switch -c develop main && git push -u origin develop`

@@ -202,7 +202,7 @@ elif [ "$(gh_val '.names | length' 0 "repos/$SLUG/topics")" -eq 0 ]; then
   echo "  ⚠ aucun topic sur le repo → il ne remonte dans AUCUNE recherche GitHub par sujet."
   echo "    Les poser : ./configure-repo.sh $SLUG '' '' 'topic-a,topic-b'"
 fi
-echo "  ✓ merge (méthodes fixées plus bas selon 'develop'), delete-branch-on-merge${HOMEPAGE:+, homepage}${DESCRIPTION:+, description}${TOPICS:+, topics}"
+echo "  ✓ merge et delete-branch-on-merge (les DEUX revus plus bas selon 'develop')${HOMEPAGE:+, homepage}${DESCRIPTION:+, description}${TOPICS:+, topics}"
 
 # Discussions — le gabarit `.github/ISSUE_TEMPLATE/config.yml` renvoie vers `/discussions` sur
 # CHAQUE repo généré. Sans cette activation, ce lien est un 404 : le premier tiers qui cherche à
@@ -648,6 +648,24 @@ if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "    → LA RECRÉER, PUIS REJOUER CE SCRIPT :"
   echo "        git switch -c develop main && git push -u origin develop"
   echo "      Le ruleset 'develop' (règle 'deletion') l'empêchera alors d'être supprimée à nouveau."
+fi
+
+# ⚠️ LE MÊME RÉGLAGE, MAIS PRIS EN AMONT — parce qu'AVERTIR N'A PAS SUFFI.
+#   Le bloc au-dessus ne parle qu'APRÈS le dégât, et seulement si on rejoue ce script. Or la perte
+#   est CERTAINE et AUTOMATIQUE : `delete_branch_on_merge` vise la branche SOURCE de la PR, et la
+#   source d'une promotion §12 EST `develop`. Ce qui la sauve en PUBLIC, c'est le ruleset (sa règle
+#   `deletion` : GitHub ne supprime jamais une branche protégée, même avec l'option activée). En
+#   PRIVÉ Free il n'y a AUCUN ruleset — donc aucun garde-fou. dEURO l'a perdue le 27/07 alors que
+#   la leçon était déjà écrite : une leçon consignée n'est pas une leçon appliquée.
+#   → Ici on RETIRE le réglage. Ce qu'on perd est le nettoyage automatique des `feat/*` — du
+#     confort, un clic — contre une branche long-lived détruite en silence, qui casse la promotion
+#     SUIVANTE (sans `develop`, ce script conclut « pas de staging » et `main` retombe en
+#     squash-only). Le flip en public le rétablit : rejouer ce script, le ruleset prend le relais.
+if { [ "$WANTS_STAGING" -eq 1 ] || [ "$HAS_DEVELOP" -eq 1 ]; } && [ -z "$RULESETS" ]; then
+  mutate gh repo edit "$SLUG" --delete-branch-on-merge=false
+  echo "  ⚠ 'delete-branch-on-merge' RETIRÉ — flux à 3 étages SANS ruleset (privé Free) : il"
+  echo "    supprimerait 'develop' à la 1ʳᵉ promotion. Les 'feat/*' sont à supprimer à la main."
+  echo "    Au passage en PUBLIC, rejouer ce script : le ruleset 'develop' protège, on le remet."
 fi
 
 if [ "$HAS_DEVELOP" -eq 1 ]; then
