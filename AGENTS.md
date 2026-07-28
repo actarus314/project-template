@@ -47,6 +47,12 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
   gh run list --commit "$sha" --json workflowName,status,conclusion
   ```
   Vert = **tout** workflow attendu est `completed/success`. Un workflow **absent** de la liste n'est **pas** un vert.
+- **Après le merge, vérifier AUSSI le run `push` sur `main`** — autre event, donc autre run : le vert de la PR ne dit rien de celui-là, et c'est `main` qui fait foi.
+  🔴 **`--commit` ne trouve PAS ce run — filtrer par BRANCHE.** Mesuré sur 5 SHA de merge *(3 squash, 2 merge commits)* : `gh run list --commit <sha>` rend **0 run**, quand `--branch main` rend le run `CI [push]` portant **exactement ce `headSha`**, vert. Le filtre `--commit` marche sur les runs `pull_request` — d'où la commande ci-dessus, qui reste juste. Jouée telle quelle après un merge, elle rend « 0 run » : **le motif même que ce fichier apprend à lire comme un échec de dispatch.**
+  ```bash
+  gh run list --branch main --limit 5 --json headSha,workflowName,event,status,conclusion \
+    --jq "[.[]|select(.headSha|startswith(\"$sha\"))]"
+  ```
 
 ## Conventions
 
