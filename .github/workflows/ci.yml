@@ -123,7 +123,7 @@ jobs:
           proj="$RUNNER_TEMP/proj/repo"
           ( cd "$proj" && actionlint -color )
           zizmor --persona regular --config "$proj/.github/zizmor.yml" "$proj/.github/workflows/"
-      # Regression guard for the osv fix (PR #23). The steps above lint a generated project's WORKFLOWS,
+      # Regression guard for the osv scope fix. The steps above lint a generated project's WORKFLOWS,
       # but never replay its osv step — which is exactly where the "CI-only tooling out of scope" fix
       # lives (requirements-ci.txt subtracted via .gitignore). So replay that project's EXACT osv step on
       # the freshly generated tree: if the gabarit .gitignore ever stops subtracting requirements-ci.txt

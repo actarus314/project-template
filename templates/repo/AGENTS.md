@@ -78,8 +78,8 @@ red pull request. The safety net is local, and partly human.
 - **After the merge, check the `push` run on `main` too.** It is a *different event*, so it is a
   different run: the pull request being green says nothing about it. `main` is what ships.
 
-  > 🔴 **`--commit` does NOT find that run — filter by branch.** Measured on five merge SHAs
-  > (three squashes, two merge commits): `gh run list --commit <sha>` returns **0 runs**, while
+  > 🔴 **`--commit` does NOT find that run — filter by branch.** On a SHA created by a merge,
+  > `gh run list --commit <sha>` returns **0 runs**, while
   > `--branch main` returns the `CI [push]` run carrying **exactly that `headSha`**, green. The
   > `--commit` filter works on `pull_request` runs, which is why the command above is correct
   > where it stands. Read as-is after a merge, it yields "0 runs" — the very pattern this file
