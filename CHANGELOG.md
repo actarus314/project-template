@@ -29,11 +29,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Sur un flux à 3 étages, Dependabot aussi visait la PRODUCTION** — et lui, aucune option ne le
   redresse : ses PR de **sécurité** ciblent **toujours** la branche par défaut *(`target-branch` ne
   redirige que les version updates)*. Le filet qui devait protéger `main` la court-circuitait donc,
-  en sautant le staging. `configure-repo.sh` le **retire** désormais quand `develop` existe — mais
-  **seulement si Renovate est prouvé vivant** *(Dependency Dashboard mis à jour depuis moins de 14
-  jours)*, et il **le dit** dans les deux cas. Retirer le filet en misant sur un bot mort est la
-  panne de juillet ; un dashboard qui **existe** ne prouve rien, un repo `disabled` garde le sien.
-  ➡️ Le pourquoi et le seuil : **standard**, « Qui met à jour les dépendances ».
+  en sautant le staging. `configure-repo.sh` ne le **pose plus** sur un flux à 3 étages, et **retire**
+  celui déjà en place — mais **seulement si Renovate est prouvé vivant** *(Dependency Dashboard mis à
+  jour depuis moins de 14 jours)*. Sans la preuve il **conserve** le filet et **nomme la cause** :
+  permission manquante, app non installée, ou bot arrêté. Retirer le filet en misant sur un bot mort
+  est la panne de juillet ; un dashboard qui **existe** ne prouve rien, un repo `disabled` garde le
+  sien. ➡️ Le pourquoi et le seuil : **standard**, « Qui met à jour les dépendances ».
+
+  🔴 **Deux gestes en découlent, tous deux dans le RUNBOOK :** le **PAT admin éphémère gagne
+  `Issues: Read`** *(sans elle la preuve de vie est illisible, et le filet reste posé)* ; et sur un
+  projet à 3 étages, **`configure-repo.sh` se rejoue APRÈS l'installation de l'app Renovate** — joué
+  avant, il ne peut trouver aucun dashboard.
 
 - **Sur un projet `--staging`, Renovate visait la PRODUCTION.** Faute de `baseBranchPatterns`, le
   bot ciblait la branche **par défaut** : chacune de ses PR — les **sécurité** comprises — atterrissait

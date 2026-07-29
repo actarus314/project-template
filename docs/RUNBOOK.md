@@ -121,7 +121,7 @@ cd <dossier-projet>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓" || ec
 | **Code scanning alerts** | **Read** | savoir si CodeQL a produit une analyse |
 | **Actions** | **Read** | 🔴 **suivre le run de la 1ʳᵉ analyse CodeQL.** Sans elle, le script ne sait pas quand l'analyse finit → il **ne pose pas la règle `code_scanning`**, et `main` reste **NON gardée**. |
 | **Contents** | **Read** | détecter `pages.yml` / `docker-publish.yml` · lire `CONTRIBUTING.md` *(le repo publie-t-il 3 étages ?)* |
-| **Issues** | **Read** | 🔴 **preuve de vie de Renovate** — `GET /repos/{o}/{r}/issues`, pour dater son *Dependency Dashboard* avant de retirer le filet Dependabot d'un flux à 3 étages. Sans elle, la lecture échoue, le script conclut « Renovate non prouvé vivant » et **conserve** le filet : ses PR sécu continueront de viser `main`. |
+| **Issues** | **Read** | 🔴 **preuve de vie de Renovate** — `GET /repos/{o}/{r}/issues`, pour dater son *Dependency Dashboard* avant de retirer le filet Dependabot d'un flux à 3 étages. Sans elle, le script **conserve** le filet *(ses PR sécu continueront de viser `main`)* — il le dit et nomme cette permission. *(La table officielle liste cet endpoint sous `Issues: read` **et** sous `Pull requests: read` — l'une **ou** l'autre suffit ; on prend `Issues`, c'est ce qu'on lit.)* |
 | *Metadata* | *Read* | *automatique* |
 
 > ⚠️ **`Administration` NE SUFFIT PAS**, et **chaque permission manquante échoue en SILENCE** : tout le reste passe, et le contrôle absent ne se voit pas. **La recette se DÉRIVE des endpoints appelés — jamais par essais successifs.**

@@ -672,11 +672,14 @@ fi
 #   ⚠ La FRAÎCHEUR, pas l'existence : un repo opted-out garde son Dependency Dashboard intact.
 #     Sonder `.updated_at` est le seul signal qui distingue un bot qui tourne d'un bot mort.
 if [ "$HAS_DEVELOP" -eq 1 ] || [ "$WANTS_STAGING" -eq 1 ]; then
+  DASH_RC=0
   DASH_AT=$(gh api "repos/$SLUG/issues?state=open&per_page=100" \
-    --jq 'map(select(.title=="Dependency Dashboard"))|.[0].updated_at // empty' 2>/dev/null) || DASH_AT=""
+    --jq 'map(select(.title=="Dependency Dashboard"))|.[0].updated_at // empty' 2>/dev/null) || DASH_RC=$?
   # ⚠ `gh api` écrit son JSON d'erreur sur STDOUT : sans ce filtre de FORME, un `{"message":"Not Found"}`
   #   comparé à une date ISO est jugé PLUS RÉCENT (`{` > `2` en ASCII) — une panne de lecture RETIRERAIT
   #   le filet. Mesuré : c'est ce que renvoie un `$SLUG` vide.
+  #   Le code de sortie est gardé À PART : sans lui, « refusé » et « absent » se ressemblent, et une
+  #   permission manquante enverrait chercher du côté de Renovate — la panne silencieuse qu'on interdit.
   case "$DASH_AT" in 20[0-9][0-9]-*) ;; *) DASH_AT="" ;; esac
   # `date -v` (BSD/macOS) puis `date -d` (GNU) : le script tourne des deux côtés.
   FRESH=$(date -u -v-14d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
@@ -685,9 +688,18 @@ if [ "$HAS_DEVELOP" -eq 1 ] || [ "$WANTS_STAGING" -eq 1 ]; then
       && echo "  ✓ Dependabot security updates RETIRÉ — 3 étages, Renovate vivant (dashboard $DASH_AT)" \
       || echo "  ⚠ DELETE automated-security-fixes : échec — vérifier Settings → Advanced Security."
   else
-    echo "  ⚠ Dependabot security updates CONSERVÉ — 3 étages, mais Renovate NON prouvé vivant"
-    echo "    (Dependency Dashboard ${DASH_AT:-absent}, seuil $FRESH). Ses PR sécu viseront 'main',"
-    echo "    court-circuitant 'develop'. → vérifier que l'app Renovate est bien installée, puis rejouer."
+    echo "  ⚠ Dependabot security updates CONSERVÉ — 3 étages, mais Renovate NON prouvé vivant."
+    echo "    Ses PR sécu viseront 'main', court-circuitant 'develop'. Cause et geste :"
+    if [ "$DASH_RC" -ne 0 ]; then
+      echo "    → LECTURE REFUSÉE (issues illisibles). Le PAT admin manque 'Issues: Read' — la recette"
+      echo "      complète est dans docs/RUNBOOK.md. Le corriger, puis REJOUER."
+    elif [ -z "$DASH_AT" ]; then
+      echo "    → AUCUN 'Dependency Dashboard' : l'app Renovate n'est pas installée sur ce repo."
+      echo "      L'installer (UI GitHub), attendre son 1er run, puis REJOUER."
+    else
+      echo "    → Dashboard PÉRIMÉ ($DASH_AT, seuil $FRESH) : Renovate est installé mais ne tourne plus."
+      echo "      Vérifier qu'aucune PR d'onboarding n'a été fermée (opt-out documenté du bot)."
+    fi
   fi
 fi
 
