@@ -120,7 +120,8 @@ cd <dossier-projet>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓" || ec
 | **Pages** | **Read and write** | création du site Pages |
 | **Code scanning alerts** | **Read** | savoir si CodeQL a produit une analyse |
 | **Actions** | **Read** | 🔴 **suivre le run de la 1ʳᵉ analyse CodeQL.** Sans elle, le script ne sait pas quand l'analyse finit → il **ne pose pas la règle `code_scanning`**, et `main` reste **NON gardée**. |
-| **Contents** | **Read** | détecter `pages.yml` / `docker-publish.yml` |
+| **Contents** | **Read** | détecter `pages.yml` / `docker-publish.yml` · lire `CONTRIBUTING.md` *(le repo publie-t-il 3 étages ?)* |
+| **Issues** | **Read** | 🔴 **preuve de vie de Renovate** — `GET /repos/{o}/{r}/issues`, pour dater son *Dependency Dashboard* avant de retirer le filet Dependabot d'un flux à 3 étages. Sans elle, le script **conserve** le filet *(ses PR sécu continueront de viser `main`)* — il le dit et nomme cette permission. *(La table officielle liste cet endpoint sous `Issues: read` **et** sous `Pull requests: read` — l'une **ou** l'autre suffit ; on prend `Issues`, c'est ce qu'on lit.)* |
 | *Metadata* | *Read* | *automatique* |
 
 > ⚠️ **`Administration` NE SUFFIT PAS**, et **chaque permission manquante échoue en SILENCE** : tout le reste passe, et le contrôle absent ne se voit pas. **La recette se DÉRIVE des endpoints appelés — jamais par essais successifs.**
@@ -143,7 +144,8 @@ cd ~/Documents/Claude/template/repo
 
 Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran, ni dans l'historique, ni dans `ps`)*.
 
-- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)*, description, méthode de merge, `default_workflow_permissions`.
+- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts** *(partout — Renovate les lit)*, les **security updates** *(filet — **2 étages seulement**)*, description, méthode de merge, `default_workflow_permissions`.
+- 🔴 **Sur un flux à 3 ÉTAGES, le REJOUER une fois l'app Renovate installée.** Le script ne retire le filet Dependabot *(dont les PR sécu visent `main`, court-circuitant le staging)* qu'en voyant Renovate **vivant** — son *Dependency Dashboard* daté de moins de 14 jours. Joué **avant** l'onboarding, il ne trouve aucun dashboard, **conserve** le filet et **le dit** : ce message est l'invitation à le rejouer, pas un échec.
 - **Il annonce que rulesets / secret scanning / CodeQL sont indisponibles** — **c'est ATTENDU, pas un échec** : ils arrivent au flip *(§4)*.
 - ⚠️ **La description ne doit contenir aucun caractère de contrôle** *(l'API renvoie 422)* — le script les retire et le signale. **Éviter aussi les tirets cadratins collés d'un copier-coller.**
 - 💡 **`--dry-run`** : lit tout, **n'écrit rien**. À utiliser sur un repo **vivant** dont on n'est pas sûr.

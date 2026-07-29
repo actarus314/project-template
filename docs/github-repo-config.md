@@ -26,7 +26,7 @@
 | **`osv-scanner`** | dépendances vulnérables (tous manifestes, `-r .`, base OSV). **L'équivalent de `dependency-review` qui, lui, marche en privé.** | chaque PR |
 | **`actionlint` + `zizmor`** | les workflows sont du code : un `${{ }}` dans un `run:` est une **injection shell**. | chaque PR |
 | **CodeQL** | **default setup** natif, activé par `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Détecte les langages et les TIENT À JOUR tout seul** — notre ancien `codeql.yml` n'en déclarait qu'UN, et ratait les workflows `actions` (§17). **Indisponible en privé** (GHAS) → arrive au flip. Les deux modes sont **exclusifs**. | push/PR `main` + hebdo |
-| **Dependabot alerts** | **détection de CVE** — natif, gratuit même en privé. Version updates → **Renovate**. Les **security updates** restent **ON (filet)** tant que le chemin sécu privé de Renovate n'est pas *observé* — ils garantissent aussi le dependency graph que Renovate lit ; Renovate ajoute l'auto-merge par-dessus. | continu |
+| **Dependabot alerts** | **détection de CVE** — natif, gratuit même en privé, **partout** : c'est le dependency graph que Renovate lit. Version updates → **Renovate**. Les **security updates**, elles, ne sont le filet **qu'à 2 étages** — à 3 étages leurs PR viseraient `main` et court-circuiteraient le staging *(→ standard, « Qui met à jour les dépendances »)*. | continu |
 | **Renovate** | **seul bot d'update.** Auto-détecte **tous** les écosystèmes du repo (npm, docker, actions, pip…) **sans aucune déclaration**, + les 4 binaires épinglés VERSION+SHA256 (gitleaks, actionlint, osv-scanner, trivy). Lit les Dependabot alerts (`vulnerabilityAlerts`) pour ses PR sécu. Routine = PR revue par un **humain** ; **sécurité = auto-merge**. Minor/patch groupés. | continu / hebdo |
 | **Secret scanning + push protection** | natif, gratuit en **public** (indisponible en privé/Free). | chaque push |
 | **Ruleset `main`** | PR obligatoire · checks requis (**`checks`** + CodeQL + **`build-check` si capacité artefact**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continu |
@@ -68,7 +68,7 @@ Miroir du one-shot/récurrent : **l'assistant gère tout le récurrent en autono
 
 | RÉCURRENT → PAT assistant (fine-grained, 1 repo) | ONE-SHOT → Romain (Administration: write) |
 |---|---|
-| Contents: **write** | Activer les features sécu (secret scanning, push protection ; **Dependabot alerts + security updates ON** — filet ; Renovate ajoute l'auto-merge sécu) |
+| Contents: **write** | Activer les features sécu (secret scanning, push protection ; **Dependabot alerts ON** partout, **security updates ON à 2 étages seulement** ; Renovate ajoute l'auto-merge sécu) |
 | Pull requests: **write** | Créer/éditer rulesets & branch protection |
 | Issues: **write** | `PATCH /repos` : visibilité, merge-methods, delete-branch, topics, homepage |
 | Actions: **read/write** (relancer/annuler runs) | Activer **CodeQL default setup** *(`configure-repo.sh` le fait)* |
@@ -134,7 +134,7 @@ Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Cont
 | CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, et DANS `configure-repo.sh`** |
 | Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
 | Secret scanning / push protection | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
-| **Dependabot security updates** *(le filet ; Renovate ajoute l'auto-merge — `DELETE` une fois une PR sécu Renovate vue en privé)* | `gh api -X PUT repos/{o}/{r}/automated-security-fixes` — 🔴 **endpoint DÉDIÉ, PAS une sous-clé de `security_and_analysis`** : `dependabot_security_updates` est dans le schéma de **réponse** du GET, **pas** dans les body-params du PATCH. Le passer au PATCH **ne lève aucune erreur** — il est ignoré, **en silence**. |
+| **Dependabot security updates** *(le filet — **2 étages seulement** : à 3 étages, `DELETE` sur le même endpoint, cf. §« Qui met à jour les dépendances » du standard)* | `gh api -X PUT repos/{o}/{r}/automated-security-fixes` — 🔴 **endpoint DÉDIÉ, PAS une sous-clé de `security_and_analysis`** : `dependabot_security_updates` est dans le schéma de **réponse** du GET, **pas** dans les body-params du PATCH. Le passer au PATCH **ne lève aucune erreur** — il est ignoré, **en silence**. |
 | Rulesets | `gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json` (`gh ruleset` = lecture seule) |
 | Topics / homepage / merge-methods / delete-branch | `gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge` |
 | Updates Renovate · gitleaks · npm audit · CI | **fichiers committés** (`.github/renovate.json`, `.github/workflows/*.yml`), pas d'API |
