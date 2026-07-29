@@ -808,7 +808,16 @@ En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning +
 
 **Renovate est le SEUL bot d'update, et il AUTO-DÉTECTE tout.** Il découvre chaque écosystème depuis les manifestes du repo *(npm, pip, docker, actions, gradle, cargo, go, conan…)* **sans liste à tenir**, et sait AUSSI lire un binaire `curl`-é dans un `run:` — ce que Dependabot ne fait pas. C'est ce qui rend le périmètre **universel** : un langage ajouté demain est couvert **sans toucher au template**. Dependabot, lui, exige de déclarer chaque `package-ecosystem` **à la main** *(aucune auto-découverte — l'inverse de CodeQL)* : le retenir comme bot d'update, c'était une liste manuelle qui rote en silence. **On l'a donc retiré du rôle d'update.**
 
-> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse les **alerts ET les security updates** de Dependabot actives : c'est le **filet**, et ça garantit le **dependency graph** que Renovate lit *(sans lui, son chemin sécu serait vide, en silence)*. Le double-emploi avec les PR sécu de Renovate est **transitoire** — Dependabot passera `disabled` **une fois une PR sécu Renovate observée sur un repo privé** *(un doublon de PR = bruit toléré ; un trou silencieux = non)*.
+> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse les **alerts** actives partout : c'est le **dependency graph** que Renovate lit *(sans lui, son chemin sécu serait vide, en silence)*.
+
+**Les security updates, elles, dépendent du nombre d'étages** — parce que leurs PR **visent TOUJOURS la branche par défaut**, et que `target-branch` ne redirige que les *version* updates.
+
+| | Security updates Dependabot | Pourquoi |
+|---|---|---|
+| **2 étages** *(`main` seule)* | **ON** — le filet | La cible par défaut **est** la bonne branche. Doublon avec les PR sécu de Renovate = bruit toléré ; un trou silencieux = non. Transitoire : passera `disabled` **une fois une PR sécu Renovate observée sur un repo privé**. |
+| **3 étages** *(`develop` existe)* | **OFF** | Sa PR entrerait par `main`, **court-circuitant le staging** — soit exactement ce que les 3 étages existent pour empêcher. Renovate, lui, sait viser `develop` *(`baseBranchPatterns`)*. Le filet ne peut donc pas jouer son rôle ici : il ne reste que le court-circuit. |
+
+> ⚠️ **Le retrait est conditionné à une preuve de vie de Renovate** — son *Dependency Dashboard* mis à jour depuis moins de 14 jours *(deux cycles du schedule hebdomadaire)*. **Un dashboard qui existe ne prouve rien** : un repo `disabled` garde le sien *(vécu — 6 jours de bots morts)*. Sans la preuve, `configure-repo.sh` **conserve** Dependabot et le **dit** : retirer le filet en misant sur un bot mort, c'est la panne de juillet.
 
 | Quoi | Comment Renovate le bumpe |
 |---|---|

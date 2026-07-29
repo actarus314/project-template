@@ -244,21 +244,16 @@ mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
   && echo "  ✓ Dependabot alerts (détection — Renovate les lit pour ses PR sécu)" \
   || echo "  ⚠ vulnerability-alerts : échec — vérifier dans l'UI"
 
-# 3a. Dependabot security updates — c'est le FILET, à dessein. Renovate ouvre AUSSI des PR de
-#     remédiation sécu (vulnerabilityAlerts, auto-mergées) ; garder Dependabot ON garantit DEUX choses :
-#     (1) le dependency graph est actif (prérequis des security updates) DONC Renovate a bien la donnée
-#         d'alerte à LIRE — sans quoi son chemin sécu serait vide, en silence ;
-#     (2) tant que le chemin sécu privé de Renovate n'est pas OBSERVÉ, la faille reste couverte nativement.
-#     Un doublon de PR sécu transitoire = bruit toléré ; un trou silencieux = NON. 🔜 Une fois une PR sécu
-#     Renovate VUE sur un repo PRIVÉ, DELETE sur cet endpoint (fin de la bascule full-Renovate —
-#     cf. workspace/archives/2026-07-autodetection/SYNTHESE.md).
+# 3a. Dependabot security updates — POSÉ ICI pour tous, RETIRÉ plus bas sur les repos à 3 étages
+#     (§12). Le pourquoi de ce ON-puis-OFF, et la preuve de vie de Renovate qui le conditionne :
+#     standard, « Qui met à jour les dépendances ».
 #     ⚠ ENDPOINT DÉDIÉ, et non une sous-clé de `security_and_analysis` : `dependabot_security_updates`
 #       apparaît dans le schéma de RÉPONSE du GET /repos, mais PAS dans les body-params du PATCH.
 #       Le passer au PATCH ne lève aucune erreur — il est simplement ignoré, EN SILENCE. Un réglage
 #       qu'on croit posé parce que l'appel a répondu 200 est pire qu'un réglage absent.
 #     Doit suivre `vulnerability-alerts` : les security updates n'ont rien à remédier sans la détection.
 mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
-  && echo "  ✓ Dependabot security updates (filet, jusqu'à vérif Renovate en privé)" \
+  && echo "  ✓ Dependabot security updates (filet — retiré plus bas si flux à 3 étages)" \
   || echo "  ⚠ automated-security-fixes : échec — vérifier Settings → Advanced Security."
 
 # 3b. Private vulnerability reporting — SANS LUI, LE LIEN DE SECURITY.md EST MORT.
@@ -660,6 +655,31 @@ fi
 #     confort, un clic — contre une branche long-lived détruite en silence, qui casse la promotion
 #     SUIVANTE (sans `develop`, ce script conclut « pas de staging » et `main` retombe en
 #     squash-only). Le flip en public le rétablit : rejouer ce script, le ruleset prend le relais.
+# Dependabot security updates : ses PR visent TOUJOURS la branche par défaut — sur 3 étages elles
+# court-circuiteraient le staging. On ne retire le filet posé au §3a que si Renovate est PROUVÉ
+# vivant. Le pourquoi et le seuil : standard, « Qui met à jour les dépendances ».
+#   ⚠ La FRAÎCHEUR, pas l'existence : un repo opted-out garde son Dependency Dashboard intact.
+#     Sonder `.updated_at` est le seul signal qui distingue un bot qui tourne d'un bot mort.
+if [ "$HAS_DEVELOP" -eq 1 ]; then
+  DASH_AT=$(gh api "repos/$SLUG/issues?state=open&per_page=100" \
+    --jq 'map(select(.title=="Dependency Dashboard"))|.[0].updated_at // empty' 2>/dev/null) || DASH_AT=""
+  # ⚠ `gh api` écrit son JSON d'erreur sur STDOUT : sans ce filtre de FORME, un `{"message":"Not Found"}`
+  #   comparé à une date ISO est jugé PLUS RÉCENT (`{` > `2` en ASCII) — une panne de lecture RETIRERAIT
+  #   le filet. Mesuré : c'est ce que renvoie un `$SLUG` vide.
+  case "$DASH_AT" in 20[0-9][0-9]-*) ;; *) DASH_AT="" ;; esac
+  # `date -v` (BSD/macOS) puis `date -d` (GNU) : le script tourne des deux côtés.
+  FRESH=$(date -u -v-14d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
+  if [ -n "$DASH_AT" ] && [[ "$DASH_AT" > "$FRESH" ]]; then
+    mutate gh api -X DELETE "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
+      && echo "  ✓ Dependabot security updates RETIRÉ — 3 étages, Renovate vivant (dashboard $DASH_AT)" \
+      || echo "  ⚠ DELETE automated-security-fixes : échec — vérifier Settings → Advanced Security."
+  else
+    echo "  ⚠ Dependabot security updates CONSERVÉ — 3 étages, mais Renovate NON prouvé vivant"
+    echo "    (Dependency Dashboard ${DASH_AT:-absent}, seuil $FRESH). Ses PR sécu viseront 'main',"
+    echo "    court-circuitant 'develop'. → vérifier que l'app Renovate est bien installée, puis rejouer."
+  fi
+fi
+
 if { [ "$WANTS_STAGING" -eq 1 ] || [ "$HAS_DEVELOP" -eq 1 ]; } && [ -z "$RULESETS" ]; then
   mutate gh repo edit "$SLUG" --delete-branch-on-merge=false
   echo "  ⚠ 'delete-branch-on-merge' RETIRÉ — flux à 3 étages SANS ruleset (privé Free) : il"
