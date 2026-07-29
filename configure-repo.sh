@@ -238,23 +238,39 @@ else
   echo "    → REJOUER ce script au passage en public."
 fi
 
+# Flux à 3 étages ? Détecté DÈS ICI, et pas seulement au §12 qui l'utilise aussi : le §3a doit savoir
+# s'il pose le filet Dependabot. Un PUT suivi d'un DELETE plus bas ne serait PAS neutre — activer les
+# security updates RÉVEILLE le bot sur les alertes DÉJÀ ouvertes, et la PR part avant le DELETE.
+#   DEUX sondes, car aucune ne suffit seule : la branche peut avoir été DÉTRUITE par la promotion
+#   (cf. §12), et le repo publier malgré tout un flux à 3 étages. `CONTRIBUTING.md` est versionné, et
+#   son bloc `## Branching` est composé par init-project.sh d'après la capacité STAGING : s'il annonce
+#   3 étages, la branche DOIT exister — c'est le §12 qui traite l'écart.
+HAS_DEVELOP=0
+gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
+WANTS_STAGING=0
+gh api "repos/$SLUG/contents/CONTRIBUTING.md" --jq '.content' 2>/dev/null \
+  | base64 -d 2>/dev/null | grep -q 'Three stages' && WANTS_STAGING=1
+
 # 3. Dependabot alerts — la DÉTECTION de CVE (native, gratuite en privé). Gardée : Renovate la LIT
 #    (vulnerabilityAlerts) pour ouvrir ses PR de remédiation. Sans elle, pas de PR sécu Renovate.
 mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
   && echo "  ✓ Dependabot alerts (détection — Renovate les lit pour ses PR sécu)" \
   || echo "  ⚠ vulnerability-alerts : échec — vérifier dans l'UI"
 
-# 3a. Dependabot security updates — POSÉ ICI pour tous, RETIRÉ plus bas sur les repos à 3 étages
-#     (§12). Le pourquoi de ce ON-puis-OFF, et la preuve de vie de Renovate qui le conditionne :
-#     standard, « Qui met à jour les dépendances ».
+# 3a. Dependabot security updates — le FILET, posé sur les flux à 2 étages SEULEMENT : à 3 étages ses
+#     PR viseraient `main` et court-circuiteraient le staging (retrait plus bas pour l'état antérieur).
+#     Le pourquoi, et la preuve de vie de Renovate qui conditionne le retrait : standard, « Qui met à
+#     jour les dépendances ».
 #     ⚠ ENDPOINT DÉDIÉ, et non une sous-clé de `security_and_analysis` : `dependabot_security_updates`
 #       apparaît dans le schéma de RÉPONSE du GET /repos, mais PAS dans les body-params du PATCH.
 #       Le passer au PATCH ne lève aucune erreur — il est simplement ignoré, EN SILENCE. Un réglage
 #       qu'on croit posé parce que l'appel a répondu 200 est pire qu'un réglage absent.
 #     Doit suivre `vulnerability-alerts` : les security updates n'ont rien à remédier sans la détection.
-mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
-  && echo "  ✓ Dependabot security updates (filet — retiré plus bas si flux à 3 étages)" \
-  || echo "  ⚠ automated-security-fixes : échec — vérifier Settings → Advanced Security."
+if [ "$HAS_DEVELOP" -eq 0 ] && [ "$WANTS_STAGING" -eq 0 ]; then
+  mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
+    && echo "  ✓ Dependabot security updates (filet)" \
+    || echo "  ⚠ automated-security-fixes : échec — vérifier Settings → Advanced Security."
+fi
 
 # 3b. Private vulnerability reporting — SANS LUI, LE LIEN DE SECURITY.md EST MORT.
 #     SECURITY.md pointe vers /security/advisories/new : si la fonctionnalité est désactivée,
@@ -615,8 +631,6 @@ upsert_ruleset() {
 #   → Si `develop` existe, `main` accepte AUSSI le merge commit (c'est ce que prescrit le §12 pour
 #     la promotion staging → prod). `develop`, elle, reste en squash seul : les `feat/*` y sont
 #     écrasés en un commit propre.
-HAS_DEVELOP=0
-gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 
 # ⚠️ LA PROMOTION EN PROD DÉTRUIT LE STAGING — et le script en était la victime silencieuse.
 #   `delete_branch_on_merge` (posé plus haut, et utile pour les `feat/*`) supprime la branche SOURCE
@@ -628,12 +642,8 @@ gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 #   staging » et alignait tout dessus : pas de ruleset 'develop', et `main` REPASSAIT en squash-only
 #   — rendant la promotion suivante IMPOSSIBLE. Un dégât en cascade, déclenché par le succès.
 #
-#   → On ne fait plus confiance à la seule existence de la branche : on demande au repo ce qu'il
-#     PUBLIE. `CONTRIBUTING.md` est versionné, et son bloc `## Branching` est composé par
-#     init-project.sh d'après la capacité STAGING. S'il annonce 3 étages, la branche DOIT exister.
-WANTS_STAGING=0
-gh api "repos/$SLUG/contents/CONTRIBUTING.md" --jq '.content' 2>/dev/null \
-  | base64 -d 2>/dev/null | grep -q 'Three stages' && WANTS_STAGING=1
+#   → On ne fait donc plus confiance à la seule existence de la branche : on demande AUSSI au repo ce
+#     qu'il PUBLIE (`WANTS_STAGING`, sondé en tête avec `HAS_DEVELOP`).
 if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "  ⚠ INCOHÉRENCE — le repo PUBLIE un flux à 3 ÉTAGES, mais la branche 'develop' N'EXISTE PAS."
   echo "    Cause quasi certaine : 'delete-branch-on-merge' l'a SUPPRIMÉE au merge de la PR develop → main."
@@ -656,11 +666,12 @@ fi
 #     SUIVANTE (sans `develop`, ce script conclut « pas de staging » et `main` retombe en
 #     squash-only). Le flip en public le rétablit : rejouer ce script, le ruleset prend le relais.
 # Dependabot security updates : ses PR visent TOUJOURS la branche par défaut — sur 3 étages elles
-# court-circuiteraient le staging. On ne retire le filet posé au §3a que si Renovate est PROUVÉ
+# court-circuiteraient le staging. Le §3a ne les pose donc plus ici ; ce bloc RETIRE l'état ANTÉRIEUR
+# (repo configuré avant ce changement, ou activé à la main), et seulement si Renovate est PROUVÉ
 # vivant. Le pourquoi et le seuil : standard, « Qui met à jour les dépendances ».
 #   ⚠ La FRAÎCHEUR, pas l'existence : un repo opted-out garde son Dependency Dashboard intact.
 #     Sonder `.updated_at` est le seul signal qui distingue un bot qui tourne d'un bot mort.
-if [ "$HAS_DEVELOP" -eq 1 ]; then
+if [ "$HAS_DEVELOP" -eq 1 ] || [ "$WANTS_STAGING" -eq 1 ]; then
   DASH_AT=$(gh api "repos/$SLUG/issues?state=open&per_page=100" \
     --jq 'map(select(.title=="Dependency Dashboard"))|.[0].updated_at // empty' 2>/dev/null) || DASH_AT=""
   # ⚠ `gh api` écrit son JSON d'erreur sur STDOUT : sans ce filtre de FORME, un `{"message":"Not Found"}`
