@@ -39,7 +39,7 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
 
 **`repo/` est PR-only.** On n'écrit **jamais** sur `main` directement : le hook `pre-push` le refuse *(il est le substitut du ruleset, absent tant que le repo est privé)*.
 
-- Brancher `feat/…` → **ouvrir la PR avec `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`** : il pousse, ouvre la PR, ET **vérifie qu'un run `pull_request` démarre** — GitHub omet parfois de dispatcher la CI *(vu #117, #33)*, et une PR à **0 run** se lit comme un vert alors qu'elle n'a **jamais** été testée. S'il manque, il close/reopen pour re-tirer l'event *(seul re-déclencheur qui reproduit les checks REQUIS `pull_request`)*. 🔴 **« 0 run » n'est JAMAIS un vert.**
+- Brancher `feat/…` → **ouvrir la PR avec `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`** : il pousse, ouvre la PR, ET **vérifie qu'un run `pull_request` démarre** — GitHub omet parfois de dispatcher la CI, et une PR à **0 run** se lit comme un vert alors qu'elle n'a **jamais** été testée. S'il manque, il close/reopen pour re-tirer l'event *(seul re-déclencheur qui reproduit les checks REQUIS `pull_request`)*. 🔴 **« 0 run » n'est JAMAIS un vert.**
 - Une **CI** *(`.github/workflows/ci.yml`)* valide chaque PR : elle lint ses **propres** workflows, génère des projets et linte **leurs** workflows en conditions réelles.
 - **Merger seulement CI verte.** Vérifier, à chaque fois — jamais `gh pr checks` *(permission `Checks` non accordable)* :
   ```bash
@@ -48,7 +48,7 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
   ```
   Vert = **tout** workflow attendu est `completed/success`. Un workflow **absent** de la liste n'est **pas** un vert.
 - **Après le merge, vérifier AUSSI le run `push` sur `main`** — autre event, donc autre run : le vert de la PR ne dit rien de celui-là, et c'est `main` qui fait foi.
-  🔴 **`--commit` ne trouve PAS ce run — filtrer par BRANCHE.** Mesuré sur 5 SHA de merge *(3 squash, 2 merge commits)* : `gh run list --commit <sha>` rend **0 run**, quand `--branch main` rend le run `CI [push]` portant **exactement ce `headSha`**, vert. Le filtre `--commit` marche sur les runs `pull_request` — d'où la commande ci-dessus, qui reste juste. Jouée telle quelle après un merge, elle rend « 0 run » : **le motif même que ce fichier apprend à lire comme un échec de dispatch.**
+  🔴 **`--commit` ne trouve PAS ce run — filtrer par BRANCHE.** Sur un SHA né d'un merge, `gh run list --commit <sha>` rend **0 run**, quand `--branch main` rend le run `CI [push]` portant **exactement ce `headSha`**, vert. Le filtre `--commit` marche sur les runs `pull_request` — d'où la commande ci-dessus, qui reste juste. Jouée telle quelle après un merge, elle rend « 0 run » : **le motif même que ce fichier apprend à lire comme un échec de dispatch.**
   ```bash
   gh run list --branch main --limit 5 --json headSha,workflowName,event,status,conclusion \
     --jq "[.[]|select(.headSha|startswith(\"$sha\"))]"

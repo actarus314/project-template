@@ -392,10 +392,10 @@ if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null
 fi
 
 # ═══ CodeQL : le DEFAULT SETUP natif, et NON PLUS un `codeql.yml` committé ═══════════════════
-# Le default setup DÉTECTE les langages et SE MET À JOUR TOUT SEUL quand le repo change (changelogs
-# GitHub 2023-06-26 · 2023-10-23), scans programmés inclus. L'advanced setup ne se justifie que
-# pour des query packs ou un `paths-ignore` — nulle part chez nous. (Standard §17. Le check-run
-# garde le nom « CodeQL » : la règle de ruleset ci-dessous est inchangée.)
+# Le default setup DÉTECTE les langages et SE MET À JOUR TOUT SEUL quand le repo change, scans
+# programmés inclus. Le POURQUOI, les sources et le cas où l'advanced setup se justifierait :
+# standard §17. (Le check-run garde le nom « CodeQL » : la règle de ruleset ci-dessous est
+# inchangée.)
 # ⚠ `gh api` écrit le corps JSON de l'erreur sur STDOUT, pas sur stderr. Un naïf
 #   `DS=$(gh api … || echo unreadable)` produit donc « {"message":"403…"}unreadable » — une chaîne
 #   qui n'est égale à RIEN, et tous les tests qui suivent partent dans le mauvais cas, en silence.
@@ -655,8 +655,7 @@ fi
 #   est CERTAINE et AUTOMATIQUE : `delete_branch_on_merge` vise la branche SOURCE de la PR, et la
 #   source d'une promotion §12 EST `develop`. Ce qui la sauve en PUBLIC, c'est le ruleset (sa règle
 #   `deletion` : GitHub ne supprime jamais une branche protégée, même avec l'option activée). En
-#   PRIVÉ Free il n'y a AUCUN ruleset — donc aucun garde-fou. dEURO l'a perdue le 27/07 alors que
-#   la leçon était déjà écrite : une leçon consignée n'est pas une leçon appliquée.
+#   PRIVÉ Free il n'y a AUCUN ruleset — donc aucun garde-fou, et avertir ne suffit pas.
 #   → Ici on RETIRE le réglage. Ce qu'on perd est le nettoyage automatique des `feat/*` — du
 #     confort, un clic — contre une branche long-lived détruite en silence, qui casse la promotion
 #     SUIVANTE (sans `develop`, ce script conclut « pas de staging » et `main` retombe en
@@ -825,7 +824,7 @@ if [ "$PULL_STATE" = "ko" ]; then
   # rappel compte. `IMG` est en portée : PULL_STATE=ko n'est posé que là où il est calculé.
   echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${IMG#*/}/settings"
   echo "     Sans ce geste, le pull anonyme renvoie 403 : ni le host de prod ni un"
-  echo "     utilisateur ne peuvent tirer l'image. (Constate sur test002 — une ORG.)"
+  echo "     utilisateur ne peuvent tirer l'image."
   echo "     Org-wide : Settings > Packages > Package creation > default visibility."
 fi
 fi

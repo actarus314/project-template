@@ -148,14 +148,11 @@ for f in CONTRIBUTING.md AGENTS.md; do
 done
 rm -f "$FRAG"
 
-# Renovate doit viser `develop` quand il y en a une. Par défaut il cible la branche PAR DÉFAUT :
-# sur un flux à trois étages, chacune de ses PR — les SÉCU comprises — atterrit donc droit en
-# PRODUCTION, en sautant le host que le 3ᵉ étage existe pour valider. Trouvé sur dEURO le 28/07 :
-# sa PR #25 (react-router, [SECURITY]) visait `main`.
 # ⚠ La clé est INJECTÉE ICI, pas portée par le gabarit : un gabarit qui la porterait en dur
 # désignerait une `develop` INEXISTANTE sur un projet à deux étages — et Renovate sans base
 # valide n'ouvre plus AUCUNE PR, en silence. Le défaut de l'injection ratée est le comportement
 # actuel (PR sur main) ; le défaut de l'inverse est un bot mort.
+# Le POURQUOI de la clé elle-même : bloc `description` de templates/repo/.github/renovate.json.
 if [ "$STAGING" = 1 ]; then
   RJ="$DEST/repo/.github/renovate.json"
   sed -e 's|^  "schedule":|  "baseBranchPatterns": ["develop"],\

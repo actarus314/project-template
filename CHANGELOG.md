@@ -20,21 +20,18 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`AGENTS.md` apprend à vérifier le run `push` sur `main` APRÈS un merge** — autre event, donc
   autre run : le vert d'une PR ne dit rien de celui-là, et c'est `main` qui ship. Le contrôle
-  n'était prescrit **nulle part** dans le versionné. Avec le piège qui va avec, **mesuré sur 5 SHA
-  de merge** (3 squash, 2 merge commits) : `gh run list --commit <sha>` rend **0 run** là où
-  `--branch main` rend le run vert portant ce même `headSha`. Jouée après un merge, la commande
-  déjà documentée rend donc « 0 run » — le motif exact que ce fichier apprend à lire comme un
-  échec de dispatch. Elle reste juste pour vérifier une PR, où `--commit` fonctionne.
+  n'était prescrit **nulle part** dans le versionné. Il vient avec son piège : la commande déjà
+  documentée ne trouve pas ce run-là. ➡️ La règle et la commande vivent dans `AGENTS.md`
+  *(gabarit : `templates/repo/AGENTS.md`)*.
 
 ### Corrigé
 
 - **Sur un projet `--staging`, Renovate visait la PRODUCTION.** Faute de `baseBranchPatterns`, le
-  bot cible la branche **par défaut** : chacune de ses PR — les **sécurité** comprises — atterrissait
-  donc sur `main`, en sautant le host que le troisième étage existe pour valider. `init-project.sh`
-  pose désormais la clé sur `develop`, **et seulement quand la branche existe** : un gabarit qui la
-  porterait en dur désignerait une `develop` inexistante sur un projet à deux étages, et Renovate
-  sans base valide n'ouvre plus **aucune** PR, en silence. *(Vu en vrai sur `dEURO-dashboard` : sa
-  PR #25 `react-router [SECURITY]` visait `main`.)*
+  bot ciblait la branche **par défaut** : chacune de ses PR — les **sécurité** comprises — atterrissait
+  sur `main`, en sautant le host que le troisième étage existe pour valider. `init-project.sh` pose
+  désormais la clé sur `develop`, **et seulement quand la branche existe**. ➡️ Le pourquoi, et
+  pourquoi la clé est injectée plutôt que portée par le gabarit : bloc `description` de
+  `templates/repo/.github/renovate.json`.
 
 ### Modifié
 
