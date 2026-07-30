@@ -53,6 +53,7 @@
 |---|---|
 | **Ruleset `develop`** | les exigences de `main`, **moins deux, à dessein** : ❌ pas de `code_scanning` *(CodeQL n'analyse que `main` — l'exiger ici bloquerait toute PR sur un check qui n'arrivera jamais)* · ❌ **squash SEUL** *(le merge commit est réservé à `main`, pour les promotions)*. |
 | **Merge commit autorisé sur `main`** | squash seul est **incompatible** avec une branche de staging. |
+| **Back-merge `main` → `develop`** | conséquence des deux lignes ci-dessus : la seule route est une **PR squashée** *(le push direct tombe sur la règle `pull_request`, le merge commit sur le squash-seul)*. ⚠️ **Le message de GitHub désigne le mauvais coupable** — *« Merge commits are not allowed on this repository »* s'affiche alors que le repo les autorise *(`allow_merge_commit=true`)* : c'est la **règle** qui bloque, pas le réglage du repo. Chercher dans les settings est une impasse. |
 
 > **Note plan** : sur compte perso (non-org), le secret scanning public n'a que les **patterns par défaut** — pas de regex custom ni validity checks (réservés à GitHub Secret Protection, payant/org). D'où l'intérêt de gitleaks pour des secrets non standards.
 
