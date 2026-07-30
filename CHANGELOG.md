@@ -18,6 +18,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Ajouté
 
+- **Un scan Trivy HEBDOMADAIRE de l'image publiée** *(capacité `artefact`)* — `docker-publish.yml` gagne un
+  job `scheduled-scan`. Jusqu'ici l'image n'était regardée qu'**à la pull request** : après le merge, plus
+  rien. Renovate ne rattrape que si la base **bouge** — or une ligne d'images qui **cesse d'être
+  reconstruite** ne produit ni bump, ni PR, ni scan, et l'image en prod continue de servir la CVE *(c'est
+  ce qui a laissé une base `debian12` figée publier un CRITICAL openssl pendant des mois)*. Mêmes flags que
+  `build-check` : **un seul critère de « propre » par fichier**. ⚠️ **Un `schedule` ne tourne QUE depuis la
+  branche par défaut** : sur un projet à 3 étages, une PR qui s'arrête à `develop` n'arme rien.
+  ➡️ Le contrôle : `docs/controles-repo.md` ; le pourquoi : **standard §17**.
+
 - **`AGENTS.md` apprend à vérifier le run `push` sur `main` APRÈS un merge** — autre event, donc
   autre run : le vert d'une PR ne dit rien de celui-là, et c'est `main` qui ship. Le contrôle
   n'était prescrit **nulle part** dans le versionné. Il vient avec son piège : la commande déjà
