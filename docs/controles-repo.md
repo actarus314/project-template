@@ -66,7 +66,10 @@ feat/…   ●────┘
 > Sans PR, on pousse sur `main` et la CI tourne **après** : elle devient une **autopsie**, pas un barrage.
 > Elle constate les dégâts sur la branche que l'on vient de déclarer « production ».
 > Avec une PR, elle tourne **avant** — c'est toute la différence entre **savoir** et **empêcher**.
-> *(L'incident qui l'illustre : standard §12.)*
+>
+> **Ça s'est déjà produit** : un push direct sur `main` a retiré une directive `user:` ; l'image est
+> partie en `:latest`, le host de prod l'a tirée, la production est tombée — découverte après coup.
+> *(standard §12.)*
 
 > ### Là où l'on ne serre PAS la vis — *trop de contrôles tue le contrôle*
 > - **Aucun lint au pre-commit** — aucun linter n'est universel aux trois toolchains ; en imposer un ferait échouer le hook dès le premier commit.

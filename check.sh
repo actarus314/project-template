@@ -128,6 +128,14 @@ if [ -n "$GITLEAKS_VERSION" ]; then
   if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
 fi
 
+# docs/verifier-checksums.sh — whenever it exists (this repo only: no generated project ships doc
+# pairs like docs/X.md + hand-authored docs/X.html). Guards against the .html drifting from its
+# source .md; silent no-op elsewhere.
+if [ -x docs/verifier-checksums.sh ]; then
+  note "docs/verifier-checksums.sh — .md/.html checksum guard"
+  if docs/verifier-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
+fi
+
 # renovate-config-validator — whenever a renovate.json exists (beyond a project's CI: anti silent-freeze).
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(

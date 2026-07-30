@@ -150,6 +150,19 @@ jobs:
             echo "::error::secrets.md is tracked in workspace/"; exit 1
           fi
 
+  docs-checksums:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # Anti-drift guard: each hand-authored docs/X.html carries the sha256 of the docs/X.md it's
+      # the layout of; this fails the PR if the .md moved on without the .html being updated too.
+      - name: Check docs/*.md <-> docs/*.html checksums (docs/verifier-checksums.sh)
+        run: docs/verifier-checksums.sh
+
   gitleaks:
     runs-on: ubuntu-latest
     permissions:
