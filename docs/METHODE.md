@@ -27,6 +27,7 @@ Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voi
 | **LES GESTES** *(`RUNBOOK.md`)* | Les gestes, dans l'**ORDRE**, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ conventions)* · l'historique *(→ archives)* |
 | **LES CONVENTIONS** *(`claude-code-project-standard.md`, les ADR)* | Les règles et le **POURQUOI** de chaque règle. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
 | **LE CODE** *(scripts, workflows)* | **ce que le code NE PEUT PAS dire** : une contrainte non évidente, un piège qui se rejouerait. | **le récit historique.** Jamais *« constaté le 14/07 sur test003… »* |
+| **LES MÉMOIRES** *(`~/.claude/projects/<projet>/memory/`)* | le **réflexe** à réveiller au démarrage : une contrainte qu'on enfreint **par défaut**, et le **récit court** qui dit pourquoi elle existe. | ce qu'un document **versionné** porte déjà *(→ un pointeur suffit)* · un fait sans le geste qui en découle |
 
 ---
 
@@ -99,6 +100,10 @@ Un document qu'on ne relit plus ne sert plus à rien. Le runbook est lu **en fai
    Objectif : **assez pour ne JAMAIS rouvrir un sujet clos faute d'info — et pas une ligne de plus.**
 3. **Y ranger les recherches et les preuves** de l'étape *(un `RECHERCHE-*` est froid une fois fait — il va dans SON dossier d'étape, pas à la racine du chaud)*.
 4. **Committer.** L'archive est immuable *(sauf renversement de paradigme du projet)*.
+5. **Passer les MÉMOIRES au même tamis** — elles sont le 6ᵉ lieu, et **le seul sans structure Git : aucun diff ne les montre, donc elles sont ratées par défaut.**
+   - **ce qui est devenu FAUX se corrige, ou disparaît.** *(Une mémoire fausse est pire qu'absente : elle est rappelée d'office au démarrage, avec autorité.)*
+   - **ce qu'un document versionné porte maintenant se réduit à un pointeur** — sauf le **récit vécu** *(« c'est arrivé, voilà la mesure »)*, qui explique pourquoi la règle existe et que le document, lui, ne porte pas.
+   - **vérifier l'index** *(`MEMORY.md`)* : une mémoire absente de l'index n'est **jamais** rappelée, et un lien `[[x]]` cassé n'est signalé par rien.
 
 **L'arborescence reste LÉGÈRE** : quelques dossiers d'étape, quelques fichiers utiles chacun — **ni un congélateur géant, ni 38 dossiers de deux fichiers de 90 lignes.**
 
