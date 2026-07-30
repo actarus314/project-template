@@ -5,16 +5,21 @@ What this repo changes **for whoever uses it** — that is, for whoever generate
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> **No versions here, and that's intentional.** This repo has neither tag nor release: it doesn't
-> deploy, it is **read** and it is **run**. So there is only one `Non publié` section, which is never closed.
-> It carries the **meaning** of the changes; the detail lives in the pull requests, and the story of the
-> closed stages lives in `../workspace/archives/`.
+> **The version is the git TAG, not a heading here.** A ruleset makes a `v*` tag immutable, whereas
+> any heading in this file can be rewritten in any pull request — so the tag is what a reader,
+> a script or a generated project can trust *(the why: standard §12)*. `verify-version.sh` fails the
+> build if this file and the newest tag ever disagree.
+>
+> `Unreleased` is the open section, never closed. It is sealed into a dated `## [X.Y.Z]` heading the
+> day the tag is pushed — never before, so no release is ever announced that does not exist.
+> Each entry carries the **meaning** of a change; the detail lives in the pull requests, and the story
+> of the closed stages lives in `../workspace/archives/`.
 >
 > ⚠️ **This file starts on 2026-07-28.** What came before was not reconstructed — doing so from
 > memory would have produced a plausible but false history. For this period: the PRs and the
 > archives are authoritative.
 
-## [Non publié]
+## [Unreleased]
 
 ### Changed
 
@@ -34,6 +39,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   second copy to maintain alongside docs that are now entirely English.
 
 ### Added
+
+- **The repo is VERSIONED — and the single source is the git TAG.** `init-project.sh`,
+  `configure-repo.sh` and `docs/verifier-checksums.sh` gain `--version`; none of them stores a
+  literal, all three read `git describe`. The tag is authoritative because a ruleset makes it
+  **immutable**, whereas a `VERSION` file or a heading in this changelog can be rewritten in any
+  pull request *(the why: standard §12)*.
+  **`verify-version.sh`** compares the places that must, by nature, carry a copy — this file, each
+  script's `--version`, and a plugin manifest the day one exists. Wired into `check.sh` and into a
+  CI job, both auto-detecting, so a generated project is unaffected.
+  ⚠️ **The CI job fetches tags explicitly**: `actions/checkout` fetches none by default, and a guard
+  that cannot see the tag would pass by being blind — the exact false green this repo exists to catch.
+  🔴 **Proven red, then green**, not merely written: a tag without its changelog section fails, a
+  version hardcoded back into a script fails, and the guard stays a silent no-op until the first tag.
+
+- **A generated project now says WHICH template version built it** — `AGENTS.md` carries
+  `Scaffolded by project-template <version>`. A generated project holds a **frozen copy** of the
+  templates, and until now nothing said which one, so no one could tell whether a later fix had ever
+  reached it. The stamp is a snapshot: it stays true about the past, and it does not pretend to
+  track the template afterwards.
 
 - **A drift guard between `docs/X.md` and `docs/X.html`** — nothing prevented a `.md`
   *(the source of truth)* from evolving without its hand-made `.html` layout following along, and this had already

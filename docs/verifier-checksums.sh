@@ -13,6 +13,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
 
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 maj=0
 [ "${1:-}" = "--maj" ] && maj=1
 

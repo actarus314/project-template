@@ -136,6 +136,12 @@ if [ -x docs/verifier-checksums.sh ]; then
   if docs/verifier-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
+if [ -x verify-version.sh ]; then
+  note "verify-version.sh — version coherence"
+  if ./verify-version.sh; then ok "version"; else ko "version"; fi
+fi
+
 # renovate-config-validator — whenever a renovate.json exists (beyond a project's CI: anti silent-freeze).
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(
