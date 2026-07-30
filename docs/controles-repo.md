@@ -121,6 +121,7 @@ feat/…   ●────┘
 |---|---|---|---|---|
 | Push tag `v*` | Publication de l'image sur ghcr | `docker-publish.yml` › `build-push` | déclenché par le tag | ✅ |
 | Hebdomadaire | Mises à jour de toutes les dépendances (npm · docker · actions · pip…) | Renovate | `renovate.json` — auto-détecté, minor/patch groupés | ✅ |
+| Hebdomadaire | CVE de l'image **PUBLIÉE** (CRITICAL/HIGH) | `trivy` | `docker-publish.yml` › `scheduled-scan` — mêmes flags que `build-check` | ✅ |
 | Continu | CVE des dépendances (**détection**) | Dependabot alerts | natif — gratuit même en privé ; Renovate **lit** ces alertes et ouvre la PR de fix (**réparation**) | ✅ |
 
 ---
