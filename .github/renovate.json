@@ -3,27 +3,27 @@
   "extends": ["config:recommended", ":semanticCommitsDisabled"],
 
   "description": [
-    "Renovate tient à jour LE TEMPLATE lui-même. C'est l'INVERSE de la config qu'on livre aux projets",
-    "(templates/repo/.github/renovate.json), et pour la MÊME raison — l'emplacement des versions décide.",
+    "Renovate keeps THE TEMPLATE itself up to date. This is the OPPOSITE of the config shipped to projects",
+    "(templates/repo/.github/renovate.json), and for the SAME reason — where the versions live decides.",
     "",
-    "Dans un projet GÉNÉRÉ : les pins vivent dans .github/workflows/. Dependabot y couvre les `uses:`",
-    "et le pip ; Renovate n'y fait QUE les binaires curl-és (d'où `enabledManagers: custom.regex` là-bas).",
+    "In a GENERATED project: the pins live in .github/workflows/. Dependabot covers the `uses:` there",
+    "and pip; Renovate ONLY does the curl-ed binaries there (hence `enabledManagers: custom.regex` there).",
     "",
-    "ICI : toutes les versions du template vivent sous `templates/` — un GABARIT, pas un workflow actif.",
-    "Dependabot `github-actions` est VERROUILLÉ sur `.github/workflows/` du repo : il n'atteint JAMAIS",
-    "`templates/workflows/`. Il n'y a donc PAS de dependabot.yml sur ce repo : il serait aveugle.",
-    "Renovate porte TOUT — actions + binaires + pip — parce que lui seul sait scanner un chemin arbitraire.",
+    "HERE: all of the template's versions live under `templates/` — a TEMPLATE FILE, not an active workflow.",
+    "Dependabot `github-actions` is LOCKED to the repo's `.github/workflows/`: it NEVER reaches",
+    "`templates/workflows/`. So there is NO dependabot.yml on this repo: it would be blind.",
+    "Renovate carries EVERYTHING — actions + binaries + pip — because it alone can scan an arbitrary path.",
     "",
-    "⚠ `github-actions` ne scanne `.github/workflows/` QUE par défaut : les `managerFilePatterns` ci-dessous",
-    "ÉTENDENT sa portée à `templates/`. `pip_requirements` trouve requirements-ci.txt tout seul (Renovate",
-    "scanne le repo entier). `custom.regex` n'a aucun défaut : son pattern DOIT pointer sur templates/.",
+    "⚠ `github-actions` ONLY scans `.github/workflows/` by default: the `managerFilePatterns` below",
+    "EXTEND its reach to `templates/`. `pip_requirements` finds requirements-ci.txt on its own (Renovate",
+    "scans the whole repo). `custom.regex` has no default: its pattern MUST point at templates/.",
     "",
-    "⚠ MODE D'ÉCHEC : une clé inconnue fait Renovate REJETER la config et STOPPER TOUTES les PR, EN",
-    "SILENCE — rien n'échoue, les PR cessent simplement. Valider toute modif : `renovate-config-validator`.",
+    "⚠ FAILURE MODE: an unknown key makes Renovate REJECT the config and STOP ALL PRs, IN",
+    "SILENCE — nothing fails, the PRs simply stop. Validate every change: `renovate-config-validator`.",
     "",
-    "⚠ Le préfixe `v` des `*_VERSION` (v8.30.1, PAS 8.30.1) est OBLIGATOIRE : la datasource",
-    "`github-release-attachments` résout le digest par GET /releases/tags/{currentValue}. Sans `v` → 404,",
-    "Renovate abandonne, aucune PR — sans rien casser de visible. (renovatebot/renovate#27317.)"
+    "⚠ The `v` prefix on `*_VERSION` (v8.30.1, NOT 8.30.1) is MANDATORY: the",
+    "`github-release-attachments` datasource resolves the digest via GET /releases/tags/{currentValue}. Without `v` → 404,",
+    "Renovate gives up, no PR — without breaking anything visible. (renovatebot/renovate#27317.)"
   ],
 
   "enabledManagers": ["github-actions", "pip_requirements", "custom.regex"],
@@ -45,18 +45,18 @@
 
   "packageRules": [
     {
-      "description": "Minor/patch groupés en une PR. Les MAJEURES restent isolées : un major de scanner change les règles, donc les findings — ça se regarde seul.",
+      "description": "Minor/patch bumps are grouped into one PR. MAJOR versions stay isolated: a scanner's major version changes the rules, hence the findings — that's reviewed alone.",
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "template — outils CI (actions, binaires, pip)"
+      "groupName": "template — CI tooling (actions, binaries, pip)"
     },
     {
       "description": [
-        "renovate-config-validator : auto-mergé. Il publie ~6 fois par JOUR — épinglé exact, il",
-        "produirait une PR mécanique chaque lundi, à réviser pour rien. C'est un outil de LINT CI,",
-        "jamais livré au runtime, et son auto-merge est GARDÉ par la CI qui l'exécute : si une",
-        "version amont régresse, `validate-renovate` rougit et la PR ne passe pas. C'est justement",
-        "le mode d'échec (un validateur qui MENT) que le plancher `>= 43` visait — ici on le voit",
-        "AVANT `main`, au lieu de le subir dessus."
+        "renovate-config-validator: auto-merged. It ships ~6 times a DAY — pinned exact, it",
+        "would produce a mechanical PR every Monday, to review for nothing. It's a CI LINT tool,",
+        "never shipped to runtime, and its auto-merge is GUARDED by the CI that runs it: if an",
+        "upstream version regresses, `validate-renovate` goes red and the PR does not pass. This is exactly",
+        "the failure mode (a validator that LIES) the `>= 43` floor targeted — here it's caught",
+        "BEFORE `main`, instead of being suffered there."
       ],
       "matchDepNames": ["renovate"],
       "matchDatasources": ["npm"],
@@ -104,12 +104,12 @@
     },
     {
       "description": [
-        "renovate-config-validator, épinglé EXACT. Il vient de npm et non d'une release GitHub :",
-        "pas de `currentDigest` ici — une version npm est IMMUABLE, le checksum n'ajoute rien.",
-        "Le pin, lui, est nécessaire : `renovate@43` résolvait la dernière 43.x À CHAQUE RUN, donc",
-        "`main` pouvait rougir sans qu'une ligne bouge. Un flottement ne donne PAS que les correctifs :",
-        "il donne aussi les régressions, tout de suite, et SANS version connue-bonne où revenir.",
-        "⚠ `check.sh` porte la même version — il est DANS les managerFilePatterns pour ça."
+        "renovate-config-validator, pinned EXACT. It comes from npm, not a GitHub release:",
+        "no `currentDigest` here — an npm version is IMMUTABLE, the checksum adds nothing.",
+        "The pin itself is necessary: `renovate@43` resolved the latest 43.x on EVERY RUN, so",
+        "`main` could go red without a line changing. A float does NOT only give the fixes:",
+        "it also gives the regressions, right away, and WITHOUT a known-good version to fall back to.",
+        "⚠ `check.sh` carries the same version — it is IN the managerFilePatterns for that reason."
       ],
       "customType": "regex",
       "managerFilePatterns": [

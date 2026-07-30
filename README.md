@@ -1,85 +1,85 @@
-# Template de projet — Claude Code
+# Project Template — Claude Code
 
-Ce dossier **fabrique et configure** les projets. Il n'est **pas** un projet.
+This folder **builds and configures** projects. It is **not** a project.
 
-La règle qui structure tout : **ce qui SERT à créer un projet** et **ce qui RACONTE comment ce template a été construit** sont deux choses différentes, et elles ne se mélangent plus.
+The rule that structures everything: **what SERVES to create a project** and **what TELLS how this template was built** are two different things, and they no longer mix.
 
 ---
 
-## Créer un projet
+## Create a project
 
 ```bash
-./init-project.sh <projet> <owner>/<repo> [dossier-parent] \
+./init-project.sh <project> <owner>/<repo> [parent-folder] \
     [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
-`--type` décide **uniquement la toolchain** (quel `ci.yml`). Tout le reste suit **trois capacités indépendantes** :
+`--type` decides **only the toolchain** (which `ci.yml`). Everything else follows **three independent capabilities**:
 
-| Capacité | La question à se poser | Ce qu'elle apporte |
+| Capability | The question to ask | What it brings |
 |---|---|---|
-| `--pages` | Le site est-il servi par **GitHub Pages** ? | `pages.yml` |
-| `--artefact` | Le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? | image ghcr · Trivy · ruleset tags · immutable releases |
-| `--staging` | Existe-t-il un **host à VALIDER** avant la prod ? | branche `develop` · flux 3 étages |
+| `--pages` | Is the site served by **GitHub Pages**? | `pages.yml` |
+| `--artefact` | Does the repo **publish an image that someone ELSE deploys**? | ghcr image · Trivy · tags ruleset · immutable releases |
+| `--staging` | Is there a **host to VALIDATE** before prod? | `develop` branch · 3-stage flow |
 
-> **`develop` découle du `staging`** — jamais de Docker, jamais du langage. Un projet `node` sans host à valider n'en a pas ; un site Pages packagé en image non plus.
+> **`develop` follows from `staging`** — never from Docker, never from the language. A `node` project with no host to validate does not have one; a Pages site packaged as an image doesn't either.
 
-**Raccourcis** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(toute autre toolchain — Android, C/C++, Rust… : contrôles-sécu seuls, build/test à remplir)*.
+**Shortcuts**: `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **no capability** *(any other toolchain — Android, C/C++, Rust… : security checks only, build/test to fill in)*.
 
-## Configurer le repo côté serveur
+## Configure the repo server-side
 
 ```bash
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ```
 
-Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, description, **topics**, et **l'activation de CodeQL** *(default setup natif — il détecte les langages et les tient à jour tout seul ; il n'y a **plus** de `codeql.yml`)*. **Joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a jamais `Administration: write`.
+Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, description, **topics**, and **CodeQL activation** *(native default setup — it detects languages and keeps them up to date on its own; there is **no longer** a `codeql.yml`)*. **Run by the maintainer** with an **ephemeral** admin PAT — the assistant never has `Administration: write`.
 
-⚠️ **Se rejoue au passage en public** : un repo privé en plan Free n'a **ni ruleset, ni secret scanning, ni CodeQL**. Le script est **idempotent**, c'est fait pour — et c'est ce rejeu qui **active CodeQL** au flip.
-`--dry-run` lit tout et **n'écrit rien** — à utiliser sur un repo vivant.
+⚠️ **Replayed on the switch to public**: a private repo on the Free plan has **neither ruleset, nor secret scanning, nor CodeQL**. The script is **idempotent**, that's what it's for — and it's this replay that **activates CodeQL** on the flip.
+`--dry-run` reads everything and **writes nothing** — to be used on a live repo.
 
-## Vérifier en local — `local == github`
+## Verify locally — `local == github`
 
 ```bash
 ./check.sh
 ```
 
-Rejoue **les checks de sécurité de la CI** aux **versions épinglées** (auto-détectées depuis `ci.yml`, donc rien à maintenir à la main) : ce qui passe ici passe la CI. Il est **copié dans chaque projet généré**, et un hook `pre-commit` le relance tout seul — throttlé (24 h) et **consultatif** (il n'a jamais bloqué un commit).
+Replays **the CI's security checks** at **pinned versions** (auto-detected from `ci.yml`, so nothing to maintain by hand): what passes here passes the CI. It is **copied into every generated project**, and a `pre-commit` hook replays it on its own — throttled (24h) and **advisory** (it has never blocked a commit).
 
 ---
 
-## Ce qu'il y a dans ce dossier
+## What's in this folder
 
-Le template s'applique à lui-même l'arborescence qu'il impose *(standard §2)* : **deux repos git distincts**, côte à côte.
+The template applies to itself the tree structure it imposes *(standard §2)*: **two distinct git repos**, side by side.
 
 ```
 template/
-├── repo/         ← CE dossier. Versionné → GitHub. Les outils et la référence.
-└── workspace/    ← La mémoire du projet. Repo git LOCAL, sans remote — jamais poussé.
+├── repo/         ← THIS folder. Versioned → GitHub. The tools and the reference.
+└── workspace/    ← The project's memory. LOCAL git repo, no remote — never pushed.
 ```
 
-| | Rôle |
+| | Role |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **Les outils.** Ce qu'on exécute. |
-| **`templates/`** | **Ce qui est COPIÉ dans un projet** — et rien d'autre. `repo/` (fichiers versionnés) · `workflows/` (CI) · `workspace/` (hors Git). |
-| **`docs/`** | **La référence, à lire à l'usage.** La méthode, le standard, le runbook, la carte des contrôles. |
-| **`../workspace/`** | **Comment ce template a été construit.** Journal de bord, décisions, recherches, les défauts trouvés. À lire pour comprendre *pourquoi*, jamais pour *faire*. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **The tools.** What gets run. |
+| **`templates/`** | **What gets COPIED into a project** — and nothing else. `repo/` (versioned files) · `workflows/` (CI) · `workspace/` (outside Git). |
+| **`docs/`** | **The reference, to be read as needed.** The method, the standard, the runbook, the map of checks. |
+| **`../workspace/`** | **How this template was built.** Log, decisions, research, defects found. To be read to understand *why*, never to *do*. |
 
-### `docs/` — la référence
+### `docs/` — the reference
 
-- 🎯 **`RUNBOOK.md`** — **le cycle de vie complet, de bout en bout** : créer · travailler · publier une version · basculer privé→public · faire évoluer · maintenir. **Il dit l'ORDRE DES GESTES et QUI les fait** ; le standard dit le *pourquoi*. **C'est le document opérationnel — commencer par lui.**
-- **`METHODE.md`** — **une seule source de vérité** : un fait vit à un seul endroit, partout ailleurs un lien. **Lue à chaque session** *(imposée par `~/.claude/CLAUDE.md`)*.
-- **`claude-code-project-standard.md`** — le standard. **Lu à chaque session** *(idem)*.
-- **`github-repo-config.md`** — contrôles serveur, matrice des PAT, checklist nouveau repo.
-- **`controles-repo.md`** / **`.html`** — quel contrôle tourne, où, avec quel outil. La version `.md` **fait foi** ; le `.html` en est la mise en page.
+- 🎯 **`RUNBOOK.md`** — **the full lifecycle, end to end**: create · work · release a version · switch private→public · evolve · maintain. **It states the ORDER OF ACTIONS and WHO does them**; the standard states the *why*. **This is the operational document — start with it.**
+- **`METHODE.md`** — **a single source of truth**: a fact lives in one place, everywhere else a link. **Read at every session** *(imposed by `~/.claude/CLAUDE.md`)*.
+- **`claude-code-project-standard.md`** — the standard. **Read at every session** *(same)*.
+- **`github-repo-config.md`** — server-side checks, PAT matrix, new-repo checklist.
+- **`controles-repo.md`** / **`.html`** — which check runs, where, with what tool. The `.md` version is **authoritative**; the `.html` is its layout.
 
-### `../workspace/` — la construction
+### `../workspace/` — the build
 
-- **`SUIVI.md`** — le journal de bord *(le chaud)*. **À ouvrir en premier** pour reprendre le chantier. Court, il **pointe** vers les archives.
-- **`archives/`** — *le froid* : un dossier par étape close *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, chacune **synthétisée** *(quoi/comment/pourquoi)*. Les trois recherches qui ont tranché vivent dans **`archives/conception/`**.
+- **`SUIVI.md`** — the log *(the hot one)*. **To open first** to resume work. Short, it **points** to the archives.
+- **`archives/`** — *the cold one*: one folder per closed stage *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, each **synthesized** *(what/how/why)*. The three pieces of research that settled things live in **`archives/conception/`**.
 
 ---
 
-## Deux choses à ne pas casser
+## Two things not to break
 
-**Le pointeur global.** `~/.claude/CLAUDE.md` référence `docs/` **en chemin absolu**. Déplacer ces fichiers casse toutes les sessions Claude Code, silencieusement.
+**The global pointer.** `~/.claude/CLAUDE.md` references `docs/` **via an absolute path**. Moving these files breaks every Claude Code session, silently.
 
-**`workspace/` n'est pas dans ce repo — et il ne doit jamais y entrer.** Il porte la mémoire interne (noms de repos privés, incidents). Son propre git, **sans remote**, est ce qui protège ce repo-ci le jour où il passera public.
+**`workspace/` is not in this repo — and it must never enter it.** It carries the internal memory (private repo names, incidents). Its own git, **with no remote**, is what protects this repo the day it goes public.

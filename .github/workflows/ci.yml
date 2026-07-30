@@ -1,4 +1,4 @@
-# CI of the TEMPLATE repo itself — NOT a shipped gabarit.
+# CI of the TEMPLATE repo itself — NOT a shipped template file.
 # It validates the scripts and the Renovate config, and above all GENERATES projects to lint their
 # workflows in real conditions — the automation of the manual test00x runs. This is what gives the
 # PR-only switch its meaning: the pre-push hook points here ("check the CI is green").
@@ -25,8 +25,8 @@ jobs:
       # The floor matters: the version npx resolves by default (37.x) IGNORES `managerFilePatterns`
       # and reports a FALSE "invalid config" — a validator that lies is worse than none.
       # The ceiling matters just as much: a floating major re-resolves the newest release ON EVERY
-      # RUN, so `main` can go red without a line changing. A floating range does not only hand you
-      # the fixes — it hands you the regressions too, instantly, with NO known-good version to fall
+      # RUN, so `main` can go red without a line changing. A floating range does not only bring
+      # the fixes — it brings the regressions too, instantly, with NO known-good version to fall
       # back to.
       - name: Validate both Renovate configs
         run: |
@@ -59,16 +59,16 @@ jobs:
           - { name: static-pages,   flags: --type static --pages }
           - { name: node-full,      flags: --type node }
           - { name: generic,        flags: --type generic }
-          - { name: rozo,           flags: --type static --pages --artefact }
+          - { name: static-artefact, flags: --type static --pages --artefact }
           - { name: static-nopages, flags: --type static --no-pages }
     env:
       # Same version+checksum the template ships (single source; Renovate keeps ci.yml and the
-      # gabarits aligned via the extended custom.regex in .github/renovate.json).
+      # template files aligned via the extended custom.regex in .github/renovate.json).
       ACTIONLINT_VERSION: v1.7.12
       ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
-      # osv n'est pas utilisé pour linter CE repo (pas de manifeste applicatif) — il sert à la GARDE
-      # anti-régression plus bas (rejouer l'étape osv d'un projet généré). Suivi par Renovate au même
-      # titre qu'actionlint (custom.regex cible aussi `.github/workflows/` — voir .github/renovate.json).
+      # osv is not used to lint THIS repo (no application manifest) — it serves the regression GUARD
+      # further below (replaying the osv step of a generated project). Tracked by Renovate on the same
+      # footing as actionlint (custom.regex also targets `.github/workflows/` — see .github/renovate.json).
       OSV_VERSION: v2.4.0
       OSV_SHA256: 15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0
     steps:
@@ -126,10 +126,10 @@ jobs:
       # Regression guard for the osv scope fix. The steps above lint a generated project's WORKFLOWS,
       # but never replay its osv step — which is exactly where the "CI-only tooling out of scope" fix
       # lives (requirements-ci.txt subtracted via .gitignore). So replay that project's EXACT osv step on
-      # the freshly generated tree: if the gabarit .gitignore ever stops subtracting requirements-ci.txt
+      # the freshly generated tree: if the template .gitignore ever stops subtracting requirements-ci.txt
       # (or a bump reintroduces tooling CVEs), THIS job goes red — before any real project ships a red
       # osv CI. The `git add -f` itself is already guarded by the "repo clean" check below (an uncommitted
-      # file leaves `git status` dirty). One shard suffices: the fix is driven by the shared gabarit
+      # file leaves `git status` dirty). One shard suffices: the fix is driven by the shared template file
       # .gitignore, identical across every --type.
       - name: Generated project passes its own osv step (regression guard, PR #23)
         if: matrix.name == 'node-full'
