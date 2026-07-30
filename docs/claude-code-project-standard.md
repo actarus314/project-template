@@ -1,240 +1,240 @@
-# Standard d'organisation — Projets Claude Code
+# Organization Standard — Claude Code Projects
 
-> Référence perso. S'applique à tout nouveau projet développé avec Claude Code (via Claude Desktop ou CLI).
-> Objectif : organisation simple, réplicable, backupable en un seul dossier, avec séparation nette entre ce qui va sur GitHub et ce qui reste privé.
+> Personal reference. Applies to every new project built with Claude Code (via Claude Desktop or CLI).
+> Goal: simple, replicable organization, backupable as a single folder, with a clean separation between what goes on GitHub and what stays private.
 
 ---
 
-## 1. Concepts de base
+## 1. Basic concepts
 
-Trois choses à distinguer clairement :
+Three things to distinguish clearly:
 
-| Terme | Définition | Localisation |
+| Term | Definition | Location |
 |---|---|---|
-| **Dossier de travail** | Le répertoire physique contenant tout (code, notes, secrets, logs) | `~/Documents/Claude/<projet>/` |
-| **Repo Git local** | L'historique Git stocké dans `.git/` + les fichiers trackés | Dans `<projet>/repo/.git/` |
-| **Repo GitHub** | Miroir distant du repo local, poussé sur github.com | Serveur GitHub (`origin`) |
+| **Working folder** | The physical directory holding everything (code, notes, secrets, logs) | `~/Documents/Claude/<project>/` |
+| **Local Git repo** | The Git history stored in `.git/` + the tracked files | In `<project>/repo/.git/` |
+| **GitHub repo** | Remote mirror of the local repo, pushed to github.com | GitHub server (`origin`) |
 
-**Règle d'or** :
-> Le repo GitHub ne contient **que ce qui est nécessaire pour cloner, builder et lancer l'application**. Tout le reste — notes, plans, réflexions, secrets, config de dev personnel — vit dans le dossier de travail, hors Git.
+**Golden rule**:
 
-Le `.gitignore` est la frontière opérationnelle entre les deux.
+> The GitHub repo contains **only what is needed to clone, build, and run the application**. Everything else — notes, plans, thinking, secrets, personal dev config — lives in the working folder, outside Git.
 
-**Règle de langue & ton** :
-> Tout le contenu **versionné (envoyé sur GitHub)** est rédigé en **anglais** — code, **commentaires de code**, docs de `repo/`, `README.md`, `.env.example` — sauf contre-ordre explicite. **Exception** : le `README.md` du projet est en anglais (défaut) **et** en français. Les fichiers locaux/gitignorés (`workspace/`, `secrets.md`, `CLAUDE.md`) peuvent rester en français.
+`.gitignore` is the operational boundary between the two.
+
+**Language & tone rule**:
+> All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`, `CLAUDE.md`) can stay in French.
 >
-> 🔵 **CONTRE-ORDRE EXPLICITE — le template lui-même est EXEMPTÉ** *(décidé le 2026-07-15)*.
-> `template/repo/` reste **en français**, docs **et** commentaires de code. C'est un **outillage personnel qui a vocation à le rester** : son repo GitHub est **privé**, il ne cherche pas de contributeur, et l'anglais n'y achèterait rien qu'une traduction à maintenir.
-> **L'exemption s'arrête au template.** Tout projet qu'il **génère** applique la règle ci-dessus — c'est d'ailleurs pour ça que les gabarits de `templates/repo/` sont, eux, **en anglais**.
+> **Remaining exceptions**: the local file templates stay in French — `templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`.
+> They are gitignored in the generated project and never reach GitHub.
 >
-> **Ton** : jamais de **2ᵉ personne** (`you/your`, `vous/tu/ton`) dans le contenu versionné **ni dans l'UI de l'app** — écrire « the user / l'utilisateur » ou des tournures impersonnelles.
+> **Tone**: never **2nd person** (`you/your`, `vous/tu/ton`) in versioned content **or in the app UI** — write "the user" / "l'utilisateur" or impersonal phrasing.
 
 ---
 
-## 2. Arborescence standard
+## 2. Standard directory layout
 
 ```
-~/Documents/Claude/<projet>/              ← dossier de travail (backupé sur NAS)
+~/Documents/Claude/<project>/             ← working folder (backed up to NAS)
 │
-├── repo/                                 ← racine Git, cwd de Claude Code
+├── repo/                                 ← Git root, Claude Code's cwd
 │   │
-│   ├── .git/                             (historique Git local)
-│   ├── .gitignore                        (frontière versionné/ignoré)
+│   ├── .git/                             (local Git history)
+│   ├── .gitignore                        (versioned/ignored boundary)
 │   │
-│   ├── .env                              ← IGNORÉ — variables de déploiement de l'app (clés API runtime)
-│   ├── .env.example                      ← versionné — template sans valeurs (app uniquement, pas le PAT)
-│   ├── .envrc                            ← IGNORÉ — direnv : PAT du repo (GITHUB_PAT) + charge .env ; expose GH_TOKEN
+│   ├── .env                              ← IGNORED — app deployment variables (runtime API keys)
+│   ├── .env.example                      ← versioned — template with no values (app only, never the PAT)
+│   ├── .envrc                            ← IGNORED — direnv: the repo's PAT (GITHUB_PAT) + loads .env; exposes GH_TOKEN
 │   │
-│   ├── .claude/                          ← IGNORÉ — config dev perso de Claude Code
+│   ├── .claude/                          ← IGNORED — personal dev config for Claude Code
 │   │   └── settings.local.json
 │   │
-│   ├── CLAUDE.md                         ← IGNORÉ — instructions Claude Code (pointeurs, conventions)
-│   ├── README.md                         ← versionné — install/run/structure pour humains
+│   ├── CLAUDE.md                         ← IGNORED — Claude Code instructions (pointers, conventions)
+│   ├── README.md                         ← versioned — install/run/structure for humans
 │   │
-│   ├── backend/, frontend/, shared/      ← versionnés — code de l'app
-│   ├── docker-compose.yaml               ← versionné — orchestration runtime
+│   ├── backend/, frontend/, shared/      ← versioned — app code
+│   ├── docker-compose.yaml               ← versioned — runtime orchestration
 │   │
-│   ├── data/                             ← IGNORÉ — données runtime (SQLite, caches)
-│   ├── node_modules/                     ← IGNORÉ — dépendances installées
-│   └── dist/, build/                     ← IGNORÉS — artefacts de build
+│   ├── data/                             ← IGNORED — runtime data (SQLite, caches)
+│   ├── node_modules/                     ← IGNORED — installed dependencies
+│   └── dist/, build/                     ← IGNORED — build artifacts
 │
-└── workspace/                            ← TOUT ce qui est perso — SON PROPRE repo git, LOCAL
+└── workspace/                            ← EVERYTHING personal — its OWN git repo, LOCAL
     │
-    ├── .git/                             (historique local — AUCUN remote, jamais poussé)
+    ├── .git/                             (local history — NO remote, never pushed)
     ├── .gitignore                        ← `secrets.md`
     │
-    ├── README.md                         ← index du workspace
-    ├── secrets.md                        ← IGNORÉ — PAT GitHub, API keys, procédures d'auth
+    ├── README.md                         ← workspace index
+    ├── secrets.md                        ← IGNORED — GitHub PAT, API keys, auth procedures
     │
-    ├── docs/                             ← SUIVI.md · archives/ · réflexions, ADR
-    ├── plans/                            ← plans phase 1, phase 2, roadmap
-    └── notes/                            ← scratch, brouillons, captures de conv
+    ├── docs/                             ← SUIVI.md · archives/ · thinking, ADRs
+    ├── plans/                            ← phase 1 plan, phase 2 plan, roadmap
+    └── notes/                            ← scratch, drafts, conversation captures
 ```
 
-### **DEUX repos git par projet** — et un seul va sur GitHub
+### **TWO git repos per project** — and only one goes on GitHub
 
 | | `repo/` | `workspace/` |
 |---|---|---|
-| **Contenu** | l'app : ce qu'il faut pour cloner, builder, lancer | la mémoire : suivi, décisions, plans, archives |
-| **Remote** | ✅ GitHub *(privé ou public)* | ❌ **aucun — jamais poussé** |
-| **cwd de Claude Code** | ✅ | — *(accédé en `../workspace/`)* |
-| **Sauvegarde hors-site** | GitHub | le **backup NAS** du dossier de travail |
+| **Content** | the app: what's needed to clone, build, run | the memory: tracking, decisions, plans, archives |
+| **Remote** | ✅ GitHub *(private or public)* | ❌ **none — never pushed** |
+| **Claude Code's cwd** | ✅ | — *(reached via `../workspace/`)* |
+| **Off-site backup** | GitHub | the working folder's **NAS backup** |
 
-**Pourquoi `workspace/` a son propre git.** Sans lui, il n'est versionné **nulle part** : toute suppression y est **irréversible**, et c'est la mémoire du projet qui part. Un `.gitignore` protège le repo du dossier — **il ne protège pas le dossier**.
+**Why `workspace/` has its own git.** Without it, it is versioned **nowhere**: any deletion there is **irreversible**, and it's the project's memory that's lost. A `.gitignore` protects the repo folder — **it does not protect the folder**.
 
-**Pourquoi il n'a PAS de remote.** *(a)* Il porte ce qui ne doit jamais devenir public — noms de repos privés, incidents, adresses de hosts. *(b)* Le jour où `repo/` passe public, il n'y a **rien à nettoyer** : la frontière a été posée au jour 1. *(c)* Git ne sait pas « versionner sans pousser » — il pousse des **commits**, pas des dossiers. **Deux repos est le seul mécanisme.**
+**Why it has NO remote.** *(a)* It carries what must never become public — private repo names, incidents, host addresses. *(b)* The day `repo/` goes public, there is **nothing to clean up**: the boundary was set on day 1. *(c)* Git has no "version without pushing" mode — it pushes **commits**, not folders. **Two repos is the only mechanism.**
 
-> ⚠️ **`secrets.md` est gitignoré dans `workspace/`.** Le repo n'a pas de remote *aujourd'hui* — mais s'il en gagnait un, **tout l'historique partirait d'un coup**. Un secret n'entre jamais dans un objet git. Conséquence assumée : ce fichier n'a **pas** de filet anti-suppression — la vérité du secret vit dans `.envrc`, `secrets.md` n'en est que la doc humaine.
+> ⚠️ **`secrets.md` is gitignored in `workspace/`.** The repo has no remote *today* — but if it ever gained one, **the entire history would go out at once**. A secret never enters a git object. Accepted consequence: this file has **no** anti-deletion safety net — the secret's source of truth lives in `.envrc`, `secrets.md` is only the human-readable documentation of it.
 
 ---
 
-## 3. Règle de décision — où mettre un fichier ?
+## 3. Decision rule — where does a file go?
 
-Trois questions à se poser, dans l'ordre :
+Three questions, in order:
 
-1. **Est-ce nécessaire pour cloner + builder + lancer l'app ?**
-   → Oui : `repo/` **et** versionné.
-   → Non : on passe à la question 2.
+1. **Is it needed to clone + build + run the app?**
+   → Yes: `repo/` **and** versioned.
+   → No: move to question 2.
 
-2. **Est-ce consommé par l'app ou par Claude Code au runtime, techniquement ?** (ex. `.env`, `.claude/settings.local.json`, `data/`)
-   → Oui : `repo/` mais **ignoré** (doit être physiquement là mais ne doit pas fuiter).
-   → Non : on passe à la question 3.
+2. **Is it consumed by the app or by Claude Code at runtime, technically?** (e.g. `.env`, `.claude/settings.local.json`, `data/`)
+   → Yes: `repo/` but **ignored** (must physically be there but must not leak).
+   → No: move to question 3.
 
-3. **C'est de la doc, des plans, des notes, des secrets personnels ?**
-   → `workspace/` (hors du repo publié — mais **sous git**, dans son propre repo local : §2).
+3. **Is it docs, plans, notes, personal secrets?**
+   → `workspace/` (outside the published repo — but **under git**, in its own local repo: §2).
 
-### Exemples concrets
+### Concrete examples
 
-| Fichier / dossier | Question 1 | Question 2 | Emplacement |
+| File / folder | Question 1 | Question 2 | Location |
 |---|---|---|---|
-| `backend/src/*.ts` | Oui | — | `repo/backend/src/` versionné |
-| `docker-compose.yaml` | Oui | — | `repo/` versionné |
-| `README.md` | Oui (install/run) | — | `repo/` versionné |
-| `.env` | Non | Oui (app runtime) | `repo/.env` ignoré |
-| `.envrc` | Non | Oui (direnv → git/gh) | `repo/.envrc` ignoré |
-| `.claude/settings.local.json` | Non | Oui (Claude Code) | `repo/.claude/` ignoré |
-| `CLAUDE.md` | Non | Oui (Claude Code) | `repo/CLAUDE.md` ignoré |
-| `node_modules/` | Non | Oui (Node runtime) | `repo/node_modules/` ignoré |
-| `data/` (SQLite) | Non | Oui (app runtime) | `repo/data/` ignoré |
-| Plan phase 2 | Non | Non | `workspace/plans/` |
-| Schéma d'archi | Non | Non | `workspace/docs/` |
-| Captures de réflexion | Non | Non | `workspace/notes/` |
-| PAT GitHub, procédures d'auth | Non | Non | `workspace/secrets.md` |
+| `backend/src/*.ts` | Yes | — | `repo/backend/src/` versioned |
+| `docker-compose.yaml` | Yes | — | `repo/` versioned |
+| `README.md` | Yes (install/run) | — | `repo/` versioned |
+| `.env` | No | Yes (app runtime) | `repo/.env` ignored |
+| `.envrc` | No | Yes (direnv → git/gh) | `repo/.envrc` ignored |
+| `.claude/settings.local.json` | No | Yes (Claude Code) | `repo/.claude/` ignored |
+| `CLAUDE.md` | No | Yes (Claude Code) | `repo/CLAUDE.md` ignored |
+| `node_modules/` | No | Yes (Node runtime) | `repo/node_modules/` ignored |
+| `data/` (SQLite) | No | Yes (app runtime) | `repo/data/` ignored |
+| Phase 2 plan | No | No | `workspace/plans/` |
+| Architecture diagram | No | No | `workspace/docs/` |
+| Thinking notes | No | No | `workspace/notes/` |
+| GitHub PAT, auth procedures | No | No | `workspace/secrets.md` |
 
 ---
 
-## 4. Gestion des secrets
+## 4. Secrets management
 
-**Règle stricte** : aucun secret dans un fichier versionné. Jamais.
+**Strict rule**: no secret in a versioned file. Ever.
 
-### Les 2 emplacements de secrets
+### The 2 secret locations
 
-| Emplacement | Contenu | Usage |
+| Location | Content | Usage |
 |---|---|---|
-| `repo/.env` | Clés API **applicatives** (`ALCHEMY_API_KEY`, `DUNE_API_KEY`, `TELEGRAM_BOT_TOKEN`, …) — **pas le PAT** | Consommé par l'app au runtime et par Claude Code en dev |
-| `repo/.envrc` | Le **`GITHUB_PAT`** du repo (secret de dev) + charge `.env` + `export GH_TOKEN=$GITHUB_PAT` | direnv : expose le PAT à git/gh, confiné au dossier |
-| `workspace/secrets.md` | Procédures d'auth, pointeurs, valeurs humainement lisibles, dates d'expiration, où régénérer | Référence humaine + pointeur pour Claude Code |
+| `repo/.env` | **App** API keys (`ALCHEMY_API_KEY`, `DUNE_API_KEY`, `TELEGRAM_BOT_TOKEN`, …) — **not the PAT** | Consumed by the app at runtime and by Claude Code in dev |
+| `repo/.envrc` | The repo's **`GITHUB_PAT`** (dev secret) + loads `.env` + `export GH_TOKEN=$GITHUB_PAT` | direnv: exposes the PAT to git/gh, confined to the folder |
+| `workspace/secrets.md` | Auth procedures, pointers, human-readable values, expiration dates, where to regenerate | Human reference + pointer for Claude Code |
 
-> **Le secret GitHub vit à un seul endroit : `repo/.envrc` (`GITHUB_PAT`).** Le remote git reste en **URL nue** (jamais `https://<PAT>@github.com/...`), et `.envrc` réexporte ce PAT en `GH_TOKEN` dans le shell du dossier. Aucun secret en clair dans `.git/config`.
+> **The GitHub secret lives in exactly one place: `repo/.envrc` (`GITHUB_PAT`).** The git remote stays a **bare URL** (never `https://<PAT>@github.com/...`), and `.envrc` re-exports this PAT as `GH_TOKEN` in the folder's shell. No secret in clear text in `.git/config`.
 
-### Pourquoi cette séparation
+### Why this separation
 
-- `.env` = format technique consommable par l'app et les scripts (pas d'explications, juste des paires clé=valeur).
-- `workspace/secrets.md` = format humain : *où* trouver, *comment* régénérer, *quels* scopes, *quand* ça expire. Indispensable pour reprendre depuis un backup NAS sur une nouvelle machine.
+- `.env` = a technical format consumable by the app and scripts (no explanations, just key=value pairs).
+- `workspace/secrets.md` = human format: *where* to find it, *how* to regenerate it, *which* scopes, *when* it expires. Essential for resuming from a NAS backup on a new machine.
 
-### Duplication à éviter
+### Duplication to avoid
 
-- Une clé API ne doit exister **qu'à un seul endroit** : `.env`. Si Claude Code en a besoin, il lit `.env` directement. Ne JAMAIS dupliquer dans `settings.local.json`.
+- An API key must exist **in exactly one place**: `.env`. If Claude Code needs it, it reads `.env` directly. NEVER duplicate it into `settings.local.json`.
 
 ---
 
-## 5. Authentification GitHub
+## 5. GitHub authentication
 
-**Principe : séparer la lecture (large, inoffensive) de l'écriture (étroite, par repo). Aucun token RW large nulle part.** Deux canaux d'auth étanches : le **cloud** (claude.ai) et le **local** (CC en terminal/desktop) ne partagent pas le même mécanisme — modifier l'un n'affecte pas l'autre.
+**Principle: separate reading (broad, harmless) from writing (narrow, per repo). No broad RW token anywhere.** Two watertight auth channels: **cloud** (claude.ai) and **local** (CC in terminal/desktop) do not share the same mechanism — changing one does not affect the other.
 
-### Vue d'ensemble des accès
+### Access overview
 
-| Acteur | Token / mécanisme | Périmètre | Durée |
+| Actor | Token / mechanism | Scope | Duration |
 |---|---|---|---|
-| **Toi** | Interface web github.com | Tout | — |
-| **Chat / Projects (cloud)** | GitHub App Claude, installée par owner | Lecture seule des repos autorisés (perso + orgs) | révocable |
-| **CC — lecture** | PAT fine-grained **public-RO** (`claude-ro`) dans `gh` | Tout le public, 5000 req/h, **zéro privé** | **sans expiration — assumé** (voir ci-dessous) |
-| **CC — écriture** | PAT fine-grained RW **1 par repo** dans `repo/.envrc` | Ce repo uniquement | **90 jours** + alerte J-14 |
-| **Dockhand** | PAT classic RO (`dockhand-ro`) — compte actarus314 | Tous repos (perso + orgs) | 1 an |
+| **The maintainer** | github.com web interface | Everything | — |
+| **Chat / Projects (cloud)** | Claude GitHub App, installed by the owner | Read-only on authorized repos (personal + orgs) | revocable |
+| **CC — read** | **public-RO** fine-grained PAT (`claude-ro`) in `gh` | All of public GitHub, 5000 req/h, **zero private** | **no expiration — deliberate** (see below) |
+| **CC — write** | fine-grained RW PAT, **1 per repo**, in `repo/.envrc` | This repo only | **90 days** + J-14 alert |
+| **Dockhand** | classic RO PAT (`dockhand-ro`) — the owner account | All repos (personal + orgs) | 1 year |
 
-### Lecture publique + auth Git par défaut → `gh` en public-RO
+### Public reading + default Git auth → `gh` in public-RO
 
-`gh` CLI porte un PAT **fine-grained « Public repositories (read-only) »** : lecture de tout le GitHub public à 5000 req/h, **aucun accès aux privés**. C'est le token par défaut de toute session CC, et il est inoffensif s'il fuit.
+The `gh` CLI carries a **fine-grained "Public repositories (read-only)"** PAT: reads all of public GitHub at 5000 req/h, **zero access to private repos**. It is the default token for every CC session, and it is harmless if leaked.
 
-> ⚠️ **Ne PAS utiliser `gh auth login` en flow web/OAuth** : il impose toujours le scope `repo` (RW sur TOUS tes repos). On installe à la place un PAT aux droits choisis via `--with-token`.
+> ⚠️ **Do NOT use `gh auth login` in web/OAuth flow**: it always forces the `repo` scope (RW on ALL repositories). A PAT with hand-picked rights is installed instead, via `--with-token`.
 
-**Setup initial (une fois par machine) :**
+**Initial setup (once per machine):**
 ```bash
 brew install gh direnv
-# Créer un fine-grained PAT "Public repositories (read-only)" sur github.com
-echo "<PAT-public-RO>" | gh auth login --with-token
-gh auth setup-git                              # git délègue à « gh auth git-credential »
-echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # hook direnv
+# Create a fine-grained "Public repositories (read-only)" PAT on github.com
+echo "<public-RO-PAT>" | gh auth login --with-token
+gh auth setup-git                              # git delegates to « gh auth git-credential »
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # direnv hook
 ```
 
-**Vérification :**
+**Verification:**
 ```bash
 gh auth status
 gh api rate_limit --jq .rate     # limit = 5000
 ```
 
-La lecture des repos **privés** depuis CC n'est volontairement pas configurée en local (un classic `repo` serait du RW déguisé ; un fine-grained ne couvre qu'un owner à la fois). Elle se fait via la **GitHub App côté Chat/Projects**.
-Corollaire assumé : depuis un terminal, Claude **ne voit ni les organisations ni les repos privés** — il faut les lui nommer.
+Reading **private** repos from CC is deliberately not configured locally (a classic `repo` scope would be RW in disguise; a fine-grained PAT only covers one owner at a time). That happens via the **GitHub App on the Chat/Projects side**.
+Accepted corollary: from a terminal, Claude **sees neither organizations nor private repos** — they must be named for it.
 
-> ⚠️ **Piège — une org PEUT refuser `claude-ro`, même en lecture publique.**
-> Une organisation peut imposer une **durée de vie maximale** aux PAT fine-grained *(Settings de l'org → Personal access tokens → « Require tokens to expire »)*.
-> Si cette limite existe, `claude-ro` — **sans expiration** — est rejeté en **403** sur **tout** repo de l'org, **y compris public** :
-> *« The '<org>' organization forbids access via a fine-grained personal access tokens if the token's lifetime is greater than 90 days. »*
-> **Symptôme déroutant** : le même `gh api` **réussit depuis `repo/`** (direnv y expose le PAT 1-repo, 90 j) et **échoue depuis ailleurs** (`gh` retombe sur `claude-ro`). Le token en cause n'est pas celui qu'on croit.
-> Le piège reste valable pour toute org qui l'active — la limite peut aussi être levée après coup côté org.
+> ⚠️ **Pitfall — an org CAN reject `claude-ro`, even for public reads.**
+> An organization can impose a **maximum lifetime** on fine-grained PATs *(org Settings → Personal access tokens → "Require tokens to expire")*.
+> If this limit exists, `claude-ro` — **no expiration** — is rejected with a **403** on **every** repo in the org, **including public ones**:
+> *"The '<org>' organization forbids access via a fine-grained personal access tokens if the token's lifetime is greater than 90 days."*
+> **Confusing symptom**: the same `gh api` call **succeeds from `repo/`** (direnv exposes the 1-repo, 90-day PAT there) and **fails from elsewhere** (`gh` falls back to `claude-ro`). The token at fault is not the one assumed.
+> The pitfall applies to any org that enables this — and the limit can also be lifted afterward, org-side.
 
-> **`claude-ro` est volontairement SANS EXPIRATION.** Ce n'est pas un oubli.
-> Une durée de vie courte ne protège que contre la **persistance après vol du secret** — or ce token est en lecture seule sur du **public** : un attaquant qui le vole n'obtient que ce qui est déjà public. Lui imposer une rotation serait une corvée récurrente pour un gain nul.
-> *(Seul garde-fou côté GitHub : révocation automatique après 1 an d'inactivité.)*
-> **Le raisonnement inverse s'applique aux PAT d'écriture** — eux touchent du code privé et publient : 90 jours, avec alerte J-14.
+> **`claude-ro` is deliberately WITHOUT EXPIRATION.** This is not an oversight.
+> A short lifetime only protects against **persistence after the secret is stolen** — and this token is read-only on **public** data: an attacker who steals it only gets what is already public. Forcing rotation on it would be a recurring chore for zero gain.
+> *(GitHub's only safeguard here: automatic revocation after 1 year of inactivity.)*
+> **The opposite reasoning applies to write PATs** — they touch private code and publish: 90 days, with a J-14 alert.
 
-### Écriture (push, PR, issues) → PAT fine-grained 1-repo exposé par direnv
+### Writing (push, PR, issues) → 1-repo fine-grained PAT exposed by direnv
 
-- **Un PAT par repo**, créé en fine-grained, *Only select repositories* → **ce repo uniquement** (owner = compte ou org du repo).
-- **Permissions standard homogènes** : `Contents R/W`, `Metadata R`, `Pull requests R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`.
-  **+ permissions d'alertes**, pour la maintenance sécu en autonomie : Dependabot & Code scanning `R/W`, Secret scanning `R`.
-  **+ `Administration: read`** *(jamais write)*.
-  *(Matrice détaillée, dérivation de `Administration: read` : `github-repo-config.md` §2.)*
-  **Tout le reste : No access** — et **jamais** `Administration: write`.
-- Stocké dans `repo/.envrc` comme `GITHUB_PAT`. **Remote en URL nue** (jamais de PAT dans l'URL).
-- Exposé à git/gh **uniquement dans le dossier** par direnv. `repo/.envrc` (gitignoré) contient le PAT et reste **sourçable en bash** *(pas de builtin `dotenv` — filet si un `source` remplace le `direnv exec`, cf. §5)* :
+- **One PAT per repo**, created fine-grained, *Only select repositories* → **this repo only** (owner = the repo's account or org).
+- **Consistent standard permissions**: `Contents R/W`, `Metadata R`, `Pull requests R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`.
+  **+ alert permissions**, for autonomous security maintenance: Dependabot & Code scanning `R/W`, Secret scanning `R`.
+  **+ `Administration: read`** *(never write)*.
+  *(Detailed matrix, derivation of `Administration: read`: `github-repo-config.md` §2.)*
+  **Everything else: No access** — and **never** `Administration: write`.
+- Stored in `repo/.envrc` as `GITHUB_PAT`. **Remote as a bare URL** (never a PAT in the URL).
+- Exposed to git/gh **only inside the folder** via direnv. `repo/.envrc` (gitignored) holds the PAT and stays **sourceable in bash** *(no `dotenv` builtin — a safety net if a `source` ever replaces `direnv exec`, cf. §5)*:
   ```
-  set -a; [ -f .env ] && . ./.env; set +a   # charge les vars app de .env (équivalent bash de `dotenv`)
+  set -a; [ -f .env ] && . ./.env; set +a   # loads the app vars from .env (bash equivalent of `dotenv`)
   export GITHUB_PAT=<PAT 1-repo>
   export GH_TOKEN="$GITHUB_PAT"
   ```
-  puis `direnv allow` une fois. En entrant dans le dossier → push/PR via le PAT du repo ; en sortant → retour au public-RO.
-- Documenté dans `workspace/secrets.md` : date d'expiration, repo ciblé, lien de régénération.
+  then `direnv allow` once. Entering the folder → push/PR via the repo's PAT; leaving it → back to public-RO.
+- Documented in `workspace/secrets.md`: expiration date, target repo, regeneration link.
 
-**Usage (direnv charge tout, pas de `source .env`) :**
+**Usage (direnv loads everything, no `source .env`):**
 ```bash
-git push                                   # auth via le PAT du repo
+git push                                   # auth via the repo's PAT
 gh pr create --title "..." --base main
 gh issue list && gh run list
 ```
 
-> **Piège Workflows :** sans la permission `Workflows: R/W`, GitHub **rejette** tout push touchant `.github/workflows/`, même avec `Contents: R/W`. La garder dans le standard évite la surprise.
+> **Workflows pitfall:** without the `Workflows: R/W` permission, GitHub **rejects** any push touching `.github/workflows/`, even with `Contents: R/W`. Keeping it in the standard avoids the surprise.
 
-> 🔴 **Limite ASSUMÉE de ce modèle — `gh pr checks` et `gh pr view` ne fonctionnent pas.**
-> Les deux lisent `statusCheckRollup`, qui exige la permission **`Checks`**. Elle est **documentée** par GitHub mais **absente de l'UI** des PAT fine-grained : **impossible à accorder** *(github/community#129512, cli/cli#12597)*. Ce n'est **pas** un oubli dans la matrice ci-dessus — **il n'y a rien à y ajouter**.
-> **Ce n'est pas cosmétique** : la seule barrière du mode privé (*« ne jamais merger une PR rouge »*, §18) reposait sur `gh pr checks`. → Elle passe par `gh run list --commit <sha>` (`Actions: read`, déjà là). **La commande exacte, et le piège du faux vert : §18.**
-> *(La GitHub App, elle, peut recevoir `Checks` — mais elle reste écartée pour les motifs du tableau ci-dessous : on ne rouvre pas le modèle d'auth pour une commande CLI qui a un substitut à coût nul.)*
+> 🔴 **ACCEPTED limitation of this model — `gh pr checks` and `gh pr view` do not work.**
+> Both read `statusCheckRollup`, which requires the **`Checks`** permission. It is **documented** by GitHub but **absent from the UI** for fine-grained PATs: **impossible to grant** *(github/community#129512, cli/cli#12597)*. This is **not** an omission in the matrix above — **there is nothing to add to it**.
+> **This is not cosmetic**: the only barrier of the private mode (*"never merge a red PR"*, §18) relied on `gh pr checks`. → It now goes through `gh run list --commit <sha>` (`Actions: read`, already there). **The exact command, and the false-green pitfall: §18.**
+> *(The GitHub App can be granted `Checks` — but it stays out of scope for the reasons in the table below: the auth model isn't reopened for a CLI command that has a zero-cost substitute.)*
 
-### Expiration : 90 jours + alerte automatique (jamais subie)
+### Expiration: 90 days + automatic alert (never caught by surprise)
 
-**Tout nouveau PAT d'écriture est borné à 90 jours.** L'expiration ne doit **jamais** être découverte en pleine session, un `git push` en main.
+**Every new write PAT is bounded to 90 days.** The expiration must **never** be discovered mid-session, with a `git push` in hand.
 
-`repo/.envrc` embarque une **alerte automatique** : GitHub renvoie la date de fin dans le header `GitHub-Authentication-Token-Expiration`, lu une fois par jour (cache dans `.git/`, jamais commité). À **J-14**, le terminal affiche :
+`repo/.envrc` embeds an **automatic alert**: GitHub returns the end date in the `GitHub-Authentication-Token-Expiration` header, read once a day (cached in `.git/`, never committed). At **J-14**, the terminal prints:
 
 ```
   /!\  GITHUB_PAT expire dans 12 jour(s), le 2026-10-11.
@@ -242,119 +242,119 @@ gh issue list && gh run list
       Puis : remplacer le PAT de ce .envrc + la date dans ../workspace/secrets.md
 ```
 
-Silencieux quand tout va bien, hors ligne, ou si le PAT n'expire pas. Message distinct si le PAT est **déjà** mort.
-C'est ce qui rend les 90 jours indolores : la rotation est **annoncée**, pas subie. Sans cette alerte, une durée courte n'est qu'une panne surprise de plus.
+Silent when everything is fine, offline, or if the PAT doesn't expire. Distinct message if the PAT is **already** dead.
+This is what makes the 90 days painless: the rotation is **announced**, not endured. Without this alert, a short duration is just one more surprise outage.
 
-### Une seule convention pour `.envrc` — l'ancienne est bannie
+### One convention for `.envrc` — the old one is banned
 
-| | ✅ Convention actuelle | ❌ Ancienne convention (à migrer) |
+| | ✅ Current convention | ❌ Old convention (to migrate) |
 |---|---|---|
-| Chargement de `.env` | `set -a; [ -f .env ] && . ./.env; set +a` | `dotenv` (builtin **direnv**) |
-| Où vit le PAT | `repo/.envrc` (`GITHUB_PAT`) | `repo/.env` |
+| Loading `.env` | `set -a; [ -f .env ] && . ./.env; set +a` | `dotenv` (**direnv** builtin) |
+| Where the PAT lives | `repo/.envrc` (`GITHUB_PAT`) | `repo/.env` |
 
-Deux raisons :
-- **Garder l'`.envrc` sourçable en bash pur.** Le push passe par `direnv exec` *(qui, lui, gère `dotenv`)* ; on garde le `.envrc` bash-pur comme **filet** : si quelqu'un retombe sur `source ./.envrc`, un `dotenv` y casse *(`dotenv: command not found`)*. Le bash pur marche partout.
-- **Le PAT dans `.env` fuite dans les conteneurs.** Un `docker-compose.yaml` avec `env_file: .env` injecte `GITHUB_PAT` dans le conteneur — visible via `docker inspect`. Le `.env` est réservé aux clés **applicatives** ; le PAT vit dans `.envrc`, et **nulle part ailleurs**.
+Two reasons:
+- **Keep `.envrc` sourceable in pure bash.** Push goes through `direnv exec` *(which does handle `dotenv`)*; `.envrc` is kept bash-pure as a **safety net**: if someone falls back on `source ./.envrc`, a `dotenv` there breaks it *(`dotenv: command not found`)*. Pure bash works everywhere.
+- **A PAT in `.env` leaks into containers.** A `docker-compose.yaml` with `env_file: .env` injects `GITHUB_PAT` into the container — visible via `docker inspect`. `.env` is reserved for **app** keys; the PAT lives in `.envrc`, and **nowhere else**.
 
-### Mécanismes évalués puis écartés — ne pas rouvrir sans fait nouveau
+### Mechanisms evaluated then rejected — do not reopen without new facts
 
-Le PAT fine-grained **1-repo** est l'optimum *(recherche complète : `workspace/archives/conception/RECHERCHE-auth-github.md`)*. Ont été évalués puis **écartés** :
+The **1-repo** fine-grained PAT is the optimum *(full research: `workspace/archives/conception/RECHERCHE-auth-github.md`)*. Evaluated then **rejected**:
 
-| Mécanisme | Motif d'écartement (vérifié) |
+| Mechanism | Reason for rejection (verified) |
 |---|---|
-| **GitHub App** (installation token) | En workflow `git push`, elle n'apporte **ni identité `[bot]` ni commits `Verified`** : le token n'authentifie que le **transport**, l'auteur du commit est figé par `git config`. Ces bénéfices n'existent que pour les commits créés **via l'API**. Restent une clé `.pem` qui **ne périme jamais** et une dépendance tierce. |
-| **GitHub App + `ghtkn`** (user token 8 h) | Aucun refresh silencieux : device flow **navigateur ~3×/jour**, et l'outil **refuse par design** qu'un agent le déclenche. Incompatible avec toute autonomie. |
-| **PAT classic** | Scope `repo` = **tout-ou-rien** : RW sur tous les repos, publics **et** privés, de tous les owners. `public_repo` n'ouvre aucun privé. Aucun scope ne vise **un seul** repo. Blast radius maximal. |
-| **1 PAT par owner** (au lieu d'1 par repo) | Économise quelques minutes/an en **multipliant par N le blast radius** d'une session. Le 1-PAT-par-repo **est** le scoping. |
-| **PAT dans le Keychain** | Casse le principe « un seul dossier à copier » (§2/§18) : le secret ne suivrait plus le dossier sur une nouvelle machine. |
+| **GitHub App** (installation token) | In a `git push` workflow, it brings **neither a `[bot]` identity nor `Verified` commits**: the token only authenticates the **transport**, the commit author is fixed by `git config`. Those benefits only exist for commits created **via the API**. What's left: a `.pem` key that **never expires** and a third-party dependency. |
+| **GitHub App + `ghtkn`** (8h user token) | No silent refresh: device flow **browser prompt ~3×/day**, and the tool **refuses by design** to let an agent trigger it. Incompatible with any autonomy. |
+| **Classic PAT** | `repo` scope = **all-or-nothing**: RW on every repo, public **and** private, of every owner. `public_repo` opens no private repo. No scope targets **one** repo only. Maximum blast radius. |
+| **1 PAT per owner** (instead of 1 per repo) | Saves a few minutes/year while **multiplying a session's blast radius by N**. 1-PAT-per-repo **is** the scoping. |
+| **PAT in the Keychain** | Breaks the "one folder to copy" principle (§2/§18): the secret would no longer travel with the folder to a new machine. |
 
-> **Ce qu'aucun mécanisme d'auth ne règle.**
-> Face à une **injection de prompt** (cf. GitLost, 2026), l'agent détourné dispose d'un token **valide au moment de l'attaque** — sa durée de vie n'y change rien.
-> Une expiration courte ne limite que la **persistance après vol du secret**, pas l'usage immédiat.
-> La seule mitigation qui mord est le **périmètre** : défaut public-RO, accès privé escaladé **délibérément**, et **jamais** le cumul credential large + shell + ingestion de contenu non fiable.
+> **What no auth mechanism solves.**
+> Facing a **prompt injection** (cf. GitLost, 2026), the hijacked agent holds a token that is **valid at the moment of the attack** — its lifetime changes nothing about that.
+> A short expiration only limits **persistence after the secret is stolen**, not immediate misuse.
+> The only mitigation that actually bites is **scope**: public-RO by default, private access escalated **deliberately**, and **never** the combination of a broad credential + a shell + ingestion of untrusted content.
 
-### Shell non-interactif (outil Bash de Claude Code) — direnv NON chargé
+### Non-interactive shell (Claude Code's Bash tool) — direnv NOT loaded
 
-Tout ce qui précède suppose un shell **interactif**, où le hook direnv a tourné.
-Or **l'outil Bash de Claude Code lance des shells non-interactifs** : le hook direnv **ne se déclenche pas**.
-Conséquence en chaîne : `GITHUB_PAT`/`GH_TOKEN` sont **absents de l'env** → `git` retombe sur le credential helper de la machine (souvent `osxkeychain`, qui porte le PAT **public-RO**) → **403 même en simple lecture d'un repo privé**.
-Le tout alors que le bon PAT est **bien présent** dans `.envrc` — d'où un symptôme parfaitement déroutant.
+Everything above assumes an **interactive** shell, where the direnv hook has run.
+But **Claude Code's Bash tool launches non-interactive shells**: the direnv hook **does not fire**.
+Chain of consequences: `GITHUB_PAT`/`GH_TOKEN` are **absent from the env** → `git` falls back to the machine's credential helper (often `osxkeychain`, which carries the **public-RO** PAT) → **403 even on a plain read of a private repo**.
+All while the right PAT is **indeed present** in `.envrc` — hence a thoroughly confusing symptom.
 
-> **Symptôme** : `git fetch/pull/push origin` → `403` / `Write access to repository not granted`, alors que `repo/.envrc` contient le bon `GITHUB_PAT`.
+> **Symptom**: `git fetch/pull/push origin` → `403` / `Write access to repository not granted`, while `repo/.envrc` holds the correct `GITHUB_PAT`.
 
-**Le mauvais réflexe à bannir** : mettre le PAT dans l'URL (`https://x-access-token:$TOKEN@github.com/...`) — ça l'expose (ps, historique, reflog, `.git/config`). **L'URL reste nue, toujours.**
+**The wrong reflex to ban**: putting the PAT in the URL (`https://x-access-token:$TOKEN@github.com/...`) — that exposes it (ps, history, reflog, `.git/config`). **The URL stays bare, always.**
 
-**Procédure propre (vérifiée)** — un helper credential **local** qui lit `$GITHUB_PAT` depuis l'env, configuré une fois (persiste dans `repo/.git/config`, **aucun secret stocké**, juste le nom de variable ; le `""` initial réinitialise la liste pour passer devant osxkeychain) :
+**Clean procedure (verified)** — a **local** credential helper that reads `$GITHUB_PAT` from the env, configured once (persists in `repo/.git/config`, **no secret stored**, just the variable name; the initial `""` resets the list to run ahead of osxkeychain):
 ```bash
 git config --local credential."https://github.com".helper ""
 git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
 ```
-Puis **préfixer chaque `git`/`gh` par `direnv exec`** : direnv évalue l'`.envrc` *(garde-fou `allow` respecté)* et lance la commande avec `GITHUB_PAT`/`GH_TOKEN` dans son env — le helper lit `GITHUB_PAT`.
+Then **prefix every `git`/`gh` call with `direnv exec`**: direnv evaluates `.envrc` *(the `allow` safety net respected)* and launches the command with `GITHUB_PAT`/`GH_TOKEN` in its env — the helper reads `GITHUB_PAT`.
 ```bash
-direnv exec . git push origin <ref>       # depuis repo/ — URL NUE, token via le helper
+direnv exec . git push origin <ref>       # from repo/ — BARE URL, token via the helper
 direnv exec . gh pr create / gh pr merge   # gh via GH_TOKEN
 ```
-> ⚠️ `direnv exec` **ne change pas le CWD** : hors de `repo/`, viser le repo → `direnv exec <repo> git -C <repo> …`.
-> Sans `direnv allow`, `direnv exec` **refuse** l'`.envrc` *(« …is blocked. Run `direnv allow` »)* et ne lance rien — plus de 403 déroutant.
-> Alternative équivalente si `gh auth setup-git` est configuré **globalement** sur la machine : le simple `export GH_TOKEN="$GITHUB_PAT"` suffit (git délègue à `gh auth git-credential` qui renvoie `GH_TOKEN`). Le helper local ci-dessus est plus robuste car il ne dépend pas de l'état global de la machine.
+> ⚠️ `direnv exec` **does not change the CWD**: outside `repo/`, targeting the repo requires `direnv exec <repo> git -C <repo> …`.
+> Without `direnv allow`, `direnv exec` **refuses** `.envrc` *("…is blocked. Run `direnv allow`")* and launches nothing — no more confusing 403.
+> Equivalent alternative if `gh auth setup-git` is configured **globally** on the machine: a plain `export GH_TOKEN="$GITHUB_PAT"` suffices (git delegates to `gh auth git-credential`, which returns `GH_TOKEN`). The local helper above is more robust because it doesn't depend on the machine's global state.
 
 ---
 
-## 6. `CLAUDE.md` — instructions locales pour Claude Code
+## 6. `CLAUDE.md` — local instructions for Claude Code
 
-Fichier présent dans `repo/CLAUDE.md` mais **ignoré par Git**. Claude Code le lit automatiquement à chaque session (il est dans cwd).
+File present at `repo/CLAUDE.md` but **ignored by Git**. Claude Code reads it automatically every session (it's in the cwd).
 
-**Contenu type** :
-- Description courte du projet (une ligne).
-- Commandes utiles (`docker compose up`, `npm run dev`, etc.).
-- Pointeurs vers `workspace/` : où sont les plans, les docs, les secrets.
-- Conventions de code spécifiques au projet.
-- Ce qu'il ne faut surtout pas toucher (sous-modules, code tiers, etc.).
+**Typical content**:
+- Short project description (one line).
+- Useful commands (`docker compose up`, `npm run dev`, etc.).
+- Pointers into `workspace/`: where plans, docs, secrets live.
+- Project-specific code conventions.
+- What must absolutely not be touched (submodules, third-party code, etc.).
 
-**Ce que `CLAUDE.md` ne contient JAMAIS** :
-- Aucun secret, token, clé API (même s'il est ignoré, discipline zéro-secret dans un fichier *nommé* → en cas d'erreur de `.gitignore`, on ne fuite pas).
-- Aucune valeur volatile qui change chaque semaine.
+**What `CLAUDE.md` NEVER contains**:
+- No secret, token, API key (even though it's ignored, zero-secret discipline applies to any file *named by convention* → if `.gitignore` is ever misconfigured, nothing leaks).
+- No volatile value that changes every week.
 
-Un futur cloneur qui n'a pas le `workspace/` (parce qu'il vient de GitHub seul) travaillera sans `CLAUDE.md`, et c'est voulu : le repo reste 100 % impersonnel.
+A future cloner who doesn't have `workspace/` (because they only got the repo from GitHub) will work without `CLAUDE.md`, and that's intentional: the repo stays 100% impersonal.
 
 ---
 
-## 7. `.claude/` — config Claude Code du projet
+## 7. `.claude/` — project-level Claude Code config
 
-Dossier entièrement **ignoré par Git**. Contient :
+Folder entirely **ignored by Git**. Contains:
 
-- `settings.local.json` : permissions autorisées pour ce projet, variables d'env spécifiques Claude Code, hooks locaux.
-- Éventuellement `commands/`, `agents/`, `skills/` si tu crées des outils projet-spécifiques pour Claude Code.
+- `settings.local.json`: permissions granted for this project, Claude-Code-specific env variables, local hooks.
+- Possibly `commands/`, `agents/`, `skills/` if project-specific tools are created for Claude Code.
 
-**Fichiers que Claude Code lit dans `.claude/`** :
+**Files Claude Code reads in `.claude/`**:
 `settings.json`, `settings.local.json`, `commands/`, `agents/`, `skills/`, `rules/`.
 
-**Fichiers à NE PAS créer dans `.claude/`** :
-- `launch.json` (format VS Code, ignoré par Claude Code, confusion classique).
-- Tout autre fichier qui n'est pas dans la liste ci-dessus.
+**Files NOT to create in `.claude/`**:
+- `launch.json` (VS Code format, ignored by Claude Code, a classic confusion).
+- Any other file not on the list above.
 
 ---
 
-## 8. Mémoire persistante de Claude Code
+## 8. Claude Code's persistent memory
 
-Stockée par Claude Code dans `~/.claude/projects/<hash-du-path>/memory/`, où `<hash-du-path>` est dérivé du chemin absolu du projet (ex. `-Users-romain-Documents-Claude-dEURO`).
+Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<path-hash>` is derived from the project's absolute path (e.g. `-Users-<user>-Documents-Claude-<project>`).
 
-**Conséquence** : si tu renommes le dossier du projet, Claude Code crée un **nouveau** dossier de mémoire et perd le lien avec l'ancien.
+**Consequence**: renaming the project folder makes Claude Code create a **new** memory folder and lose the link to the old one.
 
-**Procédure de renommage** :
-1. Renommer le dossier du projet (`~/Documents/Claude/ancien` → `~/Documents/Claude/nouveau`).
-2. Fusionner le contenu de l'ancien dossier de mémoire dans le nouveau :
+**Rename procedure**:
+1. Rename the project folder (`~/Documents/Claude/old` → `~/Documents/Claude/new`).
+2. Merge the old memory folder's content into the new one:
    ```bash
-   rsync -av ~/.claude/projects/-Users-romain-Documents-Claude-ancien/ \
-             ~/.claude/projects/-Users-romain-Documents-Claude-nouveau/
-   rm -rf ~/.claude/projects/-Users-romain-Documents-Claude-ancien/
+   rsync -av ~/.claude/projects/-Users-<user>-Documents-Claude-old/ \
+             ~/.claude/projects/-Users-<user>-Documents-Claude-new/
+   rm -rf ~/.claude/projects/-Users-<user>-Documents-Claude-old/
    ```
-3. Vérifier que `/resume` propose bien les anciennes conversations.
+3. Verify that `/resume` does offer the past conversations.
 
 ---
 
-## 9. `.gitignore` type
+## 9. Typical `.gitignore`
 
 ```gitignore
 # secrets & local config
@@ -387,613 +387,613 @@ data/
 *.bak-*
 ```
 
-**Maintenir ce fichier vivant** : si une entrée ne correspond à aucun fichier du projet (ex. `dist/` qui est généré uniquement dans Docker, jamais sur le Mac), la laisser n'est pas nuisible — c'est du défensif. En revanche, si tu as ajouté un nouveau type de fichier perso, l'ajouter au `.gitignore` immédiatement.
+**Keeping this file alive**: if an entry matches no file in the project (e.g. `dist/`, generated only inside Docker, never on the Mac), leaving it in is not harmful — it's defensive. On the other hand, once a new type of personal file has been added, add it to `.gitignore` immediately.
 
 ---
 
-## 10. Créer, configurer, faire évoluer un projet → **le RUNBOOK**
+## 10. Creating, configuring, evolving a project → **the RUNBOOK**
 
-**La procédure complète vit dans `RUNBOOK.md`** — et **elle seule fait foi** : ordre des gestes, **qui les fait**, URL directes, permissions exactes, commandes complètes.
+**The complete procedure lives in `RUNBOOK.md`** — and **it alone is authoritative**: order of actions, **who performs them**, direct URLs, exact permissions, full commands.
 
-**Ne pas la dupliquer ici.** Deux copies d'une procédure divergent, et c'est celle qu'on ne relit pas qui envoie chercher une permission qui n'existe plus.
+**Do not duplicate it here.** Two copies of a procedure always diverge, and it's the one that isn't re-read that sends someone looking for a permission that no longer exists.
 
-| Le RUNBOOK couvre | § |
+| The RUNBOOK covers | § |
 |---|---|
-| **Créer un projet** *(les 3 questions · les 2 PAT · `direnv allow` · la révocation)* | §1 |
-| **Travailler au quotidien** *(feat → PR → CI verte → merge)* | §2 |
-| **Publier une version** *(CHANGELOG → tag → Release + image)* | §3 |
-| **Basculer PRIVÉ → PUBLIC** *(le moment le plus dangereux du cycle de vie)* | §4 |
-| **Acquérir / retirer une capacité** sur un repo vivant | §5 |
-| **Maintenance** *(Dependabot, Renovate, alertes, rotation du PAT)* | §6 |
-| **Ce que l'assistant NE PEUT PAS faire** *(et pourquoi)* | §7 |
+| **Creating a project** *(the 3 questions · the 2 PATs · `direnv allow` · revocation)* | §1 |
+| **Working day to day** *(feat → PR → green CI → merge)* | §2 |
+| **Publishing a version** *(CHANGELOG → tag → Release + image)* | §3 |
+| **Switching PRIVATE → PUBLIC** *(the most dangerous moment of the lifecycle)* | §4 |
+| **Acquiring / removing a capability** on a live repo | §5 |
+| **Maintenance** *(Dependabot, Renovate, alerts, PAT rotation)* | §6 |
+| **What the assistant CANNOT do** *(and why)* | §7 |
 
-> 🔴 **Le présent document dit le POURQUOI ; le RUNBOOK dit l'ORDRE DES GESTES.**
-> En cas d'écart entre les deux : **le RUNBOOK fait foi sur la procédure**, ce document sur les **conventions** — et **l'écart est un défaut à corriger**, pas un arbitrage à faire en passant.
+> 🔴 **This document states the WHY; the RUNBOOK states the ORDER OF ACTIONS.**
+> In case of a mismatch between the two: **the RUNBOOK is authoritative on procedure**, this document on **conventions** — and **the mismatch is a defect to fix**, not an arbitration to make in passing.
 
-**Une skill Claude Code le déroule** *(`new-project`)* : elle s'arrête à chaque geste de Romain, donne l'URL et les valeurs exactes, attend confirmation, puis vérifie. Voir `workspace/archives/conception/SKILLS.md`.
+**A Claude Code skill drives it** *(`new-project`)*: it stops at every action the maintainer must perform, gives the exact URL and values, waits for confirmation, then verifies. See `workspace/archives/conception/SKILLS.md`.
 
-## 11. Pièges classiques à éviter
+## 11. Classic pitfalls to avoid
 
-- **Dupliquer une clé API** dans `.env` et `settings.local.json` → source de vérité ambiguë. Toujours une seule copie, dans `.env`.
-- **Mettre un secret dans `CLAUDE.md`** même ignoré → discipline zéro-secret sur tout fichier *nommé d'après une convention*. Un jour `.gitignore` est mal configuré, le secret fuit.
-- **Créer `launch.json` dans `.claude/`** en pensant que Claude Code le lit → il ne le lit pas. Si besoin de debug VS Code, c'est `.vscode/launch.json`.
-- **Mettre des docs de réflexion dans `repo/docs/`** → ils finissent sur GitHub alors qu'ils sont personnels. `repo/docs/` est pour la doc technique destinée à un cloneur ; les réflexions vont dans `workspace/docs/`.
-- **Renommer le dossier sans fusionner la mémoire Claude Code** → perte de l'historique `/resume`.
-- **Faire `gh auth login` en flow web/OAuth** → ça réinstalle le scope `repo` (RW sur TOUS tes repos), exactement ce qu'on évite. Toujours `gh auth login --with-token` avec le PAT public-RO.
-- **Mettre le PAT dans l'URL du remote** (`https://<PAT>@github.com/...`) → secret en clair dans `.git/config`. Remote en URL nue, PAT exposé par direnv uniquement.
-- **Oublier `direnv allow`** → `direnv exec` **refuse** l'`.envrc` *(« …is blocked. Run `direnv allow` »)* et ne lance rien — auto-diagnostiquant. *(En interactif : le hook ne charge pas → `git push` retombe sur le public-RO.)*
-- **Croire que direnv charge le PAT dans l'outil Bash de Claude Code.**
-  Il lance des shells **non-interactifs** : le hook direnv ne tourne pas → `git`/`gh` renvoient **403, même en lecture**.
-  Fix : helper credential local lisant `$GITHUB_PAT`, + **préfixer git/gh par `direnv exec`** (§5, « Shell non-interactif »).
-  ⚠️ **Ne jamais** dépanner en mettant le PAT dans l'URL du remote — c'est une fuite en clair dans `.git/config`.
-- **Utiliser `dotenv` (builtin direnv) dans `.envrc`** → il n'est plus **sourçable en bash** : le fallback `source ./.envrc` casse alors en `dotenv: command not found`. Garder le `.envrc` bash-pur ; charger `.env` par `set -a; [ -f .env ] && . ./.env; set +a`.
-- **Mettre le PAT dans `.env` au lieu de `.envrc`** → un `docker-compose.yaml` avec `env_file: .env` **injecte le PAT GitHub dans le conteneur** (visible en `docker inspect`). `.env` = clés **applicatives** uniquement ; le PAT vit dans `.envrc`, nulle part ailleurs.
-- **Laisser un PAT expirer sans le voir venir** → panne surprise en plein `git push`. L'alerte J-14 du `.envrc` (§5) le signale à l'avance : ne pas la retirer en copiant le fichier.
-- **Lancer deux sessions Claude Code (ou deux personnes) sur le même `repo/`.**
-  Elles partagent `HEAD`, l'index et les fichiers — donc elles se télescopent.
-  Un `checkout -b` **bascule la branche de l'autre** · les edits simultanés s'écrasent · `gh pr merge --delete-branch` plante (*« main already checked out »*).
-  Fix : **un working tree isolé par session** — `git worktree` ou clone séparé (§12, « Travail concurrent »).
-- **Créer un PAT owner-scoped au lieu de 1-repo** → une fuite expose tous les repos de l'owner. Toujours *Only select repositories* = ce repo.
-- **Laisser grossir `.gitignore` avec des entrées obsolètes** → pas nuisible mais brouille la lecture. Nettoyer périodiquement.
-- **Mettre un rappel calendrier pour les PAT** → inutile désormais : l'alerte **J-14** du `.envrc` (§5) s'en charge. Les PAT d'écriture sont à **90 jours** ; `claude-ro` (lecture publique) n'expire **pas**, volontairement.
+- **Duplicating an API key** into `.env` and `settings.local.json` → ambiguous source of truth. Always a single copy, in `.env`.
+- **Putting a secret in `CLAUDE.md`** even though it's ignored → zero-secret discipline applies to any file *named by convention*. One day `.gitignore` gets misconfigured, and the secret leaks.
+- **Creating `launch.json` in `.claude/`** thinking Claude Code reads it → it doesn't. For VS Code debugging, it's `.vscode/launch.json`.
+- **Putting thinking docs in `repo/docs/`** → they end up on GitHub even though they're personal. `repo/docs/` is for technical docs meant for a cloner; thinking notes go in `workspace/docs/`.
+- **Renaming the folder without merging Claude Code's memory** → loss of `/resume` history.
+- **Doing `gh auth login` in web/OAuth flow** → it reinstates the `repo` scope (RW on ALL repositories), exactly what's being avoided. Always `gh auth login --with-token` with the public-RO PAT.
+- **Putting the PAT in the remote's URL** (`https://<PAT>@github.com/...`) → secret in clear text in `.git/config`. Remote as a bare URL, PAT exposed by direnv only.
+- **Forgetting `direnv allow`** → `direnv exec` **refuses** `.envrc` *("…is blocked. Run `direnv allow`")* and launches nothing — self-diagnosing. *(Interactively: the hook doesn't load → `git push` falls back to public-RO.)*
+- **Believing direnv loads the PAT inside Claude Code's Bash tool.**
+  It launches **non-interactive** shells: the direnv hook doesn't run → `git`/`gh` return **403, even for reads**.
+  Fix: local credential helper reading `$GITHUB_PAT`, + **prefix git/gh with `direnv exec`** (§5, "Non-interactive shell").
+  ⚠️ **Never** work around it by putting the PAT in the remote's URL — that's a clear-text leak into `.git/config`.
+- **Using `dotenv` (direnv builtin) in `.envrc`** → it is no longer **sourceable in bash**: the `source ./.envrc` fallback then breaks with `dotenv: command not found`. Keep `.envrc` bash-pure; load `.env` via `set -a; [ -f .env ] && . ./.env; set +a`.
+- **Putting the PAT in `.env` instead of `.envrc`** → a `docker-compose.yaml` with `env_file: .env` **injects the GitHub PAT into the container** (visible via `docker inspect`). `.env` = **app** keys only; the PAT lives in `.envrc`, nowhere else.
+- **Letting a PAT expire without seeing it coming** → surprise outage mid `git push`. The `.envrc` J-14 alert (§5) flags it in advance: don't strip it out when copying the file.
+- **Running two Claude Code sessions (or two people) against the same `repo/`.**
+  They share `HEAD`, the index, and the files on disk — so they collide.
+  A `checkout -b` **switches the other one's branch** without warning · simultaneous edits overwrite each other silently · `gh pr merge --delete-branch` fails (*"main already checked out"*).
+  Fix: **one isolated working tree per session** — `git worktree` or a separate clone (§12, "Concurrent work").
+- **Creating an owner-scoped PAT instead of 1-repo** → a leak exposes every repo the owner has. Always *Only select repositories* = this repo.
+- **Letting `.gitignore` grow with stale entries** → not harmful, but muddies the reading. Clean it up periodically.
+- **Setting a calendar reminder for PATs** → pointless now: the `.envrc` **J-14** alert (§5) handles it. Write PATs are **90 days**; `claude-ro` (public read) does **not** expire, deliberately.
 
 ---
 
-## 12. Politique de branches — **elle dépend d'UNE capacité, pas de l'archétype**
+## 12. Branching policy — **it depends on ONE capability, not on the archetype**
 
-> La politique de branches dépend de **trois capacités indépendantes**, pas d'un archétype figé : réduire le choix à `static`/`node` fusionne trois questions distinctes et casse dès qu'on sort du cas standard *(cf. DORA · Fowler · ThoughtWorks Radar)*.
+> Branching policy depends on **three independent capabilities**, not on a fixed archetype: reducing the choice to `static`/`node` collapses three distinct questions into one and breaks as soon as the standard case is left behind *(cf. DORA · Fowler · ThoughtWorks Radar)*.
 
-### Les 3 CAPACITÉS — indépendantes, composables
+### The 3 CAPABILITIES — independent, composable
 
-`--type` ne décide plus que **la TOOLCHAIN** (quel `ci.yml` : `static` = aucun npm · `node` = npm/tests/types). Tout le reste découle de **trois questions qui n'ont rien à voir entre elles** :
+`--type` now only decides the **TOOLCHAIN** (which `ci.yml`: `static` = no npm · `node` = npm/tests/types). Everything else follows from **three questions that have nothing to do with each other**:
 
-| Capacité | La question à se poser | Ce qu'elle déclenche |
+| Capability | The question to ask | What it triggers |
 |---|---|---|
-| **`--pages`** | Le site est-il servi par **GitHub Pages** ? | `pages.yml` |
-| **`--artefact`** | Le repo **publie-t-il une image que quelqu'un d'AUTRE déploie** ? *(auto-hébergeurs, NUC…)* | `docker-publish.yml` (**`build-check` + Trivy**) · **ruleset tags** · **immutable releases** · **package ghcr PUBLIC** *(l'image de base est bumpée par Renovate, auto-détectée — rien à déclarer)* |
-| **`--staging`** | Existe-t-il un **host à VALIDER** avant la prod ? | branche **`develop`** · ruleset `develop` · merge commit sur `main` · **flux 3 étages** |
+| **`--pages`** | Is the site served by **GitHub Pages**? | `pages.yml` |
+| **`--artefact`** | Does the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUCs…)* | `docker-publish.yml` (**`build-check` + Trivy**) · **tag ruleset** · **immutable releases** · **PUBLIC ghcr package** *(the base image is bumped by Renovate, auto-detected — nothing to declare)* |
+| **`--staging`** | Is there a **host to VALIDATE** before prod? | **`develop`** branch · `develop` ruleset · merge commit onto `main` · **3-stage flow** |
 
-> 🔴 **`develop` ne découle PAS de Docker — il découle du STAGING.**
-> Un projet **node sans host à valider** n'a **pas** besoin de `develop`. Et **`rozo-bridge` packagé en image non plus** : il n'y a aucun palier intermédiaire, l'image *est* la page servie par nginx.
+> 🔴 **`develop` does NOT follow from Docker — it follows from STAGING.**
+> A **node** project **with no host to validate** does **not** need `develop`. Neither does **a static site also packaged as an image**: there is no intermediate stage, the image *is* the page served by nginx.
 
-**Le besoin d'un palier de staging vient du DÉPLOIEMENT, pas du langage ni du goût.**
+**The need for a staging stage comes from DEPLOYMENT, not from the language or taste.**
 
-### Les combinaisons réelles
+### The real combinations
 
-| Cas | `--type` | pages | artefact | staging | Flux |
+| Case | `--type` | pages | artefact | staging | Flow |
 |---|---|---|---|---|---|
-| Site Pages *(raccourci `--type static`)* | static | ✅ | — | — | **GitHub Flow** — `main` + `feat/` |
-| **`rozo-bridge` + Docker** *(des tiers l'auto-hébergent)* | static | ✅ | ✅ | — | **GitHub Flow** + tag `v*` → image |
-| Page hébergée **hors** Pages | static | — | ✅ | selon | selon le staging |
-| App Docker → NUC *(raccourci `--type node`)* | node | — | ✅ | ✅ | **3 étages** — `feat/` → `develop` → `main` + tag |
-| Projet node **sans** staging | node | — | ✅ | — | **GitHub Flow** + tag |
-| **Autre toolchain** *(Android/Kotlin, C/C++, Rust, Go…)* | generic | — | — | — | **GitHub Flow** — contrôles-sécu seuls, build/test à remplir |
+| Pages site *(shortcut `--type static`)* | static | ✅ | — | — | **GitHub Flow** — `main` + `feat/` |
+| **Pages site + Docker** *(third parties self-host it)* | static | ✅ | ✅ | — | **GitHub Flow** + `v*` tag → image |
+| Page hosted **outside** Pages | static | — | ✅ | depends | depends on staging |
+| Docker app → NUC *(shortcut `--type node`)* | node | — | ✅ | ✅ | **3 stages** — `feat/` → `develop` → `main` + tag |
+| Node project **without** staging | node | — | ✅ | — | **GitHub Flow** + tag |
+| **Other toolchain** *(Android/Kotlin, C/C++, Rust, Go…)* | generic | — | — | — | **GitHub Flow** — security controls only, build/test left to fill in |
 
-**Raccourcis rétro-compatibles** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(opt-in par flag)*. Dès qu'une capacité est passée explicitement, on **compose** (`--no-staging` retire du raccourci).
+**Backward-compatible shortcuts**: `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **no capability** *(opt-in via flag)*. As soon as a capability is passed explicitly, it **composes** (`--no-staging` removes it from the shortcut).
 
-> **`--type generic`** *(universalité)* : la toolchain que le template ne pré-câble pas. Il livre les **contrôles de sécurité** *(agnostiques : gitleaks, actionlint, zizmor, semgrep, osv `-r .`, + CodeQL au public, + Trivy si `--artefact`)* et un **stub build/test commenté** à remplir. Un projet Android ou C++ est ainsi **sécurisé dès le jour 1** ; on n'ajoute que le `./gradlew`/`cmake`/`cargo` du langage. ⚠️ Rappel osv : orienté **lockfile** — pour Gradle, activer le dependency-locking *(`gradle.lockfile`)*, sinon les deps ne sont pas scannées.
+> **`--type generic`** *(universality)*: the toolchain the template doesn't pre-wire. It ships the **security controls** *(language-agnostic: gitleaks, actionlint, zizmor, semgrep, osv `-r .`, + CodeQL when public, + Trivy if `--artefact`)* and a **commented build/test stub** to fill in. An Android or C++ project is thus **secured from day 1**; only the language's `./gradlew`/`cmake`/`cargo` needs adding. ⚠️ osv reminder: it's **lockfile**-oriented — for Gradle, enable dependency-locking *(`gradle.lockfile`)*, otherwise deps aren't scanned.
 
-⚠️ **`init-project.sh` REFUSE `--staging` sur un site Pages sans artefact** : Pages *est* la prod, il n'y a **rien à valider** — la branche serait un rituel vide qui dérive jusqu'à ce que le merge cesse d'avoir lieu.
+⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact**: Pages *is* prod, there is **nothing to validate** — the branch would be an empty ritual that drifts until the merge stops happening at all.
 
-**Le triple filtre attrape ce type de régression avant qu'elle n'atteigne la prod** (cf. « Pourquoi 3 étapes » plus bas) — mais seulement là où il existe un host à valider. Ailleurs, il n'aurait rien filtré.
+**The triple filter catches this kind of regression before it reaches prod** (cf. "Why 3 stages" below) — but only where a host to validate exists. Elsewhere, it would have filtered nothing.
 
-**Git Flow est mort** : `nvie/gitflow` a été **archivé par son auteur le 14/10/2025**. Ne pas le ressortir.
+**Git Flow is dead**: `nvie/gitflow` was **archived by its author on 2025-10-14**. Do not bring it back.
 
-### Pourquoi `develop` n'est PAS l'anti-pattern qu'on lui reproche — la nuance est structurante
+### Why `develop` is NOT the anti-pattern it gets accused of being — the nuance is structural
 
-Les *environment branches* (une branche par environnement) sont un anti-pattern documenté : Fowler (« *soon leads to a world of misery* »), ThoughtWorks (*environmental drift*). **Mais le critère n'est pas le nom de la branche — c'est ce qui pilote le déploiement.**
+*Environment branches* (one branch per environment) are a documented anti-pattern: Fowler ("*soon leads to a world of misery*"), ThoughtWorks (*environmental drift*). **But the criterion isn't the branch's name — it's what drives the deployment.**
 
-> ✅ **Ce standard est du bon côté** : la prod ne suit **jamais** une branche, elle suit un **tag épinglé** (`APP_IMAGE_TAG=X.Y.Z`, §13). On promeut un **artefact**, pas une branche — c'est exactement l'alternative que DORA et ThoughtWorks recommandent *à la place* des environment branches.
+> ✅ **This standard is on the right side**: prod never follows a branch, it follows a **pinned tag** (`APP_IMAGE_TAG=X.Y.Z`, §13). An **artefact** is promoted, not a branch — exactly the alternative DORA and ThoughtWorks recommend *instead of* environment branches.
 >
-> ❌ **On y bascule** le jour où `develop` devient longue (le code diverge par environnement) ou si un host fait `git checkout develop` comme source de vérité de son déploiement.
+> ❌ **The switch happens** the day `develop` grows long-lived (code diverges by environment) or a host does `git checkout develop` as its deployment's source of truth.
 >
-> **Règle qui en découle** : **`develop` reste courte** — merge en **jours**, pas en semaines. C'est la seule condition à tenir.
+> **Rule that follows**: **`develop` stays short-lived** — merged in **days**, not weeks. That's the only condition to uphold.
 
 ### Branches
 
-- **`main`** : prod. Protégée (ruleset). Avec la capacité **`artefact`**, la prod tourne sur un **tag pinné**, jamais sur la branche.
-- **`develop`** *(capacité **`staging`** uniquement — **PAS** « node », **PAS** « Docker »)* : staging. Protégée. **Courte durée.**
-- **`feat/<topic>`** : depuis `develop` **si `staging`**, sinon depuis `main`. Supprimée au merge (auto).
-- **Tags `v*`** : **immuables** — un ruleset interdit leur suppression et leur déplacement. Sans ça, le pin de version du §13 ne garantit rien (cf. §17).
+- **`main`**: prod. Protected (ruleset). With the **`artefact`** capability, prod runs on a **pinned tag**, never on the branch.
+- **`develop`** *(**`staging`** capability only — **NOT** "node", **NOT** "Docker")*: staging. Protected. **Short-lived.**
+- **`feat/<topic>`**: from `develop` **if `staging`**, otherwise from `main`. Deleted on merge (auto).
+- **`v*` tags**: **immutable** — a ruleset forbids their deletion and their being moved. Without that, the version pin from §13 guarantees nothing (cf. §17).
 
-### Flux complet
+### Full flow
 
-Trois étapes : `feat/` validé **localement** → mergé `--no-ff` dans `develop`, validé sur l'**hôte de staging** → PR `develop → main` mergée **en merge commit** (jamais squash — ça garde l'historique des commits `feat/*` et évite de faire diverger `develop`) → tag `vX.Y.Z` poussé sur `main`, qui déclenche la release CI. **Commandes exactes, dans l'ordre : RUNBOOK §2-3.**
+Three stages: `feat/` validated **locally** → merged `--no-ff` into `develop`, validated on the **staging host** → `develop → main` PR merged **as a merge commit** (never squash — that preserves `feat/*` commit history and avoids making `develop` diverge) → `vX.Y.Z` tag pushed to `main`, triggering the release CI. **Exact commands, in order: RUNBOOK §2-3.**
 
-> 🔴 **En PRIVÉ, la mise en production DÉTRUISAIT la branche de staging.**
-> ✅ **Corrigé à la racine** : sur un repo **privé** à 3 étages, `configure-repo.sh` **ne pose plus** `delete-branch-on-merge` — les `feat/*` se suppriment à la main, la branche de staging survit. Le passage en public le rétablit *(rejouer le script)*. ⚠️ **Un repo configuré avant ce correctif le porte encore.**
-> `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop`**, au merge de la PR `develop → main`. **En public**, le ruleset `develop` (règle `deletion`) le refuse ; **en privé, aucun ruleset n'existe** *(§18)* et la branche disparaît **en silence**.
-> **Et le dégât est en cascade** : au rejeu suivant, `configure-repo.sh` ne voit plus `develop`, en déduit « pas de staging », **ne pose pas son ruleset** et **remet `main` en squash-only** — or **squasher `develop` dans `main` fait diverger les deux branches à chaque cycle**. La promotion suivante devient **impossible**. *Le succès de la mise en prod casse le cycle suivant.*
-> **→ Recréer `develop` immédiatement après la promotion :** `git switch -c develop main && git push -u origin develop`
-> *(Le script le détecte désormais : il compare ce que le repo **publie** — le bloc `## Branching` de `CONTRIBUTING.md` — à ce qui **existe**.)*
+> 🔴 **In PRIVATE, shipping to production USED TO DESTROY the staging branch.**
+> ✅ **Fixed at the root**: on a **private**, 3-stage repo, `configure-repo.sh` **no longer sets** `delete-branch-on-merge` — `feat/*` branches are deleted by hand, the staging branch survives. Going public restores it *(rerunning the script)*. ⚠️ **A repo configured before this fix still carries it.**
+> `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop`**, when the `develop → main` PR merges. **In public**, the `develop` ruleset (`deletion` rule) refuses this; **in private, no ruleset exists** *(§18)* and the branch disappears **silently**.
+> **And the damage cascades**: on the next rerun, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **doesn't set its ruleset**, and **puts `main` back to squash-only** — but **squashing `develop` into `main` makes the two branches diverge on every cycle**. The next promotion becomes **impossible**. *Shipping successfully breaks the next cycle.*
+> **→ Recreate `develop` immediately after promotion:** `git switch -c develop main && git push -u origin develop`
+> *(The script now detects it: it compares what the repo **publishes** — the `## Branching` block of `CONTRIBUTING.md` — against what **exists**.)*
 
-Pour du trivial (typo doc, rename de variable, fix de query sans impact runtime) sur projet solo : main direct reste acceptable.
+For trivial changes (doc typo, variable rename, query fix with no runtime impact) on a solo project: pushing directly to main remains acceptable.
 
-### Travail concurrent — plusieurs sessions / intervenants
+### Concurrent work — several sessions / people
 
-> Le flux ci-dessus suppose **un working tree par intervenant**. Le piège n'est pas Git mais le **partage d'un même dossier de travail** — cas typique : deux sessions Claude Code lancées sur le même `repo/`.
+> The flow above assumes **one working tree per person**. The pitfall isn't Git but **sharing the same working folder** — the typical case: two Claude Code sessions launched against the same `repo/`.
 
-**Ce qui est partagé par dossier** (donc dangereux à plusieurs au même endroit) : le `HEAD` (branche courante), l'`index` (staging) et les fichiers sur disque. Conséquences :
+**What's shared per folder** (hence dangerous with several people in the same place): `HEAD` (current branch), the `index` (staging area), and the files on disk. Consequences:
 
-- un `git checkout -b` bascule la branche **de l'autre** sans prévenir ;
-- édition simultanée d'un même fichier → dernier qui écrit gagne (perte silencieuse) ;
-- `git add` peut embarquer le travail non commité de l'autre ;
-- symptôme révélateur : `gh pr merge --delete-branch` → *« 'main' is already checked out at … »* (le merge distant réussit quand même, seule la suppression locale de branche échoue → supprimer la branche distante à la main).
+- a `git checkout -b` switches **the other person's** branch without warning;
+- simultaneous edits of the same file → last writer wins (silent loss);
+- `git add` can sweep up the other person's uncommitted work;
+- telltale symptom: `gh pr merge --delete-branch` → *"'main' is already checked out at …"* (the remote merge still succeeds, only the local branch deletion fails → delete the remote branch by hand).
 
-**Règle : un working tree isolé par intervenant.** Deux options :
+**Rule: one isolated working tree per person.** Two options:
 
-| Option | Quand | Commande |
+| Option | When | Command |
 |---|---|---|
-| **Clones séparés** | personnes/machines différentes | `git clone` chacun de son côté |
-| **`git worktree`** | même machine, plusieurs sessions/tâches | `git worktree add -b <branche> /chemin/iso origin/main` … `git worktree remove <chemin>` |
+| **Separate clones** | different people/machines | `git clone` each on their own side |
+| **`git worktree`** | same machine, several sessions/tasks | `git worktree add -b <branch> /path/iso origin/main` … `git worktree remove <path>` |
 
-Le worktree partage le `.git` (objets, branches, remotes) mais a son **propre dossier et son propre `HEAD`**.
-On édite, commite, pousse et ouvre une PR **sans jamais toucher l'arbre de l'autre**.
-**Déployer** depuis un worktree sans empoisonner le `./data` du dossier principal : `docker build` **depuis le worktree** (l'image est *baked*), puis `docker compose up -d` **depuis le dossier principal** (les volumes réels y sont).
-Nettoyage : `git worktree remove <chemin>` + suppression de la branche.
+The worktree shares `.git` (objects, branches, remotes) but has its **own folder and its own `HEAD`**.
+Editing, committing, pushing, opening a PR — **without ever touching the other tree**.
+**Deploying** from a worktree without poisoning the main folder's `./data`: `docker build` **from the worktree** (the image is *baked*), then `docker compose up -d` **from the main folder** (that's where the real volumes are).
+Cleanup: `git worktree remove <path>` + delete the branch.
 
-**Discipline une fois les arbres isolés :**
+**Discipline once trees are isolated:**
 
-- `git fetch` + rebase/pull **avant** chaque push (toujours pousser par-dessus l'état distant à jour → pas de non-fast-forward) ;
-- **jamais de `--force`** sur une branche partagée (`--force-with-lease` si vraiment nécessaire) ;
-- `git add` **ciblé** (jamais `git add -A` à l'aveugle dans un arbre partagé).
+- `git fetch` + rebase/pull **before** every push (always push on top of the up-to-date remote state → no non-fast-forward);
+- **never `--force`** on a shared branch (`--force-with-lease` if truly necessary);
+- **targeted** `git add` (never a blind `git add -A` in a shared tree).
 
-**Garde-fou serveur — branch protection sur `main` (et `develop`)** : transforme la discipline en règle imposée. PR obligatoire (pas de push direct), **CI verte requise** (`npm test` + `typecheck`), interdiction de force-push et de suppression de branche, linear history. C'est le filet le plus efficace contre le télescopage sur le distant.
+**Server-side safety net — branch protection on `main` (and `develop`)**: turns discipline into an enforced rule. PR required (no direct push), **green CI required** (`npm test` + `typecheck`), force-push and branch deletion forbidden, linear history. This is the most effective net against collisions on the remote.
 
-**Déploiement / état partagé hors Git.**
-Un seul intervenant rebuild/déploie `main` HEAD à la fois.
-Et **ne jamais muter l'état partagé hors Git pendant qu'un service tourne.**
-Exemple : ouvrir une SQLite **en WAL depuis l'hôte** alors que le conteneur l'utilise casse le mmap `-shm` sur virtiofs (Docker Desktop macOS) → `disk I/O error` (données intactes ; correctif : `docker restart`).
-Pour inspecter une base : passer par l'API ou `docker exec` — **jamais** une connexion directe depuis le Mac.
+**Deployment / shared state outside Git.**
+Only one person rebuilds/deploys `main` HEAD at a time.
+And **never mutate shared state outside Git while a service is running.**
+Example: opening a SQLite file **in WAL mode from the host** while the container is using it breaks the `-shm` mmap on virtiofs (Docker Desktop macOS) → `disk I/O error` (data intact; fix: `docker restart`).
+To inspect a database: go through the API or `docker exec` — **never** a direct connection from the Mac.
 
-### Pourquoi 3 étapes
+### Why 3 stages
 
-Un push **direct sur `main`** peut introduire une régression de configuration (ex. une directive `docker-compose` retirée par erreur, incompatible avec les contraintes de l'image runtime — UID non-root imposé, permissions de volume, etc.) qu'**aucune build ne détecte** : le code compile, l'image se construit, seul le **comportement en conditions réelles** la révèle. Sans palier intermédiaire, ce genre de bug atteint `main`, puis `:latest`, et un host de prod peut le **pull avant que quiconque le remarque**. Le triple filtre (Mac → NUC/`develop` → NUC/`main`) attrape ce type de régression **avant** qu'elle n'atteigne la prod — potentiellement deux fois.
+A push **directly to `main`** can introduce a configuration regression (e.g. a `docker-compose` directive removed by mistake, incompatible with the runtime image's constraints — enforced non-root UID, volume permissions, etc.) that **no build detects**: the code compiles, the image builds, only **real-world behavior** reveals it. Without an intermediate stage, this kind of bug reaches `main`, then `:latest`, and a prod host can **pull it before anyone notices**. The triple filter (Mac → NUC/`develop` → NUC/`main`) catches this kind of regression **before** it reaches prod — potentially twice.
 
-### Build vs pull d'image
+### Build vs pull of an image
 
-Pour les étapes 1 et 2, **build local** sur l'host cible (`docker compose up --build`) suffit. Il est tentant d'étendre le pipeline GHA pour publier des images `:branch-feat-…` ou `:develop` consommables par `docker compose pull` — ne le faire que si :
-- plusieurs hosts doivent partager exactement le même artefact (par ex. multi-NUC) ;
-- le host cible n'a pas le toolchain de build ;
-- la build locale est trop lente sur le host (clusters arm64 anciens).
+For stages 1 and 2, a **local build** on the target host (`docker compose up --build`) is enough. It's tempting to extend the GHA pipeline to publish `:branch-feat-…` or `:develop` images consumable via `docker compose pull` — only do this if:
+- several hosts must share exactly the same artefact (e.g. multi-NUC);
+- the target host lacks the build toolchain;
+- the local build is too slow on the host (older arm64 clusters).
 
-Pour un projet solo Mac+NUC, build local = chemin court. Le workflow CI ne sert que pour la prod (tag versionné + `:latest`).
+For a solo Mac+NUC project, local build is the short path. The CI workflow only serves prod (versioned tag + `:latest`).
 
-### Quand sauter une étape
+### When to skip a stage
 
-- **Patch hotfix** : créer un `fix/<topic>` depuis `main`, valider en local, merger directement dans `main`, tag patch (`vX.Y.Z+1`). Skip staging si l'urgence le justifie ET la régression est très ciblée.
-- **Documentation** ou **renommage** sans impact runtime : commit direct sur `main`.
-- **Migration DB** ou **changement de Dockerfile/compose** : **jamais** sauter staging. La règle.
+- **Hotfix patch**: create a `fix/<topic>` from `main`, validate locally, merge directly into `main`, patch tag (`vX.Y.Z+1`). Skip staging if urgency justifies it AND the regression is very narrow.
+- **Documentation** or **rename** with no runtime impact: commit directly to `main`.
+- **DB migration** or **Dockerfile/compose change**: **never** skip staging. The rule.
 
 ---
 
-## 13. Pin de version en production
+## 13. Version pin in production
 
-> ⚠️ **Le package ghcr PEUT être privé — même sur un repo public. Ça se VÉRIFIE, ça ne se suppose pas.**
-> **Compte PERSO** : un package publié depuis un repo **public** hérite de son accès → **tirable aussitôt**, aucun geste.
-> **ORGANISATION** : il peut être **PRIVÉ** *(défaut d'org)* → le `docker compose pull` du host reçoit **403**, et le pin ci-dessous ne sert à rien : **il n'y a rien à tirer**.
-> → **`configure-repo.sh` interroge le registre ANONYMEMENT**, exactement comme le host de prod, et ne réclame le geste **que si le pull échoue** *(chemin UI exact : `github-repo-config.md` §2)*. *Un job « Publish image » vert ne prouve RIEN.*
+> ⚠️ **The ghcr package CAN be private — even on a public repo. This gets VERIFIED, never assumed.**
+> **PERSONAL account**: a package published from a **public** repo inherits its access → **pullable right away**, no action needed.
+> **ORGANIZATION**: it can be **PRIVATE** *(org default)* → the host's `docker compose pull` gets **403**, and the pin below is useless: **there is nothing to pull**.
+> → **`configure-repo.sh` queries the registry ANONYMOUSLY**, exactly like the prod host would, and only asks for the manual step **if the pull fails** *(exact UI path: `github-repo-config.md` §2)*. *A green "Publish image" job proves NOTHING.*
 
-Sur les hosts de production (NUC, serveurs déployés), **épingler le tag d'image** dans le `.env` du host :
+On production hosts (NUC, deployed servers), **pin the image tag** in the host's `.env`:
 
 ```
 APP_IMAGE_TAG=1.1.0
 ```
 
-Jamais `:latest` en prod. Le but : un déploiement doit nécessiter un `git tag` explicite, pas qu'un push sur `main` propage automatiquement.
+Never `:latest` in prod. The point: a deployment must require an explicit `git tag`, not have a push to `main` automatically propagate.
 
-Sur les hosts de dev (Mac local) : `:latest` ou pas de pin du tout, c'est OK.
+On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
-### Pourquoi
+### Why
 
-`:latest` est un tag mutable qui suit la branche `main`. Sans pin, un push de WIP sur main → workflow de release → `:latest` mis à jour → `docker compose pull` côté prod ramène potentiellement du code non validé. Avec un pin versionné, la prod est figée et un upgrade demande une action humaine consciente (changer le tag).
+`:latest` is a mutable tag that follows the `main` branch. Without a pin, a WIP push to main → release workflow → `:latest` updated → prod-side `docker compose pull` can bring in unreviewed code. With a versioned pin, prod is frozen and an upgrade requires a conscious human action (changing the tag).
 
 ---
 
-## 14. Durcissement Docker (sécurité de déploiement)
+## 14. Docker hardening (deployment security)
 
-> Pratiques de sécurité validées pour **tout service Docker** du homelab (actarus314). Dérivé de la skill `docker-compose-security` + cheatsheet Docker (section Sécurité). Complète les §12-13 (workflow & pin de version).
+> Security practices validated for **any self-hosted Docker service**. Derived from the `docker-compose-security` skill + the Docker cheatsheet (Security section). Complements §12-13 (workflow & version pin).
 
-### Règles absolues
+### Absolute rules
 
-| Règle | Détail |
+| Rule | Detail |
 |---|---|
-| `version:` dans compose | **Jamais** — ligne interdite dans tous les `docker-compose.yml` |
-| `sudo` | Toujours préfixer les commandes docker (NUC) |
-| Convention volumes | `/docker/<service>/` pour tous les bind mounts sur l'hôte |
-| Nommage image | Chemin complet dès le build : `ghcr.io/actarus314/<image>:tag` |
-| `--privileged` | **Jamais** sauf nécessité absolue documentée |
-| Ports internes | `127.0.0.1:PORT_HOTE:PORT_CONTAINER` sauf exposition publique explicite |
-| Réseau | Un réseau **bridge dédié** par service/stack |
+| `version:` in compose | **Never** — a forbidden line in every `docker-compose.yml` |
+| `sudo` | Always prefix docker commands (NUC) |
+| Volume convention | `/docker/<service>/` for every bind mount on the host |
+| Image naming | Full path from the build onward: `ghcr.io/<owner>/<image>:tag` |
+| `--privileged` | **Never**, except for a documented, absolute necessity |
+| Internal ports | `127.0.0.1:HOST_PORT:CONTAINER_PORT` unless explicit public exposure |
+| Network | A dedicated **bridge network** per service/stack |
 
-### Philosophie de durcissement
+### Hardening philosophy
 
-On **laisse `root:root`** (défaut Docker). Un UID non-root *partagé* entre containers n'apporte rien : le mouvement latéral reste possible. Le vrai gain vient des **directives compose**. Ordre d'impact réel :
+`root:root` is **kept** (Docker default). A non-root UID *shared* across containers buys nothing: lateral movement is still possible. The real gain comes from **compose directives**. Real order of impact:
 
-1. Mises à jour kernel + docker-ce régulières → bloque les évasions CVE.
-2. `cap_drop: [ALL]` + `no-new-privileges` → fort, facile à ajouter.
-3. `read_only: true` + `tmpfs` → bloque les payloads en écriture.
-4. `pids_limit` + `mem_limit` → anti-épuisement ressources hôte.
-5. UID non-root **distinct par service** → utile seulement si un UID différent par service.
+1. Regular kernel + docker-ce updates → blocks CVE escapes.
+2. `cap_drop: [ALL]` + `no-new-privileges` → strong, easy to add.
+3. `read_only: true` + `tmpfs` → blocks write payloads.
+4. `pids_limit` + `mem_limit` → anti host-resource-exhaustion.
+5. Non-root UID **distinct per service** → useful only when a different UID per service matters.
 
-### Template compose sécurisé
+### Hardened compose template
 
 ```yaml
 services:
   backend:
-    image: ghcr.io/actarus314/mon-image:${IMAGE_TAG:-latest}
+    image: ghcr.io/<owner>/my-image:${IMAGE_TAG:-latest}
     restart: unless-stopped
     read_only: true
     tmpfs:
-      - /tmp                      # seul point d'écriture container, en RAM
-    cap_drop: [ALL]               # zéro capability Linux
+      - /tmp                      # only write path in the container, in RAM
+    cap_drop: [ALL]               # zero Linux capability
     security_opt:
-      - no-new-privileges:true    # bloque escalade via setuid/setgid
-    pids_limit: 256               # protection fork bomb
-    mem_limit: 512m               # protection épuisement mémoire
+      - no-new-privileges:true    # blocks escalation via setuid/setgid
+    pids_limit: 256               # fork bomb protection
+    mem_limit: 512m               # memory exhaustion protection
     volumes:
-      - /docker/monapp/data:/app/data   # bind mount : reste writable malgré read_only
+      - /docker/myapp/data:/app/data    # bind mount: stays writable despite read_only
     env_file: .env
-    networks: [monapp]
-    # backend pur : PAS de bloc ports: (accessible via le réseau interne seulement)
+    networks: [myapp]
+    # pure backend: NO ports: block (reachable through the internal network only)
 
   frontend:
-    image: ghcr.io/actarus314/mon-image-frontend:${IMAGE_TAG:-latest}
+    image: ghcr.io/<owner>/my-image-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${PORT:-3000}:8080"
     read_only: true
-    tmpfs:                        # nginx-unprivileged écrit dans ces 3 chemins
+    tmpfs:                        # nginx-unprivileged writes to these 3 paths
       - /tmp
       - /var/cache/nginx
       - /var/run
     cap_drop: [ALL]
-    cap_add: [CHOWN, SETGID, SETUID]   # strict minimum nginx-unprivileged (init puis drop)
+    cap_add: [CHOWN, SETGID, SETUID]   # bare minimum for nginx-unprivileged (init, then drop)
     security_opt:
       - no-new-privileges:true
     pids_limit: 128
     mem_limit: 128m
     depends_on: [backend]
-    networks: [monapp]
+    networks: [myapp]
 
 networks:
-  monapp:
+  myapp:
     driver: bridge
 ```
 
-### Directives clés
+### Key directives
 
-- **`cap_drop: [ALL]`** : supprime toutes les capabilities Linux (la plus impactante). `cap_add` au strict minimum, cas par cas — nginx-unprivileged : `CHOWN`/`SETGID`/`SETUID` (init puis drop vers non-root) ; Caddy Alpine (`setcap +ep` sur le binaire) : `NET_BIND_SERVICE` même sur port haut.
-- **`read_only: true`** : FS du container en lecture seule (empêche un payload déposé). Les **volumes montés restent writable** (cas SQLite/fichiers). Compléter avec `tmpfs` pour les chemins d'écriture de l'image (backend : `/tmp` ; nginx-unprivileged : + `/var/cache/nginx` + `/var/run`). Crash au démarrage → souvent un chemin `tmpfs` manquant.
-- **`no-new-privileges: true`** : bloque l'escalade via binaires setuid/setgid de l'image.
-- **`pids_limit` / `mem_limit`** : anti fork-bomb / anti-OOM hôte. Indicatif : backend 256 pids / 512m, frontend léger 128 / 128m.
-- **`user:` (si utilisé)** : toujours **UID:GID numériques** (l'image n'a pas le `/etc/passwd` de l'hôte). Images à process manager embarqué (PM2, supervisord) : **pas de `user:`**, gérer via `chown` du volume côté hôte.
+- **`cap_drop: [ALL]`**: strips every Linux capability (the highest-impact one). `cap_add` at the strict minimum, case by case — nginx-unprivileged: `CHOWN`/`SETGID`/`SETUID` (init then drop to non-root); Caddy Alpine (`setcap +ep` on the binary): `NET_BIND_SERVICE` even on a high port.
+- **`read_only: true`**: container FS read-only (blocks a dropped payload). **Mounted volumes stay writable** (SQLite/file case). Complement with `tmpfs` for the image's write paths (backend: `/tmp`; nginx-unprivileged: + `/var/cache/nginx` + `/var/run`). Crash on startup → often a missing `tmpfs` path.
+- **`no-new-privileges: true`**: blocks escalation via setuid/setgid binaries in the image.
+- **`pids_limit` / `mem_limit`**: anti fork-bomb / anti host-OOM. Indicative: backend 256 pids / 512m, light frontend 128 / 128m.
+- **`user:` (if used)**: always **numeric UID:GID** (the image has no host `/etc/passwd`). Images with an embedded process manager (PM2, supervisord): **no `user:`**, manage via `chown` of the volume host-side.
 
-### Cas particuliers
+### Special cases
 
-- **Backend pur (sans port exposé)** : pas de bloc `ports:` du tout ; accessible uniquement via le réseau Docker interne par les autres containers de la stack.
-- **Bind mount SQLite / fichiers** : `read_only` ne touche pas les volumes montés → le volume reste writable. En `root:root` durci, root écrit le bind mount → **évite le piège dEURO** (§12 : distroless `:nonroot` UID 65532 → perte d'écriture silencieuse `SQLITE_READONLY_DIRECTORY`). Garder une **sonde d'écriture au boot** (échec bruyant + exit non-zéro) en defense-in-depth. Sous `read_only`, un écrivain SQLite pose `PRAGMA temp_store=MEMORY` (+ `SQLITE_TMPDIR=/tmp`).
-- **Process manager embarqué (PM2/supervisord)** : démarre root et gère son propre drop → pas de `user:`.
+- **Pure backend (no exposed port)**: no `ports:` block at all; reachable only via the internal Docker network by the other containers in the stack.
+- **SQLite / file bind mount**: `read_only` does not affect mounted volumes → the volume stays writable. Hardened as `root:root`, root writes to the bind mount → **avoids the §12 pitfall** (distroless `:nonroot` UID 65532 → silent write loss, `SQLITE_READONLY_DIRECTORY`). Keep a **write probe at boot** (loud failure + non-zero exit) as defense-in-depth. Under `read_only`, a SQLite writer sets `PRAGMA temp_store=MEMORY` (+ `SQLITE_TMPDIR=/tmp`).
+- **Embedded process manager (PM2/supervisord)**: starts as root and manages its own drop → no `user:`.
 
-### Le runtime ne doit PAS embarquer son gestionnaire de paquets
+### The runtime must NOT carry its package manager
 
-**`npm` est un outil de BUILD.** Le laisser dans l'image de runtime y expédie **tout son arbre de dépendances — et ses CVE**.
-Un scan Trivy a déjà trouvé des CVE **CRITICAL/HIGH** (`pacote`, `picomatch`, bundlés dans `npm`) sur une app qui n'a **aucune dépendance de production**. Les vulnérabilités ne venaient pas du code, mais de l'**outil qu'on avait oublié de retirer**.
+**`npm` is a BUILD tool.** Leaving it in the runtime image ships **its entire dependency tree — and its CVEs — along with it**.
+A Trivy scan already found **CRITICAL/HIGH** CVEs (`pacote`, `picomatch`, bundled inside `npm`) on an app with **zero production dependencies**. The vulnerabilities didn't come from the code, but from the **tool that was forgotten and left in**.
 
 ```dockerfile
 RUN npm ci --omit=dev \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /root/.npm
 ```
-Scan **vert** après cette seule ligne. *(Une image `distroless` en second étage produit le même effet — plus lourde à maintenir pour un gain identique ici.)*
+Scan **green** after this one line. *(A second-stage `distroless` image produces the same effect — heavier to maintain for an identical gain here.)*
 
-### Avant prod
+### Before prod
 
-- **Scan CVE** : `trivy image <nom-image>:<tag>` avant tout déploiement — **et en gate CI** (§17), pas seulement à la main : scanner au déploiement, c'est scanner trop tard.
-- **Checklist d'audit par service** : `cap_drop:[ALL]` · `read_only:true` · `tmpfs` couvre toutes les écritures · `no-new-privileges:true` · `pids_limit` · `mem_limit` · ports en `127.0.0.1` si interne · réseau bridge dédié · pas de `--privileged` · pas de `version:`.
-
----
-
-## 15. README — double cible : dev + vitrine
-
-Le `README.md` sert **deux publics à la fois**, sans choisir :
-- **le dev** qui clone/forke/contribue — install, run, structure, contribution ;
-- **la vitrine** — une page honnête qui donne envie, sans survendre.
-
-Léché, concis, **zéro salade**. Bilingue **anglais puis français**, séparés par `---`.
-
-**Structure type** :
-- **Titre** = `Nom — sous-titre qui dit ce que c'est` (pas juste le nom).
-- **Accroche** orientée le problème réel de l'utilisateur, honnête (pas de superlatif creux).
-- **Disclaimer** en tête (blockquote ⚠️) si l'outil est tiers/non-officiel ou touche des fonds.
-- **Captures** thème clair + sombre via `<picture>` + `prefers-color-scheme` ; l'autre thème replié en `<details>`.
-- **« Why this exists / Pourquoi »** avant le *how*.
-- Sections courtes : Quick start, Structure, License.
-- **Ton** : factuel, chiffré, honnête sur les limites — et jamais de 2ᵉ personne (§1).
-
-Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `rozo-bridge`.
-
-## 16. Docs de vie du projet — **un PRINCIPE, pas des fichiers imposés**
-
-> 🔴 **Ce template initialise TOUT projet — y compris ceux qui seront ensuite conduits par un système de gestion tiers** (GSD, superpowers, ou autre).
-> **Lui imposer nos fichiers de suivi les mettrait en COLLISION avec le sien** (`.planning/` & co.).
-> **Deux systèmes de suivi concurrents dans un projet, c'est zéro système tenu.**
-
-### Le PRINCIPE — vrai quel que soit l'outil qui le porte
-
-| Rôle | La règle |
-|---|---|
-| **Un doc de REPRISE** | **CONCIS.** Lu et édité **très souvent** → il doit rester court. Il **RENVOIE** au détail *(ADR, plans, notes)*, **il ne l'absorbe pas**. Il porte aussi **ce qui reste** *(bref — **POINTE** vers un plan si c'est lourd)*. |
-| **Le livré est PURGÉ** | Un doc de reprise qui accumule le livré n'est plus un suivi : **c'est un journal**. Le livré part dans son historique. |
-
-**Objectif** : qu'un humain **ou** une IA rouvrant le projet à 6 mois s'y retrouve **sans lire un pavé**.
-
-> **C'est la même règle que `repo/docs/` vs `workspace/` dans le template lui-même** : *le document qu'on lit souvent reste court et renvoie ; le détail vit ailleurs.* Un doc de suivi qu'on ne relit plus ne suit plus rien.
-> **La règle générale, et le fait que l'outil de suivi soit un DÉFAUT remplaçable : `METHODE.md`.**
-
-### L'IMPLÉMENTATION — remplaçable
-
-**Par défaut**, `init-project.sh` pose dans `workspace/docs/` (jamais poussé) **un seul doc vivant** :
-- **`SUIVI.md`** — la reprise à froid *(état, environnements, historique, décisions, pièges)* **et « ce qui reste »** *(bref)*. Un chantier lourd bascule dans un **plan** *(`workspace/plans/`)*.
-
-**Ce fichier est le DÉFAUT, pas un dogme.**
-→ **`init-project.sh --no-lifecycle-docs`** l'omet, **quand un autre système prend le relais**.
-
-> ⚠️ **AVANT de créer quoi que ce soit pour piloter un projet** — suivi, backlog, planification, reprise de contexte — **VÉRIFIER CE QUI EXISTE DÉJÀ** : skills et agents installés *(une centaine, dont tout **GSD** : `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, fonctionnalités natives.
-> **Si aucun système n'est explicitement en usage sur ce projet, le chercher AVANT d'en fabriquer un.** *(`find-skills` sert exactement à ça.)*
-> **Ne construire du custom qu'à défaut** — et le dire.
-
-### Les décisions structurantes → `repo/docs/adr/`
-**Versionnées, immuables.** Un ADR n'est pas édité quand la décision change : **on en écrit un nouveau qui supersède l'ancien**. Ce qui compte, c'est de préserver le **pourquoi** — que le code ne peut pas exprimer.
-
-### Ce qui est VERSIONNÉ (dans `repo/`), et pourquoi
-
-| Fichier | Rôle | Pourquoi il est versionné |
-|---|---|---|
-| **`AGENTS.md`** | Instructions projet **pour tout agent** : commandes, structure, branches, conventions, contrôles, ne-pas-toucher | **Standard réel** ([agents.md](https://agents.md), passé à la Linux Foundation fin 2025, lu par 30+ agents : Cursor, Copilot, Gemini CLI…). **`CLAUDE.md` l'importe via `@AGENTS.md`** et ne garde que le **perso** (pointeurs `workspace/`, secrets, auth) → **une seule source, aucun drift**. |
-| **`CHANGELOG.md`** | Ce qui a changé **pour un utilisateur** — format [Keep a Changelog](https://keepachangelog.com), **lien inline** par version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | La Release GitHub porte la liste **auto-générée des PR** ; le CHANGELOG porte le **sens**. *(Les sources jugent ce doublon superflu en solo — maintenu malgré tout, pour le sens qu'il apporte au-delà de la liste des PR.)* |
-| **`docs/adr/`** | Une fiche par décision **structurante** (stack, schéma, frontière) — format [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) | Préserve le **pourquoi**, que le code ne dit jamais. Validé même en solo (coût quasi nul). **Immuable** : une décision périmée n'est pas éditée, elle est *superseded*. |
-
-**Écartés délibérément** (théâtre en solo, vérifié) : `llms.txt` (mode SEO, pas un standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (le `SUIVI.md` le couvre).
-
-**Autres defaults** : i18n eng/fr avec **dictionnaire séparé** (jamais de ternaires inline) + parité en CI.
-
-## 17. Configuration du repo GitHub
-
-Tout le spectre config/maintenance d'un repo public — contrôles sécu/code, **matrice PAT à deux étages** (récurrent autonome / admin one-shot), OpenSSF, scriptable vs UI, checklist nouveau repo — est dans **`github-repo-config.md`** (à côté de ce fichier). C'est du **one-shot** : réglé à la création via `configure-repo.sh`, puis oublié.
-
-En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning + push protection · **private vulnerability reporting** · ruleset `main` (+ `develop` si elle existe) · **ruleset sur les tags** · **immutable releases** · actions tierces pinnées SHA · `permissions:` minimal. Le PAT de l'assistant gère les alertes en autonomie, **sans jamais toucher à `Administration: write`**.
-
-> 🔎 **`immutable releases` est scriptable, pas seulement via l'UI.** L'endpoint `PUT /repos/{owner}/{repo}/immutable-releases` existe et relève d'`Administration: write`, **déjà** dans la recette du PAT admin : **rien à ajouter, tout à automatiser**.
-
-### 🔴 CodeQL : **default setup**, et surtout PAS un `codeql.yml` committé
-
-**Il n'y a plus de `codeql.yml` dans le template.** `configure-repo.sh` active le **default setup** de GitHub par API *(`PATCH /repos/{o}/{r}/code-scanning/default-setup`, `Administration: write` — déjà dans la recette du PAT admin)*.
-
-**Pourquoi le natif l'emporte ici — et ce n'est pas une question de goût :**
-
-| | notre ancien `codeql.yml` | **default setup** |
-|---|---|---|
-| Langages analysés | **UN SEUL, codé en dur** | **tous**, **détectés automatiquement** |
-| Un langage apparaît dans le repo | **ignoré à vie** *(personne ne pense à éditer le YAML)* | **analysé tout seul** — [GitHub met la config à jour](https://github.blog/changelog/2023-06-26-code-scanning-default-setup-automatically-updates-when-the-languages-in-the-repository-change/) |
-| Scans planifiés | un `cron` qu'on maintient | **inclus** |
-| Maintenance | **la nôtre** | **celle de GitHub** |
-
-> 🔴 **Ce n'était pas une préférence, c'était un TROU** : un `codeql.yml` codé en dur sur un seul langage laisse **tout le reste du repo non analysé** — y compris ses propres workflows. Le custom était du natif **dégradé**, et il dégradait un **contrôle de sécurité**.
-
-**Ce que le default setup NE sait pas faire** *(la porte de sortie, si un projet en a un jour besoin)* : query packs personnalisés · `paths-ignore` · étapes de build sur mesure · upload depuis une CI externe.
-→ **Alors seulement**, revenir à un `codeql.yml` committé — **et y déclarer TOUS les langages du repo**, à la main, pour de bon.
-
-**Conséquences à ne pas manquer :**
-- **Repo PRIVÉ (Free)** : le default setup est **indisponible** *(GHAS requis)* — exactement comme l'était le workflow. **Rien ne change** : `Semgrep` + `osv-scanner` restent la parade *(voir plus bas)*.
-- **CodeQL ne « se réveille » plus tout seul au flip** : c'est **le rejeu de `configure-repo.sh`** qui l'active — et ce rejeu est **déjà obligatoire** dans la procédure de bascule *(§18)*. Aucun geste nouveau.
-- Un repo **legacy** portant encore un `codeql.yml` : l'activation le passe en **`disabled_manually`** — GitHub refuse les deux modes à la fois. Le script **le dit** au lieu de le faire en silence. **Supprimer alors le fichier : un workflow orphelin est un contrôle que plus personne ne lit.**
-- Le check-run **garde le nom `CodeQL`** : la règle de ruleset `code_scanning` *(`tool: CodeQL`)* est **inchangée**, et continue de bloquer les PR.
-
-### Contrôles recommandés (bonnes pratiques du secteur)
-
-| Contrôle | Ce qu'il empêche | Où |
-|---|---|---|
-| **Ruleset sur les tags `v*`** (`deletion`, `update`) | Qu'un tag de release soit **déplacé ou supprimé**. **Sans lui, le pin de version du §13 ne garantit RIEN** : la prod épingle `X.Y.Z` en croyant figer un artefact, alors que le tag peut pointer ailleurs demain. | `configure-repo.sh` |
-| **Immutable releases** *(GA 28/10/2025)* | Que les **assets** d'une release publiée soient **remplacés**. C'est le pendant du ruleset `tags` : celui-ci fige le **tag**, celui-là fige le **contenu**. Sans les deux, le pin du §13 se contourne **sans toucher au tag** — on republie un autre binaire sous le même. **NON RÉTROACTIF : « immutability will only apply to future releases » → posé AVANT la v1.** | `configure-repo.sh` *(à la bascule publique)* |
-| **Private vulnerability reporting** | Qu'un chercheur externe n'ait **aucun moyen de signaler en privé** — et publie donc la faille en issue publique. **Sans lui, le lien de `SECURITY.md` est MORT.** | `configure-repo.sh` |
-| **`dependency-review-action`** (PR) | Qu'une dépendance vulnérable ou mal licenciée **entre**. Dependabot n'alerte qu'**APRÈS** le merge : les deux sont complémentaires, pas redondants. | `ci-node.yml` |
-| **`actionlint` + `zizmor`** (PR) | Que **les workflows eux-mêmes** soient le trou : un `${{ }}` interpolé dans un `run:` est une **injection de shell**. | `ci-*.yml` |
-| **`persist-credentials: false`** | Que le `GITHUB_TOKEN` **traîne dans `.git/config`** et fuite par un artefact (audit `artipacked`). | tous les `checkout` |
-| **`default_workflow_permissions: read`** | Qu'un workflow **futur**, écrit sans bloc `permissions:`, hérite d'un `GITHUB_TOKEN` **en écriture**. Nos workflows le déclarent tous — c'est un filet, pas un gain immédiat. | `configure-repo.sh` |
-| **Renovate `groupName`** | Le **bruit** : minor + patch groupés en **une** PR. Les **majors restent isolés** — un major peut casser, il mérite d'être regardé seul. | `renovate.json` |
-| **Trivy** sur l'image (PR) — *capacité **`artefact`*** | Qu'une image portant une CVE **CRITICAL/HIGH** atteigne `main`. Scanner **au déploiement est trop tard** : l'image est déjà taguée et la prod l'épingle. Le job **`build-check` est un check REQUIS** — sinon le scan est **décoratif**. | `docker-publish.yml` |
-| **Trivy hebdomadaire sur l'image PUBLIÉE** — *capacité **`artefact`*** | Qu'une image **déjà en prod** devienne vulnérable **sans que rien ne le dise**. Le gate PR ne regarde plus rien après le merge, et Renovate ne rattrape que si la base **bouge** : une ligne d'images qui **cesse d'être reconstruite** ne produit ni bump, ni PR, ni scan — la CVE reste servie. **C'est un scan de veille, pas un gate** : il n'est requis nulle part, il **alerte**. | `docker-publish.yml` |
-
-### Qui met à jour les dépendances et les outils épinglés — Renovate, bot unique auto-détectant
-
-**Le pin protège de la supply chain ET pourrit la détection.** Les deux sont vrais en même temps : un `gitleaks` gelé rate les nouveaux formats de secrets, un `semgrep` gelé n'a jamais les nouvelles règles. **Un scanner de sécurité figé finit par rater ce qu'il est censé trouver.** D'où un bot qui bumpe — mais lequel, et sur quel périmètre ?
-
-**Renovate est le SEUL bot d'update, et il AUTO-DÉTECTE tout.** Il découvre chaque écosystème depuis les manifestes du repo *(npm, pip, docker, actions, gradle, cargo, go, conan…)* **sans liste à tenir**, et sait AUSSI lire un binaire `curl`-é dans un `run:` — ce que Dependabot ne fait pas. C'est ce qui rend le périmètre **universel** : un langage ajouté demain est couvert **sans toucher au template**. Dependabot, lui, exige de déclarer chaque `package-ecosystem` **à la main** *(aucune auto-découverte — l'inverse de CodeQL)* : le retenir comme bot d'update, c'était une liste manuelle qui rote en silence. **On l'a donc retiré du rôle d'update.**
-
-> **Mais ses ALERTS restent.** La détection de CVE de Dependabot *(native, gratuite même en privé)* tourne toujours ; **Renovate la LIT** *(`vulnerabilityAlerts`)* pour ouvrir ses PR de remédiation. On a changé *qui ouvre la PR*, pas *qui détecte*. `configure-repo.sh` laisse les **alerts** actives partout : c'est le **dependency graph** que Renovate lit *(sans lui, son chemin sécu serait vide, en silence)*.
-
-**Les security updates, elles, dépendent du nombre d'étages** — parce que leurs PR **visent TOUJOURS la branche par défaut**, et que `target-branch` ne redirige que les *version* updates.
-
-| | Security updates Dependabot | Pourquoi |
-|---|---|---|
-| **2 étages** *(`main` seule)* | **ON** — le filet | La cible par défaut **est** la bonne branche. Doublon avec les PR sécu de Renovate = bruit toléré ; un trou silencieux = non. Transitoire : passera `disabled` **une fois une PR sécu Renovate observée sur un repo privé**. |
-| **3 étages** *(`develop` existe)* | **OFF** | Sa PR entrerait par `main`, **court-circuitant le staging** — soit exactement ce que les 3 étages existent pour empêcher. Renovate, lui, sait viser `develop` *(`baseBranchPatterns`)*. Le filet ne peut donc pas jouer son rôle ici : il ne reste que le court-circuit. |
-
-> ⚠️ **Le retrait est conditionné à une preuve de vie de Renovate** — son *Dependency Dashboard* mis à jour depuis moins de 14 jours *(deux cycles du schedule hebdomadaire)*. **Un dashboard qui existe ne prouve rien** : un repo `disabled` garde le sien *(vécu — 6 jours de bots morts)*. Sans la preuve, `configure-repo.sh` **conserve** Dependabot et le **dit** : retirer le filet en misant sur un bot mort, c'est la panne de juillet.
-
-| Quoi | Comment Renovate le bumpe |
-|---|---|
-| `uses:` (actions) · npm · docker (`FROM`) · pip *(`requirements-ci.txt` → zizmor, semgrep)* · tout autre manifeste | **manager natif auto-détecté** — aucune déclaration |
-| `gitleaks` · `actionlint` · `osv-scanner` · `trivy` *(binaires épinglés VERSION + SHA256 dans un `run:`)* | **`customManagers` regex** — datasource `github-release-attachments` : bumpe **version ET checksum dans la même PR** |
-
-> 🟢 **Pas d'`enabledManagers` : Renovate auto-détecte TOUS les managers.** *(Retiré à la bascule full-Renovate — c'était l'inverse tant que Dependabot faisait les version-updates, pour éviter les PR en double. Sans `dependabot.yml`, plus de doublon de version-updates possible.)* Les `customManagers` couvrent les 4 binaires en plus ; ils tournent quoi qu'il arrive.
-
-**Politique d'update** *(être à jour, mais par gestes revus)* : version de **routine = PR revue par un humain** *(`automerge` top-level à false)* ; **SÉCURITÉ = auto-merge** *(`vulnerabilityAlerts.automerge`)*. Les PR de sécu **bypassent nativement `minimumReleaseAge`** — le délai de 3 j anti-release-vérolée reste sur la routine, **jamais** sur un fix de CVE.
-
-**Filet** : un checksum erroné fait échouer le `sha256sum -c` **en CI** — bruyamment, jamais en silence. Une PR rouge se ferme ; elle ne peut pas empoisonner `main`.
-
-**Prérequis** : l'app **Renovate** doit être installée sur le repo *(UI GitHub, gratuite)*. Sans elle, `renovate.json` est **inerte**. En repli, le self-host `renovatebot/github-action` *(AGPL-3.0, gratuit à vie)* fait tourner la même config — au prix d'un **PAT classique `repo`** *(les fine-grained ne marchent pas avec Renovate)*.
-
-> **Politique de pin — `.github/zizmor.yml`** : SHA complet obligatoire pour **toute action tierce** ; **tag majeur toléré pour `actions/*` et `github/*`** (les compromettre = compromettre GitHub). Ce n'est pas de la coquetterie : en **mars 2026, 75 des 76 tags de `aquasecurity/trivy-action` ont été force-pushés**. Un tag est mutable ; un SHA ne l'est pas.
-
-**Écartés, après examen** : attestations SLSA (personne d'autre ne consomme les images → on signerait dans le vide) · OpenSSF Scorecard (mesure la conformité *process*, score gamable) · CODEOWNERS et merge queue (multi-contributeurs).
+- **CVE scan**: `trivy image <image-name>:<tag>` before every deployment — **and as a CI gate** (§17), not only by hand: scanning at deployment time is scanning too late.
+- **Per-service audit checklist**: `cap_drop:[ALL]` · `read_only:true` · `tmpfs` covering every write · `no-new-privileges:true` · `pids_limit` · `mem_limit` · ports on `127.0.0.1` if internal · dedicated bridge network · no `--privileged` · no `version:`.
 
 ---
 
-## 18. Matrice des contrôles — quoi, où, quand, par qui
+## 15. README — dual target: dev + showcase
 
-> Principe : **chaque défaut est attrapé au plus tôt**, et chaque étage rattrape ce que le précédent a laissé passer.
+`README.md` serves **two audiences at once**, without choosing:
+- **the dev** who clones/forks/contributes — install, run, structure, contribution;
+- **the showcase** — an honest page that makes the project appealing, without overselling.
 
-| Étage | Contrôles | Quand | Par qui |
+Polished, concise, **zero fluff**. Bilingual **English then French**, separated by `---`.
+
+**Typical structure**:
+- **Title** = `Name — subtitle that says what it is` (not just the name).
+- **Hook** aimed at the user's real problem, honest (no hollow superlatives).
+- **Disclaimer** up top (⚠️ blockquote) if the tool is third-party/unofficial or touches funds.
+- **Screenshots** light + dark theme via `<picture>` + `prefers-color-scheme`; the other theme folded into `<details>`.
+- **"Why this exists / Pourquoi"** before the *how*.
+- Short sections: Quick start, Structure, License.
+- **Tone**: factual, quantified, honest about limitations — and never 2nd person (§1).
+
+Model: `templates/repo/README.md`.
+
+## 16. Project lifecycle docs — **a PRINCIPLE, not mandated files**
+
+> 🔴 **This template initializes EVERY project — including ones that will later be run by a third-party management system** (GSD, superpowers, or other).
+> **Forcing our tracking files on them would COLLIDE with theirs** (`.planning/` & co.).
+> **Two competing tracking systems in one project means zero system actually kept up.**
+
+### The PRINCIPLE — true regardless of which tool carries it
+
+| Role | The rule |
+|---|---|
+| **A RESUME doc** | **CONCISE.** Read and edited **very often** → it must stay short. It **POINTS** to the detail *(ADRs, plans, notes)*, **it does not absorb it**. It also carries **what's left to do** *(brief — **POINTS** to a plan if it's heavy)*. |
+| **What's shipped gets PURGED** | A resume doc that accumulates the shipped is no longer a tracking doc: **it's a journal**. The shipped moves into its history. |
+
+**Goal**: for a human **or** an AI reopening the project 6 months later to find their footing **without reading a wall of text**.
+
+> **Same rule as `repo/docs/` vs `workspace/` in the template itself**: *the doc read often stays short and points elsewhere; the detail lives elsewhere.* A tracking doc no longer re-read is no longer tracking anything.
+> **The general rule, and the fact that the tracking tool is a REPLACEABLE default: `METHODE.md`.**
+
+### The IMPLEMENTATION — replaceable
+
+**By default**, `init-project.sh` places in `workspace/docs/` (never pushed) **one single living doc**:
+- **`SUIVI.md`** — the cold-resume doc *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** (`workspace/plans/`).
+
+**This file is the DEFAULT, not a dogma.**
+→ **`init-project.sh --no-lifecycle-docs`** omits it, **when another system takes over**.
+
+> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, native features.
+> **If no system is explicitly in use on this project, look for one BEFORE building one.** *(`find-skills` exists exactly for this.)*
+> **Only build custom as a last resort** — and say so.
+
+### Structural decisions → `repo/docs/adr/`
+**Versioned, immutable.** An ADR is not edited when the decision changes: **a new one is written that supersedes the old one**. What matters is preserving the **why** — which the code can't express.
+
+### What is VERSIONED (in `repo/`), and why
+
+| File | Role | Why it's versioned |
+|---|---|---|
+| **`AGENTS.md`** | Project instructions **for any agent**: commands, structure, branches, conventions, controls, do-not-touch | **A real standard** ([agents.md](https://agents.md), handed to the Linux Foundation in late 2025, read by 30+ agents: Cursor, Copilot, Gemini CLI…). **`CLAUDE.md` imports it via `@AGENTS.md`** and keeps only the **personal** bits (`workspace/` pointers, secrets, auth) → **a single source, zero drift**. |
+| **`CHANGELOG.md`** | What changed **for a user** — [Keep a Changelog](https://keepachangelog.com) format, **inline link** per version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | The GitHub Release carries the **auto-generated PR list**; the CHANGELOG carries the **meaning**. *(Sources call this duplication superfluous solo — kept anyway, for the meaning it adds beyond the PR list.)* |
+| **`docs/adr/`** | One entry per **structural** decision (stack, schema, boundary) — [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) format | Preserves the **why**, which the code never states. Worth it even solo (near-zero cost). **Immutable**: an outdated decision isn't edited, it's *superseded*. |
+
+**Deliberately left out** (solo-project theater, verified): `llms.txt` (SEO fad, not a standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (`SUIVI.md` covers it).
+
+**Other defaults**: eng/fr i18n with a **separate dictionary** (never inline ternaries) + parity checked in CI.
+
+## 17. GitHub repo configuration
+
+The whole config/maintenance spectrum for a public repo — security/code controls, **two-tier PAT matrix** (autonomous recurring / one-shot admin), OpenSSF, scriptable vs UI, new-repo checklist — is in **`github-repo-config.md`** (next to this file). It's **one-shot**: set at creation via `configure-repo.sh`, then forgotten.
+
+In short: **CodeQL in native *default setup*** · Dependabot · secret scanning + push protection · **private vulnerability reporting** · `main` ruleset (+ `develop` if it exists) · **tag ruleset** · **immutable releases** · third-party actions pinned to SHA · minimal `permissions:`. The assistant's PAT manages alerts autonomously, **never touching `Administration: write`**.
+
+> 🔎 **`immutable releases` is scriptable, not UI-only.** The `PUT /repos/{owner}/{repo}/immutable-releases` endpoint exists and falls under `Administration: write`, **already** part of the admin PAT recipe: **nothing to add, everything to automate**.
+
+### 🔴 CodeQL: **default setup**, and above all NO committed `codeql.yml`
+
+**There is no more `codeql.yml` in the template.** `configure-repo.sh` enables GitHub's **default setup** via the API *(`PATCH /repos/{o}/{r}/code-scanning/default-setup`, `Administration: write` — already in the admin PAT recipe)*.
+
+**Why native wins here — and it's not a matter of taste:**
+
+| | our old `codeql.yml` | **default setup** |
+|---|---|---|
+| Languages analyzed | **ONE, hard-coded** | **all**, **auto-detected** |
+| A language shows up in the repo | **ignored forever** *(no one thinks to edit the YAML)* | **analyzed automatically** — [GitHub updates the config](https://github.blog/changelog/2023-06-26-code-scanning-default-setup-automatically-updates-when-the-languages-in-the-repository-change/) |
+| Scheduled scans | a `cron` we maintain | **included** |
+| Maintenance | **ours** | **GitHub's** |
+
+> 🔴 **This wasn't a preference, it was a HOLE**: a `codeql.yml` hard-coded to one language leaves **the rest of the repo unanalyzed** — including its own workflows. The custom code was **degraded** native, and it degraded a **security control**.
+
+**What default setup can't do** *(the exit door, if a project ever needs it)*: custom query packs · `paths-ignore` · custom build steps · uploads from an external CI.
+→ **Only then**, go back to a committed `codeql.yml` — **and declare ALL the repo's languages by hand**, for good.
+
+**Consequences not to miss:**
+- **PRIVATE repo (Free)**: default setup is **unavailable** *(GHAS required)* — exactly like the workflow was. **Nothing changes**: `Semgrep` + `osv-scanner` remain the mitigation *(see below)*.
+- **CodeQL no longer "wakes up" on its own at the flip**: it's **rerunning `configure-repo.sh`** that enables it — and that rerun is **already mandatory** in the visibility-flip procedure *(§18)*. No new action.
+- A **legacy** repo still carrying a `codeql.yml`: enabling it moves it to **`disabled_manually`** — GitHub refuses both modes at once. The script **says so** instead of doing it silently. **Then delete the file: an orphaned workflow is a control nobody reads anymore.**
+- The check run **keeps the name `CodeQL`**: the `code_scanning` ruleset rule *(`tool: CodeQL`)* is **unchanged**, and keeps blocking PRs.
+
+### Recommended controls (industry best practices)
+
+| Control | What it prevents | Where |
+|---|---|---|
+| **Ruleset on `v*` tags** (`deletion`, `update`) | A release tag being **moved or deleted**. **Without it, the §13 version pin guarantees NOTHING**: prod pins `X.Y.Z` believing it froze an artefact, while the tag can point elsewhere tomorrow. | `configure-repo.sh` |
+| **Immutable releases** *(GA 2025-10-28)* | A published release's **assets** being **replaced**. It's the counterpart of the `tags` ruleset: that one freezes the **tag**, this one freezes the **content**. Without both, the §13 pin can be bypassed **without touching the tag** — republishing a different binary under the same one. **NOT RETROACTIVE: "immutability will only apply to future releases" → set BEFORE v1.** | `configure-repo.sh` *(at the public flip)* |
+| **Private vulnerability reporting** | An external researcher having **no way to report privately** — and so publishing the flaw as a public issue instead. **Without it, the `SECURITY.md` link is DEAD.** | `configure-repo.sh` |
+| **`dependency-review-action`** (PR) | A vulnerable or badly-licensed dependency **getting in**. Dependabot only alerts **AFTER** merge: the two are complementary, not redundant. | `ci-node.yml` |
+| **`actionlint` + `zizmor`** (PR) | **The workflows themselves** being the hole: a `${{ }}` interpolated into a `run:` is a **shell injection**. | `ci-*.yml` |
+| **`persist-credentials: false`** | The `GITHUB_TOKEN` **lingering in `.git/config`** and leaking via an artefact (the `artipacked` audit). | every `checkout` |
+| **`default_workflow_permissions: read`** | A **future** workflow, written without a `permissions:` block, inheriting a **write** `GITHUB_TOKEN`. Our workflows all declare it — this is a safety net, not an immediate gain. | `configure-repo.sh` |
+| **Renovate `groupName`** | **Noise**: minor + patch grouped into **one** PR. **Majors stay isolated** — a major can break things, it deserves to be looked at alone. | `renovate.json` |
+| **Trivy** on the image (PR) — *capability **`artefact`*** | An image carrying a **CRITICAL/HIGH** CVE reaching `main`. Scanning **at deployment is too late**: the image is already tagged and prod pins it. The **`build-check`** job is a **REQUIRED** check — otherwise the scan is **decorative**. | `docker-publish.yml` |
+| **Weekly Trivy on the PUBLISHED image** — *capability **`artefact`*** | An image **already in prod** becoming vulnerable **with nothing saying so**. The PR gate no longer looks at anything after merge, and Renovate only catches up if the base image **moves**: a line of images that **stops being rebuilt** produces no bump, no PR, no scan — the CVE keeps being served. **This is a watch scan, not a gate**: it isn't required anywhere, it **alerts**. | `docker-publish.yml` |
+
+### Who updates dependencies and pinned tools — Renovate, the sole auto-detecting bot
+
+**The pin protects against supply chain attacks AND rots detection.** Both are true at once: a frozen `gitleaks` misses new secret formats, a frozen `semgrep` never gets new rules. **A frozen security scanner eventually misses what it's supposed to find.** Hence a bot that bumps — but which one, and over what scope?
+
+**Renovate is the ONLY update bot, and it AUTO-DETECTS everything.** It discovers every ecosystem from the repo's manifests *(npm, pip, docker, actions, gradle, cargo, go, conan…)* **with no list to maintain**, and can ALSO read a `curl`-ed binary inside a `run:` — something Dependabot cannot do. That's what makes the scope **universal**: a language added tomorrow is covered **without touching the template**. Dependabot, on the other hand, requires declaring every `package-ecosystem` **by hand** *(no auto-discovery — the opposite of CodeQL)*: keeping it as the update bot meant a manual list rotting silently. **So it was removed from the update role.**
+
+> **But its ALERTS stay.** Dependabot's CVE detection *(native, free even in private)* keeps running; **Renovate READS it** *(`vulnerabilityAlerts`)* to open its remediation PRs. What changed is *who opens the PR*, not *who detects*. `configure-repo.sh` leaves **alerts** on everywhere: it's the **dependency graph** that Renovate reads *(without it, its security path would be empty, silently)*.
+
+**Security updates, however, depend on the number of stages** — because their PRs **always target the default branch**, and `target-branch` only redirects *version* updates.
+
+| | Dependabot security updates | Why |
+|---|---|---|
+| **2 stages** *(`main` only)* | **ON** — the safety net | The default target **is** the right branch. Overlap with Renovate's security PRs = tolerated noise; a silent hole = not tolerated. Transitional: moves to `disabled` **once a Renovate security PR has been observed on a private repo**. |
+| **3 stages** *(`develop` exists)* | **OFF** | Its PR would enter through `main`, **bypassing staging** — exactly what the 3 stages exist to prevent. Renovate, on the other hand, knows how to target `develop` *(`baseBranchPatterns`)*. The safety net can't play its role here: all that's left is the bypass. |
+
+> ⚠️ **The removal is conditioned on proof that Renovate is alive** — its *Dependency Dashboard* updated less than 14 days ago *(two weekly-schedule cycles)*. **A dashboard existing proves nothing**: a `disabled` repo keeps its own *(lived through it — 6 days of dead bots)*. Without the proof, `configure-repo.sh` **keeps** Dependabot and **says so**: pulling the safety net while betting on a dead bot is the July outage.
+
+| What | How Renovate bumps it |
+|---|---|
+| `uses:` (actions) · npm · docker (`FROM`) · pip *(`requirements-ci.txt` → zizmor, semgrep)* · any other manifest | **auto-detected native manager** — no declaration |
+| `gitleaks` · `actionlint` · `osv-scanner` · `trivy` *(binaries pinned by VERSION + SHA256 inside a `run:`)* | **`customManagers` regex** — `github-release-attachments` datasource: bumps **version AND checksum in the same PR** |
+
+> 🟢 **No `enabledManagers`: Renovate auto-detects EVERY manager.** *(Removed at the full-Renovate switch — it was the opposite as long as Dependabot handled version updates, to avoid duplicate PRs. Without `dependabot.yml`, duplicate version-update PRs can no longer happen.)* The `customManagers` cover the 4 extra binaries; they run regardless.
+
+**Update policy** *(stay current, but through reviewed actions)*: routine version = **PR reviewed by a human** (`automerge` false at the top level); **SECURITY = auto-merge** (`vulnerabilityAlerts.automerge`). Security PRs **natively bypass `minimumReleaseAge`** — the 3-day anti-compromised-release delay stays on routine updates, **never** on a CVE fix.
+
+**Safety net**: a wrong checksum makes `sha256sum -c` fail **in CI** — loudly, never silently. A red PR gets closed; it cannot poison `main`.
+
+**Prerequisite**: the **Renovate** app must be installed on the repo *(GitHub UI, free)*. Without it, `renovate.json` is **inert**. As a fallback, self-hosting `renovatebot/github-action` *(AGPL-3.0, free forever)* runs the same config — at the cost of a **classic `repo`-scoped PAT** *(fine-grained ones don't work with Renovate)*.
+
+> **Pinning policy — `.github/zizmor.yml`**: full SHA required for **any third-party action**; **a major-version tag tolerated for `actions/*` and `github/*`** (compromising them means compromising GitHub itself). This isn't fussiness: in **March 2026, 75 of the 76 tags of `aquasecurity/trivy-action` were force-pushed**. A tag is mutable; a SHA is not.
+
+**Rejected, after review**: SLSA attestations (no one else consumes the images → signing into a void) · OpenSSF Scorecard (measures *process* compliance, a gameable score) · CODEOWNERS and merge queue (multi-contributor territory).
+
+---
+
+## 18. Control matrix — what, where, when, by whom
+
+> Principle: **every defect is caught as early as possible**, and each stage catches what the previous one let through.
+
+| Stage | Controls | When | By whom |
 |---|---|---|---|
-| **Pre-commit** *(local)* | **gitleaks** (fichiers stagés) — **et rien d'autre** : pas de lint. *Aucun linter n'est universel aux trois toolchains (static n'a pas de toolchain, node dépend du projet, generic est un stub à remplir) : imposer un `eslint` que la moitié des projets n'ont pas ferait échouer le hook au premier commit. Le lint appartient au projet, pas au template.* | à chaque commit | poste de dev |
-| **Push** *(serveur)* | **secret scanning push protection** | à chaque push | GitHub |
-| **PR** *(CI)* | **gitleaks** (historique **complet**) · **actionlint** + **zizmor** (les workflows) · **Semgrep** + **osv-scanner** *(les seuls qui tournent en PRIVÉ — voir ci-dessous)* · **CodeQL** *(public seulement)* · tests + typecheck + `npm audit` + **dependency-review** *(public seulement)* + **Trivy sur l'image** (*capacité `artefact`* — **pas** « node » : un site `static` qui publie une image l'a aussi) · syntax-check (toolchain `static`) | à chaque PR | GitHub Actions |
-| **Serveur** | ruleset `main` (+ `develop` si elle existe) : PR obligatoire, **checks requis (`checks` + CodeQL + `build-check` si image Docker)**, no force-push/deletion · **ruleset tags `v*`** (ni suppression ni déplacement) **+ immutable releases** (ni remplacement des assets) — *les deux, sinon le pin du §13 se contourne* · secret scanning · **private vulnerability reporting** | en continu | GitHub |
-| **Planifié** | CodeQL · **Dependabot alerts** *(détection CVE)* · **Renovate** *(updates de version + remédiation sécu auto-mergée)* · **Trivy sur l'image publiée** *(capacité `artefact`)* | hebdomadaire | GitHub · Renovate · GitHub Actions |
-| **Rotation** | PAT d'écriture — **alerte J-14** dans `.envrc` (§5) | tous les 90 j | Claude alerte · Romain régénère |
+| **Pre-commit** *(local)* | **gitleaks** (staged files) — **and nothing else**: no lint. *No linter is universal across the three toolchains (static has no toolchain, node depends on the project, generic is a stub to fill in): forcing an `eslint` that half the projects don't have would fail the hook on the very first commit. Lint belongs to the project, not the template.* | on every commit | dev machine |
+| **Push** *(server)* | **secret scanning push protection** | on every push | GitHub |
+| **PR** *(CI)* | **gitleaks** (**full** history) · **actionlint** + **zizmor** (the workflows) · **Semgrep** + **osv-scanner** *(the only ones that run in PRIVATE — see below)* · **CodeQL** *(public only)* · tests + typecheck + `npm audit` + **dependency-review** *(public only)* + **Trivy on the image** (*`artefact` capability* — **not** "node": a `static` site that publishes an image has it too) · syntax-check (`static` toolchain) | on every PR | GitHub Actions |
+| **Server** | `main` ruleset (+ `develop` if it exists): PR required, **required checks (`checks` + CodeQL + `build-check` if a Docker image)**, no force-push/deletion · **`v*` tags ruleset** (no deletion or moving) **+ immutable releases** (no asset replacement) — *both, otherwise the §13 pin can be bypassed* · secret scanning · **private vulnerability reporting** | continuously | GitHub |
+| **Scheduled** | CodeQL · **Dependabot alerts** *(CVE detection)* · **Renovate** *(version updates + auto-merged security remediation)* · **Trivy on the published image** *(`artefact` capability)* | weekly | GitHub · Renovate · GitHub Actions |
+| **Rotation** | Write PAT — **J-14 alert** in `.envrc` (§5) | every 90 days | Claude alerts · the maintainer regenerates |
 
-> **Trois barrières bloquent réellement, et elles sont redondantes à dessein** : le **hook** attrape tôt mais est *local*, contournable (`--no-verify`) et **absent d'un clone frais** ; la **push protection** n'attrape que les patterns GitHub *connus* ; la **CI** scanne tout l'historique et **garantit** — c'est la seule que personne ne peut sauter, parce que le ruleset l'exige avant merge.
+> **Three barriers actually block, and they're redundant on purpose**: the **hook** catches early but is *local*, bypassable (`--no-verify`), and **absent from a fresh clone**; **push protection** only catches *known* GitHub patterns; **CI** scans the whole history and **guarantees** — it's the only one nobody can skip, because the ruleset requires it before merge.
 
-### En privé, RIEN n'est exigé — la discipline est le seul filet, donc elle est OUTILLÉE
+### In private, NOTHING is enforced — discipline is the only net, so it's TOOLED
 
-Sur un repo privé/Free, **il n'y a aucun ruleset**. Tous les contrôles **tournent**, **aucun n'est requis** : GitHub accepterait un `git push` **direct sur `main`**, et une PR **rouge** peut être mergée. La couverture est bonne ; c'est **l'exécution forcée** qui manque.
+On a private/Free repo, **there is no ruleset at all**. Every control **runs**, **none is required**: GitHub would accept a `git push` **directly to `main`**, and a **red** PR can be merged. Coverage is good; it's **forced execution** that's missing.
 
-> ⚠️ **Une discipline qui n'est qu'écrite n'existe pas.** Elle est donc portée par des outils partout où c'est possible, et réduite à une seule règle humaine là où ça ne l'est pas.
+> ⚠️ **Discipline that's only written down doesn't exist.** So it's carried by tooling everywhere that's possible, and reduced to a single human rule where it isn't.
 
-| Ce qu'il faut tenir | Comment c'est tenu | Contournable ? |
+| What must be upheld | How it's upheld | Bypassable? |
 |---|---|---|
-| Pas de secret commité | hook **`pre-commit`** (`gitleaks`) | `--no-verify` → **la CI rejoue sur l'historique complet** |
-| **Pas de push direct sur `main`/`develop`** | hook **`pre-push`** — *le substitut du ruleset absent* | `--no-verify` (**une décision, pas un accident**) |
-| **Ne jamais merger une PR rouge** | ❗ **règle humaine** — vérifier que **tous les workflows attendus** sont `completed / success` *(commande ci-dessous — surtout **pas** `gh pr checks`)* | rien ne l'empêche côté serveur |
+| No secret committed | **`pre-commit`** hook (`gitleaks`) | `--no-verify` → **CI replays it on the full history** |
+| **No direct push to `main`/`develop`** | **`pre-push`** hook — *the substitute for the missing ruleset* | `--no-verify` (**a decision, not an accident**) |
+| **Never merge a red PR** | ❗ **human rule** — verify that **every expected workflow** is `completed / success` *(command below — above all **not** `gh pr checks`)* | nothing stops it server-side |
 
-> 🔴 **`gh pr checks <n>` est INUTILISABLE avec le PAT du standard — la règle était écrite partout, et inapplicable partout.**
-> Elle lit `statusCheckRollup`, qui exige la permission **`Checks`**. Cette permission est **documentée** par GitHub mais **absente de l'UI** des PAT fine-grained : elle **ne peut pas être accordée** *(github/community#129512, cli/cli#12597)*. Résultat : `Resource not accessible by personal access token`. *(`gh pr view <n>` tout court échoue pour la même raison.)*
-> **Rien à ajouter au PAT** — la commande ci-dessous n'a besoin que d'`Actions: read`, déjà dans la matrice (§5).
+> 🔴 **`gh pr checks <n>` is UNUSABLE with this standard's PAT — the rule was written everywhere, and unusable everywhere.**
+> It reads `statusCheckRollup`, which requires the **`Checks`** permission. This permission is **documented** by GitHub but **absent from the UI** for fine-grained PATs: it **cannot be granted** *(github/community#129512, cli/cli#12597)*. Result: `Resource not accessible by personal access token`. *(`gh pr view <n>` alone fails for the same reason.)*
+> **Nothing to add to the PAT** — the command below only needs `Actions: read`, already in the matrix (§5).
 >
 > ```bash
-> sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # --json cible → plus de rollup demandé
+> sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # --json targets → no rollup requested
 > gh run list --commit "$sha"
 > ```
 >
-> **VERT ⇔ TOUS les workflows ATTENDUS sont `completed / success`** : `CI`, **+ `Publish image`** si `docker-publish.yml` existe — *le même ensemble que les checks requis du ruleset, dérivé de la même façon (la présence du workflow)*, pour que la barrière humaine et le serveur qui la remplacera au flip disent exactement la même chose.
-> ⚠️ **Un workflow ABSENT n'est PAS un vert.** GitHub enregistre les workflows **un par un** : pendant quelques secondes après un push, `CI` peut être `success` alors que `Publish image` n'est pas encore créé. Se contenter de « aucun échec » déclare alors la PR mergeable **en ratant un check**. **« Rien de rouge » ≠ « tout est vert ».**
+> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists — *the same set as the ruleset's required checks, derived the same way (presence of the workflow)*, so the human barrier and the server that will replace it at the flip say exactly the same thing.
+> ⚠️ **A MISSING workflow is NOT a green.** GitHub registers workflows **one by one**: for a few seconds after a push, `CI` can be `success` while `Publish image` hasn't been created yet. Settling for "nothing red" then declares the PR mergeable **while missing a check**. **"Nothing red" ≠ "everything green".**
 
-Le `pre-push` **laisse passer la création** d'une branche (sinon le 1ᵉʳ push d'un repo neuf serait impossible) et **reste actif en public** — le serveur refuse alors le même push, mais le message local est bien plus clair. *Défense en profondeur.*
+The `pre-push` hook **lets branch creation through** (otherwise a fresh repo's first push would be impossible) and **stays active in public** — the server then refuses the same push, but the local message is far clearer. *Defense in depth.*
 
-**Le seul point réellement humain est le merge d'une PR rouge** : aucun hook ne peut l'intercepter, le merge se joue côté serveur. → écrit dans **`AGENTS.md`** (donc lu par les agents) et dans `CONTRIBUTING.md`.
-**Tout cela s'efface au passage en public** : les rulesets *exigent* alors les checks, et le serveur applique ce que la discipline seule retenait.
+**The one truly human point is merging a red PR**: no hook can intercept it, the merge happens server-side. → written into **`AGENTS.md`** (so read by agents) and into `CONTRIBUTING.md`.
+**All of this fades away at the public flip**: rulesets then *require* the checks, and the server enforces what discipline alone used to hold.
 
-### Le trou de la phase privée — et pourquoi Semgrep + osv-scanner existent
+### The hole in the private phase — and why Semgrep + osv-scanner exist
 
-**Un repo passe toute sa jeunesse en privé.** Or en privé/Free, **CodeQL et `dependency-review` sont indisponibles** (ils exigent GHAS). Sans parade, **le code n'est jamais analysé statiquement** jusqu'au jour du flip — et CodeQL déverse alors **tout l'arriéré d'un coup**.
+**A repo spends its whole youth private.** Yet on private/Free, **CodeQL and `dependency-review` are unavailable** (they require GHAS). Without a mitigation, **the code is never statically analyzed** until flip day — and CodeQL then dumps **the entire backlog at once**.
 
-> 🚫 **Impasse vérifiée : CodeQL est INTERDIT sur du code privé — par LICENCE, pas par une limite technique.** La licence du CodeQL CLI exclut *« any codebase that is not an Open Source Codebase (e.g., code in a private repo) »* sauf licence **GHAS payante** (~30 $/committer/mois, plan Team). **Aucun contournement légal**, même en local. → **GHAS écarté** : on paierait pour un **état transitoire**, alors que tout devient **gratuit** dès que le repo est public.
+> 🚫 **Verified dead end: CodeQL is FORBIDDEN on private code — by LICENSE, not by a technical limit.** The CodeQL CLI license excludes *"any codebase that is not an Open Source Codebase (e.g., code in a private repo)"* except with a **paid GHAS license** (~$30/committer/month, Team plan). **No legal workaround**, even locally. → **GHAS rejected**: paying for a **transitional state**, when everything becomes **free** as soon as the repo goes public.
 
-| Outil | En privé | Rôle | Limite à connaître |
+| Tool | In private | Role | Limitation to know |
 |---|---|---|---|
-| **Semgrep OSS** | ✅ gratuit, **sans compte ni token** | Analyse statique — le **recouvrement partiel mais réel** avec CodeQL | **Fichier par fichier** : aucune analyse inter-fichiers. Il **PRÉCÈDE** CodeQL, il ne le remplace **pas**. |
-| **osv-scanner** | ✅ gratuit (Apache-2.0) | **L'équivalent de `dependency-review`, qui lui marche en privé** | Base OSV : pas de contrôle de **licence** → `dependency-review` reste utile en public. |
+| **Semgrep OSS** | ✅ free, **no account or token** | Static analysis — **partial but real** overlap with CodeQL | **File by file**: no cross-file analysis. It **PRECEDES** CodeQL, it does **not** replace it. |
+| **osv-scanner** | ✅ free (Apache-2.0) | **The equivalent of `dependency-review`, which does work in private** | OSV database: no **license** check → `dependency-review` stays useful in public. |
 
-**Gardés en PERMANENCE**, pas seulement en privé : Semgrep attrape ce que CodeQL rate, et **la phase privée est celle où l'on écrit le plus de code** — donc celle où l'on veut *plus* de signal, pas moins.
+**Kept PERMANENTLY**, not just in private: Semgrep catches what CodeQL misses, and **the private phase is when the most code gets written** — so it's when *more* signal is wanted, not less.
 
-⚠️ **`--exclude=.github` sur Semgrep, et c'est délibéré** : ses règles sur les workflows **contredisent** notre politique de pin (SHA pour le tiers, tag majeur toléré pour `actions/*` — cf. `.github/zizmor.yml`). Sans cette exclusion, **tout scaffold neuf échoue dès sa 1ʳᵉ PR**. Les workflows ont **déjà** leurs linters dédiés (`actionlint` + `zizmor`). **Un périmètre par outil, aucun recouvrement.**
+⚠️ **`--exclude=.github` on Semgrep, and it's deliberate**: its rules on workflows **contradict** our pinning policy (SHA for third parties, major tag tolerated for `actions/*` — cf. `.github/zizmor.yml`). Without this exclusion, **every fresh scaffold fails on its very first PR**. Workflows already have **their own dedicated linters** (`actionlint` + `zizmor`). **One scope per tool, no overlap.**
 
-**Ce que ça ne résout pas** : le 1ᵉʳ passage de CodeQL au flip reste **une étape de triage assumée** — mais sur un code **déjà défriché**, c'est un *résidu*, plus une avalanche.
+**What this doesn't solve**: CodeQL's first pass at the flip remains **an assumed triage step** — but on code **already cleared**, it's a *residue*, not an avalanche.
 
-### La matrice n'est PAS uniforme — elle dépend de la visibilité
+### The matrix is NOT uniform — it depends on visibility
 
-| Étage | Repo **public** (Free) | Repo **privé** (Free) |
+| Stage | **Public** repo (Free) | **Private** repo (Free) |
 |---|---|---|
 | Pre-commit | ✅ | ✅ |
 | PR (CI) | ✅ | ✅ |
-| Serveur (ruleset, secret scanning) | ✅ | ❌ **indisponible** |
-| Planifié — CodeQL | ✅ | ❌ **indisponible** |
-| Planifié — Renovate + Dependabot alerts | ✅ | ✅ *(gratuit sur privé)* |
+| Server (ruleset, secret scanning) | ✅ | ❌ **unavailable** |
+| Scheduled — CodeQL | ✅ | ❌ **unavailable** |
+| Scheduled — Renovate + Dependabot alerts | ✅ | ✅ *(free in private)* |
 
-**Conséquence, à ne pas manquer** : sur un repo **privé**, les étages *serveur* et *CodeQL* sont **vides**. Le **pre-commit devient le seul filet anti-secret** — `gitleaks` n'y est pas un confort, c'est la seule barrière. C'est ce qui fait du pre-commit le **socle**, et non un raffinement.
+**Consequence, not to miss**: on a **private** repo, the *server* and *CodeQL* stages are **empty**. **Pre-commit becomes the only anti-secret net** — `gitleaks` there isn't a nicety, it's the only barrier. That's what makes pre-commit the **foundation**, not a refinement.
 
-Un repo privé gagne les trois étages manquants **d'un coup** en passant public → c'est le moment de rejouer `configure-repo.sh` (§10, étape 7), **après** un `gitleaks detect` sur l'**historique complet** (§17) : au flip de visibilité, un secret enfoui dans un vieux commit devient public.
+A private repo gains the three missing stages **all at once** by going public → that's the moment to rerun `configure-repo.sh` (§10, step 7), **after** a `gitleaks detect` on the **full history** (§17): at the visibility flip, a secret buried in an old commit becomes public.
 
-### Mise en œuvre
-- **Hook** : `repo/.githooks/pre-commit` — **versionné** (donc partagé), activé par `git config core.hooksPath .githooks` (posé par `init-project.sh` ; **un clone frais doit le reposer**).
-  Il lance `gitleaks git --staged --redact` : **exit 1 → commit bloqué**, silencieux si tout va bien. **Échec dur si gitleaks est absent** — un scanner manquant ne doit jamais ressembler à un scan propre.
-- **CI** : **binaire `gitleaks` épinglé + checksum vérifié** (⚠️ **PAS `gitleaks-action`** : elle exige une **licence** sur un repo d'**ORGANISATION** → la CI serait **rouge d'office**), avec `fetch-depth: 0` → scan de l'**historique complet**, sur les **deux** toolchains.
+### Implementation
+- **Hook**: `repo/.githooks/pre-commit` — **versioned** (hence shared), enabled via `git config core.hooksPath .githooks` (set by `init-project.sh`; **a fresh clone must set it again**).
+  It runs `gitleaks git --staged --redact`: **exit 1 → commit blocked**, silent when everything is fine. **Hard failure if gitleaks is missing** — a missing scanner must never look like a clean scan.
+- **CI**: **pinned `gitleaks` binary + verified checksum** (⚠️ **NOT `gitleaks-action`**: it requires a **license** on an **ORGANIZATION** repo → CI would be **red by default**), with `fetch-depth: 0` → scans the **full history**, on **both** toolchains.
 
-### Pourquoi le pre-commit ne suffit pas seul
-Un hook local est **contournable** (`git commit --no-verify`) et n'existe que sur la machine qui l'a installé. D'où le doublon **gitleaks en CI** : le hook attrape tôt, la CI **garantit**. Les deux, pas l'un ou l'autre.
+### Why pre-commit alone isn't enough
+A local hook is **bypassable** (`git commit --no-verify`) and only exists on the machine that installed it. Hence the duplication with **gitleaks in CI**: the hook catches early, CI **guarantees**. Both, not either.
 
-### ⚠ Auditer un historique : scanner `main`, PAS la branche courante
-`gitleaks git` scanne l'historique accessible depuis **HEAD**. Lancé depuis une branche de travail, il ne dit **rien** de l'état de `main` — les deux historiques divergent dès qu'ils ont des commits propres.
+### ⚠ Auditing a history: scan `main`, NOT the current branch
+`gitleaks git` scans the history reachable from **HEAD**. Run from a working branch, it says **nothing** about the state of `main` — the two histories diverge as soon as they have their own clean commits.
 
-**Procédure correcte** — depuis un worktree détaché sur la cible, pour ne pas perturber l'arbre de travail :
+**Correct procedure** — from a detached worktree on the target, so as not to disturb the working tree:
 ```bash
 git fetch origin main
 git worktree add --detach /tmp/scan origin/main
 ( cd /tmp/scan && gitleaks git --no-banner --redact )
 git worktree remove --force /tmp/scan
 ```
-**Avant un passage privé → public** (§17), c'est **toutes les refs** qu'il faut couvrir, pas seulement `main` : un secret dans une vieille branche poussée devient public lui aussi.
+**Before a private → public switch** (§17), it's **every ref** that needs covering, not just `main`: a secret in an old pushed branch becomes public too.
 
-### Passage privé → public — **étape normale du flux**, pas un cas particulier
+### Private → public switch — **a normal step in the flow**, not a special case
 
-**C'est le chemin nominal** (§10) : tout repo naît privé et bascule public. Un repo privé en Free n'a **ni ruleset, ni CodeQL, ni secret scanning** — il les gagne **tous d'un coup** au flip.
+**This is the nominal path** (§10): every repo is born private and later flips public. A private repo on Free has **no ruleset, no CodeQL, no secret scanning** — it gains **all of them at once** at the flip.
 
-> ⚠️ **Le flip est le moment le plus dangereux du cycle de vie d'un repo** : **tout l'historique devient public d'un seul coup**, y compris un secret enfoui dans un commit vieux de six mois — et il aura été poussé pendant la phase où **aucun secret scanning côté serveur n'existait**. D'où le passage gitleaks sur toutes les refs, ci-dessous, non négociable.
+> ⚠️ **The flip is the most dangerous moment in a repo's lifecycle**: **the entire history goes public at once**, including a secret buried in a six-month-old commit — and it will have been pushed during the phase where **no server-side secret scanning existed at all**. Hence the gitleaks pass over every ref, below, non-negotiable.
 
-**Ce que la bascule exige, et pourquoi** *(déroulé exact — qui fait quoi, dans quel ordre : RUNBOOK §4)* :
+**What the switch requires, and why** *(exact sequence — who does what, in what order: RUNBOOK §4)*:
 
-- **`gitleaks` sur TOUTES les refs**, pas seulement `main`, depuis un **worktree détaché** (§18) — un secret dans une vieille branche poussée devient public lui aussi.
-- **Rejouer `configure-repo.sh`** (PAT admin **éphémère**) : il pose le ruleset `main`, secret scanning + push protection, Dependabot, **immutable releases**, description, **topics**, **active CodeQL** *(default setup)*, et choisit la **méthode de merge selon la capacité `staging`** (squash seul ; + merge commit si `develop` existe — squash seul est incompatible avec une branche de staging, §12). Le script est **idempotent** : rejouable sans dégât.
-- **Rien à faire pour les workflows.** `pages.yml` porte `if: github.event.repository.visibility != 'private'` : il est **`skipped`** en privé et **se réveille seul** au flip. ⚠️ **CodeQL, lui, n'est PLUS un workflow** *(plus de `codeql.yml` — §17)* : c'est le rejeu de `configure-repo.sh` qui l'active, en *default setup*, et **attend sa 1ʳᵉ analyse** avant de poser la règle `code_scanning` — sans quoi `main` resterait non gardée.
-- **Repo d'ORG — SYSTÉMATIQUE, jamais une exception** : le réglage de modération « Reported content » est **UI-only** (aucune API REST/GraphQL) et n'est appliqué par défaut qu'aux repos **créés publics** — donc **jamais aux nôtres**, nés privés. Sans lui, le community health plafonne. **Chemin exact + valeur : RUNBOOK §5 · github-repo-config §5.6.**
-- **Vérifier ensuite, en lecture** : community health **100 %** · CodeQL **vert** · ruleset **actif** · secret scanning **on**.
+- **`gitleaks` on EVERY ref**, not just `main`, from a **detached worktree** (§18) — a secret in an old pushed branch becomes public too.
+- **Rerun `configure-repo.sh`** (**ephemeral** admin PAT): it sets the `main` ruleset, secret scanning + push protection, Dependabot, **immutable releases**, description, **topics**, **enables CodeQL** *(default setup)*, and picks the **merge method based on the `staging` capability** (squash only; + merge commit if `develop` exists — squash-only is incompatible with a staging branch, §12). The script is **idempotent**: safe to rerun.
+- **Nothing to do for the workflows.** `pages.yml` carries `if: github.event.repository.visibility != 'private'`: it is **`skipped`** in private and **wakes up on its own** at the flip. ⚠️ **CodeQL, though, is NO LONGER a workflow** *(no more `codeql.yml` — §17)*: it's rerunning `configure-repo.sh` that enables it, in *default setup*, and **waits for its first analysis** before setting the `code_scanning` rule — otherwise `main` would be left unguarded.
+- **ORG repo — SYSTEMATIC, never an exception**: the "Reported content" moderation setting is **UI-only** (no REST/GraphQL API) and is only applied by default to repos **created public** — so **never to ours**, born private. Without it, community health caps out. **Exact path + value: RUNBOOK §5 · github-repo-config §5.6.**
+- **Then verify, read-only**: community health **100%** · CodeQL **green** · ruleset **active** · secret scanning **on**.
 
-> **Pourquoi les workflows s'auto-gèrent au lieu d'être ajoutés au flip** : une procédure manuelle est un coût récurrent et *oubliable*. Un job qui échoue à chaque run sur un repo privé rend la CI rouge en permanence — et **une CI toujours rouge n'est plus lue**. La condition est écrite `!= 'private'` (jamais `== 'public'`) : si le champ venait à manquer du payload, le job **tourne** (du bruit) au lieu de **désactiver silencieusement un contrôle de sécurité**. **CodeQL faisait exception à ce principe, et c'était le mauvais arbitrage** — son `codeql.yml` s'auto-gérait, mais au prix d'un seul langage figé que personne ne mettait à jour (§17). Le geste existait déjà : le rejeu de `configure-repo.sh` est obligatoire au flip.
+> **Why the workflows manage themselves instead of being added at the flip**: a manual procedure is a recurring, *forgettable* cost. A job that fails on every run on a private repo makes CI permanently red — and **CI that's always red stops being read**. The condition is written `!= 'private'` (never `== 'public'`): if the field were ever missing from the payload, the job **runs** (noise) instead of **silently disabling a security control**. **CodeQL was the exception to this principle, and it was the wrong tradeoff** — its `codeql.yml` did manage itself, but at the cost of one frozen language nobody kept updated (§17). The action already existed: rerunning `configure-repo.sh` is mandatory at the flip.
 
-### Acquérir une CAPACITÉ sur un repo déjà vivant
+### Acquiring a CAPABILITY on an already-live repo
 
-Le repo garde tout le reste : on ne change pas de catégorie, on **ACQUIERT une capacité**. Un site Pages qui se met à publier une image **reste** un site Pages.
+The repo keeps everything else: the category doesn't change, a capability is **ACQUIRED**. A Pages site that starts publishing an image **stays** a Pages site.
 
-`init-project.sh` pose les capacités **à la création**. Ici le repo a déjà un historique, des rulesets et des checks requis : on ne rejoue pas le générateur, on **ajoute** — dans le bon ordre.
+`init-project.sh` sets capabilities **at creation**. Here the repo already has history, rulesets, and required checks: the generator isn't rerun, capabilities are **added** — in the right order.
 
-> ⚠️ **L'ORDRE EST LE PIÈGE, et il est contre-intuitif.** `configure-repo.sh` rend `build-check` **requis** dès qu'il voit `docker-publish.yml` sur `main`. Rejoué **avant** que le workflow y soit, il exige un check **qui ne rapportera jamais** : toute PR reste bloquée à jamais sur *« Expected — waiting for status »* — **y compris celle qui apporte le workflow**. Le repo **se verrouille lui-même**.
-> **→ Le workflow doit atteindre `main` AVANT que le script ne l'exige.** Cette règle vaut pour toute capacité qui ajoute un **check requis**.
+> ⚠️ **THE ORDER IS THE TRAP, and it's counter-intuitive.** `configure-repo.sh` makes `build-check` **required** as soon as it sees `docker-publish.yml` on `main`. Run **before** the workflow is there, it demands a check **that will never report**: every PR stays blocked forever on *"Expected — waiting for status"* — **including the one that brings the workflow**. The repo **locks itself out**.
+> **→ The workflow must reach `main` BEFORE the script requires it.** This rule applies to any capability that adds a **required check**.
 
-#### Acquérir `--artefact` — « je veux que d'autres puissent auto-héberger mon projet »
+#### Acquiring `--artefact` — "third parties should be able to self-host my project"
 
-*Le cas `rozo-bridge` : une page Pages que l'on packagera en image pour que des tiers la déploient et suivent les updates. **Pages reste**, et il n'y a **aucun `develop` à créer** — il n'existe aucun host à valider.*
+*The Pages-site-plus-Docker case: a Pages page later packaged as an image so third parties can deploy it and track updates. **Pages stays**, and there is **no `develop` to create** — no host exists that needs validation.*
 
-*(Déroulé exact — qui fait quoi, dans quel ordre : RUNBOOK §5.)*
+*(Exact sequence — who does what, in what order: RUNBOOK §5.)*
 
-- `Dockerfile` + `docker-publish.yml` arrivent **par PR**, avant que `build-check` ne soit requis — c'est ce qui évite le piège de l'ordre (plus haut : « l'ordre est le piège »).
-- **Page statique → `FROM nginx:alpine`** *(un serveur web, pas une toolchain — §14)*, **suivi de `RUN apk upgrade --no-cache`.** 🔴 **Cette ligne n'est PAS cosmétique** : `nginx:alpine` est en retard sur les paquets Alpine et peut porter des CVE HIGH déjà corrigées en amont. Trivy tourne avec `--ignore-unfixed` : il les remonte **toutes**, et `build-check` part **ROUGE** — le scanner du template refuse alors l'image que le template recommande, sans cette ligne.
-- **L'image de base est bumpée automatiquement** : Renovate auto-détecte le `FROM` du `Dockerfile` dès qu'il arrive — **rien à déclarer**. *(Sans un bot qui la bumpe, Trivy bloquerait les PR sur une CVE de l'image sans que rien ne propose le correctif — le contrôle détecte, personne ne répare. Renovate ferme ce trou par construction.)*
-- **Ne pas toucher au bloc `## Branching`** ni créer `develop` : sans host à valider, ce serait un rituel vide (§12).
-- Une fois le workflow sur `main`, rejouer `configure-repo.sh` : il détecte `docker-publish.yml`, exige `build-check`, pose le ruleset `tags` et les immutable releases, et **vérifie que l'image est tirable anonymement**.
-- **Le package ghcr peut être privé même si le repo est public** (§13) : sur un compte perso il est tirable d'office ; sur une org, il peut nécessiter un geste manuel (UI, aucune API) — ne le rendre public que si le test échoue.
-- **Immutable releases : avant la v1**, jamais après — elles ne sont pas rétroactives.
-- Documenter l'auto-hébergement dans le README avec un **tag épinglé, jamais `:latest`** (§13).
+- `Dockerfile` + `docker-publish.yml` arrive **via PR**, before `build-check` becomes required — that's what avoids the ordering pitfall (above: "the order is the trap").
+- **Static page → `FROM nginx:alpine`** *(a web server, not a toolchain — §14)*, **followed by `RUN apk upgrade --no-cache`.** 🔴 **This line is NOT cosmetic**: `nginx:alpine` lags behind Alpine packages and can carry HIGH CVEs already fixed upstream. Trivy runs with `--ignore-unfixed`: it surfaces **all** of them, and `build-check` goes **RED** — the template's own scanner then rejects the image the template itself recommends, without this line.
+- **The base image is bumped automatically**: Renovate auto-detects the `Dockerfile`'s `FROM` as soon as it lands — **nothing to declare**. *(Without a bot bumping it, Trivy would block PRs on an image CVE with nothing proposing the fix — the control detects, nobody fixes. Renovate closes that hole by construction.)*
+- **Don't touch the `## Branching` block** or create `develop`: with no host to validate, that would be an empty ritual (§12).
+- Once the workflow is on `main`, rerun `configure-repo.sh`: it detects `docker-publish.yml`, requires `build-check`, sets the `tags` ruleset and immutable releases, and **verifies the image is anonymously pullable**.
+- **The ghcr package can be private even if the repo is public** (§13): on a personal account it's pullable by default; on an org, it may need a manual step (UI, no API) — only make it public if the test fails.
+- **Immutable releases: before v1**, never after — they aren't retroactive.
+- Document self-hosting in the README with a **pinned tag, never `:latest`** (§13).
 
-#### Acquérir `--staging` — « un host apparaît, je veux le valider avant la prod »
+#### Acquiring `--staging` — "a host has appeared, I want to validate it before prod"
 
-*(Déroulé exact : RUNBOOK §5.)* Le bloc `## Branching` de `CONTRIBUTING.md` **et** `AGENTS.md` doit être réécrit en 3 étages (§12) — sinon les deux publient encore GitHub Flow alors que `develop` existe. Pousser `develop` passe : le hook `pre-push` laisse passer la **création** de branche. Une fois `develop` détectée, `configure-repo.sh` pose son ruleset et **autorise le merge commit** sur `main` — squash seul est **incompatible** avec une branche de staging (§12). `docker-publish.yml` écoute déjà les PR vers `main` **et** `develop` : sans ça, une PR vers `develop` resterait bloquée à jamais.
+*(Exact sequence: RUNBOOK §5.)* The `## Branching` block in `CONTRIBUTING.md` **and** in `AGENTS.md` must be rewritten for 3 stages (§12) — otherwise both still advertise GitHub Flow even though `develop` exists. Pushing `develop` goes through fine: the `pre-push` hook lets branch **creation** through. Once `develop` is detected, `configure-repo.sh` sets its ruleset and **allows merge commits** on `main` — squash-only is **incompatible** with a staging branch (§12). `docker-publish.yml` already listens for PRs to `main` **and** `develop`: without that, a PR to `develop` would stay blocked forever.
 
-#### Acquérir / retirer `--pages`
+#### Acquiring / removing `--pages`
 
-**Acquérir** : copier `pages.yml`, y renseigner le `<web-dir>`, et créer le site *(`configure-repo.sh` le fait — `Pages: write`)*. Aucun check requis n'est ajouté → **aucun risque de verrouillage**, l'ordre est libre.
-**Retirer** : supprimer `pages.yml`. Ne **jamais** le laisser tourner « au cas où » — **un workflow orphelin est un contrôle que plus personne ne lit**.
+**Acquiring**: copy `pages.yml`, fill in the `<web-dir>`, and create the site *(`configure-repo.sh` does it — `Pages: write`)*. No required check is added → **no lockout risk**, order is free.
+**Removing**: delete `pages.yml`. **Never** leave it running "just in case" — **an orphaned workflow is a control nobody reads anymore**.
 
-#### Retirer une capacité — le sens inverse
+#### Removing a capability — the reverse direction
 
-Il ne fait que **retirer** des contrôles : aucun risque de verrouillage… **sauf un**, symétrique du piège d'ordre décrit plus haut (« l'ordre est le piège »).
-⚠️ **Retirer `build-check` des checks requis AVANT de supprimer `docker-publish.yml`.** Dans l'autre sens, le check reste exigé alors que plus rien ne le produit → **toute PR est bloquée pour toujours**.
+It only **removes** controls: no lockout risk… **except one**, symmetric to the ordering pitfall described above ("the order is the trap").
+⚠️ **Remove `build-check` from the required checks BEFORE deleting `docker-publish.yml`.** The other way around, the check stays required while nothing produces it anymore → **every PR is blocked forever**.
 
-### Faux positifs : épingler par empreinte, jamais désactiver la règle
-Un identifiant **public** au format d'un secret (adresse de contrat `0x…`/`C…`/`G…`, transaction XDR, hash de mot de passe) déclenche la règle `generic-api-key`. Ces cas se neutralisent dans un **`.gitleaksignore` versionné**, par **empreinte** (`commit:file:rule:line`) et **commenté** — jamais en désactivant la règle : un **vrai** secret dans le même fichier doit rester attrapé.
+### False positives: pin by fingerprint, never disable the rule
+A **public** identifier shaped like a secret (contract address `0x…`/`C…`/`G…`, XDR transaction, password hash) triggers the `generic-api-key` rule. These cases are neutralized in a **versioned `.gitleaksignore`**, by **fingerprint** (`commit:file:rule:line`) and **commented** — never by disabling the rule: a **real** secret in the same file must still get caught.
 
 ---
 
-## 19. Résumé en une phrase
+## 19. One-sentence summary
 
-> **Un seul dossier à backuper** (`~/Documents/Claude/<projet>/`), **deux sous-dossiers** : `repo/` pour ce qui va sur GitHub, `workspace/` pour tout le reste. **Une seule source de vérité** par type de secret. **Zéro SSH** — lecture via `gh` en PAT public-RO, écriture via PAT fine-grained **1-repo** exposé par direnv (remote en URL nue). **Branche + PR pour les changes infra**, pin versionné en prod. **À plusieurs : un working tree isolé par intervenant** (worktree ou clone), branch protection sur `main`.
+> **One folder to back up** (`~/Documents/Claude/<project>/`), **two subfolders**: `repo/` for what goes on GitHub, `workspace/` for everything else. **One source of truth** per secret type. **Zero SSH** — reads via `gh` with a public-RO PAT, writes via a **1-repo** fine-grained PAT exposed by direnv (remote as a bare URL). **Branch + PR for infra changes**, versioned pin in prod. **With several people: one isolated working tree per person** (worktree or clone), branch protection on `main`.

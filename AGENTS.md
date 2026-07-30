@@ -1,58 +1,57 @@
-# AGENTS.md — instructions pour tout agent de code
+# AGENTS.md — instructions for any code agent
 
-À lire avant de toucher à quoi que ce soit dans ce repo.
-Ce fichier suit la convention [AGENTS.md](https://agents.md) ; Claude Code le lit via l'import `@AGENTS.md` de `CLAUDE.md` (local, non suivi).
+To be read before touching anything in this repo.
+This file follows the [AGENTS.md](https://agents.md) convention; Claude Code reads it via the `@AGENTS.md` import in `CLAUDE.md` (local, untracked).
 
-> **Exemption de langue** : ce repo est en **français** *(standard §1)*. Les projets qu'il **génère**, eux, restent en **anglais** — les gabarits de `templates/repo/` le sont déjà.
-> **Seule exception à l'exemption : `check.sh` ET `open-pr.sh` sont en anglais.** `init-project.sh` les copie **verbatim** dans chaque projet généré *(anglais)* — fichiers partagés, donc écrits dans la langue des générés, pas celle de ce repo. Ne pas les « re-franciser » au nom de §1.
+> **Language**: everything versioned in this repo is in English, just like everything it generates — only local file templates (`templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`) stay in French, since they are gitignored in the generated project.
 
-## Ce que c'est
+## What this is
 
-Ce repo **fabrique et configure** les projets. **Il n'est pas un projet.**
-Son produit, c'est le **standard** *(la version manuelle du déploiement de projet)* ; les scripts n'en sont que **l'automatisation**.
+This repo **builds and configures** projects. **It is not a project.**
+Its product is the **standard** *(the manual version of project deployment)*; the scripts are only its **automation**.
 
-## Structure — DEUX repos git, côte à côte, un seul ira sur GitHub
+## Structure — TWO git repos, side by side, only one goes to GitHub
 
-| | Remote | Contenu |
+| | Remote | Content |
 |---|---|---|
-| **`repo/`** *(le cwd)* | → GitHub **privé** — `actarus314/project-template` | les outils, `templates/`, `docs/`, `skills/` |
-| **`../workspace/`** | ❌ **aucun — jamais poussé** | le suivi, les archives, les recherches |
+| **`repo/`** *(the cwd)* | → GitHub **private** — `actarus314/project-template` | the tools, `templates/`, `docs/`, `skills/` |
+| **`../workspace/`** | ❌ **none — never pushed** | the tracking, the archives, the research |
 
-**`skills/new-project/` est la version CANONIQUE de la skill**, et `~/.claude/skills/new-project` est un **symlink** vers elle.
-Elle vivait hors de tout dépôt : ni versionnée, ni passée par la CI, ni diffable — alors qu'elle déroule le RUNBOOK, qui bouge à chaque session. *(L'audit d'intégration a trouvé 5 dérives, dont une commande formellement interdite ailleurs dans ce repo.)*
-Elle est à la **racine**, jamais sous `templates/` : `init-project.sh` copie **exclusivement** depuis `templates/`, donc rien ici ne se duplique dans les projets générés.
+**`skills/new-project/` is the CANONICAL version of the skill**, and `~/.claude/skills/new-project` is a **symlink** to it.
+It used to live outside any repo: not versioned, not run through CI, not diffable — even though it drives the RUNBOOK, which changes every session. *(The integration audit found 5 drifts, including a command formally forbidden elsewhere in this repo.)*
+It sits at the **root**, never under `templates/`: `init-project.sh` copies **exclusively** from `templates/`, so nothing here gets duplicated into generated projects.
 
-`workspace/` **ne doit JAMAIS gagner de remote** : il porte des noms de repos privés et des récits d'incidents. C'est ce qui permet à `repo/` de basculer public un jour sans rien nettoyer.
+`workspace/` **must NEVER gain a remote**: it carries private repo names and incident accounts. This is what lets `repo/` flip to public one day without cleaning anything up.
 
-## Commandes
+## Commands
 
 ```bash
-./init-project.sh <projet> <owner>/<repo> [parent] [--type static|node|generic] [--pages] [--artefact] [--staging]
+./init-project.sh <project> <owner>/<repo> [parent] [--type static|node|generic] [--pages] [--artefact] [--staging]
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
-./check.sh   # rejoue les checks de la CI EN LOCAL, aux versions épinglées (local == github)
-./open-pr.sh <base> <titre> <fichier-corps>   # ouvre une PR ET s'assure que la CI démarre (via direnv exec)
+./check.sh   # replays the CI checks LOCALLY, at the pinned versions (local == github)
+./open-pr.sh <base> <title> <body-file>   # opens a PR AND makes sure the CI actually starts (via direnv exec)
 ```
 
-`configure-repo.sh` est **joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a **jamais** `Administration: write`.
+`configure-repo.sh` is **run by the maintainer** with an **ephemeral** admin PAT — the assistant **never** has `Administration: write`.
 
-`check.sh` lit les versions épinglées dans `ci.yml` *(source unique)*, tire les binaires sous `.ci-tools/` *(gitignoré)* et rejoue **tout ce que la CI lance** : shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus la validation de tout `renovate.json` présent *(seul ajout délibéré : il attrape le gel silencieux des updates sur config cassée)*. Il est **auto-détectant** *(il lit le `ci.yml` du repo et ne lance QUE ce qui s'y trouve)*, donc le **même** fichier sert ce repo ET tout projet généré. Ce qui passe en local passe la CI — mais **la CI reste l'autorité** *(elle seule vérifie le SHA256 des assets Linux et tourne en conditions réelles)*.
+`check.sh` reads the pinned versions in `ci.yml` *(single source)*, pulls the binaries under `.ci-tools/` *(gitignored)* and replays **everything the CI runs**: shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus validation of any `renovate.json` present *(the only deliberate addition: it catches the silent freeze of updates on a broken config)*. It is **auto-detecting** *(it reads the repo's `ci.yml` and runs ONLY what's found there)*, so the **same** file serves this repo AND every generated project. What passes locally passes the CI — but **the CI remains the authority** *(it alone verifies the SHA256 of Linux assets and runs under real conditions)*.
 
-Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** : au 1er commit d'une fenêtre il rejoue `check.sh` et affiche le résultat sans **jamais** bloquer *(le seul blocage du hook reste gitleaks sur les fichiers stagés)*. Régler le délai : `CHECK_MAX_AGE_HOURS`. But : ne plus avoir à y penser, sans transformer un lint sans rapport en commit coincé.
+The `pre-commit` hook **reruns it on its own, throttled (24h) and CONSULTATIVE**: on the 1st commit of a window it replays `check.sh` and shows the result without **ever** blocking *(the only blocking the hook still does is gitleaks on staged files)*. To adjust the delay: `CHECK_MAX_AGE_HOURS`. Goal: no longer having to think about it, without turning an unrelated lint into a stuck commit.
 
 ## Discipline — PR-only
 
-**`repo/` est PR-only.** On n'écrit **jamais** sur `main` directement : le hook `pre-push` le refuse *(il est le substitut du ruleset, absent tant que le repo est privé)*.
+**`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it *(it stands in for the ruleset, absent as long as the repo is private)*.
 
-- Brancher `feat/…` → **ouvrir la PR avec `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`** : il pousse, ouvre la PR, ET **vérifie qu'un run `pull_request` démarre** — GitHub omet parfois de dispatcher la CI, et une PR à **0 run** se lit comme un vert alors qu'elle n'a **jamais** été testée. S'il manque, il close/reopen pour re-tirer l'event *(seul re-déclencheur qui reproduit les checks REQUIS `pull_request`)*. 🔴 **« 0 run » n'est JAMAIS un vert.**
-- Une **CI** *(`.github/workflows/ci.yml`)* valide chaque PR : elle lint ses **propres** workflows, génère des projets et linte **leurs** workflows en conditions réelles.
-- **Merger seulement CI verte.** Vérifier, à chaque fois — jamais `gh pr checks` *(permission `Checks` non accordable)* :
+- Branch `feat/…` → **open the PR with `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`**: it pushes, opens the PR, AND **verifies that a `pull_request` run starts** — GitHub sometimes fails to dispatch the CI, and a PR with **0 runs** reads as green when it has **never** been tested. If it's missing, it closes/reopens to re-pull the event *(the only re-trigger that reproduces the REQUIRED `pull_request` checks)*. 🔴 **"0 runs" is NEVER a green.**
+- A **CI** *(`.github/workflows/ci.yml`)* validates every PR: it lints its **own** workflows, generates projects and lints **their** workflows under real conditions.
+- **Merge only on green CI.** This must be verified every time — never `gh pr checks` *(the `Checks` permission cannot be granted)*:
   ```bash
   sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
   gh run list --commit "$sha" --json workflowName,status,conclusion
   ```
-  Vert = **tout** workflow attendu est `completed/success`. Un workflow **absent** de la liste n'est **pas** un vert.
-- **Après le merge, vérifier AUSSI le run `push` sur `main`** — autre event, donc autre run : le vert de la PR ne dit rien de celui-là, et c'est `main` qui fait foi.
-  🔴 **`--commit` ne trouve PAS ce run — filtrer par BRANCHE.** Sur un SHA né d'un merge, `gh run list --commit <sha>` rend **0 run**, quand `--branch main` rend le run `CI [push]` portant **exactement ce `headSha`**, vert. Le filtre `--commit` marche sur les runs `pull_request` — d'où la commande ci-dessus, qui reste juste. Jouée telle quelle après un merge, elle rend « 0 run » : **le motif même que ce fichier apprend à lire comme un échec de dispatch.**
+  Green = **every** expected workflow is `completed/success`. A workflow **missing** from the list is **not** a green.
+- **After the merge, also verify the `push` run on `main`** — a different event, so a different run: the PR's green says nothing about that one, and `main` is what counts.
+  🔴 **`--commit` does NOT find this run — filter by BRANCH.** On a SHA born from a merge, `gh run list --commit <sha>` returns **0 runs**, while `--branch main` returns the `CI [push]` run carrying **exactly this `headSha`**, green. The `--commit` filter works on `pull_request` runs — hence the command above, which stays correct. Run as-is after a merge, it returns "0 runs": **the exact pattern this file teaches to read as a dispatch failure.**
   ```bash
   gh run list --branch main --limit 5 --json headSha,workflowName,event,status,conclusion \
     --jq "[.[]|select(.headSha|startswith(\"$sha\"))]"
@@ -60,13 +59,13 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
 
 ## Conventions
 
-- **Français** dans ce repo *(exemption §1)* ; **anglais** dans tout ce qui est généré.
-- **Doc** : une idée par phrase, une phrase par ligne. Un fait vit à **un seul endroit** — partout ailleurs, un lien *(voir `docs/METHODE.md`)*.
-- **`CHANGELOG.md`** : une ligne dans `Non publié` dès qu'un changement se voit **de qui se sert du repo** *(un gabarit qui change, un geste du RUNBOOK qui bouge, un comportement de script)*. Pas de section versionnée — ce repo n'a ni tag ni release. Un refactor interne ou une correction de typo n'y va pas.
+- Everything versioned is in **English**, here and in the generated projects.
+- **Docs**: one idea per sentence, one sentence per line. A fact lives in **a single place** — everywhere else, a link *(see `docs/METHODE.md`)*.
+- **`CHANGELOG.md`**: a line in `Non publié` as soon as a change is visible **to whoever uses the repo** *(a template that changes, a RUNBOOK step that moves, a script's behavior)*. No versioned section — this repo has neither tag nor release. An internal refactor or a typo fix does not go there.
 
-## Ne pas casser
+## Do not break
 
-- **`~/.claude/CLAUDE.md` pointe en chemin ABSOLU** vers `docs/claude-code-project-standard.md`, `docs/METHODE.md` et `docs/RUNBOOK.md`. Les déplacer casse **toutes** les sessions Claude Code, **en silence**.
-- **`templates/repo/.envrc`, `templates/repo/CLAUDE.md` et `templates/repo/requirements-ci.txt` sont suivis via `git add -f`** : le `.gitignore` **modèle** voisin les ignorerait sinon *(`requirements-ci.txt` l'est EXPRÈS — soustrait au scan osv, cf. son commentaire dans ce `.gitignore`)*. **Ne jamais les `git rm --cached`.**
-- **`~/.claude/skills/new-project` est un SYMLINK vers `skills/new-project/`** — donc **déplacer ce dossier casse la skill**, en silence : elle disparaît simplement de la liste, sans erreur. Le rétablir : `ln -s <nouveau chemin> ~/.claude/skills/new-project`. *(Une copie plutôt qu'un lien serait pire : elle divergerait, et c'est précisément ce qui a produit 13 copies périmées des recettes de PAT.)*
-- **Ne jamais committer de secret.** `.env` et `.envrc` sont non suivis, et doivent le rester.
+- **`~/.claude/CLAUDE.md` points via an ABSOLUTE path** to `docs/claude-code-project-standard.md`, `docs/METHODE.md` and `docs/RUNBOOK.md`. Moving them breaks **every** Claude Code session, **silently**.
+- **`templates/repo/.envrc`, `templates/repo/CLAUDE.md` and `templates/repo/requirements-ci.txt` are tracked via `git add -f`**: the neighboring **template** `.gitignore` would otherwise ignore them *(`requirements-ci.txt` is DELIBERATELY so — excluded from the osv scan, see its comment in that `.gitignore`)*. **Never `git rm --cached` them.**
+- **`~/.claude/skills/new-project` is a SYMLINK to `skills/new-project/`** — so **moving this folder breaks the skill**, silently: it simply disappears from the list, with no error. To restore it: `ln -s <new path> ~/.claude/skills/new-project`. *(A copy instead of a link would be worse: it would drift, and that is exactly what produced 13 stale copies of the PAT recipes.)*
+- **Never commit a secret.** `.env` and `.envrc` are untracked, and must stay that way.
