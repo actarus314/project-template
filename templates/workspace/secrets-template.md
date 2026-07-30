@@ -47,7 +47,8 @@ gh api repos/<owner>/<un-repo-prive>   # doit renvoyer 404 (privé inaccessible 
   - Dependabot alerts : Read & Write (voir + dismiss/reopen en autonomie)
   - Code scanning alerts : Read & Write (voir + dismiss en autonomie)
   - Secret scanning alerts : Read (dismiss réservé à Romain — rejeter à tort une vraie fuite = trop d'impact)
-  - **Tout le reste : No access** (surtout PAS d'Administration)
+  - Administration : **Read** (JAMAIS write) — vérifier les réglages sécu qu'un `✓` de script affirme
+  - **Tout le reste : No access** — `Administration: WRITE` réservé au PAT admin éphémère de Romain
 
 **Durée** : **90 jours** (standard §5 — tout nouveau PAT).
 **Dernière génération** : YYYY-MM-DD

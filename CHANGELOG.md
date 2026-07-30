@@ -24,6 +24,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   documentée ne trouve pas ce run-là. ➡️ La règle et la commande vivent dans `AGENTS.md`
   *(gabarit : `templates/repo/AGENTS.md`)*.
 
+- **Le PAT de travail gagne `Administration: read`** *(jamais `write`)* — sans elle, l'assistant ne peut
+  **pas vérifier** les réglages qu'un script affirme avoir posés : ni les toggles sécu, ni la branch
+  protection **classique** *(invisible dans l'API `rulesets`, et capable de verrouiller `main` pour
+  toujours)*. Deux pannes déjà vécues, structurellement indétectables sans cette lecture. Elle ne mute
+  rien. ➡️ Dérivation et endpoints : **`docs/github-repo-config.md §2`** ; case à cocher :
+  **`docs/RUNBOOK.md §1`**. **Sur un PAT existant, aucune rotation n'est nécessaire** — l'UI édite les
+  permissions en place.
+
 ### Corrigé
 
 - **Sur un flux à 3 étages, Dependabot aussi visait la PRODUCTION** — et lui, aucune option ne le
