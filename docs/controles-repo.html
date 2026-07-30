@@ -13,6 +13,9 @@
   Ce fichier-ci n'en est que la MISE EN PAGE. Toute correction se fait dans le .md,
   puis se reporte ici — sinon les deux divergent, et on ne sait plus lequel croire.
 
+  checksum-source-md: sha256:03cf81758080d57a13ef556dec85df5a29fcd82f86ff127f526239cc10e00a94
+  (rempli par docs/verifier-checksums.sh --maj ; vérifié par ./check.sh et la CI)
+
   Thème clair/sombre : suit la préférence système (prefers-color-scheme).
 -->
 <style>html{color-scheme:light dark}</style>
@@ -356,7 +359,7 @@
   <div class="note accent">
     <h3>Pourquoi la pull request même seul, même en privé</h3>
     <p>Sans PR, on pousse sur <code>main</code> et la CI tourne <strong>après</strong> : elle devient une <strong>autopsie</strong>, pas un barrage — elle constate les dégâts sur la branche que l'on vient de déclarer « production ». Avec une PR, elle tourne <strong>avant</strong>. C'est toute la différence entre <em>savoir</em> et <em>empêcher</em>.</p>
-    <p><strong>Ça s'est déjà produit</strong> : sur dEURO, un push direct sur <code>main</code> a retiré une directive <code>user:</code> ; l'image est partie en <code>:latest</code>, le NUC l'a tirée, la production est tombée — découverte après coup.</p>
+    <p><strong>Ça s'est déjà produit</strong> : un push direct sur <code>main</code> a retiré une directive <code>user:</code> ; l'image est partie en <code>:latest</code>, le host de prod l'a tirée, la production est tombée — découverte après coup.</p>
     <p><strong>Là où l'on ne serre PAS la vis</strong> — <em>trop de contrôles tue le contrôle</em> : aucun lint au pre-commit · un <strong>seul</strong> contrôle bloquant en local, les secrets (vital, instantané, irréversible une fois poussé) · <strong>zéro relecture obligatoire</strong> (<code>required_approving_review_count = 0</code>) : en solo, s'auto-approuver serait un théâtre.</p>
   </div>
 </section>
@@ -682,7 +685,7 @@
   </div>
 </section>
 
-<footer>Standard projet — claude-code-project-standard.md §18 · révision du 14 juillet 2026</footer>
+<footer>Standard projet — claude-code-project-standard.md §18</footer>
 </div>
 </body>
 </html>

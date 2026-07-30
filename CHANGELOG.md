@@ -18,6 +18,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Ajouté
 
+- **Un garde-fou anti-dérive entre `docs/X.md` et `docs/X.html`** — rien n'empêchait un `.md`
+  *(la source de vérité)* d'évoluer sans que sa mise en page `.html` faite main suive, et c'est déjà
+  arrivé. `docs/verifier-checksums.sh` compare le sha256 du `.md` à celui inscrit dans le
+  commentaire d'en-tête du `.html` ; divergence → rouge, avec la commande de mise à jour
+  (`--maj`). Branché dans `check.sh` *(auto-détecté : silencieux si le script est absent, donc
+  aucun impact sur un projet généré)* et dans un job dédié de `ci.yml`.
+
 - **Un scan Trivy HEBDOMADAIRE de l'image publiée** *(capacité `artefact`)* — `docker-publish.yml` gagne un
   job `scheduled-scan`. Jusqu'ici l'image n'était regardée qu'**à la pull request** : après le merge, plus
   rien. Renovate ne rattrape que si la base **bouge** — or une ligne d'images qui **cesse d'être
@@ -47,6 +54,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `templates/` : rien ici ne se duplique dans les projets générés.
 
 ### Corrigé
+
+- **L'incident qui justifie la PR-même-seul ne vivait que dans `docs/controles-repo.html`** — le
+  `.md` ne portait qu'un renvoi (« standard §12 »), le récit lui-même n'existait que dans la copie.
+  Rapatrié dans le `.md`, sous forme anonymisée : plus de nom de projet ni de nom de host.
+  `docs/controles-repo.html` gagne aussi une date de révision en dur retirée : absente du `.md`,
+  déjà périmée — exactement le genre de fait qui dérive silencieusement.
 
 - 🔴 **Deux gabarits nommaient des repos PRIVÉS, et se recopiaient dans chaque projet généré** —
   `ci-node.yml` renvoyait *« see dEURO-dashboard for a worked example »*, `templates/repo/README.md`
