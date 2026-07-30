@@ -1,36 +1,38 @@
-# <projet> — instructions Claude Code
+# <project> — Claude Code instructions
 
-> Fichier local, **ignoré par Git**. Lu automatiquement par Claude Code à chaque session.
+> Local file, **ignored by Git**. Claude Code reads it automatically at every session.
 
-## Les règles du projet sont dans AGENTS.md
+## The project's rules live in AGENTS.md
 
 @AGENTS.md
 
-> `AGENTS.md` est **versionné** et lu par tous les agents (convention [agents.md](https://agents.md)).
-> Il porte : commandes, structure, politique de branches, conventions de code, contrôles, ne-pas-toucher.
-> **Ne pas dupliquer ici ce qui est déjà là-bas** — deux copies divergent toujours.
-> Ce fichier-ci ne garde que ce qui est **personnel** et n'a rien à faire sur GitHub.
+> `AGENTS.md` is **versioned** and read by every agent ([agents.md](https://agents.md) convention).
+> It carries: commands, structure, branching policy, code conventions, checks, do-not-touch.
+> **Do not duplicate here what already lives there** — two copies always drift.
+> This file keeps only what is **personal** and has no business on GitHub.
 
-## Standard d'organisation (perso)
-`/Users/romain/Documents/Claude/template/repo/docs/claude-code-project-standard.md`
-(déjà imposé par `~/.claude/CLAUDE.md` — le relire en cas de doute).
+## Organisation standard
 
-## Pointeurs workspace (repo git LOCAL — sans remote, jamais poussé)
-- Secrets / auth : `../workspace/secrets.md`
-- Docs / archi : `../workspace/docs/` — **`SUIVI.md` à lire en premier après un `/clear`** *(le seul doc vivant : état + « ce qui reste »)*
-- Plans / roadmap : `../workspace/plans/`
-- Notes : `../workspace/notes/`
+https://github.com/actarus314/project-template/blob/main/docs/claude-code-project-standard.md
 
-## Auth GitHub — le piège du shell non-interactif
-- L'outil Bash de Claude Code lance un shell **non-interactif** : le hook direnv **ne charge rien**.
-  → **préfixer `git push` / `gh` par `direnv exec .`** (depuis `repo/`) ; il charge `.envrc` pour la commande.
-  ⚠️ `direnv exec` **ne change pas le CWD** : depuis un autre dossier, viser `repo/` via `git -C repo`. Requiert `direnv allow` (fait au setup).
-- Le PAT vit dans **`.envrc`** (`GITHUB_PAT`), jamais dans `.env` (fuite conteneur via `env_file`).
-- Remote en **URL nue** — un PAT dans l'URL du remote est une fuite en clair dans `.git/config`.
-- Sans `direnv exec`, `git`/`gh` retombent sur le PAT public-RO : une org peut le refuser.
+*(If a local clone of the template is available, read it from there instead — it is the same file.)*
 
-## Docs de vie — à tenir de moi-même
-- `../workspace/docs/SUIVI.md` : consolider (état, décisions, ce qui reste) · purger le livré.
-- `CHANGELOG.md` (versionné) : section `Unreleased` à chaque change visible par l'utilisateur.
+## Workspace pointers (LOCAL git repo — no remote, never pushed)
+- Secrets / auth: `../workspace/secrets.md`
+- Docs / architecture: `../workspace/docs/` — **read `SUIVI.md` first after a `/clear`** *(the single living doc: state + what remains)*
+- Plans / roadmap: `../workspace/plans/`
+- Notes: `../workspace/notes/`
 
-> Aucun secret dans ce fichier (discipline zéro-secret sur tout fichier nommé).
+## GitHub auth — the non-interactive shell trap
+- Claude Code's Bash tool spawns a **non-interactive** shell: the direnv hook **loads nothing**.
+  → **prefix `git push` / `gh` with `direnv exec .`** (from `repo/`); it loads `.envrc` for that command.
+  ⚠️ `direnv exec` **does not change the CWD**: from another folder, target `repo/` via `git -C repo`. Requires `direnv allow` (done at setup).
+- The PAT lives in **`.envrc`** (`GITHUB_PAT`), never in `.env` (container leak via `env_file`).
+- Remote as a **bare URL** — a PAT in the remote URL is a plaintext leak in `.git/config`.
+- Without `direnv exec`, `git`/`gh` fall back to the public-RO PAT: an org may refuse it.
+
+## Living docs — to keep up unprompted
+- `../workspace/docs/SUIVI.md`: consolidate (state, decisions, what remains) · purge what shipped.
+- `CHANGELOG.md` (versioned): a line under `Unreleased` for every user-facing change.
+
+> No secret in this file (zero-secret discipline on any file named by convention).

@@ -1,11 +1,11 @@
-# Workspace — <projet>
+# Workspace — <project>
 
-Tout ce qui est personnel. **Ce dossier est un repo git à part, LOCAL : il n'a AUCUN remote et ne doit jamais en gagner.**
-C'est la mémoire du projet — sans git, toute suppression y serait irréversible.
+Everything personal. **This folder is a separate git repo, LOCAL: it has NO remote and must never gain one.**
+It is the project's memory — without git, any deletion here would be irreversible.
 
-- `docs/`      : docs de vie — `SUIVI.md` (le CHAUD : reprise-à-froid, il POINTE ; porte aussi « ce qui reste ») · `archives/<étape>/` (le FROID : une **synthèse** par étape close — quoi/comment/pourquoi)
-                 Le SUIVI **respire** : il grossit pendant une étape, rétrécit à sa clôture (on élague + on synthétise dans `archives/`, jamais un dump).
-                 ⚠️ Les **ADR** ne sont PAS ici : ils sont **versionnés** dans `repo/docs/adr/` (immuables, publics).
-- `plans/`     : plans d'exécution, roadmap
-- `notes/`     : scratch, brouillons, captures de conversation
-- `secrets.md` : procédures d'auth, clés API, dates d'expiration — **NE JAMAIS committer**
+- `docs/`      : living docs — `SUIVI.md` (the HOT one: cold-start resumption, it POINTS; also carries "what remains") · `archives/<stage>/` (the COLD one: one **synthesis** per closed stage — what/how/why)
+                 The log **breathes**: it grows during a stage, shrinks when it closes (prune + synthesize into `archives/`, never a dump).
+                 ⚠️ **ADRs are NOT here**: they are **versioned** in `repo/docs/adr/` (immutable, public).
+- `plans/`     : execution plans, roadmap
+- `notes/`     : scratch, drafts, conversation captures
+- `secrets.md` : auth procedures, API keys, expiry dates — **NEVER commit**
