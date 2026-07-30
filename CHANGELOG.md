@@ -48,6 +48,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Corrigé
 
+- **`configure-repo.sh` annonçait « ✓ Discussions ouvertes » sans jamais vérifier qu'elles l'étaient.**
+  Il testait le **code de sortie** du `PATCH /repos` — or `has_discussions` n'est pas un bodyParameter
+  documenté de cet endpoint, et REST **ignore un champ inconnu sans erreur** : le PATCH rend 200 en
+  n'activant rien, et le ✓ s'affiche pour un réglage jamais posé. Il **relit** désormais le repo et
+  dit « ⚠ TOUJOURS fermées » avec l'URL du réglage quand c'est le cas. *(Même discipline que partout
+  ailleurs dans ce script : un ✓ affiché n'est pas un réglage appliqué.)*
+  ➡️ **Conséquence à connaître** : `project-template` lui-même est à `has_discussions: false` — donc
+  son lien « Question / Discussion » est un 404 tant que le script n'y est pas rejoué.
+
 - 🔴 **Le RUNBOOK prescrivait de FERMER une PR d'onboarding Renovate** — or fermer est l'**opt-out
   documenté** du bot. Il affirmait deux faits que le vécu a démentis : « Renovate redémarre de lui-même
   dès qu'il voit le fichier » et « réversible dans les deux sens ». **Le statut `disabled` vit côté Mend**,
