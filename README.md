@@ -44,6 +44,16 @@ Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, descrip
 
 Replays **the CI's security checks** at **pinned versions** (auto-detected from `ci.yml`, so nothing to maintain by hand): what passes here passes the CI. It is **copied into every generated project**, and a `pre-commit` hook replays it on its own — throttled (24h) and **advisory** (it has never blocked a commit).
 
+## Which version am I running?
+
+```bash
+./init-project.sh --version
+```
+
+The **git tag** is the single source, because a ruleset makes it immutable — the scripts read it, they never store it *(the why: standard §12)*. `verify-version.sh`, run by `check.sh` and by the CI, fails the build if the tag, the changelog and the scripts ever disagree.
+
+A generated project records the version that built it, in its own `AGENTS.md`: it carries a **frozen copy** of the templates, so knowing which one is what makes a later fix diffable.
+
 ---
 
 ## What's in this folder
@@ -58,8 +68,9 @@ template/
 
 | | Role |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **The tools.** What gets run. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** · **`verify-version.sh`** | **The tools.** What gets run. |
 | **`templates/`** | **What gets COPIED into a project** — and nothing else. `repo/` (versioned files) · `workflows/` (CI) · `workspace/` (outside Git). |
+| **`skills/`** | **`new-project/`** — the Claude Code skill that runs through the RUNBOOK, stopping at every action the maintainer must perform themselves. Canonical here, never under `templates/`: nothing duplicates into generated projects. |
 | **`docs/`** | **The reference, to be read as needed.** The method, the standard, the runbook, the map of checks. |
 | **`../workspace/`** | **How this template was built.** Log, decisions, research, defects found. To be read to understand *why*, never to *do*. |
 
@@ -70,6 +81,10 @@ template/
 - **`claude-code-project-standard.md`** — the standard. **Read at every session** *(same)*.
 - **`github-repo-config.md`** — server-side checks, PAT matrix, new-repo checklist.
 - **`controles-repo.md`** / **`.html`** — which check runs, where, with what tool. The `.md` version is **authoritative**; the `.html` is its layout.
+
+### At the root
+
+**`AGENTS.md`** — read this before touching anything: structure, commands, the PR-only rule, what must not be broken. · **`CONTRIBUTING.md`** — how to open a PR here. · **`SECURITY.md`** — report a flaw **privately**, never as a public issue. · **`CHANGELOG.md`** — what changed, for whoever uses the repo.
 
 ### `../workspace/` — the build
 

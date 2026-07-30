@@ -14,9 +14,9 @@ They do not replace each other — they answer two different questions. **Confus
 | 🎯 **`docs/RUNBOOK.md`** | **WHAT to do, in what ORDER, and WHO does it.** URLs, exact permissions, complete commands, pitfalls. | **IN FULL, before starting.** It's the thread to follow. |
 | 📖 **`docs/claude-code-project-standard.md`** | **WHY**, and the **conventions to hold while developing**: layout, secrets, branches, README, lifecycle docs. | **Already imposed on every session** by `~/.claude/CLAUDE.md`. **If it hasn't been done in this session: read it NOW** — the runbook keeps referring to it ("standard §12"…), and **an unread reference is a dead reference**. |
 
-**Paths:**
-- `/Users/romain/Documents/Claude/template/repo/docs/RUNBOOK.md`
-- `/Users/romain/Documents/Claude/template/repo/docs/claude-code-project-standard.md`
+**Where they live:** `docs/RUNBOOK.md` and `docs/claude-code-project-standard.md`, **in the template clone**.
+This skill is a symlink into that clone, so both files sit two levels above it — read them from there.
+*(Without a local clone: <https://github.com/actarus314/project-template/tree/main/docs>.)*
 
 > 🔴 **NEVER run through these steps from memory.** They carry URLs, exact permissions and precise pitfalls, and they change. **A step recited from memory is a wrong step.**
 

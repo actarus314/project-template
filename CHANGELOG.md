@@ -32,11 +32,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `github-repo-config.md`, `AGENTS.md`)*, then the RUNBOOK and the `new-project` skill, then the root,
   the scripts and the workflows. **The `.md`/`.html` pairs are still to come, so the repo stays mixed
   until they land.**
-  Templates of **local** files *(`templates/repo/CLAUDE.md`, `templates/repo/.envrc`,
-  `templates/workspace/*`)* **stay in French**: they are gitignored in the generated project and never
-  reach GitHub. The **template** `README.md` stays **bilingual by design** — its French half *is* the
-  product. This repo's own `README.md`, by contrast, is **English only**: a French half would be a
-  second copy to maintain alongside docs that are now entirely English.
+  🔴 **The templates of LOCAL files were first excluded, wrongly.** The reasoning — *"they are
+  gitignored in the generated project, so they never reach GitHub"* — is true **of the generated
+  project** and false **here**: `templates/repo/CLAUDE.md`, `templates/repo/.envrc` and
+  `templates/workspace/*` are versioned in this repo *(`git add -f`)*, so they were about to go
+  public in French inside an all-English repo. They are translated too.
+  The **template** `README.md` is the one real exception, and it stays **bilingual by design** — its
+  French half *is* the product. This repo's own `README.md` is **English only**: a French half would
+  be a second copy to maintain alongside docs that are now entirely English.
 
 ### Added
 

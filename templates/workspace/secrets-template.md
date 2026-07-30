@@ -1,75 +1,75 @@
-# Secrets & Auth — <projet>
-> **Fichier personnel, hors Git. Ne JAMAIS le commiter, le copier vers `repo/`, ou le partager.**
+# Secrets & Auth — <project>
+> **Personal file, outside Git. NEVER commit it, copy it to `repo/`, or share it.**
 
 ---
 
-## 1. Lecture GitHub + auth Git par défaut (`gh` CLI, public-RO)
+## 1. Default GitHub read + Git auth (`gh` CLI, public-RO)
 
-`gh` CLI configuré une fois par machine avec un PAT **fine-grained « Public repositories (read-only) »** : lecture de tout le GitHub public à 5000 req/h, **aucun accès aux repos privés**. Token volontairement inoffensif (une fuite ne donne rien de plus que ce qui est déjà public).
+`gh` CLI configured once per machine with a **fine-grained "Public repositories (read-only)"** PAT: read access to all of public GitHub at 5000 req/h, **no access to private repos**. Token deliberately harmless (a leak gives nothing more than what is already public).
 
-L'écriture (push/PR) ne passe PAS par ce token — elle vient du PAT du repo, exposé par direnv (voir §2).
+Writing (push/PR) does NOT go through this token — it comes from the repo's PAT, exposed by direnv (see §2).
 
-**Setup (une fois par machine) :**
+**Setup (once per machine):**
 ```bash
 brew install gh direnv
-# Créer un fine-grained PAT "Public repositories (read-only)" sur
+# Create a fine-grained PAT "Public repositories (read-only)" at
 # https://github.com/settings/personal-access-tokens
-#   Resource owner = <ton compte> · Repository access = Public repositories (read-only)
-#   Account permissions = aucune · expiration = AUCUNE (assumé : RO sur du public, une fuite
-#   ne donne accès qu'à ce qui est déjà public — cf. standard §5. Les PAT d'ÉCRITURE, eux, sont à 90 j.)
+#   Resource owner = <the account> · Repository access = Public repositories (read-only)
+#   Account permissions = none · expiration = NONE (accepted: RO on public data, a leak
+#   only grants access to what is already public — see standard §5. WRITE PATs, on the other hand, are 90 days.)
 echo "<PAT-public-RO>" | gh auth login --with-token
-gh auth setup-git        # git délègue son auth à gh (helper « gh auth git-credential »)
-echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # hook direnv
+gh auth setup-git        # git delegates its auth to gh (helper "gh auth git-credential")
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # direnv hook
 ```
 
-**Vérification :**
+**Verification:**
 ```bash
 gh auth status
-gh api rate_limit --jq .rate     # "limit" doit valoir 5000
-gh api repos/<owner>/<un-repo-prive>   # doit renvoyer 404 (privé inaccessible = OK)
+gh api rate_limit --jq .rate     # "limit" should be 5000
+gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessible = OK)
 ```
 
 ---
 
-## 2. PAT d'écriture du repo (push, PR, issues) — 1 par repo, via direnv
+## 2. Repo write PAT (push, PR, issues) — 1 per repo, via direnv
 
-**Token** : fine-grained, **restreint à CE SEUL repo** (owner = compte ou org du repo).
-**Valeur** : dans `repo/.envrc` comme `GITHUB_PAT` — nulle part ailleurs, **jamais dans l'URL du remote**.
-**Régénération** : https://github.com/settings/personal-access-tokens
-**Repository access** : Only select repositories → ce repo uniquement.
-**Permissions (standard homogène — matrice complète : `docs/github-repo-config.md §2`)** :
-  - Contents : Read & Write
-  - Metadata : Read (obligatoire / auto)
-  - Pull requests : Read & Write
-  - Issues : Read & Write
-  - Workflows : Read & Write (indispensable dès qu'il y a un `.github/workflows/`, sinon push rejeté)
-  - Actions : Read & Write (état CI + relancer/annuler un run)
-  - Dependabot alerts : Read & Write (voir + dismiss/reopen en autonomie)
-  - Code scanning alerts : Read & Write (voir + dismiss en autonomie)
-  - Secret scanning alerts : Read (dismiss réservé à Romain — rejeter à tort une vraie fuite = trop d'impact)
-  - Administration : **Read** (JAMAIS write) — vérifier les réglages sécu qu'un `✓` de script affirme
-  - **Tout le reste : No access** — `Administration: WRITE` réservé au PAT admin éphémère de Romain
+**Token**: fine-grained, **restricted to THIS SINGLE repo** (owner = repo's account or org).
+**Value**: in `repo/.envrc` as `GITHUB_PAT` — nowhere else, **never in the remote URL**.
+**Regeneration**: https://github.com/settings/personal-access-tokens
+**Repository access**: Only select repositories → this repo only.
+**Permissions (uniform standard — full matrix: `docs/github-repo-config.md §2`)**:
+  - Contents: Read & Write
+  - Metadata: Read (mandatory / automatic)
+  - Pull requests: Read & Write
+  - Issues: Read & Write
+  - Workflows: Read & Write (essential as soon as there is a `.github/workflows/`, otherwise push rejected)
+  - Actions: Read & Write (CI status + re-run/cancel a run)
+  - Dependabot alerts: Read & Write (view + dismiss/reopen autonomously)
+  - Code scanning alerts: Read & Write (view + dismiss autonomously)
+  - Secret scanning alerts: Read (dismiss reserved for the maintainer — wrongly dismissing a real leak = too much impact)
+  - Administration: **Read** (NEVER write) — verify the security settings a script's `✓` claims
+  - **Everything else: No access** — `Administration: WRITE` reserved for the maintainer's ephemeral admin PAT
 
-**Durée** : **90 jours** (standard §5 — tout nouveau PAT).
-**Dernière génération** : YYYY-MM-DD
-**Expire le** : YYYY-MM-DD
+**Duration**: **90 days** (standard §5 — every new PAT).
+**Last generated**: YYYY-MM-DD
+**Expires on**: YYYY-MM-DD
 
-> **Alerte automatique** : `.envrc` prévient dans le terminal **14 jours avant** l'expiration (il lit le header `GitHub-Authentication-Token-Expiration`, 1 appel/jour max).
-> L'expiration n'est donc jamais subie en pleine session — mais **penser à reporter la nouvelle date ici** après chaque rotation.
+> **Automatic alert**: `.envrc` warns in the terminal **14 days before** expiration (it reads the `GitHub-Authentication-Token-Expiration` header, 1 call/day max).
+> Expiration is therefore never hit mid-session — but **remember to update the new date here** after each rotation.
 
-**Exposition à git/gh via direnv.** Le remote reste en **URL nue** (`https://github.com/<owner>/<repo>.git`). Le PAT n'est rendu visible à git/gh **que dans ce dossier**, par direnv :
-- `repo/.envrc` (gitignoré) contient le PAT et reste **sourçable en bash** (pas de builtin `dotenv`, pour l'outil Bash non-interactif) :
+**Exposure to git/gh via direnv.** The remote stays a **bare URL** (`https://github.com/<owner>/<repo>.git`). The PAT is made visible to git/gh **only in this folder**, via direnv:
+- `repo/.envrc` (gitignored) contains the PAT and stays **sourceable in bash** (no `dotenv` builtin, for the non-interactive Bash tool):
   ```
-  set -a; [ -f .env ] && . ./.env; set +a   # charge les vars app de .env (équivalent bash de `dotenv`)
+  set -a; [ -f .env ] && . ./.env; set +a   # loads app vars from .env (bash equivalent of `dotenv`)
   export GITHUB_PAT=<PAT 1-repo>
   export GH_TOKEN="$GITHUB_PAT"
   ```
-- `direnv allow` une fois. En entrant dans le dossier → `GH_TOKEN` chargé → `git push`/`gh` utilisent le PAT du repo. En sortant → retour au public-RO.
-- **Outil Bash de Claude (non-interactif)** : direnv ne charge pas seul → **préfixer par `direnv exec . git …`** (depuis `repo/` ; `direnv exec` ne change pas le CWD, requiert `direnv allow`).
+- `direnv allow` once. Entering the folder → `GH_TOKEN` loaded → `git push`/`gh` use the repo's PAT. Leaving it → back to public-RO.
+- **Claude's Bash tool (non-interactive)**: direnv does not load on its own → **prefix with `direnv exec . git …`** (from `repo/`; `direnv exec` does not change the CWD, requires `direnv allow`).
 
-**Usage :** plus besoin de `source .env` — direnv charge tout automatiquement dans le dossier.
+**Usage:** no more need for `source .env` — direnv loads everything automatically in the folder.
 ```bash
-git push                                   # auth via le PAT du repo (direnv)
+git push                                   # auth via the repo's PAT (direnv)
 gh pr create --title "..." --base main
 gh issue list
 gh run list
@@ -77,34 +77,34 @@ gh run list
 
 ---
 
-## 3. API Keys de l'application
+## 3. Application API Keys
 
-Toutes stockées dans `repo/.env`. **Une seule source de vérité, pas de duplication ailleurs.**
+All stored in `repo/.env`. **A single source of truth, no duplication elsewhere.**
 
-| Variable | Service | Où régénérer |
+| Variable | Service | Where to regenerate |
 |---|---|---|
 | `...` | ... | ... |
 
 ---
 
-## 4. Checklist en cas de compromission
+## 4. Checklist in case of compromise
 
-Si une clé est exposée (commit accidentel, fuite, chat public, etc.) :
-1. **Révoquer immédiatement** sur le dashboard du service concerné.
-2. **Régénérer** une nouvelle clé.
-3. **Mettre à jour** `repo/.env`.
-4. **Redémarrer** l'app (ou `docker compose up -d` si container).
-5. **Vérifier** les logs pour activité suspecte dans les dernières heures.
+If a key is exposed (accidental commit, leak, public chat, etc.):
+1. **Revoke immediately** on the relevant service's dashboard.
+2. **Regenerate** a new key.
+3. **Update** `repo/.env`.
+4. **Restart** the app (or `docker compose up -d` if containerized).
+5. **Check** the logs for suspicious activity in the last few hours.
 
 ---
 
-## 5. Rappel : où est ce qui est
+## 5. Reminder: what lives where
 
-| Donnée | Emplacement |
+| Data | Location |
 |---|---|
-| PAT lecture publique (`gh` par défaut) | trousseau macOS (via `gh auth login --with-token`) |
-| PAT d'écriture du repo (1-repo) | `repo/.envrc` (`GITHUB_PAT`, gitignoré) |
-| Pont PAT → git/gh | `repo/.envrc` (`export GH_TOKEN=$GITHUB_PAT`) |
-| Clés API applicatives | `repo/.env` |
-| Permissions Claude Code | `repo/.claude/settings.local.json` (hors Git) |
-| Instructions projet pour Claude | `repo/CLAUDE.md` (hors Git) |
+| Public read PAT (`gh` default) | macOS keychain (via `gh auth login --with-token`) |
+| Repo write PAT (1-repo) | `repo/.envrc` (`GITHUB_PAT`, gitignored) |
+| PAT → git/gh bridge | `repo/.envrc` (`export GH_TOKEN=$GITHUB_PAT`) |
+| Application API keys | `repo/.env` |
+| Claude Code permissions | `repo/.claude/settings.local.json` (outside Git) |
+| Project instructions for Claude | `repo/CLAUDE.md` (outside Git) |
