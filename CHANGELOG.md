@@ -32,7 +32,24 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **`docs/RUNBOOK.md §1`**. **Sur un PAT existant, aucune rotation n'est nécessaire** — l'UI édite les
   permissions en place.
 
+- **La skill `new-project` entre dans le repo**, en version **canonique** — `skills/new-project/`, avec
+  `~/.claude/skills/new-project` réduit à un **symlink**. Elle déroule le RUNBOOK mais vivait hors de tout
+  dépôt : ni versionnée, ni passée par la CI, ni diffable. Elle est à la **racine**, jamais sous
+  `templates/` : rien ici ne se duplique dans les projets générés.
+
 ### Corrigé
+
+- 🔴 **Le RUNBOOK prescrivait de FERMER une PR d'onboarding Renovate** — or fermer est l'**opt-out
+  documenté** du bot. Il affirmait deux faits que le vécu a démentis : « Renovate redémarre de lui-même
+  dès qu'il voit le fichier » et « réversible dans les deux sens ». **Le statut `disabled` vit côté Mend**,
+  committer `renovate.json` ensuite ne rallume rien, et la réparation demande un **scan manuel au portail**.
+  C'est la consigne qui a mis **4 repos sans aucun bot d'update pendant 6 jours** le 14/07. Corrigé en
+  « la laisser ouverte et demander », avec la réparation. *(Le fait était déjà rectifié ailleurs — pas ici.)*
+
+- **La skill `new-project` recommandait `gh pr checks`**, formellement interdit dans ce repo *(la permission
+  `Checks` n'existe pas dans l'UI des PAT fine-grained)*, et posait encore un **`BACKLOG.md`** que le
+  template ne génère plus. Plus 3 dérives : `--type generic` absent, « jamais `Administration` » sans
+  `write`, et le package ghcr présenté comme un geste systématique au lieu d'un contrôle conditionnel.
 
 - **Les recettes de PAT annonçaient des permissions PÉRIMÉES — à 4 endroits, dont 2 lus au moment de
   créer le token** *(`configure-repo.sh` avant la saisie masquée, et l'étape 5 de `init-project.sh`)*.

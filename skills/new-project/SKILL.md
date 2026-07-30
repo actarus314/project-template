@@ -30,8 +30,10 @@ Ils ne se remplacent pas — ils répondent à deux questions différentes. **Le
 
 ### 1. S'ARRÊTER à chaque geste de Romain
 
-Le runbook marque **qui fait quoi**. Certains gestes sont **impossibles** pour l'assistant (il n'a **jamais** `Administration`) :
-créer le repo · créer/révoquer un PAT · `direnv allow` · jouer `configure-repo.sh` · flipper la visibilité · rendre un package ghcr public · installer Renovate.
+Le runbook marque **qui fait quoi**. Certains gestes sont **impossibles** pour l'assistant (il n'a **jamais** `Administration: write` — `read` seul est admis) :
+créer le repo · créer/révoquer un PAT · `direnv allow` · jouer `configure-repo.sh` · flipper la visibilité · rendre un package ghcr public *(si le test du script échoue)* · installer Renovate.
+
+> 🔴 **Piège Renovate — la PR « Configure Renovate »** *(repo existant, app installée avant `renovate.json`)* : ne **JAMAIS** la merger *(elle activerait la config par défaut, pas celle du template)*, et 🔴 ne **JAMAIS** la fermer non plus — fermer est l'**opt-out documenté** du bot (`disabled` côté Mend ; committer `renovate.json` ensuite ne rallume rien). **La laisser ouverte et demander à Romain.** Détail et réparation : RUNBOOK §1 étape 8.
 
 Pour chacun :
 - **Donner l'URL directe** et **les valeurs exactes** (nom du token, expiration, permissions une par une).
@@ -40,15 +42,9 @@ Pour chacun :
 
 ### 2. Poser les 3 questions AVANT de taper la commande
 
-Elles décident de toute l'architecture (`AskUserQuestion`) :
-
-| | Question | Flag |
-|---|---|---|
-| **a** | Le site sera-t-il servi par **GitHub Pages** ? | `--pages` |
-| **b** | Le repo **publiera-t-il une image que quelqu'un d'AUTRE déploie** ? *(auto-hébergeurs, un NUC…)* | `--artefact` |
-| **c** | Existe-t-il un **host à VALIDER** avant la prod ? | `--staging` |
-
-Plus la **toolchain** : `--type static` (aucun npm) ou `--type node` (npm, tests, types).
+Elles décident de toute l'architecture (`AskUserQuestion`) : **(a)** site servi par **Pages** ? → `--pages` · **(b)** le repo publie-t-il une image que **quelqu'un d'AUTRE** déploie ? → `--artefact` · **(c)** existe-t-il un **host à VALIDER** avant la prod ? → `--staging`.
+**Les poser avec leur libellé EXACT** *(table et nuances : RUNBOOK §1)* — reformulées de mémoire, (b) et (c) se confondent, et on fabrique un `develop` inutile.
+Plus la **toolchain** : `--type static` (aucun npm) · `--type node` (npm, tests, types) · `--type generic` (aucune capacité pré-câblée — Rust, Go, C/C++, Android… ; contrôles de sécurité seuls).
 
 > 🔴 **`develop` découle de (c), JAMAIS de Docker ni du langage.** Un projet `node` sans host à valider n'en a pas. Un site Pages packagé en image non plus.
 
@@ -71,16 +67,16 @@ Plus la **toolchain** : `--type static` (aucun npm) ou `--type node` (npm, tests
 
 La même skill couvre :
 
-- **§2 — travailler au quotidien** : `feat/` → PR → CI verte → merge. ⚠️ En privé, **rien n'exige la CI** : `gh pr checks <n>` **doit sortir 0** avant tout merge. C'est le **seul point resté humain**.
-- **§3 — publier une version** : CHANGELOG → tag `v*` → Release + image. ⚠️ **1ʳᵉ release : rendre le package ghcr PUBLIC**, sinon personne ne peut auto-héberger.
+- **§2 — travailler au quotidien** : `feat/` → PR → CI verte → merge. ⚠️ En privé, **rien n'exige la CI** — c'est le **seul point resté humain**. Vérifier via `sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)` puis `gh run list --commit "$sha"` — **jamais `gh pr checks`** (403 garanti, permission `Checks` absente des PAT fine-grained). ⚠️ Un workflow **absent** de la liste n'est **pas** un vert. Détail : RUNBOOK §2.
+- **§3 — publier une version** : CHANGELOG → tag `v*` → Release + image. ⚠️ **1ʳᵉ release : VÉRIFIER que le package ghcr est tirable** *(`configure-repo.sh` le teste lui-même)* — tirable aussitôt sur un compte perso, potentiellement privé par défaut sur une org ; n'agir que si le test échoue.
 - **§4 — basculer privé → public** : **le moment le plus dangereux du cycle de vie** (tout l'historique devient public d'un coup). Suivre les 8 étapes **dans l'ordre**, en commençant par `gitleaks` sur **toutes les refs**.
 - **§5 — acquérir une capacité** sur un repo vivant. ⚠️ **L'ORDRE est un piège** : le workflow doit atteindre `main` **AVANT** que `configure-repo.sh` n'exige `build-check` — sinon **le repo se verrouille lui-même**.
 - **§6 — maintenance** : Dependabot et Renovate en autonomie. 🔴 **Les alertes SECRET SCANNING sont réservées à Romain.**
 
 ## Les docs de vie — CHERCHER AVANT DE FABRIQUER
 
-Le template pose par défaut `SUIVI.md` / `BACKLOG.md` dans `workspace/docs/`.
-**Ce sont un DÉFAUT, pas un dogme** — `init-project.sh --no-lifecycle-docs` les omet.
+Le template pose par défaut `SUIVI.md` dans `workspace/docs/` *(l'état ET « ce qui reste »)*.
+**C'est un DÉFAUT, pas un dogme** — `init-project.sh --no-lifecycle-docs` l'omet.
 
 > 🔴 **Tout projet est initialisé par ce template, y compris ceux qui seront conduits par un système tiers.**
 > Imposer nos fichiers de suivi les mettrait en **COLLISION** avec le sien (`.planning/` de GSD & co.).
@@ -90,7 +86,7 @@ Le template pose par défaut `SUIVI.md` / `BACKLOG.md` dans `workspace/docs/`.
 
 1. **DEMANDER** à Romain si le projet sera piloté par un système de gestion *(GSD, superpowers, autre)*.
    - **Oui** → `--no-lifecycle-docs`. **Ce système porte le principe**, nos fichiers seraient un doublon.
-   - **Non / il ne sait pas** → poser le défaut *(`SUIVI.md` + `BACKLOG.md`)*.
+   - **Non / il ne sait pas** → poser le défaut *(`SUIVI.md`)*.
 
 2. 🔴 **Si AUCUN outil n'est explicitement appelé — CHERCHER CE QUI EXISTE AVANT D'EN FABRIQUER UN.**
    **~100 skills sont installées**, dont **tout GSD** : `gsd-progress` · `gsd-resume-work` · `gsd-pause-work` · `gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`…
@@ -103,13 +99,9 @@ Le template pose par défaut `SUIVI.md` / `BACKLOG.md` dans `workspace/docs/`.
 
 ## Discipline sur les secrets
 
-- **Ne JAMAIS afficher la valeur d'un PAT.** Tester un **booléen**, jamais imprimer :
-  `[ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓"`
 - **Ne jamais réécrire un fichier portant un secret par position de ligne.**
-- Le PAT vit **uniquement** dans `repo/.envrc` — jamais dans `.env`, jamais dans l'URL du remote.
+- Test du PAT chargé, stockage (`repo/.envrc` seul), interdits (`.env`, URL du remote) : **jamais afficher un PAT en clair** — détail et commande : RUNBOOK §1 étape 4.
 
 ## Le piège du `direnv allow`
 
-`init-project.sh` fait un `direnv allow` — **mais sur un `.envrc` VIDE**. Quand Romain y colle le PAT, il **modifie le fichier** → direnv **révoque** son autorisation.
-**Sans un SECOND `direnv allow`, le `.envrc` n'est jamais chargé** → `git push` échoue en **403**, alors que le token est bien dans le fichier.
-**Le lui rappeler explicitement**, et vérifier ensuite que le PAT est chargé.
+> 🔴 `init-project.sh` a posé un `direnv allow` sur un `.envrc` VIDE ; y coller le PAT modifie le fichier → direnv **révoque** cette autorisation. **Sans un SECOND `direnv allow`, le `git push` échoue en 403** alors que le token est bien dans le fichier. **Le rappeler explicitement**, puis vérifier que le PAT est chargé. Détail : RUNBOOK §1 étape 4.
