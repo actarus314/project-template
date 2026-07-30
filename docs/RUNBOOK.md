@@ -1,319 +1,319 @@
-# Runbook — le cycle de vie d'un projet, de bout en bout
+# Runbook — the lifecycle of a project, end to end
 
-> **Ce document dit l'ORDRE DES GESTES et QUI les fait. Le standard dit le POURQUOI.**
-> Chaque étape renvoie à la section qui l'explique — on ne recopie pas le raisonnement ici.
+> **This document states the ORDER OF ACTIONS and WHO performs them. The standard states the WHY.**
+> Each step refers to the section that explains it — the reasoning is not copied here.
 >
-> 🔴 **SOURCE DE VÉRITÉ — les tables de permissions des PAT (§1) FONT FOI.** Elles sont *aussi* dans
-> `github-repo-config.md §2`, qui explique **d'où chaque permission est dérivée** (un endpoint appelé
-> = une permission). **En cas d'écart : ce document gagne, et l'écart est un DÉFAUT à corriger** —
-> deux copies divergent toujours, et une permission manquante **échoue en SILENCE**.
-> Standard : `claude-code-project-standard.md` · Config serveur : `github-repo-config.md` · Contrôles : `controles-repo.md`
+> 🔴 **SOURCE OF TRUTH — the PAT permission tables (§1) ARE AUTHORITATIVE.** They are *also* in
+> `github-repo-config.md §2`, which explains **where each permission is derived from** (a called endpoint
+> = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** —
+> two copies always diverge, and a missing permission **fails SILENTLY**.
+> Standard: `claude-code-project-standard.md` · Server config: `github-repo-config.md` · Checks: `controles-repo.md`
 
-**Deux règles qui traversent tout le document :**
+**Two rules that run through the entire document:**
 
 | | |
 |---|---|
-| 🔴 **L'assistant n'a JAMAIS `Administration: write`** | Tout ce qui touche rulesets / visibilité / Pages / secret scanning est **fait par Romain**, avec un **PAT admin ÉPHÉMÈRE** créé puis **révoqué dans la foulée**. |
-| 🔴 **Le cycle nominal est : PRIVÉ → développé → PUBLIC** | Un repo privé en plan Free n'a **ni ruleset, ni secret scanning, ni CodeQL**. Les contrôles **tournent** mais **rien ne les exige**. Le flip les active **tous d'un coup**. |
+| 🔴 **The assistant NEVER has `Administration: write`** | Everything touching rulesets / visibility / Pages / secret scanning is **done by the maintainer**, with an **EPHEMERAL admin PAT** created then **revoked immediately after**. |
+| 🔴 **The nominal cycle is: PRIVATE → developed → PUBLIC** | A private repo on the Free plan has **neither ruleset, nor secret scanning, nor CodeQL**. The checks **run** but **nothing requires them**. The flip activates **all of them at once**. |
 
 ---
 
-## 1 · Créer un projet
+## 1 · Create a project
 
-**Se poser les trois questions AVANT de taper la commande** — elles décident de tout *(standard §12)* :
+**Ask the three questions BEFORE typing the command** — they decide everything *(standard §12)*:
 
 | | Question | Flag |
 |---|---|---|
-| **a** | Le site sera-t-il servi par **GitHub Pages** ? | `--pages` |
-| **b** | Le repo **publiera-t-il une image que quelqu'un d'AUTRE déploie** ? *(auto-hébergeurs, NUC…)* | `--artefact` |
-| **c** | Existe-t-il un **host à VALIDER** avant la prod ? | `--staging` |
+| **a** | Will the site be served by **GitHub Pages**? | `--pages` |
+| **b** | Will the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUC…)* | `--artefact` |
+| **c** | Is there a **host to VALIDATE** before prod? | `--staging` |
 
-> **`develop` découle de (c), jamais de Docker ni du langage.** Un projet `node` sans host à valider n'en a pas ; un site Pages packagé en image non plus.
+> **`develop` follows from (c), never from Docker or the language.** A `node` project without a host to validate does not have one; a Pages site packaged as an image does not either.
 
-### 🔴 Étape 1 — Romain : créer le repo (UI)
+### 🔴 Step 1 — the maintainer: create the repo (UI)
 
 **→ https://github.com/new**
 
-- **Visibility : PRIVATE.** *(Le cycle nominal. Il passera public plus tard — §4.)*
-- **Ne rien cocher** : ni README, ni .gitignore, ni licence. `init-project.sh` les pose, et un fichier créé par GitHub ferait diverger le premier commit.
+- **Visibility: PRIVATE.** *(The nominal cycle. It will go public later — §4.)*
+- **Check nothing**: no README, no .gitignore, no license. `init-project.sh` sets them up, and a file created by GitHub would make the first commit diverge.
 
-### Étape 2 — Claude : générer le projet
+### Step 2 — Claude: generate the project
 
 ```bash
-./init-project.sh <projet> <owner>/<repo> [--type static|node|generic] [--pages] [--artefact] [--staging]
+./init-project.sh <project> <owner>/<repo> [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
-Crée l'arborescence, le premier commit, le remote en **URL nue**, et un **`.envrc` VIDE** *(le PAT n'existe pas encore)*.
+Creates the tree, the first commit, the remote as a **bare URL**, and an **EMPTY `.envrc`** *(the PAT does not exist yet)*.
 
-> ⚠️ `repo/.envrc` **n'existe pas** tant que ce script n'a pas tourné : rien à y coller avant l'étape 3.
+> ⚠️ `repo/.envrc` **does not exist** until this script has run: nothing to paste into it before step 3.
 
-### 🔴 Étape 3 — Romain : créer le PAT d'écriture (celui de l'assistant)
+### 🔴 Step 3 — the maintainer: create the write PAT (the assistant's)
 
 **→ https://github.com/settings/personal-access-tokens/new**
 
-| Réglage | Valeur |
+| Setting | Value |
 |---|---|
 | **Token name** | `claude-<repo>` |
-| **Expiration** | **90 jours** *(Claude alerte à J-14 — §6)* |
-| **Resource owner** | l'owner du repo *(perso ou l'org)* |
-| **Repository access** | ⚠️ **Only select repositories → CE repo, et lui seul.** *Blast radius = 1 repo.* |
+| **Expiration** | **90 days** *(Claude alerts at D-14 — §6)* |
+| **Resource owner** | the repo's owner *(personal or the org)* |
+| **Repository access** | ⚠️ **Only select repositories → THIS repo, and only this one.** *Blast radius = 1 repo.* |
 
-**Repository permissions** — *exactement celles-ci, rien de plus* :
+**Repository permissions** — *exactly these, nothing more*:
 
-| Permission | Niveau | Pourquoi |
+| Permission | Level | Why |
 |---|---|---|
-| **Contents** | Read and write | pousser, brancher, merger |
-| **Pull requests** | Read and write | ouvrir et merger les PR |
+| **Contents** | Read and write | push, branch, merge |
+| **Pull requests** | Read and write | open and merge PRs |
 | **Issues** | Read and write | |
-| **Workflows** | Read and write | éditer les YAML de CI |
-| **Actions** | Read and write | relancer / annuler un run |
-| **Dependabot alerts** | Read and write | traiter les alertes **en autonomie** |
-| **Code scanning alerts** | Read and write | idem |
-| **Secret scanning alerts** | **Read** *(pas write)* | 🔴 **le dismiss est réservé à Romain** — rejeter à tort une vraie fuite a trop d'impact |
-| **Administration** | **Read** *(JAMAIS write)* | **vérifier** les réglages sécu qu'un `✓` de script affirme — dérivation : `github-repo-config.md §2` |
-| *Metadata* | *Read* | *coché automatiquement* |
+| **Workflows** | Read and write | edit the CI YAML |
+| **Actions** | Read and write | rerun / cancel a run |
+| **Dependabot alerts** | Read and write | handle alerts **autonomously** |
+| **Code scanning alerts** | Read and write | same |
+| **Secret scanning alerts** | **Read** *(not write)* | 🔴 **dismissing is reserved for the maintainer** — wrongly dismissing a real leak has too much impact |
+| **Administration** | **Read** *(NEVER write)* | **verify** the security settings that a script's `✓` claims — derivation: `github-repo-config.md §2` |
+| *Metadata* | *Read* | *checked automatically* |
 
-> 🔴 **`Administration: WRITE` : JAMAIS** — c'est toute la matrice de sécurité, et elle reste l'apanage du **PAT admin éphémère** *(§ suivant)*. **`read` est admis, et lui seul.** **Tout le reste : No access.**
-> ⚠️ **Sur un PAT DÉJÀ créé, l'ajouter ne demande AUCUNE rotation** : l'UI édite les permissions d'un fine-grained existant *(→ https://github.com/settings/personal-access-tokens)*.
+> 🔴 **`Administration: WRITE`: NEVER** — that is the entire security matrix, and it remains the sole preserve of the **ephemeral admin PAT** *(§ next)*. **`read` is admitted, and only that.** **Everything else: No access.**
+> ⚠️ **On a PAT ALREADY created, adding it requires NO rotation**: the UI edits the permissions of an existing fine-grained token *(→ https://github.com/settings/personal-access-tokens)*.
 
-### 🔴 Étape 4 — Romain : coller le PAT, puis **`direnv allow`**
+### 🔴 Step 4 — the maintainer: paste the PAT, then **`direnv allow`**
 
 ```bash
-cd <dossier-projet>/repo
-$EDITOR .envrc          # remplir la ligne : export GITHUB_PAT=github_pat_xxxxx
-direnv allow            # ⚠️ OBLIGATOIRE — voir ci-dessous
+cd <project-folder>/repo
+$EDITOR .envrc          # fill in the line: export GITHUB_PAT=github_pat_xxxxx
+direnv allow            # ⚠️ MANDATORY — see below
 ```
 
-> 🔴 **`direnv allow` n'est PAS optionnel, et le piège est subtil.**
-> `init-project.sh` a déjà fait un `direnv allow` — **mais sur un `.envrc` VIDE**. En y collant le PAT, **tu modifies le fichier**, et direnv **révoque automatiquement** son autorisation *(c'est sa sécurité : il refuse d'exécuter un fichier modifié sans accord explicite)*.
-> **Sans ce second `direnv allow`, le `.envrc` n'est jamais chargé** → `GITHUB_PAT` reste vide → **`git push` échoue en 403**, alors que le token est bien dans le fichier. **Symptôme parfaitement déroutant.**
+> 🔴 **`direnv allow` is NOT optional, and the trap is subtle.**
+> `init-project.sh` already did a `direnv allow` — **but on an EMPTY `.envrc`**. **Pasting the PAT into it modifies the file**, and direnv **automatically revokes** its authorization *(that is its security: it refuses to run a modified file without explicit consent)*.
+> **Without this second `direnv allow`, `.envrc` is never loaded** → `GITHUB_PAT` stays empty → **`git push` fails with 403**, even though the token is indeed in the file. **A perfectly confusing symptom.**
 
-**Vérifier que ça a pris** *(le PAT ne doit JAMAIS être affiché — on ne teste qu'un booléen)* :
+**Verify that it took effect** *(the PAT must NEVER be displayed — only a boolean is tested)*:
 ```bash
-cd <dossier-projet>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT chargé ✓" || echo "PAT ABSENT ✗ → direnv allow"
+cd <project-folder>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT loaded ✓" || echo "PAT ABSENT ✗ → direnv allow"
 ```
 
-- **Jamais dans `.env`** *(fuite conteneur via `env_file`)*. **Jamais dans l'URL du remote** *(fuite en clair dans `.git/config`)*.
-- *(Si `direnv` n'est pas installé : `brew install direnv` + le hook dans `~/.zshrc`.)*
-- 💡 **L'outil Bash de Claude lance un shell NON-interactif : direnv n'y tourne pas.** `init-project.sh` a donc posé un **credential helper local** qui lit `$GITHUB_PAT` — c'est ce qui permet à l'assistant de pousser malgré tout. **Ton `direnv allow` reste indispensable** : c'est lui qui met le PAT dans l'environnement.
+- **Never in `.env`** *(container leak via `env_file`)*. **Never in the remote URL** *(leaks in clear text in `.git/config`)*.
+- *(If `direnv` is not installed: `brew install direnv` + the hook in `~/.zshrc`.)*
+- 💡 **Claude's Bash tool launches a NON-interactive shell: direnv does not run there.** `init-project.sh` therefore set up a **local credential helper** that reads `$GITHUB_PAT` — that is what lets the assistant push despite this. **The maintainer's `direnv allow` remains essential**: it is what puts the PAT into the environment.
 
-### Étapes 5 et 6 — Claude
+### Steps 5 and 6 — Claude
 
-| # | Geste |
+| # | Action |
 |---|---|
-| 5 | **Remplir ce que le script signale** : `<contact>` dans `SECURITY.md` · les champs de `AGENTS.md` · le titulaire de `LICENSE`. |
-| 6 | Premier push : `git push -u origin main` *(le hook `pre-push` laisse passer la **création** d'une branche)*. Puis `git push -u origin develop` **si `--staging`**. |
+| 5 | **Fill in what the script flags**: `<contact>` in `SECURITY.md` · the fields of `AGENTS.md` · the holder of `LICENSE`. |
+| 6 | First push: `git push -u origin main` *(the `pre-push` hook allows the **creation** of a branch)*. Then `git push -u origin develop` **if `--staging`**. |
 
-### 🔴 Étape 7a — Romain : créer le PAT ADMIN **ÉPHÉMÈRE**
+### 🔴 Step 7a — the maintainer: create the **EPHEMERAL** ADMIN PAT
 
 **→ https://github.com/settings/personal-access-tokens/new**
 
-| Réglage | Valeur |
+| Setting | Value |
 |---|---|
-| **Token name** | `admin-<repo>-jetable` |
-| **Expiration** | **la plus courte possible** *(7 jours)* — il sera de toute façon **révoqué dans 5 minutes** |
-| **Repository access** | ⚠️ **Only select repositories → CE repo** |
+| **Token name** | `admin-<repo>-disposable` |
+| **Expiration** | **the shortest possible** *(7 days)* — it will be **revoked within 5 minutes** anyway |
+| **Repository access** | ⚠️ **Only select repositories → THIS repo** |
 
-**Repository permissions** — *la recette COMPLÈTE, dérivée des endpoints appelés* :
+**Repository permissions** — *the COMPLETE recipe, derived from the endpoints called*:
 
-| Permission | Niveau | Pourquoi |
+| Permission | Level | Why |
 |---|---|---|
 | **Administration** | **Read and write** | `PATCH /repos` · `PUT /vulnerability-alerts` · `*/rulesets` · `PUT /immutable-releases` |
-| **Pages** | **Read and write** | création du site Pages |
-| **Code scanning alerts** | **Read** | savoir si CodeQL a produit une analyse |
-| **Actions** | **Read** | 🔴 **suivre le run de la 1ʳᵉ analyse CodeQL.** Sans elle, le script ne sait pas quand l'analyse finit → il **ne pose pas la règle `code_scanning`**, et `main` reste **NON gardée**. |
-| **Contents** | **Read** | détecter `pages.yml` / `docker-publish.yml` · lire `CONTRIBUTING.md` *(le repo publie-t-il 3 étages ?)* |
-| **Issues** | **Read** | 🔴 **preuve de vie de Renovate** — `GET /repos/{o}/{r}/issues`, pour dater son *Dependency Dashboard* avant de retirer le filet Dependabot d'un flux à 3 étages. Sans elle, le script **conserve** le filet *(ses PR sécu continueront de viser `main`)* — il le dit et nomme cette permission. *(La table officielle liste cet endpoint sous `Issues: read` **et** sous `Pull requests: read` — l'une **ou** l'autre suffit ; on prend `Issues`, c'est ce qu'on lit.)* |
-| *Metadata* | *Read* | *automatique* |
+| **Pages** | **Read and write** | creation of the Pages site |
+| **Code scanning alerts** | **Read** | know whether CodeQL has produced an analysis |
+| **Actions** | **Read** | 🔴 **track the run of the 1st CodeQL analysis.** Without it, the script does not know when the analysis finishes → it **does not set the `code_scanning` rule**, and `main` remains **UNGUARDED**. |
+| **Contents** | **Read** | detect `pages.yml` / `docker-publish.yml` · read `CONTRIBUTING.md` *(does the repo publish 3 tiers?)* |
+| **Issues** | **Read** | 🔴 **proof of life for Renovate** — `GET /repos/{o}/{r}/issues`, to date its *Dependency Dashboard* before removing the Dependabot safety net from a 3-tier flow. Without it, the script **keeps** the safety net *(its security PRs will keep targeting `main`)* — it says so and names this permission. *(The official table lists this endpoint under `Issues: read` **and** under `Pull requests: read` — one **or** the other suffices; `Issues` is the one used here, it is what gets read.)* |
+| *Metadata* | *Read* | *automatic* |
 
-> ⚠️ **`Administration` NE SUFFIT PAS**, et **chaque permission manquante échoue en SILENCE** : tout le reste passe, et le contrôle absent ne se voit pas. **La recette se DÉRIVE des endpoints appelés — jamais par essais successifs.**
-> **Ce token n'est stocké NULLE PART** : ni keychain, ni `.envrc`, ni historique shell. Le script le demande en **saisie masquée**.
+> ⚠️ **`Administration` IS NOT ENOUGH**, and **each missing permission fails SILENTLY**: everything else passes, and the missing check does not show. **The recipe is DERIVED from the endpoints called — never by trial and error.**
+> **This token is stored NOWHERE**: no keychain, no `.envrc`, no shell history. The script requests it as **masked input**.
 
-### Étape 7b — Romain : jouer le script
+### Step 7b — the maintainer: run the script
 
 ```bash
 cd ~/Documents/Claude/template/repo
-./configure-repo.sh <owner>/<repo> '' 'Description du projet en une ligne.' 'topic-a,topic-b'
-#                                   ↑ homepage : vide ici, le script la déduira de Pages au flip
-#                                                                            ↑ topics : csv, facultatif
+./configure-repo.sh <owner>/<repo> '' 'One-line description of the project.' 'topic-a,topic-b'
+#                                   ↑ homepage: empty here, the script will derive it from Pages at the flip
+#                                                                            ↑ topics: csv, optional
 ```
 
-> 🔴 **Sur un repo qui EXISTAIT déjà, le script peut signaler une « branch protection CLASSIQUE encore active ».** C'est l'**ancien** système de protection, que l'API `rulesets` **ne montre pas** — et il se **cumule** avec le ruleset. S'il exige un check nommé d'après un job qui a disparu *(ce qui arrive dès qu'on adopte les workflows du template)*, **plus aucune PR ne peut jamais être mergée**, CI verte ou pas, avec le seul message « base branch policy prohibits the merge ».
-> **→ La retirer MAINTENANT** *(le ruleset vient d'être posé : la branche n'est jamais sans protection)* : https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/branches — section **« Branch protection rules »**, à distinguer de la section **« Rulesets »** juste en dessous. *(Le badge « Protected » s'allume pour les deux : regarder la SECTION, pas le badge.)*
+> 🔴 **On a repo that ALREADY EXISTED, the script may report a "CLASSIC branch protection still active".** This is the **old** protection system, which the `rulesets` API **does not show** — and it **stacks** with the ruleset. If it requires a check named after a job that has disappeared *(which happens as soon as the template's workflows are adopted)*, **no PR can ever be merged again**, whether CI is green or not, with only the message "base branch policy prohibits the merge".
+> **→ Remove it NOW** *(the ruleset was just set: the branch is never without protection)*: https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/branches — section **"Branch protection rules"**, to be distinguished from the **"Rulesets"** section just below. *(The "Protected" badge lights up for both: look at the SECTION, not the badge.)*
 
-> **La description ET les topics exigent `Administration:write`** — l'assistant, qui n'a **jamais** cette permission, reçoit un **403**. **Seul ce script peut les poser.**
-> Sans description, le community health **plafonne à 85 %**. Sans topic, le repo **ne remonte dans aucune recherche GitHub par sujet**. Le script **le signale** dans les deux cas au lieu de laisser le trou passer.
+> **The description AND the topics require `Administration:write`** — the assistant, which **never** has this permission, receives a **403**. **Only this script can set them.**
+> Without a description, community health **caps at 85%**. Without a topic, the repo **does not surface in any GitHub search by subject**. The script **flags it** in both cases instead of letting the gap slip through.
 
-Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran, ni dans l'historique, ni dans `ps`)*.
+The script **requests the PAT as masked input** *(it appears neither on screen, nor in history, nor in `ps`)*.
 
-- **Sur un repo PRIVÉ/Free, il pose ce qu'il peut** : **Dependabot alerts** *(partout — Renovate les lit)*, les **security updates** *(filet — **2 étages seulement**)*, description, méthode de merge, `default_workflow_permissions`.
-- 🔴 **Sur un flux à 3 ÉTAGES, le REJOUER une fois l'app Renovate installée.** Le script ne retire le filet Dependabot *(dont les PR sécu visent `main`, court-circuitant le staging)* qu'en voyant Renovate **vivant** — son *Dependency Dashboard* daté de moins de 14 jours. Joué **avant** l'onboarding, il ne trouve aucun dashboard, **conserve** le filet et **le dit** : ce message est l'invitation à le rejouer, pas un échec.
-- **Il annonce que rulesets / secret scanning / CodeQL sont indisponibles** — **c'est ATTENDU, pas un échec** : ils arrivent au flip *(§4)*.
-- ⚠️ **La description ne doit contenir aucun caractère de contrôle** *(l'API renvoie 422)* — le script les retire et le signale. **Éviter aussi les tirets cadratins collés d'un copier-coller.**
-- 💡 **`--dry-run`** : lit tout, **n'écrit rien**. À utiliser sur un repo **vivant** dont on n'est pas sûr.
+- **On a PRIVATE/Free repo, it sets what it can**: **Dependabot alerts** *(everywhere — Renovate reads them)*, **security updates** *(safety net — **2 tiers only**)*, description, merge method, `default_workflow_permissions`.
+- 🔴 **On a 3-TIER flow, RE-RUN it once the Renovate app is installed.** The script only removes the Dependabot safety net *(whose security PRs target `main`, short-circuiting staging)* on seeing Renovate **alive** — its *Dependency Dashboard* dated less than 14 days old. Run **before** onboarding, it finds no dashboard, **keeps** the safety net and **says so**: this message is an invitation to re-run it, not a failure.
+- **It announces that rulesets / secret scanning / CodeQL are unavailable** — **this is EXPECTED, not a failure**: they arrive at the flip *(§4)*.
+- ⚠️ **The description must not contain any control character** *(the API returns 422)* — the script removes them and flags it. **Also avoid em dashes stuck together from a copy-paste.**
+- 💡 **`--dry-run`**: reads everything, **writes nothing**. To use on a **live** repo when unsure.
 
-### 🔴🔴 Étape 7c — Romain : **RÉVOQUER LE PAT ADMIN. MAINTENANT.**
+### 🔴🔴 Step 7c — the maintainer: **REVOKE THE ADMIN PAT. NOW.**
 
 **→ https://github.com/settings/personal-access-tokens**
 
-> **C'est l'étape qu'on oublie, et c'est la plus dangereuse à oublier.**
-> Ce token peut **supprimer le repo** et **changer sa visibilité** — il n'a **plus aucune raison d'exister** dès que le script a fini. *(Pourquoi révoquer plutôt que dégrader → §7 en bas.)*
+> **This is the step that gets forgotten, and it is the most dangerous one to forget.**
+> This token can **delete the repo** and **change its visibility** — it has **no reason left to exist** once the script has finished. *(Why revoke rather than downgrade → §7 below.)*
 >
-> *(Le script le rappelle en fin de course — **un rappel n'est pas une révocation**.)*
+> *(The script repeats this reminder at the end of its run — **a reminder is not a revocation**.)*
 
-### Étape 8 — Romain : installer Renovate
+### Step 8 — the maintainer: install Renovate
 
-**→ https://github.com/apps/renovate** — *« Install » → Only select repositories → ce repo.*
+**→ https://github.com/apps/renovate** — *"Install" → Only select repositories → this repo.*
 
-> **Sans elle, `renovate.json` est INERTE** : les 4 binaires épinglés *(gitleaks, actionlint, osv-scanner, trivy)* **gèlent en silence** *(pourquoi ça compte : §17)*.
+> **Without it, `renovate.json` is INERT**: the 4 pinned binaries *(gitleaks, actionlint, osv-scanner, trivy)* **freeze silently** *(why this matters: §17)*.
 
-> 🔴 **L'ORDRE EST UN PIÈGE — `renovate.json` DOIT être sur `main` AVANT que l'app ne soit installée.**
-> Renovate regarde s'il trouve une config sur la branche par défaut.
-> **Il en trouve une → il se met au travail directement.**
-> **Il n'en trouve pas → il ouvre une PR d'onboarding « Configure Renovate ».**
+> 🔴 **THE ORDER IS A TRAP — `renovate.json` MUST be on `main` BEFORE the app is installed.**
+> Renovate checks whether it finds a config on the default branch.
+> **It finds one → it gets to work directly.**
+> **It does not find one → it opens an onboarding PR "Configure Renovate".**
 >
-> Ici, l'ordre est bon **par construction** : le template pose `.github/renovate.json` dès l'étape 1, donc à l'étape 8 le fichier est déjà sur `main` — **aucune PR d'onboarding n'apparaît**.
+> Here, the order is correct **by construction**: the template puts `.github/renovate.json` in place as early as step 1, so at step 8 the file is already on `main` — **no onboarding PR appears**.
 >
-> **⚠️ Sur un repo EXISTANT** *(mise en conformité, §7)*, **l'ordre s'inverse tout seul** : l'app est souvent installée avant que le fichier n'arrive → **la PR d'onboarding surgit**.
-> **NE JAMAIS LA MERGER** *(la merger activerait la config **par DÉFAUT** de Renovate, pas la `renovate.json` **accordée** du template)*.
-> 🔴🔴 **ET NE JAMAIS LA FERMER — c'est l'OPT-OUT DOCUMENTÉ DU BOT.** *« If you wish to opt-out of having Renovate run for your repo, simply close the onboarding Pull Request without merging it. »*
-> Le statut `disabled` vit **côté Mend, pas dans le repo** : **committer `renovate.json` ensuite ne rallume RIEN.**
-> **Vécu le 14/07/2026** — les 4 PR d'onboarding fermées sur cette consigne : `anyone` · `dEURO-dashboard` · `DecantFi` · `rozo-bridge` en `disabled`, **6 jours sans un seul job**, et l'un d'eux **sans aucun bot d'update** *(la bascule full-Renovate venait de retirer son `dependabot.yml` en misant sur un bot qui ne tournait pas)*.
-> ✅ **Conduite à tenir : la LAISSER OUVERTE et demander à Romain.** Ne jamais la fermer par réflexe.
-> **Réparation si c'est déjà arrivé** *(prouvée sur `rozo-bridge` le 21/07)* : un **scan manuel depuis le portail Mend** *(developer.mend.io)* rebascule le repo en `onboarded` — geste **UI de Romain**. Le Dependency Dashboard se réouvre, et Renovate nettoie lui-même la branche fantôme `renovate/configure`.
-> **Le signe qu'un bot VIT** = un job récent **ET** un Dependency Dashboard. Un fichier de config ne prouve rien.
+> **⚠️ On an EXISTING repo** *(bringing into compliance, §7)*, **the order reverses on its own**: the app is often installed before the file arrives → **the onboarding PR shows up**.
+> **NEVER MERGE IT** *(merging it would activate Renovate's **DEFAULT** config, not the template's **tuned** `renovate.json`)*.
+> 🔴🔴 **AND NEVER CLOSE IT — this is the bot's DOCUMENTED OPT-OUT.** *"If you wish to opt-out of having Renovate run for your repo, simply close the onboarding Pull Request without merging it."*
+> The `disabled` status lives **on Mend's side, not in the repo**: **committing `renovate.json` afterward reactivates NOTHING.**
+> **Experienced on 14/07/2026** — the 4 onboarding PRs closed on that instruction left **4 repos** `disabled`, **6 days without a single job**, and one of them **with no update bot left at all** *(the full-Renovate switch had just removed its `dependabot.yml`, betting on a bot that was not running)*.
+> ✅ **Course of action: LEAVE IT OPEN and ask the maintainer.** Never close it by reflex.
+> **Fix if this has already happened** *(proven on a real repo on 21/07)*: a **manual scan from the Mend portal** *(developer.mend.io)* switches the repo back to `onboarded` — a **UI action by the maintainer**. The Dependency Dashboard reopens, and Renovate itself cleans up the phantom `renovate/configure` branch.
+> **The sign that a bot is ALIVE** = a recent job **AND** a Dependency Dashboard. A config file proves nothing.
 
-### Étape 9 — Romain, **si le repo a un arbre npm** : activer Dependabot malware alerts (UI)
+### Step 9 — the maintainer, **if the repo has an npm tree**: enable Dependabot malware alerts (UI)
 
-> **npm-only · AUCUNE API → `configure-repo.sh` NE PEUT PAS le poser** *(cf. §7)*. Disponible **dès le privé Free** *(pas gaté par le plan)*.
+> **npm-only · NO API → `configure-repo.sh` CANNOT set it** *(see §7)*. Available **from private Free onward** *(not gated by the plan)*.
 > **→ Settings → Advanced Security → *Dependabot malware alerts* → Enable.**
-> Détecte les versions npm **malveillantes** *(paquet compromis, typosquat)* — un angle que **Renovate ne couvre pas** : Renovate remédie aux **CVE** par montée de version, or un paquet malveillant n'a souvent **aucune version saine** où bumper. **Inutile sur un repo sans `package.json`.**
+> Detects **malicious** npm versions *(compromised package, typosquat)* — an angle that **Renovate does not cover**: Renovate remedies **CVEs** by version bump, but a malicious package often has **no safe version** to bump to. **Useless on a repo without `package.json`.**
 
 ---
 
-## 2 · Travailler au quotidien
+## 2 · Working day to day
 
-**`main` est la production. On n'y écrit jamais directement.** *(standard §12)*
+**`main` is production. Nothing is ever written to it directly.** *(standard §12)*
 
 ```bash
-git switch -c feat/<sujet>          # depuis `develop` si --staging, sinon depuis `main`
-git commit                          # le hook pre-commit REFUSE un secret
-git push -u origin feat/<sujet>     # le hook pre-push REFUSE main/develop
+git switch -c feat/<subject>          # from `develop` if --staging, otherwise from `main`
+git commit                          # the pre-commit hook REFUSES a secret
+git push -u origin feat/<subject>     # the pre-push hook REFUSES main/develop
 gh pr create --fill
 
-# La CI est-elle verte ? (voir l'avertissement ci-dessous — PAS `gh pr checks`)
+# Is the CI green? (see the warning below — NOT `gh pr checks`)
 sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
 gh run list --commit "$sha"
 
-gh pr merge --squash                # SEULEMENT si tous les workflows attendus sont completed/success
+gh pr merge --squash                # ONLY if all expected workflows are completed/success
 ```
 
-> 🔴 **En PRIVÉ, rien n'exige la CI.** Aucun ruleset → GitHub **accepterait** le merge d'une PR rouge. Vérifier la CI avant tout merge est le **seul point resté humain** de toute la chaîne : aucun hook ne peut l'intercepter, le merge se joue côté serveur.
+> 🔴 **In PRIVATE, nothing requires CI.** No ruleset → GitHub **would accept** the merge of a red PR. Verifying CI before any merge is the **only point that has remained human** in the entire chain: no hook can intercept it, the merge happens server-side.
 >
-> **VERT ⇔ TOUS les workflows ATTENDUS sont `completed / success`** : `CI`, **+ `Publish image`** si `docker-publish.yml` existe *(le même ensemble que les checks requis du ruleset — `configure-repo.sh` le dérive de la présence du workflow)*.
-> ⚠️ **Un workflow ABSENT de la liste n'est PAS un vert** : il n'a simplement pas encore rapporté. GitHub enregistre les workflows **un par un** après un push — pendant quelques secondes, `CI` peut être `success` alors que `Publish image` n'existe pas encore. *« Rien de rouge » et « tout est vert » ne sont pas la même affirmation*, et l'écart entre les deux est exactement là où un change cassé passe.
+> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists *(the same set as the ruleset's required checks — `configure-repo.sh` derives it from the workflow's presence)*.
+> ⚠️ **A workflow ABSENT from the list is NOT a green**: it simply has not reported yet. GitHub registers workflows **one by one** after a push — for a few seconds, `CI` can be `success` while `Publish image` does not exist yet. *"Nothing red" and "everything is green" are not the same claim*, and the gap between the two is exactly where a broken change slips through.
 
-> 🔴 **Ne PAS utiliser `gh pr checks <n>`** *(ni `gh pr view <n>` tout court)* : les deux lisent `statusCheckRollup`, qui exige la permission **`Checks`** — **absente de l'UI des PAT fine-grained**, impossible à accorder *(github/community#129512, cli/cli#12597)*. Avec le PAT du standard, la commande renvoie **`Resource not accessible by personal access token`**.
-> **Rien à ajouter au PAT** : la commande ci-dessus n'a besoin que d'`Actions: read`, déjà dans la matrice. *(`gh pr view --json headRefOid` passe : en ciblant un champ, il ne demande plus le rollup.)*
+> 🔴 **Do NOT use `gh pr checks <n>`** *(nor `gh pr view <n>` alone)*: both read `statusCheckRollup`, which requires the **`Checks`** permission — **absent from the fine-grained PAT UI**, impossible to grant *(github/community#129512, cli/cli#12597)*. With the standard's PAT, the command returns **`Resource not accessible by personal access token`**.
+> **Nothing to add to the PAT**: the command above only needs `Actions: read`, already in the matrix. *(`gh pr view --json headRefOid` works: by targeting one field, it no longer requests the rollup.)*
 
-**Avec `--staging`** : les `feat/` s'accumulent dans `develop`. `develop → main` n'arrive **qu'au moment de publier une version** — **une seule PR pour N changements**, pas deux PR par changement.
+**With `--staging`**: `feat/` branches accumulate in `develop`. `develop → main` happens **only when publishing a version** — **a single PR for N changes**, not two PRs per change.
 
 ---
 
-## 3 · Publier une version
+## 3 · Publish a version
 
-| # | Qui | Geste |
+| # | Who | Action |
 |---|---|---|
-| 1 | Claude | `CHANGELOG.md` : passer `Unreleased` en `X.Y.Z` *(ce que la release raconte à l'utilisateur ; les notes GitHub listent les PR — les deux sont complémentaires)*. |
-| 2 | Claude | *(si `--staging`)* PR `develop → main`, CI verte, merge **en merge commit** *(jamais squash — §12)*. ⚠️ **PUIS : voir l'encadré ci-dessous — ce merge SUPPRIME `develop` tant que le repo est privé.** |
-| 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → la **Release** est créée, et l'**image ghcr** poussée *(si `--artefact`)*. ⚠️ **Avec `--artefact`, la Release est le job `release` de `docker-publish.yml`** *(`needs: build-push` — pas de Release si l'image n'a pas été publiée)* ; **sans** cette capacité, c'est `release.yml`. **Un seul des deux existe**, jamais les deux. |
-| 4 | **Romain** | ⚠️ **1ʳᵉ release — VÉRIFIER que le package ghcr est tirable, et n'agir QUE s'il ne l'est pas.** Sur un compte **PERSO**, un package publié depuis un repo **public** hérite de son accès : il est tirable **aussitôt**, aucun geste. Sur une **ORG**, il peut être **PRIVÉ** *(défaut d'org)* → `docker pull` anonyme = **403**, et **personne ne peut auto-héberger**. **`configure-repo.sh` fait le test lui-même** et ne réclame le geste que s'il échoue. |
-| 5 | Claude | Vérifier que l'image est **réellement tirable** — `configure-repo.sh` le teste **anonymement**, comme le fait le host de prod. ⚠️ **Un job « Publish image » VERT ne prouve RIEN** : il peut réussir alors que l'image reste **intirable** (package privé). |
+| 1 | Claude | `CHANGELOG.md`: turn `Unreleased` into `X.Y.Z` *(what the release tells the user; the GitHub notes list the PRs — the two are complementary)*. |
+| 2 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — §12)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
+| 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → the **Release** is created, and the **ghcr image** pushed *(if `--artefact`)*. ⚠️ **With `--artefact`, the Release is the `release` job of `docker-publish.yml`** *(`needs: build-push` — no Release if the image was not published)*; **without** this capability, it is `release.yml`. **Only one of the two exists**, never both. |
+| 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
+| 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 
-> 🔴 **LA MISE EN PRODUCTION DÉTRUISAIT LE STAGING — tant que le repo est PRIVÉ.**
-> ✅ **Corrigé à la racine** : sur un repo **privé** qui publie un flux à 3 étages, `configure-repo.sh` **RETIRE** `delete-branch-on-merge`. On perd le nettoyage automatique des `feat/*` *(un clic)* ; on garde la branche de staging. Le flip en public le **rétablit** *(rejouer le script — le ruleset prend le relais)*.
-> ⚠️ **Un repo configuré AVANT ce correctif porte encore le réglage** : rejouer `configure-repo.sh` avant sa prochaine promotion, sinon ce qui suit s'applique toujours.
-> `delete-branch-on-merge` supprime la branche **source** de **toute** PR mergée — donc **`develop` elle-même**, au merge de la PR `develop → main`.
-> **En PUBLIC**, le ruleset `develop` (règle `deletion`) **l'en empêche**. **En PRIVÉ, il n'existe aucun ruleset : la branche est supprimée, sans un mot.**
-> **Le dégât est en cascade** : au rejeu suivant, `configure-repo.sh` ne voit plus `develop`, en conclut « pas de staging », **ne pose pas son ruleset** et **repasse `main` en squash-only** → **la promotion suivante devient IMPOSSIBLE** *(squasher `develop` dans `main` fait diverger les deux branches à chaque cycle — §12)*.
-> **→ Après une promotion sur un repo PRIVÉ, RECRÉER `develop` immédiatement :**
+> 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING — as long as the repo is PRIVATE.**
+> ✅ **Fixed at the root**: on a **private** repo that publishes a 3-tier flow, `configure-repo.sh` **REMOVES** `delete-branch-on-merge`. The automatic cleanup of `feat/*` is lost *(one click)*; the staging branch is kept. The flip to public **restores it** *(re-run the script — the ruleset takes over)*.
+> ⚠️ **A repo configured BEFORE this fix still carries the setting**: re-run `configure-repo.sh` before its next promotion, otherwise what follows still applies.
+> `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop` itself**, when the `develop → main` PR merges.
+> **In PUBLIC**, the `develop` ruleset (the `deletion` rule) **prevents this**. **In PRIVATE, no ruleset exists: the branch is deleted, without a word.**
+> **The damage cascades**: at the next run, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **does not set its ruleset** and **switches `main` back to squash-only** → **the next promotion becomes IMPOSSIBLE** *(squashing `develop` into `main` makes the two branches diverge on every cycle — §12)*.
+> **→ After a promotion on a PRIVATE repo, RECREATE `develop` immediately:**
 > ```bash
 > git switch -c develop main && git push -u origin develop
 > ```
-> *(Le script le détecte et le signale : il compare le bloc `## Branching` de `CONTRIBUTING.md` à ce qui **existe** réellement.)*
+> *(The script detects and flags this: it compares the `## Branching` block of `CONTRIBUTING.md` to what **actually exists**.)*
 
-> ⚠️ **Les immutable releases ne sont PAS rétroactives.** Elles doivent être posées **avant la v1** — après, il est trop tard pour les releases déjà publiées.
-> `configure-repo.sh` s'en charge **dès le privé** *(le réglage y est disponible)* : rien à attendre, et un repo qui ne bascule jamais en public est couvert lui aussi.
+> ⚠️ **Immutable releases are NOT retroactive.** They must be set up **before v1** — after that, it is too late for releases already published.
+> `configure-repo.sh` handles this **from the private state onward** *(the setting is available there)*: nothing to wait for, and a repo that never flips to public is covered too.
 
 ---
 
-## 4 · Basculer PRIVÉ → PUBLIC
+## 4 · Flip PRIVATE → PUBLIC
 
-> 🔴 **Le moment le plus dangereux du cycle de vie.** **Tout l'historique devient public d'un coup** — y compris un secret enfoui dans un commit de six mois, poussé pendant la phase où **aucun secret scanning serveur n'existait**. D'où l'étape 1, non négociable.
+> 🔴 **The most dangerous moment of the lifecycle.** **The entire history becomes public at once** — including a secret buried in a six-month-old commit, pushed during the phase when **no server-side secret scanning existed**. Hence step 1, non-negotiable.
 
-| # | Qui | Geste |
+| # | Who | Action |
 |---|---|---|
-| 1 | Claude | **`gitleaks` sur TOUTES les refs**, pas seulement `main` — un secret dans une vieille branche poussée devient public lui aussi. |
-| 2 | Claude | Vérifier qu'**aucun `<placeholder>` ne subsiste** dans les fichiers versionnés — surtout `<contact>` dans `SECURITY.md`. |
-| 3 | **Romain** | Flipper la visibilité *(UI)*. |
-| 4 | **Romain** | **Rejouer `configure-repo.sh`** *(PAT admin éphémère)* → rulesets `main`/`develop`/`tags`, secret scanning + push protection, **private vulnerability reporting**, **immutable releases**, Pages, description, topics, et **L'ACTIVATION DE CODEQL** *(default setup — il attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`)*. **Le script est idempotent : c'est fait pour.** |
-| 5 | **Romain** | **Repo d'ORG uniquement** — Settings → **Moderation options** → **Reported content** → « Prior contributors and collaborators ». **Aucune API.** Sans ce clic, le community health **plafonne à 87 %**. |
-| 6 | — | **Rien à faire pour les workflows** : `pages.yml` porte `if: visibility != 'private'` — il est `skipped` en privé et **se réveille seul**. ⚠️ **CodeQL n'est PLUS un workflow** *(il n'y a plus de `codeql.yml`)* : il est activé **par le script**, à l'**étape 4**, en ***default setup*** — GitHub y détecte les langages et **les tient à jour tout seul** *(standard §17)*. |
-| 7 | — | **Rien à faire pour la règle `code_scanning`** : à l'**étape 4**, le script **active CodeQL, ATTEND sa 1ʳᵉ analyse, PUIS pose la règle** — en **une seule** exécution *(sinon `main` resterait NON gardée jusqu'à un rejeu — conséquence détaillée §1 étape 7a)*. |
-| 8 | Claude | Vérifier en lecture : community health **100 %** · CodeQL **vert** · rulesets **actifs** · secret scanning **on**. |
+| 1 | Claude | **`gitleaks` on ALL refs**, not just `main` — a secret in an old pushed branch becomes public too. |
+| 2 | Claude | Verify that **no `<placeholder>` remains** in the versioned files — especially `<contact>` in `SECURITY.md`. |
+| 3 | **the maintainer** | Flip the visibility *(UI)*. |
+| 4 | **the maintainer** | **Re-run `configure-repo.sh`** *(ephemeral admin PAT)* → rulesets `main`/`develop`/`tags`, secret scanning + push protection, **private vulnerability reporting**, **immutable releases**, Pages, description, topics, and **THE ACTIVATION OF CODEQL** *(default setup — it waits for the 1st analysis, then sets the `code_scanning` rule)*. **The script is idempotent: that is what it is built for.** |
+| 5 | **the maintainer** | **ORG repo only** — Settings → **Moderation options** → **Reported content** → "Prior contributors and collaborators". **No API.** Without this click, community health **caps at 87%**. |
+| 6 | — | **Nothing to do for the workflows**: `pages.yml` carries `if: visibility != 'private'` — it is `skipped` in private and **wakes up on its own**. ⚠️ **CodeQL is NO LONGER a workflow** *(there is no more `codeql.yml`)*: it is activated **by the script**, at **step 4**, in ***default setup*** — GitHub detects the languages there and **keeps them up to date on its own** *(standard §17)*. |
+| 7 | — | **Nothing to do for the `code_scanning` rule**: at **step 4**, the script **activates CodeQL, WAITS for its 1st analysis, THEN sets the rule** — in a **single** run *(otherwise `main` would stay UNGUARDED until a re-run — consequence detailed in §1 step 7a)*. |
+| 8 | Claude | Verify by reading: community health **100%** · CodeQL **green** · rulesets **active** · secret scanning **on**. |
 
-> **CodeQL analyse tout l'historique d'un coup** au flip — `semgrep` + `osv-scanner` tournent donc **depuis le premier jour** *(détail : §18)*.
+> **CodeQL analyzes the entire history at once** at the flip — `semgrep` + `osv-scanner` therefore run **from day one** *(detail: §18)*.
 
 ---
 
-## 5 · Faire évoluer un projet vivant
+## 5 · Evolving a live project
 
-**On ne change pas d'archétype — on ACQUIERT une capacité.** *(standard §18, checklists détaillées)*
+**The archetype does not change — a capability is ACQUIRED.** *(standard §18, detailed checklists)*
 
-| Besoin | Capacité | ⚠️ Le piège |
+| Need | Capability | ⚠️ The trap |
 |---|---|---|
-| « je veux que d'autres puissent **auto-héberger** » | `--artefact` | **L'ORDRE.** Le workflow doit atteindre `main` **AVANT** que `configure-repo.sh` n'exige `build-check` — sinon **le repo se verrouille lui-même**, y compris contre la PR qui apporte le workflow. |
-| « un **host** apparaît, je veux le valider » | `--staging` | Rejouer `configure-repo.sh` : il pose le ruleset `develop` **et autorise le merge commit** *(squash seul est incompatible avec une branche de staging)*. |
-| « le site part **hors Pages** » | retirer `--pages` | Supprimer `pages.yml`. Ne **jamais** le laisser tourner « au cas où » — un workflow orphelin est un contrôle que plus personne ne lit. |
-| **retirer** une capacité | — | ⚠️ Retirer `build-check` des checks **requis AVANT** de supprimer `docker-publish.yml`. Sinon le check reste exigé alors que plus rien ne le produit → **toute PR bloquée pour toujours**. |
+| "others should be able to **self-host**" | `--artefact` | **THE ORDER.** The workflow must reach `main` **BEFORE** `configure-repo.sh` requires `build-check` — otherwise **the repo locks itself out**, including against the PR that brings the workflow. |
+| "a **host** appears, it needs validating" | `--staging` | Re-run `configure-repo.sh`: it sets the `develop` ruleset **and allows the merge commit** *(squash-only is incompatible with a staging branch)*. |
+| "the site moves **off Pages**" | remove `--pages` | Delete `pages.yml`. **Never** leave it running "just in case" — an orphaned workflow is a check that no one reads anymore. |
+| **removing** a capability | — | ⚠️ Remove `build-check` from the **required** checks **BEFORE** deleting `docker-publish.yml`. Otherwise the check stays required while nothing produces it anymore → **every PR blocked forever**. |
 
 ---
 
-## 6 · Maintenance courante
+## 6 · Ongoing maintenance
 
-| Quoi | Qui | Quand |
+| What | Who | When |
 |---|---|---|
-| **PR Renovate** *(TOUT : écosystèmes auto-détectés — actions, npm, docker, pip… — **et** les 4 binaires épinglés VERSION+SHA256)* | Claude — **en autonomie** | hebdo. Minor/patch groupés, **majeures seules**. **Routine = PR revue par un humain ; SÉCURITÉ = auto-mergée** *(aucun geste)*. ⚠️ **Si le checksum d'un binaire est faux, `sha256sum -c` fait échouer la CI** — bruyamment. Une PR rouge se ferme. |
-| **Alertes Dependabot** et **code scanning** | Claude — **en autonomie** *(dismiss/reopen)* | à réception |
-| **Alertes SECRET SCANNING** | 🔴 **ROMAIN SEUL** | L'assistant est en **lecture seule** dessus *(pourquoi : §1 étape 3)*. |
-| **Rotation du PAT d'écriture** | Claude **alerte à J-14** · **Romain régénère** | tous les **90 j** |
-| **`SUIVI.md`** | Claude — **de lui-même** | consolider · purger le livré |
+| **Renovate PR** *(EVERYTHING: auto-detected ecosystems — actions, npm, docker, pip… — **and** the 4 pinned binaries VERSION+SHA256)* | Claude — **autonomously** | weekly. Minor/patch grouped, **majors alone**. **Routine = PR reviewed by a human; SECURITY = auto-merged** *(no action needed)*. ⚠️ **If a binary's checksum is wrong, `sha256sum -c` fails the CI** — loudly. A red PR gets closed. |
+| **Dependabot** and **code scanning** alerts | Claude — **autonomously** *(dismiss/reopen)* | on receipt |
+| **SECRET SCANNING alerts** | 🔴 **THE MAINTAINER ALONE** | The assistant is **read-only** on these *(why: §1 step 3)*. |
+| **Write PAT rotation** | Claude **alerts at D-14** · **the maintainer regenerates** | every **90 days** |
+| **`SUIVI.md`** | Claude — **on its own** | consolidate · purge what's shipped |
 
 ---
 
-## 7 · Les gestes que Claude ne peut PAS faire
+## 7 · The actions Claude CANNOT perform
 
-*(Ce ne sont pas des oublis : c'est le modèle de sécurité — §5, `github-repo-config.md` §2.)*
+*(These are not oversights: this is the security model — §5, `github-repo-config.md` §2.)*
 
-- **Créer** ou **supprimer** un repo · **changer la visibilité** → droit à portée de **compte**.
-- **Tout ce qui exige `Administration`** : rulesets, secret scanning, Pages, immutable releases, description, **topics** → **PAT admin éphémère, joué par Romain**. ⚠️ **Ce sont des gestes du SCRIPT, pas des gestes « à la main »** : `configure-repo.sh` les pose tous *(topics inclus : `PUT /repos/{o}/{r}/topics` exige `administration=write`)*.
-- **Rendre un package ghcr public** → **UI, aucune API** *(les PAT fine-grained ne couvrent pas ghcr — seuls les PAT `classic` le font)*. Le script **le TESTE** *(pull anonyme réel)* et **ne le réclame que si le test échoue** *(détail : §3 étape 4)*.
-- **Reported content** → UI, aucune API.
-- **Activer Dependabot malware alerts** *(repos npm)* → **UI, aucune API** — npm-only, dispo dès le privé Free *(détail : §1 étape 9)*.
-- **2FA** → **UI, aucune API.** ✅ **DÉJÀ ACTIF sur le compte de Romain.** Réglage de **COMPTE**, **une fois pour toutes** — **pas** un geste par repo. ⚠️ **Ne pas le confondre avec le 2FA OBLIGATOIRE d'une ORG**, qui est un réglage **distinct** *(imposer le 2FA aux membres)* — voir l'encart ci-dessous.
-- **Dismiss une alerte secret scanning** → **Romain seul.**
+- **Create** or **delete** a repo · **change visibility** → **account**-scoped right.
+- **Everything requiring `Administration`**: rulesets, secret scanning, Pages, immutable releases, description, **topics** → **ephemeral admin PAT, run by the maintainer**. ⚠️ **These are actions performed by the SCRIPT, not "by hand" actions**: `configure-repo.sh` sets all of them *(topics included: `PUT /repos/{o}/{r}/topics` requires `administration=write`)*.
+- **Making a ghcr package public** → **UI, no API** *(fine-grained PATs do not cover ghcr — only `classic` PATs do)*. The script **TESTS it** *(real anonymous pull)* and **only requests it if the test fails** *(detail: §3 step 4)*.
+- **Reported content** → UI, no API.
+- **Enabling Dependabot malware alerts** *(npm repos)* → **UI, no API** — npm-only, available from private Free onward *(detail: §1 step 9)*.
+- **2FA** → **UI, no API.** ✅ **ALREADY ACTIVE on the maintainer's account.** **ACCOUNT**-level setting, **once and for all** — **not** a per-repo action. ⚠️ **Not to be confused with an ORG's MANDATORY 2FA**, which is a **distinct** setting *(enforcing 2FA on members)* — see the box below.
+- **Dismissing a secret scanning alert** → **the maintainer alone.**
 
-> ### Si le repo vit dans une ORGANISATION — 4 réglages, une seule fois par org
-> **Aucun n'est scriptable sans un PAT `Organization Administration`** *(permission sans granularité : qui peut lire peut tout écrire)* — donc **UI, geste de Romain**.
-> ✅ **Déjà posés sur `bayalis` et `quatrecarre`** *(25/07)* — c'est l'**état attendu** de toute org :
+> ### If the repo lives in an ORGANIZATION — 4 settings, once per org
+> **None can be scripted without an `Organization Administration` PAT** *(a permission with no granularity: whoever can read can write everything)* — so **UI, an action by the maintainer**.
+> ✅ **Already set on the account's orgs** *(25/07)* — this is the **expected state** of every org:
 >
-> | Réglage | Où | Valeur |
+> | Setting | Where | Value |
 > |---|---|---|
-> | **2FA obligatoire** | `/settings/security` | activé |
-> | **PAT classiques** | `/settings/personal-access-tokens?tab=classic` | **Restrict** *(bloqués)* |
-> | **PAT fine-grained** | `/settings/personal-access-tokens` | approbation admin **requise** + durée de vie max **90 j** |
-> | **Visibilité par défaut des packages** | `/settings/packages` | ⚠️ sur une **org**, un package ghcr est **privé d'office** *(§3 étape 4)* |
+> | **Mandatory 2FA** | `/settings/security` | enabled |
+> | **Classic PATs** | `/settings/personal-access-tokens?tab=classic` | **Restrict** *(blocked)* |
+> | **Fine-grained PATs** | `/settings/personal-access-tokens` | admin approval **required** + max lifetime **90 days** |
+> | **Default package visibility** | `/settings/packages` | ⚠️ on an **org**, a ghcr package is **private by default** *(§3 step 4)* |
 >
-> ⛔ **Ce que l'org n'apporte PAS, malgré les apparences** : les **rulesets d'org** exigent **Team** *(bandeau explicite sur `/settings/rules`)* · une **code security configuration** ne remplace le geste repo qu'à partir de **plusieurs** repos *(en dessous, `configure-repo.sh` fait déjà tout)* · l'écran **« Advanced Security »** laisse croire que **Dependabot** est derrière le mur payant : **c'est faux**, il est gratuit, privé compris — c'est `/settings/security_analysis` qui dit vrai.
+> ⛔ **What the org does NOT bring, despite appearances**: **org rulesets** require **Team** *(explicit banner on `/settings/rules`)* · a **code security configuration** only replaces the repo action from **several** repos onward *(below that, `configure-repo.sh` already does everything)* · the **"Advanced Security"** screen suggests **Dependabot** is behind the paywall: **that is false**, it is free, private included — it is `/settings/security_analysis` that tells the truth.
 
-> **Pourquoi le PAT admin est JETABLE plutôt que dégradé après coup** → `github-repo-config.md` §2. *(En un mot : **révoquer est binaire ; dégrader des droits ne l'est pas** — et un retrait manuel est oubliable.)*
+> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `github-repo-config.md` §2. *(In a word: **revoking is binary; downgrading rights is not** — and a manual removal is forgettable.)*

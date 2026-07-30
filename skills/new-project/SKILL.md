@@ -1,107 +1,107 @@
 ---
 name: new-project
-description: Use when Romain wants to create, initialise, scaffold or set up a NEW project/repo, or configure an existing one, or flip a repo from private to public, or add a capability (Docker image, staging host, GitHub Pages) to a live repo. Triggers on "initialise un projet", "crée un projet", "nouveau repo", "passe le repo en public", "configure ce repo". Drives the full runbook step by step, stopping at every action Romain must perform himself.
+description: Use when the maintainer wants to create, initialise, scaffold or set up a NEW project/repo, or configure an existing one, or flip a repo from private to public, or add a capability (Docker image, staging host, GitHub Pages) to a live repo. Triggers on "initialise un projet", "crée un projet", "nouveau repo", "passe le repo en public", "configure ce repo". Drives the full runbook step by step, stopping at every action the maintainer must perform themselves.
 ---
 
-# Créer / configurer un projet — dérouler le RUNBOOK
+# Create / configure a project — run through the RUNBOOK
 
-## Les deux documents, et lequel fait foi sur quoi
+## The two documents, and which one governs what
 
-Ils ne se remplacent pas — ils répondent à deux questions différentes. **Les confondre, c'est soit improviser la procédure, soit violer les conventions.**
+They do not replace each other — they answer two different questions. **Confusing them means either improvising the procedure, or violating the conventions.**
 
-| Document | Répond à | Quand le lire |
+| Document | Answers | When to read it |
 |---|---|---|
-| 🎯 **`docs/RUNBOOK.md`** | **QUOI faire, dans quel ORDRE, et QUI le fait.** URL, permissions exactes, commandes complètes, pièges. | **INTÉGRALEMENT, avant de commencer.** C'est le fil à dérouler. |
-| 📖 **`docs/claude-code-project-standard.md`** | **POURQUOI**, et les **conventions à tenir pendant qu'on développe** : arborescence, secrets, branches, README, docs de vie. | **Déjà imposé à chaque session** par `~/.claude/CLAUDE.md`. **Si ce n'est pas fait dans cette session : le lire MAINTENANT** — le runbook y renvoie sans cesse (« standard §12 »…), et **un renvoi non lu est un renvoi mort**. |
+| 🎯 **`docs/RUNBOOK.md`** | **WHAT to do, in what ORDER, and WHO does it.** URLs, exact permissions, complete commands, pitfalls. | **IN FULL, before starting.** It's the thread to follow. |
+| 📖 **`docs/claude-code-project-standard.md`** | **WHY**, and the **conventions to hold while developing**: layout, secrets, branches, README, lifecycle docs. | **Already imposed on every session** by `~/.claude/CLAUDE.md`. **If it hasn't been done in this session: read it NOW** — the runbook keeps referring to it ("standard §12"…), and **an unread reference is a dead reference**. |
 
-**Chemins :**
+**Paths:**
 - `/Users/romain/Documents/Claude/template/repo/docs/RUNBOOK.md`
 - `/Users/romain/Documents/Claude/template/repo/docs/claude-code-project-standard.md`
 
-> 🔴 **Ne JAMAIS dérouler ces étapes de mémoire.** Elles portent des URL, des permissions exactes et des pièges précis, et elles changent. **Une étape récitée de mémoire est une étape fausse.**
+> 🔴 **NEVER run through these steps from memory.** They carry URLs, exact permissions and precise pitfalls, and they change. **A step recited from memory is a wrong step.**
 
-**Les sections du standard réellement engagées ici** *(à ouvrir quand le runbook y renvoie, pas à réciter)* :
-**§5** auth GitHub et matrice des PAT · **§10** initier un projet · **§12** politique de branches (les 3 capacités) · **§17** config du repo · **§18** la matrice des contrôles + les procédures *(flip privé→public, acquérir une capacité)*.
+**The standard's sections actually involved here** *(to open when the runbook refers to them, not to recite)*:
+**§5** GitHub auth and the PAT matrix · **§10** initiating a project · **§12** branch policy (the 3 capabilities) · **§17** repo config · **§18** the controls matrix + the procedures *(flip private→public, acquire a capability)*.
 
-> ⚠️ **En cas de CONTRADICTION entre les deux : le RUNBOOK fait foi sur la PROCÉDURE** (l'ordre, les valeurs, les URL — il est tenu à jour pour l'exécution). **Le STANDARD fait foi sur les CONVENTIONS** (le pourquoi, les règles de fond).
-> **Et il faut SIGNALER la contradiction à Romain** au lieu de choisir en silence : deux docs qui divergent, c'est un défaut du template — pas un arbitrage à faire en passant.
+> ⚠️ **In case of CONTRADICTION between the two: the RUNBOOK governs the PROCEDURE** (the order, the values, the URLs — it is kept up to date for execution). **The STANDARD governs the CONVENTIONS** (the why, the substantive rules).
+> **And the contradiction must be FLAGGED to the maintainer** instead of choosing silently: two docs that diverge is a defect in the template — not a call to make in passing.
 
-## Les 4 règles, non négociables
+## The 4 rules, non-negotiable
 
-### 1. S'ARRÊTER à chaque geste de Romain
+### 1. STOP at every action by the maintainer
 
-Le runbook marque **qui fait quoi**. Certains gestes sont **impossibles** pour l'assistant (il n'a **jamais** `Administration: write` — `read` seul est admis) :
-créer le repo · créer/révoquer un PAT · `direnv allow` · jouer `configure-repo.sh` · flipper la visibilité · rendre un package ghcr public *(si le test du script échoue)* · installer Renovate.
+The runbook marks **who does what**. Some actions are **impossible** for the assistant (it **never** has `Administration: write` — `read` alone is allowed):
+create the repo · create/revoke a PAT · `direnv allow` · run `configure-repo.sh` · flip the visibility · make a ghcr package public *(if the script's test fails)* · install Renovate.
 
-> 🔴 **Piège Renovate — la PR « Configure Renovate »** *(repo existant, app installée avant `renovate.json`)* : ne **JAMAIS** la merger *(elle activerait la config par défaut, pas celle du template)*, et 🔴 ne **JAMAIS** la fermer non plus — fermer est l'**opt-out documenté** du bot (`disabled` côté Mend ; committer `renovate.json` ensuite ne rallume rien). **La laisser ouverte et demander à Romain.** Détail et réparation : RUNBOOK §1 étape 8.
+> 🔴 **Renovate trap — the "Configure Renovate" PR** *(existing repo, app installed before `renovate.json`)*: **NEVER** merge it *(it would activate the default config, not the template's)*, and 🔴 **NEVER** close it either — closing is the bot's **documented opt-out** (`disabled` on Mend's side; committing `renovate.json` afterward relights nothing). **Leave it open and ask the maintainer.** Detail and repair: RUNBOOK §1 step 8.
 
-Pour chacun :
-- **Donner l'URL directe** et **les valeurs exactes** (nom du token, expiration, permissions une par une).
-- **S'ARRÊTER. Attendre sa confirmation.** Ne **jamais** enchaîner en supposant que c'est fait.
-- Puis **VÉRIFIER** en lecture que c'est bien fait, avant de continuer.
+For each one:
+- **Give the direct URL** and **the exact values** (token name, expiration, permissions one by one).
+- **STOP. Wait for confirmation.** **Never** move on assuming it's done.
+- Then **VERIFY** in read mode that it's indeed done, before continuing.
 
-### 2. Poser les 3 questions AVANT de taper la commande
+### 2. Ask the 3 questions BEFORE typing the command
 
-Elles décident de toute l'architecture (`AskUserQuestion`) : **(a)** site servi par **Pages** ? → `--pages` · **(b)** le repo publie-t-il une image que **quelqu'un d'AUTRE** déploie ? → `--artefact` · **(c)** existe-t-il un **host à VALIDER** avant la prod ? → `--staging`.
-**Les poser avec leur libellé EXACT** *(table et nuances : RUNBOOK §1)* — reformulées de mémoire, (b) et (c) se confondent, et on fabrique un `develop` inutile.
-Plus la **toolchain** : `--type static` (aucun npm) · `--type node` (npm, tests, types) · `--type generic` (aucune capacité pré-câblée — Rust, Go, C/C++, Android… ; contrôles de sécurité seuls).
+They decide the whole architecture (`AskUserQuestion`): **(a)** site served by **Pages**? → `--pages` · **(b)** does the repo publish an image that **someone ELSE** deploys? → `--artefact` · **(c)** is there a **host to VALIDATE** before prod? → `--staging`.
+**Ask them with their EXACT wording** *(table and nuances: RUNBOOK §1)* — reworded from memory, (b) and (c) get confused, and an unnecessary `develop` gets built.
+Plus the **toolchain**: `--type static` (no npm) · `--type node` (npm, tests, types) · `--type generic` (no pre-wired capability — Rust, Go, C/C++, Android… ; security controls only).
 
-> 🔴 **`develop` découle de (c), JAMAIS de Docker ni du langage.** Un projet `node` sans host à valider n'en a pas. Un site Pages packagé en image non plus.
+> 🔴 **`develop` follows from (c), NEVER from Docker nor from the language.** A `node` project with no host to validate doesn't have one. A Pages site packaged as an image doesn't either.
 
-**Ne pas deviner ces réponses.** Si Romain dit juste « initialise un projet », **les poser**.
+**Do not guess these answers.** If the maintainer just says "initialise un projet", **ask**.
 
-### 3. Ne rien inventer, tout vérifier
+### 3. Invent nothing, verify everything
 
-- **Les permissions du PAT** : les lire dans le runbook, **les énoncer une par une**. Une permission manquante **échoue en SILENCE** — tout le reste passe, et le contrôle absent ne se voit pas.
-- **Après chaque étape**, vérifier le résultat réel (`gh api`, `git ls-files`, la CI) — **jamais supposer**.
-- Si quelque chose ne correspond pas au runbook : **le dire**, ne pas improviser.
+- **The PAT's permissions**: read them in the runbook, **state them one by one**. A missing permission **fails SILENTLY** — everything else passes, and the missing control doesn't show.
+- **After each step**, verify the actual result (`gh api`, `git ls-files`, the CI) — **never assume**.
+- If something doesn't match the runbook: **say so**, don't improvise.
 
-### 4. Ne JAMAIS oublier la révocation du PAT admin
+### 4. NEVER forget to revoke the admin PAT
 
-> 🔴🔴 **C'est l'étape qu'on oublie, et la plus dangereuse à oublier.**
-> Le PAT admin peut **supprimer le repo** et **changer sa visibilité**. Dès que `configure-repo.sh` a fini :
-> **→ https://github.com/settings/personal-access-tokens — RÉVOQUER MAINTENANT.**
-> Le rappeler **explicitement**, et **attendre confirmation**. *Un rappel n'est pas une révocation.*
+> 🔴🔴 **This is the step that gets forgotten, and the most dangerous one to forget.**
+> The admin PAT can **delete the repo** and **change its visibility**. As soon as `configure-repo.sh` is finished:
+> **→ https://github.com/settings/personal-access-tokens — REVOKE NOW.**
+> State the reminder **explicitly**, and **wait for confirmation**. *A reminder is not a revocation.*
 
-## Les autres parcours du runbook
+## The runbook's other paths
 
-La même skill couvre :
+The same skill covers:
 
-- **§2 — travailler au quotidien** : `feat/` → PR → CI verte → merge. ⚠️ En privé, **rien n'exige la CI** — c'est le **seul point resté humain**. Vérifier via `sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)` puis `gh run list --commit "$sha"` — **jamais `gh pr checks`** (403 garanti, permission `Checks` absente des PAT fine-grained). ⚠️ Un workflow **absent** de la liste n'est **pas** un vert. Détail : RUNBOOK §2.
-- **§3 — publier une version** : CHANGELOG → tag `v*` → Release + image. ⚠️ **1ʳᵉ release : VÉRIFIER que le package ghcr est tirable** *(`configure-repo.sh` le teste lui-même)* — tirable aussitôt sur un compte perso, potentiellement privé par défaut sur une org ; n'agir que si le test échoue.
-- **§4 — basculer privé → public** : **le moment le plus dangereux du cycle de vie** (tout l'historique devient public d'un coup). Suivre les 8 étapes **dans l'ordre**, en commençant par `gitleaks` sur **toutes les refs**.
-- **§5 — acquérir une capacité** sur un repo vivant. ⚠️ **L'ORDRE est un piège** : le workflow doit atteindre `main` **AVANT** que `configure-repo.sh` n'exige `build-check` — sinon **le repo se verrouille lui-même**.
-- **§6 — maintenance** : Dependabot et Renovate en autonomie. 🔴 **Les alertes SECRET SCANNING sont réservées à Romain.**
+- **§2 — day-to-day work**: `feat/` → PR → green CI → merge. ⚠️ In private, **nothing requires CI** — it's the **only point that stays human**. Verify via `sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)` then `gh run list --commit "$sha"` — **never `gh pr checks`** (guaranteed 403, `Checks` permission absent from fine-grained PATs). ⚠️ A workflow **absent** from the list is **not** a green. Detail: RUNBOOK §2.
+- **§3 — publishing a release**: CHANGELOG → tag `v*` → Release + image. ⚠️ **1st release: VERIFY that the ghcr package is pullable** *(`configure-repo.sh` tests it itself)* — pullable right away on a personal account, potentially private by default on an org; act only if the test fails.
+- **§4 — flipping private → public**: **the most dangerous moment of the lifecycle** (the entire history becomes public all at once). Follow the 8 steps **in order**, starting with `gitleaks` on **all refs**.
+- **§5 — acquiring a capability** on a live repo. ⚠️ **The ORDER is a trap**: the workflow must reach `main` **BEFORE** `configure-repo.sh` requires `build-check` — otherwise **the repo locks itself out**.
+- **§6 — maintenance**: Dependabot and Renovate autonomously. 🔴 **SECRET SCANNING alerts are reserved for the maintainer.**
 
-## Les docs de vie — CHERCHER AVANT DE FABRIQUER
+## Lifecycle docs — SEARCH BEFORE BUILDING
 
-Le template pose par défaut `SUIVI.md` dans `workspace/docs/` *(l'état ET « ce qui reste »)*.
-**C'est un DÉFAUT, pas un dogme** — `init-project.sh --no-lifecycle-docs` l'omet.
+The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND "what's left")*.
+**This is a DEFAULT, not a dogma** — `init-project.sh --no-lifecycle-docs` omits it.
 
-> 🔴 **Tout projet est initialisé par ce template, y compris ceux qui seront conduits par un système tiers.**
-> Imposer nos fichiers de suivi les mettrait en **COLLISION** avec le sien (`.planning/` de GSD & co.).
-> **Deux systèmes de suivi concurrents = zéro système tenu.**
+> 🔴 **Every project is initialized by this template, including those that will be driven by a third-party system.**
+> Imposing our tracking files would put them in **COLLISION** with its own (`.planning/` from GSD & co.).
+> **Two competing tracking systems = zero system maintained.**
 
-**À faire, au moment de créer le projet :**
+**To do, at project-creation time:**
 
-1. **DEMANDER** à Romain si le projet sera piloté par un système de gestion *(GSD, superpowers, autre)*.
-   - **Oui** → `--no-lifecycle-docs`. **Ce système porte le principe**, nos fichiers seraient un doublon.
-   - **Non / il ne sait pas** → poser le défaut *(`SUIVI.md`)*.
+1. **ASK** the maintainer whether the project will be driven by a management system *(GSD, superpowers, other)*.
+   - **Yes** → `--no-lifecycle-docs`. **This system carries the principle**, our files would be a duplicate.
+   - **No / doesn't know** → apply the default *(`SUIVI.md`)*.
 
-2. 🔴 **Si AUCUN outil n'est explicitement appelé — CHERCHER CE QUI EXISTE AVANT D'EN FABRIQUER UN.**
-   **~100 skills sont installées**, dont **tout GSD** : `gsd-progress` · `gsd-resume-work` · `gsd-pause-work` · `gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`…
-   **Utiliser `find-skills`** — elle sert exactement à ça. Regarder aussi les **agents**, les **plugins**, le **marketplace**, les **fonctionnalités natives**.
-   **Ne construire du custom qu'à défaut, et le DIRE.**
+2. 🔴 **If NO tool is explicitly named — SEARCH FOR WHAT EXISTS BEFORE BUILDING ONE.**
+   **~100 skills are installed**, including **all of GSD**: `gsd-progress` · `gsd-resume-work` · `gsd-pause-work` · `gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`…
+   **Use `find-skills`** — that's exactly what it's for. Also look at the **agents**, the **plugins**, the **marketplace**, the **native features**.
+   **Only build custom as a last resort, and SAY SO.**
 
-> **Le principe, lui, vaut quel que soit l'outil qui le porte** *(standard §16)* :
-> un doc de reprise **CONCIS** qui **RENVOIE** au détail · un backlog **BREF** qui **POINTE** vers un plan · **le livré est PURGÉ**.
-> *Un doc de suivi qu'on ne relit plus ne suit plus rien.*
+> **The principle itself holds regardless of which tool carries it** *(standard §16)*:
+> a **CONCISE** resumption doc that **REFERS** to the detail · a **BRIEF** backlog that **POINTS** to a plan · **what's delivered is PURGED**.
+> *A tracking doc that no longer gets reread no longer tracks anything.*
 
-## Discipline sur les secrets
+## Secrets discipline
 
-- **Ne jamais réécrire un fichier portant un secret par position de ligne.**
-- Test du PAT chargé, stockage (`repo/.envrc` seul), interdits (`.env`, URL du remote) : **jamais afficher un PAT en clair** — détail et commande : RUNBOOK §1 étape 4.
+- **Never rewrite a file holding a secret by line position.**
+- Testing that the PAT is loaded, storage (`repo/.envrc` only), forbidden items (`.env`, remote URL): **never display a PAT in the clear** — detail and command: RUNBOOK §1 step 4.
 
-## Le piège du `direnv allow`
+## The `direnv allow` trap
 
-> 🔴 `init-project.sh` a posé un `direnv allow` sur un `.envrc` VIDE ; y coller le PAT modifie le fichier → direnv **révoque** cette autorisation. **Sans un SECOND `direnv allow`, le `git push` échoue en 403** alors que le token est bien dans le fichier. **Le rappeler explicitement**, puis vérifier que le PAT est chargé. Détail : RUNBOOK §1 étape 4.
+> 🔴 `init-project.sh` placed a `direnv allow` on an EMPTY `.envrc`; pasting the PAT into it modifies the file → direnv **revokes** that authorization. **Without a SECOND `direnv allow`, the `git push` fails with a 403** even though the token is indeed in the file. **State this explicitly**, then verify that the PAT is loaded. Detail: RUNBOOK §1 step 4.
