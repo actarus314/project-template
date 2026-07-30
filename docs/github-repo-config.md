@@ -110,6 +110,7 @@ Elle ferme un trou de **vérification**, dérivé de trois endpoints qu'aucune a
 >   | **Code scanning alerts** | **read** | `GET /code-scanning/analyses` — savoir si CodeQL a tourné |
 >   | **Actions** | **read** | 🔴 `GET /actions/runs/{id}` — **suivre le run de la 1ʳᵉ analyse CodeQL**. Sans lui, le script ignore quand elle se termine → il **ne pose pas la règle `code_scanning`**, et **`main` reste NON gardée**. |
 >   | **Contents** | **read** | `GET /contents/…` — détecter `pages.yml` (repo privé) |
+>   | **Issues** | **read** | `GET /repos/{o}/{r}/issues` — dater le *Dependency Dashboard* de Renovate (preuve de vie avant de retirer le filet Dependabot) |
 >   | **Metadata** | read | implicite |
 >
 >   ⚠ **`Administration` NE SUFFIT PAS**, et **chaque permission manquante échoue en SILENCE** : tout le reste passe, et le contrôle absent ne se voit pas.
@@ -119,7 +120,7 @@ Elle ferme un trou de **vérification**, dérivé de trois endpoints qu'aucune a
 >
 > **Pourquoi pas un PAT unique dont on retirerait `Administration` après coup** : cela donnerait à l'assistant, le temps de la config, le droit de **changer la visibilité** ou de **supprimer le repo** — et le retrait de permission serait **manuel, donc oubliable**, laissant un token vivant 90 j. Révoquer un token jetable est **binaire** ; dégrader ses droits ne l'est pas.
 >
-> **L'assistant n'a JAMAIS Administration.** `configure-repo.sh` est lancé par Romain.
+> **L'assistant n'a JAMAIS `Administration: write`.** `configure-repo.sh` est lancé par Romain.
 
 ## 3. OpenSSF Scorecard — garder / jeter (solo, public, petit)
 
@@ -166,7 +167,7 @@ Elle ferme un trou de **vérification**, dérivé de trois endpoints qu'aucune a
    Puis : `./init-project.sh <projet> <owner/repo> [--type static|node|generic] [--pages] [--artefact] [--staging]`.
    *Raccourcis : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ aucune capacité (toute autre toolchain — contrôles-sécu seuls, build/test à remplir).*
 1. Créer le repo — **PRIVÉ** (le cas nominal), remote en **URL nue**, PAT 1-repo dans `.envrc` (standard §5) — avec les **3 permissions d'alertes** du §2.
-2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(filet ; Renovate ajoute l'auto-merge sécu)* · **immutable releases** · topics · homepage · delete-branch-on-merge *(**retiré** si flux à 3 étages **sans** ruleset — en privé Free, il supprimerait `develop` à la 1ʳᵉ promotion)* · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
+2. `configure-repo.sh` : rulesets (`main` · `develop` **si staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(filet **à 2 étages seulement** — Renovate ajoute l'auto-merge sécu ; à 3 étages leurs PR viseraient `main` et court-circuiteraient le staging)* · **immutable releases** · topics · homepage · delete-branch-on-merge *(**retiré** si flux à 3 étages **sans** ruleset — en privé Free, il supprimerait `develop` à la 1ʳᵉ promotion)* · **méthode de merge selon la capacité `staging`** — squash seul, **+ merge commit si `develop` existe** *(squash seul est incompatible avec une branche de staging)*. *(**CodeQL y est** : le script active le **default setup**, attend la 1ʳᵉ analyse, puis pose la règle `code_scanning`. Il n'y a plus de `codeql.yml`.)*
 3. Fichiers présents dès le 1er commit : `LICENSE` · `README` (double-cible, standard §15) · `SECURITY.md` (advisories privées) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` si lib vendorée.
 4. **Avant de passer public** : `gitleaks detect` sur l'**historique complet** (pas juste HEAD) — un secret dans un vieux commit fuite au flip de visibilité.
 5. Activer **2FA** du compte (UI).

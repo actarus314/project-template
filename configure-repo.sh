@@ -4,27 +4,12 @@ set -euo pipefail
 # Configure les réglages SERVEUR d'un repo GitHub public selon le standard.
 # One-shot, IDEMPOTENT (relançable sans créer de doublon).
 #
-# ⚠ Exécuté par ROMAIN — JAMAIS par l'assistant, qui n'a jamais Administration
+# ⚠ Exécuté par ROMAIN — JAMAIS par l'assistant, qui n'a jamais Administration: write
 #   (matrice PAT : cf. docs/github-repo-config.md §2).
 #
 # AUTH — PAT fine-grained ÉPHÉMÈRE, à créer puis RÉVOQUER dans la foulée :
-#   RECETTE COMPLÈTE — une permission par endpoint appelé (vérifié sur la doc GitHub REST,
-#   « Permissions required for fine-grained PATs ») :
-#       · Administration: WRITE        → PATCH /repos · PUT /vulnerability-alerts · */rulesets
-#                                        · PUT /immutable-releases  (même permission — rien à ajouter)
-#       · Pages: WRITE                 → POST|PUT /pages   (création du site + source=workflow)
-#       · Administration: WRITE (bis)  → PATCH /code-scanning/default-setup (ACTIVE CodeQL)
-#                                        · PUT /topics
-#       · Code scanning alerts: READ   → GET /code-scanning/analyses
-#       · Actions: READ                → GET /actions/runs/{id} — SUIVRE le run de la 1re analyse
-#                                        CodeQL. Sans lui, le script ne sait pas quand elle finit,
-#                                        ne pose pas la regle `code_scanning`, et `main` reste NON
-#                                        gardee. La boucle d'attente le DIT au lieu de patienter
-#                                        six minutes dans le vide.
-#       · Contents: READ               → GET /contents/... (détection de pages.yml)
-#       · Metadata: READ               → implicite
-#     ⚠ ADMINISTRATION NE SUFFIT PAS, et chaque permission manquante échoue en SILENCE :
-#       tout le reste passe, et le contrôle absent ne se voit pas. Le script les rend BRUYANTES.
+#   Permissions : recette EXACTE dans docs/RUNBOOK.md, étape 7a
+#   (une permission manquante échoue en SILENCE).
 #   · « Only select repositories » = CE repo uniquement  → blast radius = 1 repo
 #   · Créer/révoquer : https://github.com/settings/personal-access-tokens
 #
@@ -126,12 +111,17 @@ command -v jq >/dev/null || { echo "✗ jq requis"; exit 1; }
 
 # PAT Administration ÉPHÉMÈRE — saisi À LA MAIN, jamais stocké (ni keychain, ni fichier).
 # On IGNORE délibérément GH_TOKEN de l'ENVIRONNEMENT : le .envrc de tout repo l'exporte = PAT
-# d'ÉCRITURE (sans Administration). ADMIN_PAT est la SEULE porte d'injection, EXPLICITE (tests/CI)
+# d'ÉCRITURE (sans Administration: write). ADMIN_PAT est la SEULE porte d'injection, EXPLICITE (tests/CI)
 # — jamais un .envrc.
 if [ -n "${ADMIN_PAT:-}" ]; then
   GH_TOKEN="$ADMIN_PAT"
 else
-  printf 'PAT admin éphémère sur %s — Administration:write + Pages:write + Code scanning:read + Actions:read\n' "$SLUG" >&2
+  # ⚠ NE PAS recopier la recette ici. Cette ligne l'a listée, et la copie a DIVERGÉ en silence :
+  #   il y manquait `Contents:read` (lire CONTRIBUTING.md) puis `Issues:read` (dater le Dependency
+  #   Dashboard). Or c'est cette ligne-là qu'on lit en créant le token — une recette courte et fausse
+  #   est pire qu'un renvoi, et chaque permission absente échoue EN SILENCE.
+  printf 'PAT admin éphémère sur %s — recette EXACTE : docs/RUNBOOK.md, étape 7a\n' "$SLUG" >&2
+  printf '  (une permission manquante ne lève AUCUNE erreur : le contrôle absent ne se voit pas)\n' >&2
   printf 'Saisie masquée : ' >&2
   GH_TOKEN=""                        # vider AVANT le read : un read sans tty laisserait le GH_TOKEN d'env (le PAT d'écriture)
   read -rs GH_TOKEN < /dev/tty || true
@@ -194,7 +184,7 @@ if [ -z "$DESCRIPTION" ] && [ -z "$(gh api "repos/$SLUG" --jq '.description // "
   echo "    La poser : ./configure-repo.sh $SLUG '' '<description>'"
 fi
 # Les topics EXIGENT Administration:write (`PUT /repos/{o}/{r}/topics` → `administration=write`)
-# — donc l'assistant, qui n'a JAMAIS `Administration`, reçoit un 403 : SEUL ce script peut les poser.
+# — donc l'assistant, qui n'a JAMAIS `Administration: write`, reçoit un 403 : SEUL ce script peut les poser.
 # `--add-topic` AJOUTE, il n'écrase pas l'existant.
 if [ -n "$TOPICS" ]; then
   mutate gh repo edit "$SLUG" --add-topic "$TOPICS"

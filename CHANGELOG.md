@@ -34,6 +34,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Corrigé
 
+- **Les recettes de PAT annonçaient des permissions PÉRIMÉES — à 4 endroits, dont 2 lus au moment de
+  créer le token** *(`configure-repo.sh` avant la saisie masquée, et l'étape 5 de `init-project.sh`)*.
+  Elles listaient 4 permissions là où la recette admin en compte 6 : ni `Contents: read` ni
+  `Issues: read` n'y avaient été reportées, et **une permission manquante ne lève aucune erreur**.
+  Les deux scripts **renvoient** désormais au RUNBOOK au lieu de recopier — une liste corrigée
+  aujourd'hui divergerait à la prochaine permission, ce qui est déjà arrivé deux fois de suite.
+  ➡️ La recette exécutable vit dans **`docs/RUNBOOK.md` étape 7a**, sa dérivation par endpoint dans
+  **`docs/github-repo-config.md` §2** *(où la ligne `Issues: read` manquait aussi)*.
+
+- **« jamais d'`Administration` » disait désormais faux** — le PAT de travail porte `Administration: read`.
+  La formule est précisée en **`Administration: write`** partout où elle vivait *(RUNBOOK, standard,
+  README, AGENTS, les deux scripts, la checklist)* — le RUNBOOK se contredisait même d'une section à
+  l'autre. Et la recette du PAT de travail, dans le standard, ne mentionnait pas la nouvelle permission.
+
 - **Sur un flux à 3 étages, Dependabot aussi visait la PRODUCTION** — et lui, aucune option ne le
   redresse : ses PR de **sécurité** ciblent **toujours** la branche par défaut *(`target-branch` ne
   redirige que les version updates)*. Le filet qui devait protéger `main` la court-circuitait donc,

@@ -354,7 +354,7 @@ cat <<EOF
   Local prêt : arborescence, modèles, git init, 1er commit, remote en URL nue, direnv.
 
   ── ROMAIN ────────────────────────────────────────────────────────────
-   1. PAT COURANT — fine-grained, **90 jours**, restreint à $R, SANS Administration
+   1. PAT COURANT — fine-grained, **90 jours**, restreint à $R, SANS Administration: write
       (permissions : standard §5). → le coller dans repo/.envrc (GITHUB_PAT)
       puis 'direnv allow' (l'édition du .envrc invalide l'autorisation).
    2. Reporter la date d'expiration dans workspace/secrets.md.
@@ -366,15 +366,16 @@ cat <<EOF
       ⚠ VALIDER la licence (MIT par défaut — vérifier compat deps/vendored).
    4. git push -u origin main
 
-  ── ROMAIN (config serveur — l'assistant n'a JAMAIS Administration) ───
+  ── ROMAIN (config serveur — l'assistant n'a JAMAIS Administration: write) ───
    5. ./configure-repo.sh $R '' '<description en une ligne>' '<topic-a,topic-b>'
       → ruleset main, secret scanning, Dependabot, squash-only, immutable releases,
         description, topics, et l'ACTIVATION DE CODEQL (default setup).
-      ⚠ La description et les topics EXIGENT Administration : l'assistant reçoit un 403.
+      ⚠ La description et les topics EXIGENT Administration: write — l'assistant reçoit un 403.
         SEUL ce script peut les poser. Sans description, le community health plafonne
         à 85 % ; sans topic, le repo ne remonte dans AUCUNE recherche par sujet.
       Demande un PAT admin ÉPHÉMÈRE en saisie masquée — À RÉVOQUER dès la fin.
-      Permissions : Administration:write + Pages:write + Code scanning:read + Actions:read.
+      Permissions : recette EXACTE dans docs/RUNBOOK.md, étape 7a
+      (une permission manquante échoue en SILENCE).
       NB : sur un repo PRIVÉ en plan Free, rulesets/secret scanning/CodeQL sont
       indisponibles → à rejouer au passage en public (après gitleaks sur l'historique).
       C'est ce REJEU qui active CodeQL : il n'y a plus de codeql.yml qui se réveille seul.

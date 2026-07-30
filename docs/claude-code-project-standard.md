@@ -203,8 +203,9 @@ Corollaire assumé : depuis un terminal, Claude **ne voit ni les organisations n
 - **Un PAT par repo**, créé en fine-grained, *Only select repositories* → **ce repo uniquement** (owner = compte ou org du repo).
 - **Permissions standard homogènes** : `Contents R/W`, `Metadata R`, `Pull requests R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`.
   **+ permissions d'alertes**, pour la maintenance sécu en autonomie : Dependabot & Code scanning `R/W`, Secret scanning `R`.
-  *(Matrice détaillée : `github-repo-config.md` §2.)*
-  **Tout le reste : No access** — et **jamais** `Administration`.
+  **+ `Administration: read`** *(jamais write)*.
+  *(Matrice détaillée, dérivation de `Administration: read` : `github-repo-config.md` §2.)*
+  **Tout le reste : No access** — et **jamais** `Administration: write`.
 - Stocké dans `repo/.envrc` comme `GITHUB_PAT`. **Remote en URL nue** (jamais de PAT dans l'URL).
 - Exposé à git/gh **uniquement dans le dossier** par direnv. `repo/.envrc` (gitignoré) contient le PAT et reste **sourçable en bash** *(pas de builtin `dotenv` — filet si un `source` remplace le `direnv exec`, cf. §5)* :
   ```
@@ -760,7 +761,7 @@ Modèle : `templates/repo/README.md`. Exemple vivant complet : le README de `roz
 
 Tout le spectre config/maintenance d'un repo public — contrôles sécu/code, **matrice PAT à deux étages** (récurrent autonome / admin one-shot), OpenSSF, scriptable vs UI, checklist nouveau repo — est dans **`github-repo-config.md`** (à côté de ce fichier). C'est du **one-shot** : réglé à la création via `configure-repo.sh`, puis oublié.
 
-En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning + push protection · **private vulnerability reporting** · ruleset `main` (+ `develop` si elle existe) · **ruleset sur les tags** · **immutable releases** · actions tierces pinnées SHA · `permissions:` minimal. Le PAT de l'assistant gère les alertes en autonomie, **sans jamais toucher à Administration**.
+En bref : **CodeQL en *default setup* natif** · Dependabot · secret scanning + push protection · **private vulnerability reporting** · ruleset `main` (+ `develop` si elle existe) · **ruleset sur les tags** · **immutable releases** · actions tierces pinnées SHA · `permissions:` minimal. Le PAT de l'assistant gère les alertes en autonomie, **sans jamais toucher à `Administration: write`**.
 
 > 🔎 **`immutable releases` est scriptable, pas seulement via l'UI.** L'endpoint `PUT /repos/{owner}/{repo}/immutable-releases` existe et relève d'`Administration: write`, **déjà** dans la recette du PAT admin : **rien à ajouter, tout à automatiser**.
 

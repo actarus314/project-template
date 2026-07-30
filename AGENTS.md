@@ -29,7 +29,7 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 ./open-pr.sh <base> <titre> <fichier-corps>   # ouvre une PR ET s'assure que la CI démarre (via direnv exec)
 ```
 
-`configure-repo.sh` est **joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a **jamais** `Administration`.
+`configure-repo.sh` est **joué par Romain** avec un PAT admin **éphémère** — l'assistant n'a **jamais** `Administration: write`.
 
 `check.sh` lit les versions épinglées dans `ci.yml` *(source unique)*, tire les binaires sous `.ci-tools/` *(gitignoré)* et rejoue **tout ce que la CI lance** : shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus la validation de tout `renovate.json` présent *(seul ajout délibéré : il attrape le gel silencieux des updates sur config cassée)*. Il est **auto-détectant** *(il lit le `ci.yml` du repo et ne lance QUE ce qui s'y trouve)*, donc le **même** fichier sert ce repo ET tout projet généré. Ce qui passe en local passe la CI — mais **la CI reste l'autorité** *(elle seule vérifie le SHA256 des assets Linux et tourne en conditions réelles)*.
 

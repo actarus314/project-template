@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| 🔴 **L'assistant n'a JAMAIS `Administration`** | Tout ce qui touche rulesets / visibilité / Pages / secret scanning est **fait par Romain**, avec un **PAT admin ÉPHÉMÈRE** créé puis **révoqué dans la foulée**. |
+| 🔴 **L'assistant n'a JAMAIS `Administration: write`** | Tout ce qui touche rulesets / visibilité / Pages / secret scanning est **fait par Romain**, avec un **PAT admin ÉPHÉMÈRE** créé puis **révoqué dans la foulée**. |
 | 🔴 **Le cycle nominal est : PRIVÉ → développé → PUBLIC** | Un repo privé en plan Free n'a **ni ruleset, ni secret scanning, ni CodeQL**. Les contrôles **tournent** mais **rien ne les exige**. Le flip les active **tous d'un coup**. |
 
 ---
