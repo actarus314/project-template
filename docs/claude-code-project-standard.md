@@ -160,7 +160,7 @@ Three questions, in order:
 | **Chat / Projects (cloud)** | Claude GitHub App, installed by the owner | Read-only on authorized repos (personal + orgs) | revocable |
 | **CC — read** | **public-RO** fine-grained PAT (`claude-ro`) in `gh` | All of public GitHub, 5000 req/h, **zero private** | **no expiration — deliberate** (see below) |
 | **CC — write** | fine-grained RW PAT, **1 per repo**, in `repo/.envrc` | This repo only | **90 days** + J-14 alert |
-| **Dockhand** | classic RO PAT (`dockhand-ro`) — the owner account | All repos (personal + orgs) | 1 year |
+| **Container host** | classic RO PAT, read-only — the owner account | All repos (personal + orgs) | 1 year |
 
 ### Public reading + default Git auth → `gh` in public-RO
 

@@ -40,6 +40,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **The community health files the repo prescribes but never had** — `SECURITY.md`,
+  `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md` and
+  `.github/ISSUE_TEMPLATE/config.yml`. The template **posts these into every generated project**
+  and had none of its own: "the template must eat its own food", once more.
+  🔴 **`SECURITY.md` is not cosmetic on a public repo**: with `ISSUE_TEMPLATE/config.yml`, it is
+  what routes a flaw to a **private advisory** instead of a public issue. Without them, the only
+  channel available to a finder is to disclose it in the open.
+  `CONTRIBUTING.md` is written for **this** repo, not copied from the template: no `develop`
+  *(nothing to validate before production — this repo is read and run, it does not deploy)*, and
+  the `open-pr.sh` rule, since a PR with zero CI runs reads exactly like a green one.
+
 - **The repo gets a LICENSE — two, in fact, and the boundary is the point.** The tool is under
   **PolyForm Noncommercial 1.0.0**; the files it **copies into every generated project**
   *(`check.sh`, `open-pr.sh`, all of `templates/`)* are under **MIT** *(`LICENSE-MIT`)*.
