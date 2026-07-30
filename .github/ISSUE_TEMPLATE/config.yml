@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/actarus314/project-template/security/advisories/new
+    about: Report privately — do not open a public issue.
+  - name: Question / Discussion
+    url: https://github.com/actarus314/project-template/discussions
+    about: Questions and ideas.
