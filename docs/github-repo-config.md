@@ -53,7 +53,7 @@
 |---|---|
 | **`develop` ruleset** | the requirements of `main`, **minus two, by design**: ❌ no `code_scanning` *(CodeQL only analyzes `main` — requiring it here would block every PR on a check that will never arrive)* · ❌ **squash ONLY** *(the merge commit is reserved for `main`, for promotions)*. |
 | **Merge commit allowed on `main`** | squash only is **incompatible** with a staging branch. |
-| **Back-merge `main` → `develop`** | consequence of the two lines above: the only route is a **squashed PR** *(a direct push runs into the `pull_request` rule, a merge commit into squash-only)*. ⚠️ **GitHub's message names the wrong culprit** — *« Merge commits are not allowed on this repository »* is shown even though the repo allows them *(`allow_merge_commit=true`)*: it's the **rule** that blocks, not the repo's setting. Looking in the settings is a dead end. |
+| **Back-merge `main` → `develop`** | consequence of the two lines above: the only route is a **squashed PR** *(a direct push runs into the `pull_request` rule, a merge commit into squash-only)*. ⚠️ **GitHub's message names the wrong culprit** — *"Merge commits are not allowed on this repository"* is shown even though the repo allows them *(`allow_merge_commit=true`)*: it's the **rule** that blocks, not the repo's setting. Looking in the settings is a dead end. |
 
 > **Plan note**: on a personal account (non-org), public secret scanning only has the **default patterns** — no custom regex nor validity checks (reserved for GitHub Secret Protection, paid/org). Hence the value of gitleaks for non-standard secrets.
 
@@ -102,7 +102,7 @@ It closes a **verification** gap, derived from three endpoints that no other per
 > The Administration PAT lives **nowhere**: not in the keychain, not in `.envrc`, not in shell history.
 > **Created → used → revoked**, within minutes. `configure-repo.sh` asks for it as **masked input**.
 >
-> - Fine-grained · **« Only select repositories » = THIS repo** → blast radius **1 repo**. **Complete** recipe, one permission per endpoint called *(verified against the REST doc « Permissions required for fine-grained PATs » — derived from the endpoints, **NEVER** discovered by trial and error)*:
+> - Fine-grained · **"Only select repositories" = THIS repo** → blast radius **1 repo**. **Complete** recipe, one permission per endpoint called *(verified against the REST doc "Permissions required for fine-grained PATs" — derived from the endpoints, **NEVER** discovered by trial and error)*:
 >
 >   | Permission | Level | Why |
 >   |---|---|---|
@@ -145,7 +145,7 @@ It closes a **verification** gap, derived from three endpoints that no other per
 |---|---|
 | **Immutable releases** | `gh api -X PUT repos/{o}/{r}/immutable-releases` (`Administration: write` — **already** in the admin PAT's recipe). 🔴 **NOT RETROACTIVE** → set **from private on** *(the setting is available there)*, never deferred to the flip: whatever isn't covered when a release is published **never** will be. |
 | **Private vulnerability reporting** | `gh api -X PUT repos/{o}/{r}/private-vulnerability-reporting` — **public-only** *(moot on private: no external researcher can access it)*. |
-| **`sha_pinning_required`** *(« Require actions to be pinned to a full-length commit SHA »)* | `PUT /repos/{o}/{r}/actions/permissions` — scriptable, available on private Free. ⏸️ **Deliberately NOT set**: the native toggle is **stricter than the repo's convention**, which tolerates the major tag for `actions/*` and `github/*`. Enabling it would force everything to full SHA, first-party included. *(zizmor already covers third parties.)* |
+| **`sha_pinning_required`** *("Require actions to be pinned to a full-length commit SHA")* | `PUT /repos/{o}/{r}/actions/permissions` — scriptable, available on private Free. ⏸️ **Deliberately NOT set**: the native toggle is **stricter than the repo's convention**, which tolerates the major tag for `actions/*` and `github/*`. Enabling it would force everything to full SHA, first-party included. *(zizmor already covers third parties.)* |
 | **Dependabot malware alerts** | ⚠️ **UI, no API** *(no `security_and_analysis` field, no endpoint)* — **npm-only**, available from private Free. Detects the **malicious** package, an angle Renovate doesn't cover *(it remedies CVEs via a version bump; a malicious package often has no safe version)*. → the maintainer's action, RUNBOOK §1 step 9. |
 | CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, and IN `configure-repo.sh`** |
 | Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
@@ -157,7 +157,7 @@ It closes a **verification** gap, derived from three endpoints that no other per
 | 2FA | **UI-only** (no endpoint) |
 | **Reading the packages / ghcr API** | ❌ **IMPOSSIBLE on fine-grained** — GitHub Packages is **not supported** by fine-grained PATs (classic `read:packages` only). There is no point adding the permission: **it doesn't exist**. → **Moot**: the right test is an **ANONYMOUS pull** of the registry (`ghcr.io/token` + `/v2/<img>/manifests/<tag>` → **200 = pullable**), which verifies *exactly* what the prod host does, **with no token at all**. Set by `configure-repo.sh`. |
 | **ghcr package visibility** | ⚠️ **UI, no API** *(fine-grained PATs do NOT cover ghcr — only `classic` PATs do)*. 🔴 **The default DEPENDS ON THE OWNER, and confusing it is costly:** on a **PERSONAL** account, a package published from a **public** repo is pullable **anonymously, WITH NO ACTION AT ALL** *(HTTP 200 — verified on test003)*. On an **ORGANIZATION**, it is **PRIVATE by default** → an anonymous `docker pull` = **403**, and **no one can self-host** *(verified on test004)*. → **`configure-repo.sh` TESTS the anonymous pull** and only asks for the action **IF the test fails**. *(Org-wide: Settings → Packages → Package creation → default visibility.)* **When the action IS needed** *(org)*: Package settings → Danger Zone → *Change visibility* → **Public**. Without it, neither the prod host nor a user can pull the image — and **the production version pin is worth nothing anymore**: it points to an image no one can retrieve. |
-| **Reported content** (moderation) | **UI-only — NO API** (verified: no moderation endpoint exists). Exact path, scope (org only) and item count: **§5, point 6**. ⚠️ The box **is not checked** on « All users ». |
+| **Reported content** (moderation) | **UI-only — NO API** (verified: no moderation endpoint exists). Exact path, scope (org only) and item count: **§5, point 6**. ⚠️ The box **is not checked** on "All users". |
 
 > **Dry-run first**: on a personal account, some `security_and_analysis` sub-keys (`advanced_security`, `code_security`) are probably no-ops outside GHAS/org. This should be tested on the target repo before hard-coding it into `configure-repo.sh`.
 
@@ -172,7 +172,7 @@ It closes a **verification** gap, derived from three endpoints that no other per
 3. Files present from the 1st commit: `LICENSE` · `README` (dual-target, standard §15) · `SECURITY.md` (private advisories) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` if a vendored lib.
 4. **Before going public**: `gitleaks detect` on the **full history** (not just HEAD) — a secret in an old commit leaks at the visibility flip.
 5. Enable account **2FA** (UI).
-6. **ORG repos only** — *« Repository admins accept content reports »*: Settings → **Moderation options** → **Reported content** → **« Prior contributors and collaborators »** (UI, **no API**).
+6. **ORG repos only** — *"Repository admins accept content reports"*: Settings → **Moderation options** → **Reported content** → **"Prior contributors and collaborators"** (UI, **no API**).
    ⚠️ **This item exists ONLY on repos belonging to an organization** ([GitHub changelog, 2020](https://github.blog/changelog/2020-06-23-community-content-reports-included-in-community-profile/)): an org repo's checklist counts **8 items**, a personal account's **7**.
    **Consequence not to miss**: a personal repo at 100% and an org repo at 87% can have **exactly the same files** — comparing their scores makes no sense.
 

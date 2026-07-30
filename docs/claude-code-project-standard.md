@@ -173,7 +173,7 @@ The `gh` CLI carries a **fine-grained "Public repositories (read-only)"** PAT: r
 brew install gh direnv
 # Create a fine-grained "Public repositories (read-only)" PAT on github.com
 echo "<public-RO-PAT>" | gh auth login --with-token
-gh auth setup-git                              # git delegates to « gh auth git-credential »
+gh auth setup-git                              # git delegates to "gh auth git-credential"
 echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # direnv hook
 ```
 
