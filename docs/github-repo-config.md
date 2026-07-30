@@ -176,6 +176,9 @@ It closes a **verification** gap, derived from three endpoints that no other per
    ⚠️ **This item exists ONLY on repos belonging to an organization** ([GitHub changelog, 2020](https://github.blog/changelog/2020-06-23-community-content-reports-included-in-community-profile/)): an org repo's checklist counts **8 items**, a personal account's **7**.
    **Consequence not to miss**: a personal repo at 100% and an org repo at 87% can have **exactly the same files** — comparing their scores makes no sense.
 
-> **License**: MIT by default (`templates/repo/LICENSE`). BEFORE locking it in — check: (1) no dependency nor vendored code under copyleft (GPL/AGPL) imposing something stricter; (2) would the project benefit from copyleft (anti-proprietary re-appropriation; network service → AGPL)?; (3) when in doubt, ask the maintainer — then fill in year + holder.
+> **License**: **PolyForm Noncommercial 1.0.0** by default (`templates/repo/LICENSE`) — attribution required, noncommercial use allowed, commercial use closed, **including partial use**. Year and holder are substituted by `init-project.sh`, nothing to fill in.
+> 🔴 **It is NOT open source** *(the OSI definition forbids restricting the field of use)*, and GitHub displays it as **"Other"**. A repo aimed at professional users, or meant to be adopted widely, wants a permissive license instead — **swapping `LICENSE` is a one-file decision**, and it is the right moment to make it: before the first release, not after.
+> **`LICENSE-MIT` stays whatever the project chooses**: the files inherited from the template are MIT so that a generated project never inherits a restriction from the tool that built it.
+> BEFORE locking it in — check: (1) no dependency nor vendored code under copyleft (GPL/AGPL) imposing something stricter; (2) does this project have a commercial future, in which case noncommercial is the wrong default?; (3) when in doubt, ask the maintainer.
 
 > Sources: GitHub Docs (code scanning, Dependabot, secret scanning, REST repos/rulesets/alerts) · OpenSSF Scorecard `docs/checks.md`.

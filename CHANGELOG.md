@@ -40,6 +40,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **The repo gets a LICENSE — two, in fact, and the boundary is the point.** The tool is under
+  **PolyForm Noncommercial 1.0.0**; the files it **copies into every generated project**
+  *(`check.sh`, `open-pr.sh`, all of `templates/`)* are under **MIT** *(`LICENSE-MIT`)*.
+  Without that exception, every project built with this tool would inherit the noncommercial
+  restriction — including projects whose author never asked for it and had no way of knowing.
+  🔴 **A public repo with no license is "all rights reserved"**: nobody may legally use it. This was
+  therefore a **prerequisite** for going public, not cosmetic community health.
+  ⚠️ PolyForm Noncommercial is **not open source** *(the OSI definition forbids restricting the field
+  of use)* and GitHub displays it as **"Other"** — measured on a real repo, not assumed. The community
+  profile still counts the file, so the score is not penalised.
+  **Generated projects default to PolyForm too**, and `init-project.sh` now says so plainly at the end
+  of a run: the default forbids commercial use, and swapping `LICENSE` is a one-file decision best
+  made before the first release.
+
 - **The repo is VERSIONED — and the single source is the git TAG.** `init-project.sh`,
   `configure-repo.sh` and `docs/verifier-checksums.sh` gain `--version`; none of them stores a
   literal, all three read `git describe`. The tag is authoritative because a ruleset makes it

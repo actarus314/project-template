@@ -1,0 +1,40 @@
+This repository is under the PolyForm Noncommercial License 1.0.0 (see `LICENSE`),
+with ONE deliberate exception, covered by the MIT license below.
+
+The exception exists because this repository is a TOOL THAT PRODUCES OTHER REPOSITORIES.
+`init-project.sh` copies the files listed here verbatim into every project it generates.
+Under a noncommercial license, every generated project would inherit that restriction —
+including projects whose author never intended it, and who would have no way of knowing.
+The tool is protected; what the tool FABRICATES is free.
+
+Files covered by the MIT license below:
+
+  check.sh
+  open-pr.sh
+  templates/**   (every file under that directory, at any depth)
+
+Everything else in this repository is under `LICENSE`.
+
+---
+
+MIT License
+
+Copyright (c) 2026 actarus314
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

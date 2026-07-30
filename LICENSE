@@ -1,7 +1,8 @@
-Required Notice: Copyright <year> <copyright holder>
+Required Notice: Copyright 2026 actarus314 (https://github.com/actarus314/project-template)
 
-> ⚠️ The files this project received from its template — `check.sh`, `open-pr.sh` and the
-> workflows/hooks it ships — are under the MIT license, not these terms. See `LICENSE-MIT`.
+> ⚠️ NOT ALL of this repository is under these terms. The files this tool COPIES into the
+> projects it generates — `check.sh`, `open-pr.sh` and everything under `templates/` — are under
+> the MIT license instead, so that a generated project inherits no restriction. See `LICENSE-MIT`.
 
 # PolyForm Noncommercial License 1.0.0
 
