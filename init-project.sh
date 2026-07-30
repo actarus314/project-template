@@ -98,8 +98,10 @@ cp -R "$TPL/templates/repo/docs"             "$DEST/repo/docs"        # docs/adr
 # <year> AND <copyright holder>: both are deterministic (the year, the slug's owner). Substituting
 # only one left a legally shaky LICENSE — "Copyright (c) 2026 <copyright holder>".
 HOLDER="${SLUG%%/*}"; HOLDER="${HOLDER:-$PROJ}"   # without a fallback, LICENSE would ship with an EMPTY holder
-sed -e "s/<year>/$(date +%Y)/" -e "s/<copyright holder>/$HOLDER/" \
-  "$TPL/templates/repo/LICENSE" > "$DEST/repo/LICENSE"   # MIT by default — VALIDATE the license (see repo/CLAUDE.md)
+for l in LICENSE LICENSE-MIT; do
+  sed -e "s/<year>/$(date +%Y)/" -e "s/<copyright holder>/$HOLDER/" \
+    "$TPL/templates/repo/$l" > "$DEST/repo/$l"   # PolyForm NC by default — VALIDATE the license (see repo/CLAUDE.md)
+done
 
 FRAG="$DEST/repo/.branching.frag"
 
@@ -223,8 +225,11 @@ fi
 #   same as before. → they get LISTED, and going public requires them filled in (standard §18).
 #   README deliberately EXCLUDED: it's obvious to fill in, and its HTML tags (<picture>, <p …>)
 #   are false positives that would drown out the only message that matters — the one about `<contact>`.
+#   LICENSE deliberately EXCLUDED too: its year and holder are substituted right above, so nothing
+#   is left to fill — and the license text carries its own canonical URL between angle brackets,
+#   which the pattern would report as a placeholder.
 HUMAN=$(grep -rl '<[a-z][^>]*>' "$DEST/repo/SECURITY.md" "$DEST/repo/CODE_OF_CONDUCT.md" \
-  "$DEST/repo/LICENSE" "$DEST/repo/AGENTS.md" \
+  "$DEST/repo/AGENTS.md" \
   "$DEST/repo/.github/workflows/pages.yml" 2>/dev/null || true)
 if [ -n "$HUMAN" ]; then
   echo "  ⚠ TO FILL IN BY HAND before going PUBLIC (versioned files, so published):"
@@ -323,7 +328,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # EXPLICIT list (never `git add -A`: `.env` and `.envrc` carry secrets and are gitignored,
 # but that's not something to bet on). ⚠ Corollary: every file ADDED to the template must be added
 # HERE — otherwise it's created on disk and NEVER committed. The net below makes that loud.
-git add .gitignore .env.example README.md .gitattributes LICENSE check.sh open-pr.sh \
+git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 # requirements-ci.txt is gitignored ON PURPOSE (excluded from the osv scan, see .gitignore): a plain `git add`
 # would skip it SILENTLY → broken CI (`pip install -r`). `-f` versions it anyway (same pattern as .envrc).
@@ -370,8 +375,10 @@ cat <<EOF
 
   ── CLAUDE (after step 1) ───────────────────────────────────────────
    3. Fill in repo/.env (app vars), repo/CLAUDE.md; adjust .github/workflows/
-      ($([ "$TYPE" = node ] && echo 'add package.json' || echo 'adjust ci.yml')$([ "$ARTEFACT" = 1 ] && echo ' ; add Dockerfile')$([ "$PAGES" = 1 ] && echo ' ; <web-dir> in pages.yml')) ; LICENSE: holder.
-      ⚠ VALIDATE the license (MIT by default — check compat with deps/vendored).
+      ($([ "$TYPE" = node ] && echo 'add package.json' || echo 'adjust ci.yml')$([ "$ARTEFACT" = 1 ] && echo ' ; add Dockerfile')$([ "$PAGES" = 1 ] && echo ' ; <web-dir> in pages.yml')).
+      ⚠ VALIDATE the license: PolyForm Noncommercial by default — it FORBIDS commercial use.
+        Swap LICENSE for a permissive one if this project needs it. LICENSE-MIT stays either way:
+        the files inherited from the template are MIT whatever this project chooses.
    4. git push -u origin main
 
   ── MAINTAINER (server config — the assistant NEVER has Administration: write) ───

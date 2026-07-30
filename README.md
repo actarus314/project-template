@@ -83,3 +83,17 @@ template/
 **The global pointer.** `~/.claude/CLAUDE.md` references `docs/` **via an absolute path**. Moving these files breaks every Claude Code session, silently.
 
 **`workspace/` is not in this repo — and it must never enter it.** It carries the internal memory (private repo names, incidents). Its own git, **with no remote**, is what protects this repo the day it goes public.
+
+---
+
+## License — two of them, and the boundary matters
+
+| What | License |
+|---|---|
+| **The tool** — scripts, docs, the skill | **PolyForm Noncommercial 1.0.0** *(`LICENSE`)* |
+| **What the tool FABRICATES** — `check.sh`, `open-pr.sh`, everything under `templates/` | **MIT** *(`LICENSE-MIT`)* |
+
+The exception is not a detail: `init-project.sh` copies those files **verbatim** into every project it generates. Under a single noncommercial license, **every generated project would inherit that restriction** — including projects whose author never asked for it and had no way of knowing. The tool is protected; what it produces is free.
+
+🔴 **PolyForm Noncommercial is not an open source license** — the OSI definition forbids restricting the field of use — and GitHub therefore displays this repository as *"Other"*. That is deliberate, not an oversight.
+
