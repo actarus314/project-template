@@ -176,7 +176,12 @@ Le script **demande le PAT en saisie masquée** *(il n'apparaît ni à l'écran,
 >
 > **⚠️ Sur un repo EXISTANT** *(mise en conformité, §7)*, **l'ordre s'inverse tout seul** : l'app est souvent installée avant que le fichier n'arrive → **la PR d'onboarding surgit**.
 > **NE JAMAIS LA MERGER** *(la merger activerait la config **par DÉFAUT** de Renovate, pas la `renovate.json` **accordée** du template)*.
-> **Conduite à tenir : FERMER la PR d'onboarding** *(Renovate s'arrête, et il ne la rouvre pas)*, **puis commiter `.github/renovate.json`** — Renovate redémarre de lui-même dès qu'il voit le fichier. Le geste est **réversible dans les deux sens**.
+> 🔴🔴 **ET NE JAMAIS LA FERMER — c'est l'OPT-OUT DOCUMENTÉ DU BOT.** *« If you wish to opt-out of having Renovate run for your repo, simply close the onboarding Pull Request without merging it. »*
+> Le statut `disabled` vit **côté Mend, pas dans le repo** : **committer `renovate.json` ensuite ne rallume RIEN.**
+> **Vécu le 14/07/2026** — les 4 PR d'onboarding fermées sur cette consigne : `anyone` · `dEURO-dashboard` · `DecantFi` · `rozo-bridge` en `disabled`, **6 jours sans un seul job**, et l'un d'eux **sans aucun bot d'update** *(la bascule full-Renovate venait de retirer son `dependabot.yml` en misant sur un bot qui ne tournait pas)*.
+> ✅ **Conduite à tenir : la LAISSER OUVERTE et demander à Romain.** Ne jamais la fermer par réflexe.
+> **Réparation si c'est déjà arrivé** *(prouvée sur `rozo-bridge` le 21/07)* : un **scan manuel depuis le portail Mend** *(developer.mend.io)* rebascule le repo en `onboarded` — geste **UI de Romain**. Le Dependency Dashboard se réouvre, et Renovate nettoie lui-même la branche fantôme `renovate/configure`.
+> **Le signe qu'un bot VIT** = un job récent **ET** un Dependency Dashboard. Un fichier de config ne prouve rien.
 
 ### Étape 9 — Romain, **si le repo a un arbre npm** : activer Dependabot malware alerts (UI)
 

@@ -15,8 +15,12 @@ Son produit, c'est le **standard** *(la version manuelle du déploiement de proj
 
 | | Remote | Contenu |
 |---|---|---|
-| **`repo/`** *(le cwd)* | → GitHub **privé** — `actarus314/project-template` | les outils, `templates/`, `docs/` |
+| **`repo/`** *(le cwd)* | → GitHub **privé** — `actarus314/project-template` | les outils, `templates/`, `docs/`, `skills/` |
 | **`../workspace/`** | ❌ **aucun — jamais poussé** | le suivi, les archives, les recherches |
+
+**`skills/new-project/` est la version CANONIQUE de la skill**, et `~/.claude/skills/new-project` est un **symlink** vers elle.
+Elle vivait hors de tout dépôt : ni versionnée, ni passée par la CI, ni diffable — alors qu'elle déroule le RUNBOOK, qui bouge à chaque session. *(L'audit d'intégration a trouvé 5 dérives, dont une commande formellement interdite ailleurs dans ce repo.)*
+Elle est à la **racine**, jamais sous `templates/` : `init-project.sh` copie **exclusivement** depuis `templates/`, donc rien ici ne se duplique dans les projets générés.
 
 `workspace/` **ne doit JAMAIS gagner de remote** : il porte des noms de repos privés et des récits d'incidents. C'est ce qui permet à `repo/` de basculer public un jour sans rien nettoyer.
 
@@ -64,4 +68,5 @@ Le hook `pre-commit` le **relance tout seul, throttlé (24 h) et CONSULTATIF** :
 
 - **`~/.claude/CLAUDE.md` pointe en chemin ABSOLU** vers `docs/claude-code-project-standard.md`, `docs/METHODE.md` et `docs/RUNBOOK.md`. Les déplacer casse **toutes** les sessions Claude Code, **en silence**.
 - **`templates/repo/.envrc`, `templates/repo/CLAUDE.md` et `templates/repo/requirements-ci.txt` sont suivis via `git add -f`** : le `.gitignore` **modèle** voisin les ignorerait sinon *(`requirements-ci.txt` l'est EXPRÈS — soustrait au scan osv, cf. son commentaire dans ce `.gitignore`)*. **Ne jamais les `git rm --cached`.**
+- **`~/.claude/skills/new-project` est un SYMLINK vers `skills/new-project/`** — donc **déplacer ce dossier casse la skill**, en silence : elle disparaît simplement de la liste, sans erreur. Le rétablir : `ln -s <nouveau chemin> ~/.claude/skills/new-project`. *(Une copie plutôt qu'un lien serait pire : elle divergerait, et c'est précisément ce qui a produit 13 copies périmées des recettes de PAT.)*
 - **Ne jamais committer de secret.** `.env` et `.envrc` sont non suivis, et doivent le rester.
