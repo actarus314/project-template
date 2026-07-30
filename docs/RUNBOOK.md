@@ -70,9 +70,11 @@ Crée l'arborescence, le premier commit, le remote en **URL nue**, et un **`.env
 | **Dependabot alerts** | Read and write | traiter les alertes **en autonomie** |
 | **Code scanning alerts** | Read and write | idem |
 | **Secret scanning alerts** | **Read** *(pas write)* | 🔴 **le dismiss est réservé à Romain** — rejeter à tort une vraie fuite a trop d'impact |
+| **Administration** | **Read** *(JAMAIS write)* | **vérifier** les réglages sécu qu'un `✓` de script affirme — dérivation : `github-repo-config.md §2` |
 | *Metadata* | *Read* | *coché automatiquement* |
 
-> 🔴 **`Administration` : JAMAIS.** C'est toute la matrice de sécurité. **Tout le reste : No access.**
+> 🔴 **`Administration: WRITE` : JAMAIS** — c'est toute la matrice de sécurité, et elle reste l'apanage du **PAT admin éphémère** *(§ suivant)*. **`read` est admis, et lui seul.** **Tout le reste : No access.**
+> ⚠️ **Sur un PAT DÉJÀ créé, l'ajouter ne demande AUCUNE rotation** : l'UI édite les permissions d'un fine-grained existant *(→ https://github.com/settings/personal-access-tokens)*.
 
 ### 🔴 Étape 4 — Romain : coller le PAT, puis **`direnv allow`**
 

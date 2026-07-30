@@ -75,10 +75,24 @@ Miroir du one-shot/récurrent : **l'assistant gère tout le récurrent en autono
 | Dependabot alerts: **write** (dismiss/reopen) | Dependabot **secrets** (valeurs), webhooks, deploy keys |
 | Code scanning alerts: **write** (dismiss) | 2FA (réglage de **compte**, pas de repo — UI/mobile only) |
 | **Secret scanning alerts: read** — dismiss réservé à Romain (rejeter à tort une vraie fuite = trop d'impact) | |
+| **Administration: read** *(JAMAIS write)* — **VÉRIFIER** ce qu'un `✓` affirme : `GET /automated-security-fixes` · `GET /vulnerability-alerts` · `GET /branches/{b}/protection` | |
 | Metadata: read (implicite) · **Workflows: write** — l'assistant édite les YAML de CI | |
 
 **Vérifié** : traiter (dismiss/reopen) une alerte Dependabot ou code scanning ne demande **que** la permission dédiée en *write* — **aucune Administration**. Ouvrir une PR = Contents + Pull requests write ; merger = Contents write.
-Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Contents R/W`, `PR R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`) **+** les 3 alertes ci-dessus. **Jamais d'Administration.**
+Le PAT garde les **permissions homogènes** du standard §5 (`Metadata R`, `Contents R/W`, `PR R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`) **+** les 3 alertes ci-dessus **+ `Administration: read`**. **`Administration: write` : jamais.**
+
+#### `Administration: read` — pourquoi une permission de plus, et pourquoi celle-là
+
+**Elle ne mute rien.** Ce qui rend `Administration` redoutable *(supprimer le repo, flipper la visibilité, réécrire un ruleset)* est dans le **write**, réservé au PAT admin éphémère.
+
+Elle ferme un trou de **vérification**, dérivé de trois endpoints qu'aucune autre permission n'ouvre :
+
+| Lire | Sinon |
+|---|---|
+| `GET /automated-security-fixes` · `GET /vulnerability-alerts` | l'état des toggles sécu n'est **pas lisible** : le seul contrôle est une capture d'écran de Romain |
+| `GET /branches/{b}/protection` *(+ `/required_status_checks`)* | la protection **CLASSIQUE** reste invisible — l'API `rulesets` ne la montre pas, et elle peut verrouiller `main` **pour toujours** |
+
+🔴 **Le motif de fond : un `✓` affiché par un script n'est pas un réglage appliqué.** Un `--dry-run` a déjà annoncé 3 réglages dont **2 étaient impossibles**, et une protection classique a déjà bloqué toute PR sur un repo, CI verte. Sans lecture, ces deux pannes sont **structurellement indétectables** par l'assistant — c'est la maintenance sécu en autonomie qui retombe sur Romain.
 
 > 🔴 **`Checks` n'est PAS dans cette liste — et ne peut PAS y être.** Documentée par GitHub, **absente de l'UI** des PAT fine-grained → `gh pr checks` et `gh pr view` échouent (ils lisent `statusCheckRollup`). Vérifier la CI verte via `gh run list --commit <sha>` (`Actions: read`, déjà là) à la place. **Détail, citations, commande exacte, piège du faux vert : standard §18.**
 
