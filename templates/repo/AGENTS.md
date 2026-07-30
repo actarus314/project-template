@@ -4,6 +4,11 @@ Read this before changing anything in this repository.
 This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding
 agents. Claude Code reads it through the import in `CLAUDE.md` (local, untracked).
 
+> Scaffolded by **project-template `<template-version>`**.
+> This project carries a **frozen copy** of that version's templates: a later fix to the template
+> does **not** reach it on its own. This line says which version to diff against — it is a
+> snapshot of the past, not a claim about the present.
+
 ## Project
 
 - **What it is**: <one line>

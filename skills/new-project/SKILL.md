@@ -20,6 +20,9 @@ They do not replace each other — they answer two different questions. **Confus
 
 > 🔴 **NEVER run through these steps from memory.** They carry URLs, exact permissions and precise pitfalls, and they change. **A step recited from memory is a wrong step.**
 
+**Announce which version of the template is being run through, before the first step** — `./init-project.sh --version`.
+This skill is a symlink into the repo, so it is always the clone's version; saying it out loud makes a stale clone visible instead of silent.
+
 **The standard's sections actually involved here** *(to open when the runbook refers to them, not to recite)*:
 **§5** GitHub auth and the PAT matrix · **§10** initiating a project · **§12** branch policy (the 3 capabilities) · **§17** repo config · **§18** the controls matrix + the procedures *(flip private→public, acquire a capability)*.
 

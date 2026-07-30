@@ -37,6 +37,7 @@ ARGS=()
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
+    --version) echo "project-template $(git -C "$(dirname "$0")" describe --tags --abbrev=0 2>/dev/null || echo unreleased)"; exit 0 ;;
     *) ARGS+=("$a") ;;
   esac
 done

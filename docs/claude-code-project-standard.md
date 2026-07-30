@@ -495,6 +495,8 @@ data/
 - **`develop`** *(**`staging`** capability only — **NOT** "node", **NOT** "Docker")*: staging. Protected. **Short-lived.**
 - **`feat/<topic>`**: from `develop` **if `staging`**, otherwise from `main`. Deleted on merge (auto).
 - **`v*` tags**: **immutable** — a ruleset forbids their deletion and their being moved. Without that, the version pin from §13 guarantees nothing (cf. §17).
+  🔴 **That immutability is why the tag is the SINGLE SOURCE of the version** — and not a `VERSION` file, a CHANGELOG heading or a manifest, all of which can be rewritten in any pull request. Everything able to read it does so *(`--version` derives it from `git describe`)*; the places that must carry a copy — the CHANGELOG, a plugin manifest — are compared against it by a guard, because a copy nobody watches is a copy that drifts.
+  ⚠️ **A tag is pushed AFTER the settings are in place, never before**: immutable releases are **not retroactive**, so a release published earlier stays unprotected forever.
 
 ### Full flow
 

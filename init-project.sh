@@ -28,6 +28,7 @@ while [ $# -gt 0 ]; do
     --staging)     STAGING=1;  shift;;
     --no-staging)  STAGING=0;  shift;;
     --no-lifecycle-docs) LIFECYCLE_DOCS=0; shift;;
+    --version)     echo "project-template $(git -C "$(dirname "$0")" describe --tags --abbrev=0 2>/dev/null || echo unreleased)"; exit 0;;
     -*)            echo "✗ unknown option: $1"; exit 1;;
     *)             if [ -z "$PROJ" ]; then PROJ="$1"; elif [ -z "$SLUG" ]; then SLUG="$1"; else BASE="$1"; fi; shift;;
   esac
@@ -147,6 +148,13 @@ for f in CONTRIBUTING.md AGENTS.md; do
   mv "$DEST/repo/$f.tmp" "$DEST/repo/$f"
 done
 rm -f "$FRAG"
+
+# Stamp WHICH version of the template built this project. A generated project carries a FROZEN
+# COPY of the templates: without this line, nothing says which one, so nobody can tell whether a
+# later fix ever reached it. Read from the tag at generation time — it is a snapshot, and it
+# stays true about the past even after the template moves on.
+TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unreleased)
+sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
 
 # ⚠ The key is INJECTED HERE, not carried by the template: a template that hardcoded it
 # would point at a NONEXISTENT `develop` on a two-stage project — and Renovate without a valid
