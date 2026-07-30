@@ -16,6 +16,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Non publié]
 
+### Changé
+
+- **Le repo bascule en ANGLAIS, et l'exemption de langue du standard §1 TOMBE** *(1er lot : les
+  conventions — `claude-code-project-standard.md`, `METHODE.md`, `github-repo-config.md`, `AGENTS.md`)*.
+  L'exemption reposait sur trois jambes — repo **privé**, aucun contributeur recherché, l'anglais
+  n'achèterait qu'une traduction à maintenir. Le passage en public en retire une, et la décision a été
+  prise d'aligner le repo sur ce qu'il impose déjà à tout projet qu'il génère. **Ce qu'il enseigne ne
+  change pas** : chaque exemple vécu a été réécrit sans le nom du repo réel, la leçon conservée.
+  Les gabarits de fichiers **locaux** *(`templates/repo/CLAUDE.md`, `templates/repo/.envrc`,
+  `templates/workspace/*`)* **restent en français** : ils sont gitignorés dans le projet généré et
+  n'atteignent jamais GitHub. Le `README.md` du gabarit reste **bilingue par conception**.
+  ⚠️ Les lots suivants *(RUNBOOK et skill · les paires `.md`/`.html` · la racine et les scripts)*
+  arrivent séparément : tant qu'ils ne sont pas passés, le repo est **mixte**.
+
 ### Ajouté
 
 - **Un garde-fou anti-dérive entre `docs/X.md` et `docs/X.html`** — rien n'empêchait un `.md`

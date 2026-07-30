@@ -1,135 +1,135 @@
-# MÉTHODE — une seule source de vérité
+# METHOD — a single source of truth
 
-> **Règle posée par Romain le 2026-07-14, après avoir dû réordonner trois passes de cohérence.**
-> **Elle ne se rediscute pas. Elle s'applique à CHAQUE écriture, dans CE projet et dans tous ceux qu'il génère.**
-
----
-
-## La règle
-
-**Un fait vit à UN SEUL endroit. Partout ailleurs : un lien — jamais une copie.**
-
-Le mal n'est pas la longueur d'un document : c'est **la concurrence entre plusieurs sources**.
-Quand le même fait est écrit dans le script, le runbook, les conventions *et* le suivi, **les quatre copies divergent** — c'est mécanique. Et le jour où l'une d'elles ment, on tourne en rond en cherchant laquelle croire.
-
-> **Ce n'est pas une hypothèse.** `configure-repo.sh` a porté un commentaire affirmant *« CodeQL : via le workflow committé, rien à activer ici »* — **soixante lignes au-dessus du code qui fait précisément l'activation**. Le script se contredisait lui-même, et c'est ce commentaire qu'on relisait pour décider.
+> **Rule set by the maintainer on 2026-07-14, after having to reorder three consistency passes.**
+> **It is not up for debate. It applies to EVERY write, in THIS project and in every one it generates.**
 
 ---
 
-## Où vit quoi — par RÔLE, pas par nom de fichier
+## The rule
 
-Les rôles ci-dessous sont **stables** ; les fichiers qui les portent, non *(voir « L'outil de suivi est un défaut »)*.
+**A fact lives in ONE SINGLE place. Everywhere else: a link — never a copy.**
 
-| Rôle | Contient | **Ne contient JAMAIS** |
+The problem is not a document's length: it is **competition between multiple sources**.
+When the same fact is written in the script, the runbook, the conventions *and* the tracking doc, **the four copies diverge** — it is mechanical. And the day one of them lies, it becomes a circular search for which one to believe.
+
+> **This is not a hypothesis.** `configure-repo.sh` carried a comment stating *"CodeQL: via the committed workflow, nothing to activate here"* — **sixty lines above the code that does exactly that activation**. The script was contradicting itself, and this was the comment reread to decide.
+
+---
+
+## Where each thing lives — by ROLE, not by file name
+
+The roles below are **stable**; the files that carry them are not *(see "The tracking tool is a default")*.
+
+| Role | Contains | **NEVER contains** |
 |---|---|---|
-| **LE SUIVI** *(défaut : `workspace/docs/SUIVI.md`)* | Où on en est · les décisions · les pièges · **ce qui reste** *(bref — POINTE vers un plan si c'est lourd)*. **Assez pour qu'un humain OU une IA reprenne à froid.** | le détail des preuves · le récit des bugs · le pourquoi long · **le livré** *(purgé)* · les plans complets |
-| **LES ARCHIVES** *(défaut : `workspace/docs/archives/<étape>/`)* | **LE DÉTAIL.** Le pourquoi, le comment, les preuves, les mesures, les sources. **Datés, par phase ou par sujet.** | — *(c'est le déversoir : il peut grossir)* |
-| **LES GESTES** *(`RUNBOOK.md`)* | Les gestes, dans l'**ORDRE**, et **QUI les fait**. Les URL, les valeurs exactes, les pièges. | le pourquoi *(→ conventions)* · l'historique *(→ archives)* |
-| **LES CONVENTIONS** *(`claude-code-project-standard.md`, les ADR)* | Les règles et le **POURQUOI** de chaque règle. | la procédure *(→ runbook)* · le récit des incidents *(→ archives)* |
-| **LE CODE** *(scripts, workflows)* | **ce que le code NE PEUT PAS dire** : une contrainte non évidente, un piège qui se rejouerait. | **le récit historique.** Jamais *« constaté le 14/07 sur test003… »* |
-| **LES MÉMOIRES** *(`~/.claude/projects/<projet>/memory/`)* | le **réflexe** à réveiller au démarrage : une contrainte qu'on enfreint **par défaut**, et le **récit court** qui dit pourquoi elle existe. | ce qu'un document **versionné** porte déjà *(→ un pointeur suffit)* · un fait sans le geste qui en découle |
+| **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | Where things stand · decisions · pitfalls · **what remains** *(brief — POINTS to a plan if it's heavy)*. **Enough for a human OR an AI to pick back up cold.** | the detail of the evidence · the story of the bugs · the long why · **what has shipped** *(purged)* · full plans |
+| **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by phase or by topic.** | — *(it's the overflow: it can grow)* |
+| **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, the pitfalls. | the why *(→ conventions)* · the history *(→ archives)* |
+| **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |
+| **THE CODE** *(scripts, workflows)* | **what the code CANNOT say**: a non-obvious constraint, a pitfall that would recur. | **the historical narrative.** Never *"observed on 14/07 on test003…"* |
+| **THE MEMORIES** *(`~/.claude/projects/<project>/memory/`)* | the **reflex** to wake up at startup: a constraint that gets broken **by default**, and the **short story** that says why it exists. | what a **versioned** document already carries *(→ a pointer is enough)* · a fact without the action that follows from it |
 
 ---
 
-## Les commentaires dans le code — la règle qui fait le plus mal
+## Comments in the code — the rule that hurts the most
 
-**Le code dit ce qu'il FAIT. Le commentaire ne dit QUE ce que le code ne peut pas dire.**
+**The code says what it DOES. The comment says ONLY what the code cannot say.**
 
-> **Le critère qui tranche, et il est mécanique : UN SCRIPT EST L'AUTOMATISATION D'UNE PRESCRIPTION ÉCRITE AILLEURS.**
-> Le geste existe **d'abord** dans le runbook, la règle **d'abord** dans les conventions. Le script ne les invente pas — **il les exécute**. D'où :
+> **The deciding criterion, and it is mechanical: A SCRIPT IS THE AUTOMATION OF A PRESCRIPTION WRITTEN ELSEWHERE.**
+> The action exists **first** in the runbook, the rule **first** in the conventions. The script does not invent them — **it executes them**. Hence:
 >
-> | Le commentaire explique… | Verdict |
+> | The comment explains… | Verdict |
 > |---|---|
-> | **une règle, un pourquoi, un défaut GitHub** *(« le package ghcr est privé d'office en org »)* | **copie du doc → SUPPRIMER**, laisser un renvoi. Le fait vit **dans le doc**. |
-> | **une contrainte d'implémentation** *(« `gh api` écrit ses erreurs sur STDOUT »)* | **n'existe nulle part ailleurs, et n'a rien à faire dans le doc → GARDER.** |
+> | **a rule, a why, a GitHub default** *("the ghcr package is private by default in an org")* | **copy of the doc → DELETE**, leave a pointer. The fact lives **in the doc**. |
+> | **an implementation constraint** *("`gh api` writes its errors to STDOUT")* | **exists nowhere else, and has no business in the doc → KEEP.** |
 >
-> 🔴 **Et la contrainte marche dans l'AUTRE SENS — c'est là qu'est sa valeur.**
-> **Tout ce que le script APPREND doit REMONTER au doc.** Un fait découvert en exécutant *(le comportement ghcr perso/org, découvert en testant)* n'a pas le droit de vivre **uniquement** dans le script : le doc cesserait d'être suffisant pour faire **à la main**, et il deviendrait faux par omission.
+> 🔴 **And the constraint works in the OTHER DIRECTION too — that's where its value is.**
+> **Everything the script LEARNS must FLOW BACK to the doc.** A fact discovered while running it *(the personal/org ghcr behavior, discovered through testing)* has no right to live **only** in the script: the doc would stop being enough to do it **by hand**, and it would become wrong by omission.
 >
-> ⚠️ **Ce que ça ne veut PAS dire** : « le doc doit tout dire ». Ce serait la porte de l'obésité — exactement ce qu'on combat. Le **standard** dit les conventions, le **runbook** dit les gestes, le **script** garde ses contraintes techniques.
+> ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
 
-✅ **Garder** — une contrainte qui se rejouerait si on l'ignorait :
+✅ **Keep** — a constraint that would recur if ignored:
 ```bash
-# `gh api` écrit ses erreurs sur STDOUT : `$(gh api … || echo x)` produit '{"message":…}x'.
+# `gh api` writes its errors to STDOUT: `$(gh api … || echo x)` produces '{"message":…}x'.
 ```
 
-❌ **Supprimer** — le récit, la preuve, la date, l'incident :
+❌ **Delete** — the narrative, the evidence, the date, the incident:
 ```bash
-# Ce piège a frappé QUATRE fois dans ce fichier, dont deux fois après avoir été documenté :
-#   · le run_id du PATCH → le script annonçait « ✓ CodeQL ACTIVÉ » sur un repo PRIVÉ…
-#   (Constaté sur test005, 2026-07-14.)
+# This pitfall struck FOUR times in this file, twice of them after being documented:
+#   · the run_id of the PATCH → the script announced "✓ CodeQL ENABLED" on a PRIVATE repo…
+#   (Observed on test005, 2026-07-14.)
 ```
-→ **Ça va en archive.** Une ligne dans le code, le récit complet dans les archives.
+→ **That goes to the archive.** One line in the code, the full narrative in the archives.
 
-**Supprimer un commentaire n'est PAS perdre l'information** : elle vit dans l'archive, datée, avec sa preuve. **Elle est juste au bon endroit.**
-
----
-
-## L'outil de suivi est un DÉFAUT, pas un dogme
-
-`SUIVI.md` est ce que le générateur pose **par défaut** *(le suivi ET « ce qui reste » dans un seul doc vivant ; un chantier lourd bascule dans un plan)*. Ce sont les **rôles** qui comptent, pas les fichiers : le `.planning/` de GSD, un Linear, un Notion **satisfont la même règle** dès lors qu'un fait continue de vivre à **un seul endroit**.
-
-- Ce que doit porter chaque document : **`claude-code-project-standard.md` §16**.
-- Ne pas les vouloir du tout : `init-project.sh --no-lifecycle-docs`.
-- 🔴 **Deux systèmes de suivi en parallèle = deux sources concurrentes** — précisément ce que cette règle interdit. **On en choisit UN.**
+**Deleting a comment is NOT losing the information**: it lives in the archive, dated, with its evidence. **It is simply in the right place.**
 
 ---
 
-## Les documents principaux restent COURTS
+## The tracking tool is a DEFAULT, not a dogma
 
-**S'ils grossissent, le détail PART EN ARCHIVE — il ne se tasse pas.**
+`SUIVI.md` is what the generator sets up **by default** *(the tracking doc AND "what remains" in a single living doc; a heavy undertaking moves into a plan)*. It is the **roles** that matter, not the files: GSD's `.planning/`, a Linear, a Notion **satisfy the same rule** as long as a fact keeps living in **a single place**.
 
-Un document qu'on ne relit plus ne sert plus à rien. Le runbook est lu **en faisant** : s'il est illisible, il n'est pas lu, et le geste est fait de mémoire — **et un geste récité de mémoire est un geste faux**.
-
-**Trop de fichiers d'archive n'est PAS un problème** — tant que les liens sont là et respectés.
-**Une arborescence légère** vaut mieux que 25 `.md` au même niveau qui mélangent les documents vivants et les archives.
-
----
-
-## Clôturer une étape — le geste récurrent *(le SUIVI respire)*
-
-**La doc est un chantier à part entière, à deux températures :**
-- **CHAUD** — `SUIVI.md` : ce qui est *en cours* et *à venir*. Il **grossit** pendant une étape.
-- **FROID** — `archives/<étape>/` : ce qui est *clos*. **Un dossier par étape terminée, ses recherches et ses preuves dedans.**
-
-**À CHAQUE étape terminée** *(un chantier, une phase, un lot — pas chaque commit)* :
-
-1. **Élaguer le chaud.** Sortir de `SUIVI.md` tout ce que l'étape a clos. Il **rétrécit** — c'est le signe que l'étape est finie.
-2. **Écrire l'archive de l'étape — une SYNTHÈSE, JAMAIS un déplacement ni un dump** *(format ADR : contexte → décisions → conséquences)* :
-   on **lit les sources en ENTIER**, puis on distille le **QUOI** *(ce qui a été fait)* **+ le COMMENT** *(les pièges rencontrés)* **+ le POURQUOI** *(pourquoi ces choix, ce qu'on a écarté)*.
-   Objectif : **assez pour ne JAMAIS rouvrir un sujet clos faute d'info — et pas une ligne de plus.**
-3. **Y ranger les recherches et les preuves** de l'étape *(un `RECHERCHE-*` est froid une fois fait — il va dans SON dossier d'étape, pas à la racine du chaud)*.
-4. **Committer.** L'archive est immuable *(sauf renversement de paradigme du projet)*.
-5. **Passer les MÉMOIRES au même tamis** — elles sont le 6ᵉ lieu, et **le seul sans structure Git : aucun diff ne les montre, donc elles sont ratées par défaut.**
-   - **ce qui est devenu FAUX se corrige, ou disparaît.** *(Une mémoire fausse est pire qu'absente : elle est rappelée d'office au démarrage, avec autorité.)*
-   - **ce qu'un document versionné porte maintenant se réduit à un pointeur** — sauf le **récit vécu** *(« c'est arrivé, voilà la mesure »)*, qui explique pourquoi la règle existe et que le document, lui, ne porte pas.
-   - **vérifier l'index** *(`MEMORY.md`)* : une mémoire absente de l'index n'est **jamais** rappelée, et un lien `[[x]]` cassé n'est signalé par rien.
-
-**L'arborescence reste LÉGÈRE** : quelques dossiers d'étape, quelques fichiers utiles chacun — **ni un congélateur géant, ni 38 dossiers de deux fichiers de 90 lignes.**
-
-> 🔴 **Le piège — et il a été commis** *(15/07)* : **congeler le verbatim** du `SUIVI` dans un seul pavé de 114 Ko. Un congélateur qu'on **n'ouvre jamais** : si retrouver le *pourquoi* d'une ligne du chaud oblige à fouiller l'énorme archive, **on ne le fera pas**. L'archive se **synthétise** ; elle ne se **déverse** pas.
+- What each document must carry: **`claude-code-project-standard.md` §16**.
+- Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
+- 🔴 **Two tracking systems in parallel = two competing sources** — precisely what this rule forbids. **ONE gets chosen.**
 
 ---
 
-## Le réflexe, à chaque écriture
+## The main documents stay SHORT
 
-Avant d'ajouter une information, **une seule question** :
+**If they grow, the detail MOVES TO THE ARCHIVE — it does not get crammed in.**
 
-> **« Ce fait existe-t-il déjà ailleurs ? »**
+A document no one rereads is no longer of any use. The runbook is read **while doing** the work: if it is unreadable, it goes unread, and the action gets done from memory — **and an action recited from memory is a wrong action**.
 
-- **Oui** → **mettre un lien**, et corriger l'endroit d'origine s'il est faux.
-- **Non** → **quel est son SEUL endroit ?** Le suivi, l'archive, le runbook, les conventions, ou le code. **Un.**
-
-**Et si un document grossit : on n'y tasse pas — on en sort le détail.**
+**Too many archive files is NOT a problem** — as long as the links are there and honored.
+**A light directory structure** is better than 25 `.md` files at the same level mixing living documents with archives.
 
 ---
 
-## Déléguer : Claude est chef d'orchestre
+## Closing out a stage — the recurring action *(the tracking doc breathes)*
 
-**Dès qu'une tâche coûte MOINS cher déléguée** — ou qu'elle est **sensiblement plus rapide ou plus performante à coût égal** *(ou très légèrement supérieur)* — **Claude prend le rôle de chef d'orchestre et délègue** à un ou plusieurs sous-agents.
+**The docs are an undertaking of their own, at two temperatures:**
+- **HOT** — `SUIVI.md`: what is *in progress* and *upcoming*. It **grows** during a stage.
+- **COLD** — `archives/<stage>/`: what is *closed*. **One folder per finished stage, its research and its evidence inside.**
 
-- Le sous-agent **fait le travail lui-même** : il ne re-délègue pas, et il **n'appelle pas l'advisor**.
-- Il tourne souvent sur un modèle **plus rapide et moins coûteux** *(Sonnet, voire Haiku)* — l'orchestrateur garde le raisonnement, l'agent exécute.
-- **Préférer les workflows** *(orchestration déterministe : fan-out en parallèle, pipeline, vérification adversariale)* **autant que possible et autant que pertinent** : un travail décomposable en tâches parallèles ou en étapes vérifiables gagne à être un workflow plutôt qu'une longue passe séquentielle.
+**At EVERY finished stage** *(an undertaking, a phase, a batch — not every commit)*:
 
-Le but : l'orchestrateur dépense ses tokens à **décider**, pas à exécuter ce qu'un modèle plus léger fait aussi bien.
+1. **Prune the hot side.** Take out of `SUIVI.md` everything the stage closed. It **shrinks** — that is the sign the stage is finished.
+2. **Write the stage's archive — a SYNTHESIS, NEVER a move or a dump** *(ADR format: context → decisions → consequences)*:
+   the sources get **read in FULL**, then distilled into the **WHAT** *(what was done)* **+ the HOW** *(the pitfalls encountered)* **+ the WHY** *(why these choices, what got ruled out)*.
+   Goal: **enough to NEVER reopen a closed topic for lack of information — and not one line more.**
+3. **File the stage's research and evidence there** *(a `RECHERCHE-*` is cold once done — it goes into ITS stage folder, not at the root of the hot side)*.
+4. **Commit.** The archive is immutable *(except for a project paradigm shift)*.
+5. **Put the MEMORIES through the same sieve** — they are the 6th location, and **the only one without Git structure: no diff shows them, so they get missed by default.**
+   - **whatever has become FALSE gets corrected, or disappears.** *(A false memory is worse than none: it gets recalled automatically at startup, with authority.)*
+   - **what a versioned document now carries gets reduced to a pointer** — except for the **lived narrative** *("it happened, here is the measure")*, which explains why the rule exists and which the document itself does not carry.
+   - **check the index** *(`MEMORY.md`)*: a memory absent from the index is **never** recalled, and a broken `[[x]]` link is flagged by nothing.
+
+**The directory structure stays LIGHT**: a few stage folders, a few useful files each — **neither a giant freezer, nor 38 folders of two 90-line files.**
+
+> 🔴 **The trap — and it has been committed** *(15/07)*: **freezing the verbatim** of `SUIVI` into a single 114 KB block. A freezer that **never gets opened**: if finding the *why* behind a line on the hot side requires digging through the huge archive, **it will not get done**. The archive gets **synthesized**; it does not get **dumped**.
+
+---
+
+## The reflex, on every write
+
+Before adding a piece of information, **a single question**:
+
+> **"Does this fact already exist elsewhere?"**
+
+- **Yes** → **put a link**, and fix the original spot if it is wrong.
+- **No** → **what is its ONE place?** The tracking doc, the archive, the runbook, the conventions, or the code. **One.**
+
+**And if a document grows: nothing gets crammed in — the detail comes out.**
+
+---
+
+## Delegating: Claude is the orchestrator
+
+**As soon as a task costs LESS delegated** — or it is **noticeably faster or more capable at equal cost** *(or very slightly higher)* — **Claude takes the orchestrator role and delegates** to one or more subagents.
+
+- The subagent **does the work itself**: it does not re-delegate, and it **does not call the advisor**.
+- It often runs on a **faster and cheaper** model *(Sonnet, or even Haiku)* — the orchestrator keeps the reasoning, the agent executes.
+- **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **as much as possible and as much as relevant**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass.
+
+The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
