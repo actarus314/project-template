@@ -48,6 +48,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Corrigé
 
+- 🔴 **Deux gabarits nommaient des repos PRIVÉS, et se recopiaient dans chaque projet généré** —
+  `ci-node.yml` renvoyait *« see dEURO-dashboard for a worked example »*, `templates/repo/README.md`
+  citait `rozo-bridge`. Un gabarit n'est pas de la prose interne : il **part** dans les projets, **y
+  compris publics**. Le nom d'un repo privé était donc lisible par n'importe qui sur un généré public,
+  sans que rien ne le signale. Les deux renvois sont remplacés par ce qu'ils **enseignaient**
+  *(un `npm ci --prefix <dir>` par workspace)* ou retirés. ➡️ **Un projet généré avant ce correctif
+  porte une COPIE figée : la propagation fait partie du correctif.**
+
 - **`configure-repo.sh` annonçait « ✓ Discussions ouvertes » sans jamais vérifier qu'elles l'étaient.**
   Il testait le **code de sortie** du `PATCH /repos` — or `has_discussions` n'est pas un bodyParameter
   documenté de cet endpoint, et REST **ignore un champ inconnu sans erreur** : le PATCH rend 200 en

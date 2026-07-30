@@ -4,7 +4,7 @@
     (2) une vitrine honnête qui donne envie sans survendre.
   Léché, concis, ZÉRO salade. Bilingue : anglais d'abord (défaut), français ensuite, séparés par `---`.
   Ton : jamais de 2e personne — « the user / l'utilisateur », pas « you / vous ».
-  Supprimer ces commentaires une fois rempli. Exemple vivant complet : le README de rozo-bridge.
+  Supprimer ces commentaires une fois rempli.
 -->
 
 # <project> — <one-line subtitle that says what it is>
