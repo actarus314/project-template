@@ -131,7 +131,12 @@ command -v jq >/dev/null || { echo "✗ jq requis"; exit 1; }
 if [ -n "${ADMIN_PAT:-}" ]; then
   GH_TOKEN="$ADMIN_PAT"
 else
-  printf 'PAT admin éphémère sur %s — Administration:write + Pages:write + Code scanning:read + Actions:read\n' "$SLUG" >&2
+  # ⚠ NE PAS recopier la recette ici. Cette ligne l'a listée, et la copie a DIVERGÉ en silence :
+  #   il y manquait `Contents:read` (lire CONTRIBUTING.md) puis `Issues:read` (dater le Dependency
+  #   Dashboard). Or c'est cette ligne-là qu'on lit en créant le token — une recette courte et fausse
+  #   est pire qu'un renvoi, et chaque permission absente échoue EN SILENCE.
+  printf 'PAT admin éphémère sur %s — recette EXACTE : docs/RUNBOOK.md, étape 7a\n' "$SLUG" >&2
+  printf '  (une permission manquante ne lève AUCUNE erreur : le contrôle absent ne se voit pas)\n' >&2
   printf 'Saisie masquée : ' >&2
   GH_TOKEN=""                        # vider AVANT le read : un read sans tty laisserait le GH_TOKEN d'env (le PAT d'écriture)
   read -rs GH_TOKEN < /dev/tty || true

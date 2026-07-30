@@ -34,6 +34,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Corrigé
 
+- **`configure-repo.sh` annonçait une recette de PAT admin PÉRIMÉE** — la ligne affichée juste avant la
+  saisie du token listait 4 permissions, alors que la recette en compte 6 : ni `Contents: read` ni
+  `Issues: read` n'y avaient été reportées. C'est précisément la ligne qu'on lit **en créant le token**,
+  et une permission manquante **ne lève aucune erreur**. Elle **renvoie** désormais au RUNBOOK au lieu de
+  recopier — une liste courte et fausse est pire qu'un lien.
+
 - **Sur un flux à 3 étages, Dependabot aussi visait la PRODUCTION** — et lui, aucune option ne le
   redresse : ses PR de **sécurité** ciblent **toujours** la branche par défaut *(`target-branch` ne
   redirige que les version updates)*. Le filet qui devait protéger `main` la court-circuitait donc,
