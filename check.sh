@@ -155,6 +155,32 @@ if [ "${#renovate_files[@]}" -gt 0 ]; then
   [ "$rv" = 1 ] && ok "renovate configs valid" || ko "renovate config invalid"
 fi
 
+# Second person — forbidden in versioned content by the standard (§1), and by AGENTS.md in every
+# generated project. Nothing enforced it: the rule held by discipline alone, and discipline is what
+# let it slip into 9 files, 4 of them templates copied into EVERY generated project.
+#
+# ⚠ `git grep` on purpose, not a filesystem walk: the rule is about what is COMMITTED. An untracked
+#   scratch file breaking it is nobody's business.
+#
+# Exceptions are LISTED and NARROW — never a disabled rule, so a real slip in an exempted file is
+# still caught (same principle as the .gitleaksignore fingerprints, standard §18):
+#   · licenses      — third-party verbatim text, not ours to reword;
+#   · the RULE      — the lines that STATE the rule have to spell the forbidden words out;
+#   · contributing  — the "By contributing…" clause, addressed to the contributor by design;
+#   · a quotation   — foreign documentation quoted verbatim loses its value reworded;
+#   · `sp_hits=`    — the line below, which has to carry the very words it hunts for.
+note "second person — standard §1 (versioned content)"
+sp_hits=$(git grep -nIwE '(you|your|yours|vous|votre|vos|tu|toi|ton|ta|tes)' -- . \
+            ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
+          | grep -vE '(2nd|second) person|2e personne|By contributing|wish to opt-out of having Renovate|sp_hits=' \
+          || true)
+if [ -z "$sp_hits" ]; then
+  ok "no second person"
+else
+  printf '%s\n' "$sp_hits" >&2
+  ko "second person in versioned content — rewrite impersonally (\"the user\"), or widen the exception list above"
+fi
+
 echo
 if [ "$fail" = 0 ]; then
   printf '\033[32m✓ local == github: all pass.\033[0m\n'
