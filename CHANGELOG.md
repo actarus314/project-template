@@ -21,6 +21,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-31
+
+First tagged version. The repository went public on this date: everything below had landed
+before the flip, and is sealed here rather than reconstructed.
+
 ### Changed
 
 - **The repo switches to ENGLISH, and the standard's §1 language exemption FALLS.** That exemption
