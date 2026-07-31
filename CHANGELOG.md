@@ -21,6 +21,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `configure-repo.sh` no longer makes a status check required without checking that a job of that
+  name exists on the default branch. It derived `checks` (and `build-check`) from what the templates
+  ship, never from the target repo — so on a repo whose CI names its jobs otherwise, the ruleset
+  required something nothing produces and **every PR blocked forever**. The script now refuses
+  before writing the ruleset, and `--dry-run` reports it without writing.
+
 ## [1.0.0] - 2026-07-31
 
 First tagged version. The repository went public on this date: everything below had landed
