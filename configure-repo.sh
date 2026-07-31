@@ -400,6 +400,35 @@ if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null
   echo "  ↳ ARTEFACT capability detected (docker-publish.yml) → 'build-check' (Dockerfile + Trivy scan) becomes a REQUIRED check."
 fi
 
+# 🔴 The rulesets API accepts ANY string as a required context — including one no job will ever
+# produce. Every PR then sits on "Expected — waiting for status" forever, the PR that would add the
+# job included. So each context is verified against the workflows of the DEFAULT BRANCH: the SERVER,
+# not the working tree — this script takes a slug and runs without a checkout.
+# ⚠ Ceiling, NOT caught here: a job carrying `name:` or a `matrix` reports under a DIFFERENT
+#   check-run name, and a workflow with no `pull_request` trigger never reports on a PR at all.
+job_declared() {
+  local wf body
+  for wf in $(gh api "repos/$SLUG/contents/.github/workflows" --jq '.[].name' 2>/dev/null); do
+    # Command substitution, never a pipe into grep: under `pipefail`, `grep -q` closing the pipe
+    # early SIGPIPEs `gh api` and the pipeline reports failure on a MATCH.
+    body=$(gh api "repos/$SLUG/contents/.github/workflows/$wf" \
+             -H 'Accept: application/vnd.github.raw' 2>/dev/null || true)
+    # Anchored on "nothing after the colon": `permissions:` also carries a 2-space `checks: write`.
+    grep -qE "^  $1:[[:space:]]*(#.*)?$" <<<"$body" && return 0
+  done
+  return 1
+}
+MISSING=""
+for CTX in $(printf '%s' "$CHECKS_JSON" | jq -r '.[].context'); do
+  job_declared "$CTX" || MISSING="$MISSING '$CTX'"
+done
+if [ -n "$MISSING" ]; then
+  echo "  ✗ NO job named$MISSING in .github/workflows on the default branch of $SLUG."
+  echo "    Requiring it would LOCK the repo — add a job under that EXACT name first (RUNBOOK §5)."
+  # In dry-run the script keeps going: its whole point is to surface this BEFORE the real run.
+  [ "$DRY" -eq 1 ] || exit 1
+fi
+
 # ═══ CodeQL: the native DEFAULT SETUP, and NO LONGER a committed `codeql.yml` ═══════════════════
 # The default setup DETECTS languages and UPDATES ITSELF as the repo changes, scheduled scans
 # included. The WHY, sources, and where the advanced setup would be justified:

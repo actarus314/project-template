@@ -276,6 +276,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | "a **host** appears, it needs validating" | `--staging` | Re-run `configure-repo.sh`: it sets the `develop` ruleset **and allows the merge commit** *(squash-only is incompatible with a staging branch)*. |
 | "the site moves **off Pages**" | remove `--pages` | Delete `pages.yml`. **Never** leave it running "just in case" — an orphaned workflow is a check that no one reads anymore. |
 | **removing** a capability | — | ⚠️ Remove `build-check` from the **required** checks **BEFORE** deleting `docker-publish.yml`. Otherwise the check stays required while nothing produces it anymore → **every PR blocked forever**. |
+| bringing an **EXISTING** repo into compliance | — | ⚠️ Its CI names its jobs however it likes, while the ruleset requires **`checks`** *(and `build-check` with `--artefact`)*. **`configure-repo.sh` now REFUSES to set the ruleset** if no job carries the name — a `--dry-run` says so without writing. The fix: an aggregator job named `checks`, `needs:` every other job, `if: always()` *(model: this repo's own `ci.yml`)*. |
 
 ---
 
