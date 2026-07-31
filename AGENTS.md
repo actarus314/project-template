@@ -42,7 +42,7 @@ The `pre-commit` hook **reruns it on its own, throttled (24h) and CONSULTATIVE**
 
 **`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it *(it stands in for the ruleset, absent as long as the repo is private)*.
 
-- Branch `feat/…` → **open the PR with `direnv exec <repo> ./open-pr.sh <base> <titre> <fichier-corps>`**: it pushes, opens the PR, AND **verifies that a `pull_request` run starts** — GitHub sometimes fails to dispatch the CI, and a PR with **0 runs** reads as green when it has **never** been tested. If it's missing, it closes/reopens to re-pull the event *(the only re-trigger that reproduces the REQUIRED `pull_request` checks)*. 🔴 **"0 runs" is NEVER a green.**
+- Branch `feat/…` → **open the PR with `direnv exec <repo> ./open-pr.sh <base> <title> <body-file>`**: it pushes, opens the PR, AND **verifies that a `pull_request` run starts** — GitHub sometimes fails to dispatch the CI, and a PR with **0 runs** reads as green when it has **never** been tested. If it's missing, it closes/reopens to re-pull the event *(the only re-trigger that reproduces the REQUIRED `pull_request` checks)*. 🔴 **"0 runs" is NEVER a green.**
 - A **CI** *(`.github/workflows/ci.yml`)* validates every PR: it lints its **own** workflows, generates projects and lints **their** workflows under real conditions.
 - **Merge only on green CI.** This must be verified every time — never `gh pr checks` *(the `Checks` permission cannot be granted)*:
   ```bash
