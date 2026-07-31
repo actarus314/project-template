@@ -7,7 +7,7 @@
 > `github-repo-config.md §2`, which explains **where each permission is derived from** (a called endpoint
 > = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** —
 > two copies always diverge, and a missing permission **fails SILENTLY**.
-> Standard: `claude-code-project-standard.md` · Server config: `github-repo-config.md` · Checks: `controles-repo.md`
+> Standard: `claude-code-project-standard.md` · Server config: `github-repo-config.md` · Checks: `repo-controls.md`
 
 **Two rules that run through the entire document:**
 

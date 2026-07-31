@@ -1,9 +1,9 @@
 # Installed as .github/workflows/ci.yml by `init-project.sh --type generic`. Job name MUST stay
 # `checks` (the ruleset requires it).
 #
-# WHAT THIS IS: the language-AGNOSTIC security controls, pre-wired, plus a BUILD/TEST STUB you fill
+# WHAT THIS IS: the language-AGNOSTIC security controls, pre-wired, plus a BUILD/TEST STUB to fill
 # in. Use it for any toolchain the template has no dedicated `--type` for — Android/Kotlin (Gradle),
-# C/C++ (CMake), Rust, Go, .NET… The project is secure on day 1; you only add the build/test steps.
+# C/C++ (CMake), Rust, Go, .NET… The project is secure on day 1; only the build/test steps get added.
 # The security block below is identical to the other CI templates (single behaviour, kept in sync by
 # Renovate's version pins). Rationale for semgrep + osv-scanner lives in the standard, §17-18.
 name: CI
@@ -87,8 +87,8 @@ jobs:
       # PROJECT BUILD & TEST — add the steps YOUR toolchain needs. Everything above is language-
       # agnostic and already protects the repo; a `checks` job with no build step is valid and green.
       # ⚠ osv-scanner reads LOCKFILES: for Gradle, enable dependency locking so a `gradle.lockfile`
-      #   is committed, otherwise your dependencies are not scanned. (Go/pip manifests need no lock.)
-      # Uncomment and adapt ONE (or add your own):
+      #   is committed, otherwise the dependencies are not scanned. (Go/pip manifests need no lock.)
+      # Uncomment and adapt ONE (or add another):
       #   - uses: actions/setup-java@v5
       #     with: { distribution: temurin, java-version: '21' }
       #   - run: ./gradlew build test            # Android / Kotlin / Java

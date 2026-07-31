@@ -7,7 +7,7 @@ Preferred: use GitHub's **private vulnerability reporting** —
 on this repo. This keeps the report private until a fix is out.
 
 Do not open a public issue for a security concern. If private reporting
-isn't available to you, reach out to `<contact>` directly.
+isn't available, reach out to `<contact>` directly.
 
 ## Scope
 

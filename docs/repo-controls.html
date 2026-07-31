@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Repo controls, from commit to production: pipeline, private-to-public switch, tool reference table.">
+<title>Repo controls — commit → production</title>
+<!--
+  STANDALONE version: works offline, printable to PDF (Cmd+P).
+  No external resources, no hosting: these two files are self-sufficient.
+
+  SOURCE OF TRUTH for the content: docs/repo-controls.md
+  This file is only the LAYOUT of it. Any correction is made in the .md,
+  then carried over here — otherwise the two diverge, and nobody knows which to trust.
+
+  checksum-source-md: sha256:6efef030af1be5284afd254df8373829bdebcd94414ca5a74d47cd9e28df7153
+  (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
+
+  Light/dark theme: follows the system preference (prefers-color-scheme).
+-->
+<style>html{color-scheme:light dark}</style>
+<style>
+  :root{
+    --ground:#fbfcfd; --surface:#fff; --sunk:#f2f5f8;
+    --ink:#10151c; --body:#3d4855; --muted:#6b7683;
+    --line:#dde3ea; --line-strong:#c3ccd6;
+    --accent:#2b62b0; --accent-soft:#e8effa;
+    --main:#8250df; --dev:#1a7f37; --feat:#bc4c00;
+    --on:#1a7f37; --on-soft:#e6f4ea;
+    --off:#96690a; --off-soft:#fbf1dc;
+    --shadow:0 1px 2px rgba(16,21,28,.06), 0 4px 12px rgba(16,21,28,.04);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0d1117; --surface:#151b23; --sunk:#10161d;
+      --ink:#e8edf3; --body:#b6c1cd; --muted:#8593a1;
+      --line:#242d38; --line-strong:#33404e;
+      --accent:#6a9ceb; --accent-soft:#16243a;
+      --main:#b083f0; --dev:#4ac26b; --feat:#f0883e;
+      --on:#4ac26b; --on-soft:#122a1b;
+      --off:#d9a441; --off-soft:#2d2413;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.22);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0d1117; --surface:#151b23; --sunk:#10161d;
+    --ink:#e8edf3; --body:#b6c1cd; --muted:#8593a1;
+    --line:#242d38; --line-strong:#33404e;
+    --accent:#6a9ceb; --accent-soft:#16243a;
+    --main:#b083f0; --dev:#4ac26b; --feat:#f0883e;
+    --on:#4ac26b; --on-soft:#122a1b;
+    --off:#d9a441; --off-soft:#2d2413;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.22);
+  }
+  :root[data-theme="light"]{
+    --ground:#fbfcfd; --surface:#fff; --sunk:#f2f5f8;
+    --ink:#10151c; --body:#3d4855; --muted:#6b7683;
+    --line:#dde3ea; --line-strong:#c3ccd6;
+    --accent:#2b62b0; --accent-soft:#e8effa;
+    --main:#8250df; --dev:#1a7f37; --feat:#bc4c00;
+    --on:#1a7f37; --on-soft:#e6f4ea;
+    --off:#96690a; --off-soft:#fbf1dc;
+    --shadow:0 1px 2px rgba(16,21,28,.06), 0 4px 12px rgba(16,21,28,.04);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--body);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .wrap{max-width:1080px; margin:0 auto; padding:48px 24px 96px}
+
+  header{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:44px}
+  .eyebrow{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:11px; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 12px;
+  }
+  h1{
+    margin:0 0 10px; color:var(--ink); font-size:2.1rem; line-height:1.15;
+    font-weight:640; letter-spacing:-.02em; text-wrap:balance;
+  }
+  .lede{margin:0; max-width:64ch; color:var(--muted); font-size:1.02rem}
+
+  h2{
+    color:var(--ink); font-size:1.28rem; font-weight:620; letter-spacing:-.01em;
+    margin:0 0 6px; text-wrap:balance;
+  }
+  .sub{margin:0 0 24px; color:var(--muted); font-size:.93rem; max-width:70ch}
+  section{margin-bottom:56px}
+
+  /* status legend */
+  .key{display:flex; flex-wrap:wrap; gap:18px; margin:0 0 28px; padding:12px 16px;
+       background:var(--sunk); border:1px solid var(--line); border-radius:8px}
+  .key div{display:flex; align-items:center; gap:8px; font-size:.86rem}
+  .dot{width:9px; height:9px; border-radius:50%; flex:none}
+  .dot.on{background:var(--on)} .dot.off{background:var(--off)}
+
+  /* ---- pipeline rail ---- */
+  .rail{display:grid; gap:0}
+  .stage{
+    display:grid; grid-template-columns:150px 1fr; gap:24px;
+    padding:20px 0; border-top:1px solid var(--line); position:relative;
+  }
+  .stage:first-child{border-top:0}
+  .when{position:relative; padding-left:26px}
+  .when::before{ /* the rail */
+    content:""; position:absolute; left:5px; top:-20px; bottom:-20px; width:2px; background:var(--line);
+  }
+  .stage:first-child .when::before{top:8px}
+  .stage:last-child .when::before{bottom:auto; height:28px}
+  .when::after{ /* the node */
+    content:""; position:absolute; left:0; top:6px; width:12px; height:12px; border-radius:50%;
+    background:var(--surface); border:2px solid var(--line-strong);
+  }
+  .stage.gate .when::after{border-color:var(--accent); background:var(--accent)}
+  .when b{display:block; color:var(--ink); font-size:.95rem; font-weight:620; line-height:1.35}
+  .when span{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  }
+  .ctrls{display:flex; flex-direction:column; gap:10px}
+  .ctrl{
+    display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start;
+    background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--on);
+    border-radius:7px; padding:11px 14px; box-shadow:var(--shadow);
+  }
+  .ctrl.dormant{border-left-color:var(--off)}
+  .ctrl .st{margin-top:6px}
+  .ctrl p{margin:0; font-size:.9rem}
+  .ctrl .what{color:var(--ink); font-weight:560}
+  .ctrl .tool{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:.83rem;
+    color:var(--accent); word-break:break-word;
+  }
+  .ctrl .how{color:var(--muted); font-size:.83rem}
+
+  /* ---- switch ---- */
+  .flip{display:grid; grid-template-columns:1fr auto 1fr; gap:20px; align-items:stretch}
+  .col{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; box-shadow:var(--shadow)}
+  .col h3{margin:0 0 4px; font-size:1rem; color:var(--ink); font-weight:620}
+  .col .cap{margin:0 0 14px; font-size:.82rem; color:var(--muted)}
+  .col ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px}
+  .col li{display:flex; gap:9px; align-items:flex-start; font-size:.87rem}
+  .col li .st{margin-top:6px}
+  .arrow{display:flex; align-items:center; justify-content:center; color:var(--muted);
+         font-family:ui-monospace,monospace; font-size:.78rem; text-align:center; padding:0 4px}
+  .arrow b{display:block; color:var(--accent); font-size:1.4rem; line-height:1}
+
+  /* ---- table ---- */
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface); box-shadow:var(--shadow)}
+  table{border-collapse:collapse; width:100%; min-width:840px; font-size:.87rem}
+  th{
+    text-align:left; padding:12px 14px; background:var(--sunk); color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; font-weight:600;
+    border-bottom:1px solid var(--line-strong); white-space:nowrap;
+  }
+  td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  td.w{color:var(--ink); font-weight:560; white-space:nowrap}
+  td.t{font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:.82rem; color:var(--accent)}
+  td.h{color:var(--muted); font-size:.83rem}
+  td.p{text-align:center; white-space:nowrap}
+  .pill{
+    display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:640;
+    font-family:ui-monospace,monospace; letter-spacing:.04em;
+  }
+  .pill.on{background:var(--on-soft); color:var(--on)}
+  .pill.off{background:var(--off-soft); color:var(--off)}
+  tbody tr.grp td{
+    background:var(--sunk); font-family:ui-monospace,monospace; font-size:10.5px;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600; padding:8px 14px;
+  }
+
+  /* ---- callout ---- */
+  .note{
+    background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--off);
+    border-radius:8px; padding:18px 20px; box-shadow:var(--shadow);
+  }
+  .note h3{margin:0 0 8px; color:var(--ink); font-size:1rem; font-weight:620}
+  .note p{margin:0 0 10px; font-size:.9rem}
+  .note p:last-child{margin:0}
+  .note code{
+    font-family:ui-monospace,monospace; font-size:.82rem; background:var(--sunk);
+    padding:1px 5px; border-radius:4px; border:1px solid var(--line);
+  }
+  strong{color:var(--ink); font-weight:620}
+
+  footer{margin-top:64px; padding-top:20px; border-top:1px solid var(--line);
+         color:var(--muted); font-size:.8rem; font-family:ui-monospace,monospace}
+
+  /* ---- branch graph (SVG: the merge curves are real) ---- */
+  .graph{background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:22px 18px; box-shadow:var(--shadow); overflow-x:auto}
+  .graph svg{display:block; width:100%; min-width:600px; height:auto}
+  .g-rail{stroke-width:3; fill:none; stroke-linecap:round}
+  .g-merge{stroke-width:2; fill:none; stroke-dasharray:none; opacity:.55}
+  .g-node{stroke:var(--surface); stroke-width:3}
+  .g-lane{font-family:ui-monospace,monospace; font-size:12px; font-weight:700; text-anchor:end}
+  .g-txt{font-family:ui-monospace,monospace; font-size:10.5px; fill:var(--muted)}
+  .g-gate{font-family:ui-monospace,monospace; font-size:10px; font-weight:700; fill:#fff; text-anchor:middle}
+  .g-gatebg{fill:var(--accent); rx:4}
+  .legend{display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; padding-top:14px;
+    border-top:1px solid var(--line); font-size:.82rem; color:var(--muted)}
+  .legend span{display:flex; align-items:center; gap:7px}
+  .sw{width:20px; height:3px; border-radius:2px; flex:none}
+  .chip{background:var(--accent); color:#fff; font-family:ui-monospace,monospace; font-size:9.5px;
+    font-weight:700; padding:2px 6px; border-radius:4px}
+  .steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(196px,1fr)); gap:12px; margin-top:20px}
+  .step{background:var(--sunk); border:1px solid var(--line); border-radius:8px; padding:13px 15px}
+  .step b{display:block; color:var(--ink); font-size:.86rem; margin-bottom:3px}
+  .step p{margin:0; font-size:.82rem; color:var(--muted)}
+  .step .cmd{font-family:ui-monospace,monospace; font-size:.78rem; color:var(--accent);
+    display:block; margin-top:6px; word-break:break-all}
+  .note.accent{border-left-color:var(--accent)}
+
+  @media (max-width:760px){
+    .wrap{padding:32px 16px 64px}
+    .stage{grid-template-columns:1fr; gap:14px}
+    .when{padding-left:26px}
+    .when::before{top:-20px}
+    .flip{grid-template-columns:1fr}
+    .arrow{padding:8px 0}
+    .arrow b{transform:rotate(90deg)}
+  }
+  @media print{
+    body{background:#fff}
+    .ctrl,.col,.tablewrap,.note{box-shadow:none}
+    section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">Project standard · reference</p>
+  <h1>The repo controls, from commit to production</h1>
+  <p class="lede">First <strong>where the code goes</strong>, then <strong>what verifies it</strong> — at what point, with what tool, triggered by what. The distinction that structures everything: a <strong>private</strong> repo on the Free plan has <strong>no ruleset</strong> — the controls run, but <strong>nothing requires them</strong>.</p>
+</header>
+
+<div class="key">
+  <div><span class="dot on"></span> Active from the <strong>private</strong> phase</div>
+  <div><span class="dot off"></span> Dormant in private — <strong>activates when going public</strong></div>
+  <div><span class="dot" style="background:var(--accent)"></span> <strong>Blocking</strong> stage (nothing passes without it)</div>
+</div>
+
+<section>
+  <h2>The flow — where the code goes</h2>
+  <p class="sub"><strong>The single principle:</strong> <code>main</code> is production. We never write to it directly — the only way in is a pull request with green CI. Everything else follows from that.</p>
+
+  <div class="note accent" style="margin:0 0 22px">
+    <h3>What decides the flow: <em>a single question</em></h3>
+    <p><strong>"Is there a host to VALIDATE before production?"</strong> — that's the <code>staging</code> capability, and only that one. Not the language, not Docker.</p>
+    <p>A <code>node</code> project with no host to validate does <strong>not</strong> need <code>develop</code>. A Pages site packaged as an image <strong>doesn't either</strong> — the image <em>is</em> the page. Publishing an <strong>artefact</strong> (tag → ghcr image) is an <strong>independent</strong> capability: it attaches to <em>both</em> flows below.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:0 0 4px">Without <code>staging</code> — GitHub Flow, two branches are enough</h3>
+  <p class="sub" style="margin-bottom:18px">This is the case of a Pages site, <strong>and also</strong> that of a static site packaged as an image so third parties can self-host it. Nothing to validate upstream → a <code>develop</code> would be an <strong>empty ritual</strong>, and a long-lived branch nobody uses drifts until the merge stops happening.</p>
+
+  <div class="graph">
+    <svg viewBox="0 0 760 150" role="img" aria-label="Static flow: feat to main, one pull request">
+      <text class="g-lane" x="72" y="44" fill="var(--main)">main</text>
+      <text class="g-lane" x="72" y="122" fill="var(--feat)">feat/…</text>
+
+      <path class="g-rail" d="M88 40 H720" stroke="var(--main)"/>
+      <path class="g-rail" d="M150 118 H430" stroke="var(--feat)" stroke-dasharray="7 6"/>
+
+      <path class="g-merge" d="M150 118 C150 78, 118 78, 118 44" stroke="var(--feat)"/>
+      <path class="g-merge" d="M430 118 C430 78, 470 78, 470 44" stroke="var(--feat)"/>
+
+      <circle class="g-node" cx="118" cy="40" r="7" fill="var(--main)"/>
+      <circle class="g-node" cx="470" cy="40" r="7" fill="var(--main)"/>
+      <circle class="g-node" cx="600" cy="40" r="7" fill="var(--main)"/>
+      <rect class="g-node" x="682" y="32" width="16" height="16" rx="3" fill="var(--main)" transform="rotate(45 690 40)"/>
+      <circle class="g-node" cx="150" cy="118" r="7" fill="var(--feat)"/>
+      <circle class="g-node" cx="290" cy="118" r="7" fill="var(--feat)"/>
+      <circle class="g-node" cx="430" cy="118" r="7" fill="var(--feat)"/>
+
+      <text class="g-txt" x="118" y="22" text-anchor="middle">branch</text>
+      <text class="g-txt" x="290" y="140" text-anchor="middle">commits — gitleaks hook on each one</text>
+      <text class="g-txt" x="600" y="22" text-anchor="middle">merge → Pages = PROD</text>
+      <text class="g-txt" x="690" y="66" text-anchor="middle">tag v* → image</text>
+
+      <rect class="g-gatebg" x="428" y="62" width="84" height="17"/>
+      <text class="g-gate" x="470" y="74">PR · CI green</text>
+    </svg>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--main)"></i> <code>pages</code>: merging deploys</span>
+      <span><i class="sw" style="background:var(--main); transform:rotate(45deg); width:9px; height:9px; border-radius:2px"></i> <code>artefact</code>: the tag publishes the image — <strong>independent capability, optional here</strong></span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><b>1 · Branch</b><p>Always from <code>main</code>.<span class="cmd">git switch -c feat/&lt;topic&gt;</span></p></div>
+    <div class="step"><b>2 · Commit</b><p>The hook refuses a secret.<span class="cmd">git commit</span></p></div>
+    <div class="step"><b>3 · Open the PR</b><p>The CI runs <em>before</em> the code touches <code>main</code>.<span class="cmd">gh pr create --fill</span></p></div>
+    <div class="step"><b>4 · Merge</b><p>Only if the CI is green — <b>not</b> <code>gh pr checks</code> (the <code>Checks</code> permission cannot be granted).<span class="cmd">gh run list --commit "$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)"</span><span class="cmd">gh pr merge --squash</span></p></div>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:34px 0 4px">With <code>staging</code> — three tiers, because there's a host to validate</h3>
+  <p class="sub" style="margin-bottom:18px">Here <code>develop</code> earns its place: there's a <strong>real host</strong> to validate before production. And prod doesn't follow a <em>branch</em>, it follows a <strong>pinned tag</strong> — we promote an <strong>artefact</strong>, not a branch.</p>
+
+  <div class="graph">
+    <svg viewBox="0 0 760 215" role="img" aria-label="Node flow: feat to develop, develop to main, then tag and image">
+      <text class="g-lane" x="72" y="40" fill="var(--main)">main</text>
+      <text class="g-lane" x="72" y="118" fill="var(--dev)">develop</text>
+      <text class="g-lane" x="72" y="188" fill="var(--feat)">feat/…</text>
+
+      <path class="g-rail" d="M88 36 H720" stroke="var(--main)"/>
+      <path class="g-rail" d="M110 114 H560" stroke="var(--dev)"/>
+      <path class="g-rail" d="M150 184 H300" stroke="var(--feat)" stroke-dasharray="7 6"/>
+
+      <path class="g-merge" d="M110 110 V40" stroke="var(--dev)"/>
+      <path class="g-merge" d="M150 184 C150 150, 190 150, 190 118" stroke="var(--feat)"/>
+      <path class="g-merge" d="M300 184 C300 150, 340 150, 340 118" stroke="var(--feat)"/>
+      <path class="g-merge" d="M560 114 C560 76, 600 76, 600 40" stroke="var(--dev)"/>
+
+      <circle class="g-node" cx="110" cy="36" r="7" fill="var(--main)"/>
+      <circle class="g-node" cx="600" cy="36" r="7" fill="var(--main)"/>
+      <rect class="g-node" x="686" y="28" width="16" height="16" rx="3" fill="var(--main)" transform="rotate(45 694 36)"/>
+
+      <circle class="g-node" cx="110" cy="114" r="7" fill="var(--dev)"/>
+      <circle class="g-node" cx="190" cy="114" r="7" fill="var(--dev)"/>
+      <circle class="g-node" cx="340" cy="114" r="7" fill="var(--dev)"/>
+      <circle class="g-node" cx="470" cy="114" r="7" fill="var(--dev)"/>
+      <circle class="g-node" cx="560" cy="114" r="7" fill="var(--dev)"/>
+
+      <circle class="g-node" cx="150" cy="184" r="7" fill="var(--feat)"/>
+      <circle class="g-node" cx="300" cy="184" r="7" fill="var(--feat)"/>
+
+      <text class="g-txt" x="225" y="206" text-anchor="middle">commits</text>
+      <text class="g-txt" x="470" y="142" text-anchor="middle">staging — deployed on a real host, validated</text>
+      <text class="g-txt" x="756" y="18" text-anchor="end">tag v1.2.3 → image ghcr → PROD</text>
+
+      <rect class="g-gatebg" x="148" y="130" width="84" height="17"/>
+      <text class="g-gate" x="190" y="142">PR · CI green</text>
+      <rect class="g-gatebg" x="558" y="56" width="84" height="17"/>
+      <text class="g-gate" x="600" y="68">PR · CI green</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--main)"></i> <code>main</code> — production</span>
+    <span><i class="sw" style="background:var(--dev)"></i> <code>develop</code> — staging (host)</span>
+    <span><i class="sw" style="background:var(--feat)"></i> <code>feat/…</code> — the work</span>
+    <span><i class="chip">PR · CI green</i> the only passage — nothing else writes to these branches</span>
+  </div>
+
+  <div class="note">
+    <h3>This is NOT two pull requests per change</h3>
+    <p>That's the classic confusion, and it would make the flow unbearable. <strong>The <code>feat/</code> branches pile up in <code>develop</code></strong> — one PR each, that's the normal pace of work.</p>
+    <p><code>develop → main</code> happens <strong>only when publishing a version</strong>: <strong>a single PR for N changes</strong>. Solo, that's roughly once a week, not once per commit.</p>
+  </div>
+
+  <div class="note accent">
+    <h3>Why the pull request even solo, even in private</h3>
+    <p>Without a PR, we push to <code>main</code> and the CI runs <strong>after</strong>: it becomes an <strong>autopsy</strong>, not a barrier — it records the damage on the branch we just declared "production". With a PR, it runs <strong>before</strong>. That's the whole difference between <em>knowing</em> and <em>preventing</em>.</p>
+    <p><strong>This has already happened</strong>: a direct push to <code>main</code> removed a <code>user:</code> directive; the image shipped as <code>:latest</code>, the prod host pulled it, and production went down — discovered after the fact.</p>
+    <p><strong>Where we do NOT tighten the screws</strong> — <em>too many controls kills the control</em>: no lint at pre-commit · <strong>only one</strong> blocking control locally, secrets (vital, instant, irreversible once pushed) · <strong>zero mandatory review</strong> (<code>required_approving_review_count = 0</code>): solo, self-approving would be theater.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The pipeline</h2>
+  <p class="sub">Seven stages. Each one catches what the previous one couldn't see — a secret at commit, an injection in a PR, a tag moved after the release.</p>
+
+  <div class="rail">
+
+    <div class="stage gate">
+      <div class="when"><b>Local commit</b><span>dev machine</span></div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">No secret in the staged files.</span>
+          <span class="tool">gitleaks</span> —
+          <span class="how">hook <code>.githooks/pre-commit</code>, armed by <code>git config core.hooksPath .githooks</code>. Bypassable with <code>--no-verify</code>: the CI replays it on the full history.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage gate">
+      <div class="when"><b>Local push</b><span>dev machine</span></div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">No direct push to <code>main</code> / <code>develop</code>.</span>
+          <span class="tool">pre-push hook</span> —
+          <span class="how">this is the <strong>substitute for the missing ruleset</strong> as long as the repo is private. Lets branch creation through, refuses direct writes.</span></p>
+        </div>
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">Secret detected in the push, server-side.</span>
+          <span class="tool">push protection</span> —
+          <span class="how">native GitHub, automatic. Unavailable on a private repo on Free.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage gate">
+      <div class="when"><b>Pull request</b><span>job <code>checks</code></span></div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">Secrets across the <strong>full</strong> history, not just the diff.</span>
+          <span class="tool">gitleaks</span> <span class="how">— pinned binary + checksum. The net that cannot be bypassed.</span></p>
+        </div>
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">Application code flaws.</span>
+          <span class="tool">semgrep</span>
+          <span class="how">— <code>p/security-audit</code> + <code>p/owasp-top-ten</code> rulesets. Analyzes file by file: it <em>precedes</em> CodeQL, it doesn't replace it.</span></p>
+        </div>
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">Vulnerable dependencies (all manifests, <code>-r .</code>).</span>
+          <span class="tool">osv-scanner</span>
+          <span class="how">— OSV database. It's the equivalent of dependency-review, except this one works in private.</span></p>
+        </div>
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">The workflows themselves: syntax, shell, <code>${{ }}</code> injection.</span>
+          <span class="tool">actionlint · zizmor</span>
+          <span class="how">— a workflow is code, and it's the most direct attack surface.</span></p>
+        </div>
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">The code does what it claims.</span>
+          <span class="tool">npm test · npm run typecheck · npm audit · node --check</span>
+          <span class="how">— depending on the toolchain (<code>--type</code>).</span></p>
+        </div>
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what"><strong>Cross-file</strong> static analysis (data flow).</span>
+          <span class="tool">CodeQL</span>
+          <span class="how">— requires GitHub Advanced Security on a private repo. Its license even forbids local use on private code.</span></p>
+        </div>
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">Incoming dependency + <strong>licenses</strong>.</span>
+          <span class="tool">dependency-review</span>
+          <span class="how">— blocks before the merge, where Dependabot only alerts after.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage gate">
+      <div class="when"><b>Pull request</b><span>job <code>build-check</code></span></div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">Docker image CVEs — CRITICAL/HIGH fail the PR.</span>
+          <span class="tool">docker build --load › trivy</span>
+          <span class="how">— scanning at deploy time would be too late: the image is already tagged and prod pins it.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="when"><b>Merge</b><span>server</span></div>
+      <div class="ctrls">
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">PR mandatory · <strong>required</strong> checks · no force-push.</span>
+          <span class="tool">main / develop rulesets</span>
+          <span class="how">— set up by <code>configure-repo.sh</code>. In private, they don't exist: <strong>a red PR can be merged</strong>.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="when"><b>Tag <code>v*</code></b><span>release</span></div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <span class="dot on st"></span>
+          <p><span class="what">Image published to ghcr.</span>
+          <span class="tool">docker-publish.yml › build-push</span>
+          <span class="how">— triggered by the tag push.</span></p>
+        </div>
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">The tag can't be moved or deleted.</span>
+          <span class="tool">tags ruleset</span>
+          <span class="how">— without it, the version pin in prod guarantees nothing: the tag could point elsewhere tomorrow.</span></p>
+        </div>
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">A release's assets can no longer be replaced.</span>
+          <span class="tool">immutable releases</span>
+          <span class="how">— <strong>not retroactive</strong>: set it up before v1, otherwise it's too late.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="when"><b>Production</b><span>host</span></div>
+      <div class="ctrls">
+        <div class="ctrl dormant">
+          <span class="dot off st"></span>
+          <p><span class="what">Is the image actually <em>pullable</em>?</span>
+          <span class="tool">curl ghcr.io/v2/…/manifests</span>
+          <span class="how">— tested <strong>anonymously</strong>, the way the prod host does. A green "Publish image" job proves nothing. The default <strong>depends on the owner</strong>: public by default on a <strong>personal</strong> account, <strong>PRIVATE by default on an ORGANIZATION</strong> (anonymous pull = 403). The script tests, and only asks for action if the test fails.</span></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>The private → public switch</h2>
+  <p class="sub">The nominal cycle: the repo is born private, it becomes public. Everything that was dormant activates all at once — it's the most dangerous moment of its life.</p>
+
+  <div class="flip">
+    <div class="col">
+      <h3>While private</h3>
+      <p class="cap">Everything runs. Nothing is required.</p>
+      <ul>
+        <li><span class="dot on st"></span><span>gitleaks (hook + CI, full history)</span></li>
+        <li><span class="dot on st"></span><span>pre-push hook: no direct write to <code>main</code></span></li>
+        <li><span class="dot on st"></span><span>semgrep · osv-scanner</span></li>
+        <li><span class="dot on st"></span><span>actionlint · zizmor · trivy</span></li>
+        <li><span class="dot on st"></span><span>tests · typecheck · Renovate + Dependabot alerts</span></li>
+        <li><span class="dot off st"></span><span><strong>No ruleset</strong> — a red PR can be merged</span></li>
+      </ul>
+    </div>
+
+    <div class="arrow"><span><b>→</b>flip</span></div>
+
+    <div class="col">
+      <h3>Going public</h3>
+      <p class="cap">The server enforces what discipline used to hold.</p>
+      <ul>
+        <li><span class="dot on st"></span><span><code>main</code>, <code>develop</code>, <code>tags</code> rulesets</span></li>
+        <li><span class="dot on st"></span><span><strong>Required</strong> checks before merge</span></li>
+        <li><span class="dot on st"></span><span>Secret scanning + push protection</span></li>
+        <li><span class="dot on st"></span><span>CodeQL — <em>scans the whole history at once</em></span></li>
+        <li><span class="dot on st"></span><span>dependency-review · immutable releases</span></li>
+        <li><span class="dot on st"></span><span>Private vulnerability reporting</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The hole, and how it's held</h2>
+  <div class="note">
+    <h3>In private, discipline is the only safety net — so it's tooled</h3>
+    <p>On a private repo on Free, GitHub would accept a direct push to <code>main</code>, and a red PR can be merged. A discipline that's only written down doesn't exist: it's carried by tools everywhere possible.</p>
+    <p><strong>The <code>pre-commit</code> hook</strong> refuses a secret. <strong>The <code>pre-push</code> hook</strong> refuses direct writes to <code>main</code> — it's the missing ruleset, brought back onto the developer's machine. Both can be bypassed with <code>--no-verify</code>: a decision, not an accident.</p>
+    <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
+    <p>⚠️ <strong>This is not <code>gh pr checks</code></strong>: it requires the <code>Checks</code> permission, <strong>absent from the UI</strong> of fine-grained PATs — so impossible to grant. The rule was written everywhere, and <strong>unenforceable everywhere</strong>. → <code>gh run list --commit &lt;sha&gt;</code>, and <strong>green ⇔ every expected workflow is <code>completed / success</code></strong> (a workflow that's <strong>absent</strong> is not a green: it just hasn't reported yet). Detail: standard §18.</p>
+    <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Reference table</h2>
+  <p class="sub">The <em>Private</em> column is the only one that matters for knowing what protects the repo today.</p>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Where / when</th><th>What</th><th>With what</th><th>How</th><th>Private</th></tr>
+      </thead>
+      <tbody>
+        <tr class="grp"><td colspan="5">Development machine</td></tr>
+        <tr>
+          <td class="w">Commit</td><td>No secret in the staged files</td>
+          <td class="t">gitleaks</td><td class="h">hook <code>.githooks/pre-commit</code></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Push</td><td>No direct push to <code>main</code>/<code>develop</code></td>
+          <td class="t">pre-push hook</td><td class="h">hook <code>.githooks/pre-push</code></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+
+        <tr class="grp"><td colspan="5">Continuous integration — job <code>checks</code> (ci.yml)</td></tr>
+        <tr>
+          <td class="w">Pull request</td><td>Secrets across the full history</td>
+          <td class="t">gitleaks</td><td class="h">pinned binary + checksum</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Application code flaws</td>
+          <td class="t">semgrep</td><td class="h"><code>p/security-audit</code>, <code>p/owasp-top-ten</code></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Vulnerable dependencies (all manifests, <code>-r .</code>)</td>
+          <td class="t">osv-scanner</td><td class="h">pinned binary + checksum</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Workflows: syntax + shell</td>
+          <td class="t">actionlint</td><td class="h">pinned binary + checksum</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Workflows: injection, pinning</td>
+          <td class="t">zizmor</td><td class="h">config <code>.github/zizmor.yml</code></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Tests · types · npm audit</td>
+          <td class="t">npm test · npm run typecheck · npm audit</td><td class="h"><code>node</code> toolchain</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Syntax of all JS files</td>
+          <td class="t">node --check</td><td class="h"><code>static</code> toolchain</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Pull request</td><td>Incoming dependency + licenses</td>
+          <td class="t">dependency-review</td><td class="h">gated on public (requires GHAS)</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+
+        <tr class="grp"><td colspan="5">Continuous integration — other jobs</td></tr>
+        <tr>
+          <td class="w">Pull request</td><td>Docker image CVEs (CRITICAL/HIGH)</td>
+          <td class="t">trivy</td><td class="h">job <code>build-check</code> — <strong>required check</strong></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">PR + push</td><td>Cross-file static analysis</td>
+          <td class="t">CodeQL</td><td class="h"><strong>default setup</strong> — enabled by <code>configure-repo.sh</code>, public only</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+        <tr>
+          <td class="w">Repo without CI</td><td>Secrets (full history)</td>
+          <td class="t">gitleaks</td><td class="h"><code>gitleaks.yml</code> standalone — PR + weekly</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+
+        <tr class="grp"><td colspan="5">Server — set up by <code>configure-repo.sh</code></td></tr>
+        <tr>
+          <td class="w">Merge</td><td>PR mandatory · required checks · no force-push</td>
+          <td class="t">main / develop rulesets</td><td class="h">unavailable in private (Free)</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+        <tr>
+          <td class="w">Tag</td><td><code>v*</code> tag can't be moved or deleted</td>
+          <td class="t">tags ruleset</td><td class="h">without it, the prod pin means nothing</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+        <tr>
+          <td class="w">Release</td><td>Assets can't be replaced</td>
+          <td class="t">immutable releases</td><td class="h"><code>PUT /immutable-releases</code> — not retroactive</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+        <tr>
+          <td class="w">Server push</td><td>Secret in the push</td>
+          <td class="t">secret scanning + push protection</td><td class="h">native GitHub</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+        <tr>
+          <td class="w">After release</td><td>Is the image pullable?</td>
+          <td class="t">curl ghcr.io/v2/…/manifests</td><td class="h">test <strong>anonymous</strong>, like the prod host</td>
+          <td class="p"><span class="pill off">dormant</span></td>
+        </tr>
+
+        <tr class="grp"><td colspan="5">Publication &amp; monitoring</td></tr>
+        <tr>
+          <td class="w">Push tag <code>v*</code></td><td>Image published to ghcr</td>
+          <td class="t">docker-publish.yml › build-push</td><td class="h">triggered by the tag</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Weekly</td><td>Updates for all dependencies (npm · docker · actions · pip…)</td>
+          <td class="t">Renovate</td><td class="h"><code>renovate.json</code> — auto-detected, minor/patch grouped</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Continuous</td><td>Dependency CVEs (<strong>detection</strong>)</td>
+          <td class="t">Dependabot alerts</td><td class="h">native — free even in private; Renovate <strong>reads</strong> these alerts and opens the fix PR</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Project standard — claude-code-project-standard.md §18</footer>
+</div>
+</body>
+</html>

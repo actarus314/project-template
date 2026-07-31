@@ -128,12 +128,12 @@ if [ -n "$GITLEAKS_VERSION" ]; then
   if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
 fi
 
-# docs/verifier-checksums.sh — whenever it exists (this repo only: no generated project ships doc
+# docs/verify-checksums.sh — whenever it exists (this repo only: no generated project ships doc
 # pairs like docs/X.md + hand-authored docs/X.html). Guards against the .html drifting from its
 # source .md; silent no-op elsewhere.
-if [ -x docs/verifier-checksums.sh ]; then
-  note "docs/verifier-checksums.sh — .md/.html checksum guard"
-  if docs/verifier-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
+if [ -x docs/verify-checksums.sh ]; then
+  note "docs/verify-checksums.sh — .md/.html checksum guard"
+  if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.

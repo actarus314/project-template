@@ -21,8 +21,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The last four French documents are now in English, and renamed with them**:
+  `docs/controles-repo.{md,html}` → `docs/repo-controls.{md,html}`,
+  `docs/securite-mises-a-jour.{md,html}` → `docs/security-and-updates.{md,html}`, and
+  `docs/verifier-checksums.sh` → `docs/verify-checksums.sh` — whose `--maj` flag becomes
+  `--update`. Everything versioned here is now English, file names included; the entries sealed
+  under `1.0.0` keep the old names, since they describe what happened then.
+- **`README.md` is bilingual** — English then French, separated by `---`, as the standard requires
+  of a project README (§1, §15) and as `templates/repo/README.md` already modelled. It gains the
+  two sections it was missing: **Why this exists** (what the tool answers, and the three findings
+  that shaped it) and **What this is not** (GitHub-only, built for Claude Code, solo-sized, no
+  update path for already-generated projects, build/test still per-language).
+
 ### Fixed
 
+- **The second person, which the standard forbids in versioned content (§1), was in it anyway** —
+  both doc pairs, `SECURITY.md`, and four files that ship into **every generated project**:
+  `templates/repo/SECURITY.md`, `templates/repo/.gitattributes`,
+  `templates/repo/.github/renovate.json` and `templates/workflows/ci-generic.yml`. All impersonal
+  now. Already-generated projects keep their frozen copy. Note that nothing in `check.sh` or the
+  CI verifies this rule — it held by discipline alone, and discipline is what let it slip.
+- `docs/security-and-updates.md` listed as *"left to build"* the pinned local runner and the pinned
+  gitleaks hook — both shipped, as `check.sh` and `.githooks/pre-commit`. Only the per-language
+  build/test stub actually remains.
 - `configure-repo.sh` no longer makes a status check required without checking that a job of that
   name exists on the default branch. It derived `checks` (and `build-check`) from what the templates
   ship, never from the target repo — so on a repo whose CI names its jobs otherwise, the ruleset

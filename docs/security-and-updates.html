@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Security & update process for the template: three version-bump channels, six checks on every PR, and who decided what.">
+<title>Security & update process</title>
+<!--
+  STANDALONE version: opens offline, prints to PDF (Cmd+P).
+  No external resource, no hosting: this file is self-contained.
+
+  SOURCE OF TRUTH for the content: docs/security-and-updates.md
+  This file is only its LAYOUT. Every correction happens in the .md,
+  then gets carried over here — otherwise the two drift apart, and nobody knows which to trust.
+
+  checksum-source-md: sha256:d98d34e2d386ee5e67d1efaf82039c1ea29a4e05ea7eebb439309996dd4576ce
+  (filled in by docs/verify-checksums.sh --update ; verified by ./check.sh and the CI)
+
+  Light/dark theme: follows the system preference (prefers-color-scheme).
+-->
+<style>
+  :root{
+    --bg:#f5f7f9; --surface:#ffffff; --surface-2:#eef1f5;
+    --ink:#172029; --ink-2:#48566a; --ink-3:#7b8798; --line:#dce2ea;
+    --accent:#3d5a9e; --accent-2:#2c4478; --accent-bg:#e9edf6;
+    --auto:#237a48; --auto-bg:#e4f3ea;
+    --manual:#9c6a12; --manual-bg:#f7eeda;
+    --gap:#b43a31; --gap-bg:#f8e6e4;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e131a; --surface:#151d27; --surface-2:#1b2530; --ink:#e7edf4; --ink-2:#a7b4c4; --ink-3:#6f7e8e; --line:#293440;
+      --accent:#82a0da; --accent-2:#a9c0ef; --accent-bg:#182233;
+      --auto:#5ec489; --auto-bg:#14301e; --manual:#e2ad4c; --manual-bg:#322510; --gap:#e2726b; --gap-bg:#331b19;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e131a; --surface:#151d27; --surface-2:#1b2530; --ink:#e7edf4; --ink-2:#a7b4c4; --ink-3:#6f7e8e; --line:#293440;
+    --accent:#82a0da; --accent-2:#a9c0ef; --accent-bg:#182233;
+    --auto:#5ec489; --auto-bg:#14301e; --manual:#e2ad4c; --manual-bg:#322510; --gap:#e2726b; --gap-bg:#331b19;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;margin:0;padding:0 20px 72px}
+  .wrap{max-width:var(--maxw);margin:0 auto}
+
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  code,.tok{font-family:var(--mono);font-size:.86em;background:var(--surface-2);color:var(--ink);
+    padding:.08em .38em;border-radius:4px;border:1px solid var(--line)}
+
+  /* masthead */
+  header.mast{padding:56px 0 28px;border-bottom:1px solid var(--line)}
+  header.mast h1{font-size:clamp(1.7rem,4vw,2.5rem);font-weight:800;letter-spacing:-.02em;
+    line-height:1.08;margin:.5rem 0 .4rem;text-wrap:balance}
+  header.mast .thesis{font-size:1.06rem;color:var(--ink-2);max-width:60ch;margin:0}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;font-family:var(--mono);font-size:.76rem}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--ink-2)}
+  .dot{width:9px;height:9px;border-radius:2px;flex:none}
+
+  section{padding:38px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:1.28rem;font-weight:750;letter-spacing:-.01em;margin:.2rem 0 .3rem}
+  .lead{color:var(--ink-2);max-width:66ch;margin:0 0 22px}
+
+  /* flow tracks */
+  .track{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:16px;overflow:hidden}
+  .track-head{display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);
+    border-left:4px solid var(--tc,var(--accent))}
+  .track-head .n{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tc,var(--accent));font-weight:600}
+  .track-head .d{font-size:.86rem;color:var(--ink-3)}
+  .steps{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:16px;scrollbar-width:thin}
+  .step{flex:0 0 auto;width:172px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+    padding:11px 12px;display:flex;flex-direction:column;gap:5px}
+  .step .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .step .act{font-weight:650;font-size:.9rem;line-height:1.25}
+  .step .sub{font-size:.78rem;color:var(--ink-2);line-height:1.35}
+  .arrow{flex:0 0 auto;align-self:center;width:26px;text-align:center;color:var(--ink-3);font-size:1.1rem}
+  .step.human{border-color:var(--manual);background:var(--manual-bg)}
+  .step.human .who{color:var(--manual)}
+  .step.auto{border-color:var(--auto);background:var(--auto-bg)}
+  .step.auto .who{color:var(--auto)}
+  .step.win{border-style:dashed}
+
+  .band{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;background:var(--accent-bg);
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:4px}
+  .band .lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2);font-weight:600;flex:none}
+  .band p{margin:0;font-size:.9rem;color:var(--ink-2);max-width:74ch}
+  .safety{margin-top:16px;font-size:.9rem;color:var(--ink-2);display:flex;gap:10px;align-items:baseline}
+  .safety b{color:var(--ink)}
+
+  /* controls table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  tbody tr:last-child td{border-bottom:none}
+  td .tool{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .chip{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:.03em;
+    padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .chip.a{background:var(--auto-bg);color:var(--auto);border:1px solid var(--auto)}
+  .chip.m{background:var(--manual-bg);color:var(--manual);border:1px solid var(--manual)}
+  .chip.g{background:var(--gap-bg);color:var(--gap);border:1px solid var(--gap)}
+
+  /* decisions */
+  .decks{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px}
+  .dec{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:14px 15px}
+  .dec .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .dec .what{font-weight:700;font-size:.96rem}
+  .dec .by{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent-2);background:var(--accent-bg);padding:2px 8px;border-radius:999px;flex:none}
+  .dec .why{font-size:.85rem;color:var(--ink-2);margin:0}
+
+  footer{padding:26px 0 0;color:var(--ink-3);font-size:.82rem;font-family:var(--mono)}
+  footer a{color:var(--accent)}
+
+  @media (max-width:560px){
+    .track-head{flex-direction:column;gap:3px}
+    .band{flex-direction:column;gap:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Project template · security &amp; dependencies</p>
+    <h1>How an update enters the repo — and what checks it</h1>
+    <p class="thesis"><b>Field-level overview</b> — the rules and their rationale are authoritative in the <b>standard §17-18</b> ; this doc introduces no new rule. Three distinct channels bump versions; six tools check the code on every PR. A <b>single update bot — Renovate</b> — auto-detects everything that needs bumping, with no list to maintain. The principle: <b>always up to date, but through reviewed actions</b> — never silent drift, never day-zero adoption.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--accent)"></i>system / pin</span>
+      <span><i class="dot" style="background:var(--auto)"></i>automatic</span>
+      <span><i class="dot" style="background:var(--manual)"></i>human action</span>
+      <span><i class="dot" style="background:var(--gap)"></i>gap / manual</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">The flow</p>
+    <h2>Three version-bump channels</h2>
+    <p class="lead">Each channel has its trigger, its delay, its gate (the CI) and its decider at merge time. They diverge at the key moment: <b>version → a human merges</b>, <b>security → auto-merge</b>.</p>
+
+    <div class="track" style="--tc:var(--accent)">
+      <div class="track-head"><span class="n">Channel 1 — code dependency</span><span class="d">triggered by hand · decided by hand · impact: the app</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Dev · local</span><span class="act">Bump a dep</span><span class="sub"><code>npm install x@2</code> during development</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Automatic</span><span class="act">Lockfile written</span><span class="sub">exact version <b>+ integrity hash</b> in <code>package-lock.json</code></span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Git</span><span class="act">Push</span><span class="sub">the lockfile goes to GitHub</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Scan</span><span class="sub"><code>npm ci</code> + osv on the lockfile's <b>exact</b> versions</span></div>
+        <div class="arrow">→</div>
+        <div class="step win auto"><span class="who">Impact</span><span class="act">local == CI guaranteed</span><span class="sub">both read the same lockfile → no loop</span></div>
+      </div>
+    </div>
+
+    <div class="track" style="--tc:var(--manual)">
+      <div class="track-head"><span class="n">Channel 2 — Renovate · version update (routine)</span><span class="d">triggered by the bot · decided by a human · impact: deps + tooling</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Renovate · scheduled</span><span class="act">Auto-detects + proposes</span><span class="sub">Monday — every ecosystem <b>+</b> the 4 pinned binaries</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Delay</span><span class="act">3-day maturation</span><span class="sub">the release must age — long enough for a poisoned one to be spotted</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Renovate</span><span class="act">PR opened</span><span class="sub">minor/patch grouped, majors isolated</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Gate</span><span class="sub">green? a breaking bump stays red, here</span></div>
+        <div class="arrow">→</div>
+        <div class="step human"><span class="who">Human · the maintainer</span><span class="act">Reviewed merge</span><span class="sub">every update gets seen go by — no auto-merge on routine</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Impact</span><span class="act">The pin moves forward</span><span class="sub">main + local realign on <code>pull</code></span></div>
+      </div>
+    </div>
+
+    <div class="track" style="--tc:var(--auto)">
+      <div class="track-head"><span class="n">Channel 3 — Renovate · security update</span><span class="d">triggered by a CVE alert · decided by policy · impact: closes a flaw</span></div>
+      <div class="steps">
+        <div class="step"><span class="who">Alert</span><span class="act">CVE published</span><span class="sub">the <b>Dependabot alerts</b> raise it (native detection)</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">Renovate</span><span class="act">Security PR</span><span class="sub">reads the alert (<code>vulnerabilityAlerts</code>) — <b>no delay</b>, bypasses maturation</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="who">CI</span><span class="act">Gate</span><span class="sub">green?</span></div>
+        <div class="arrow">→</div>
+        <div class="step auto"><span class="who">Auto</span><span class="act">Auto-merge</span><span class="sub"><code>vulnerabilityAlerts.automerge</code> — the only exception to human action</span></div>
+        <div class="arrow">→</div>
+        <div class="step win auto"><span class="who">Impact</span><span class="act">Flaw closed</span><span class="sub">without waiting for the next session</span></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <span class="lab">Ongoing — detection &amp; scan data</span>
+      <p>The <b>Dependabot alerts</b> (CVE detection, native, free even on private) run in the background — they're what Renovate reads for channel 3. In parallel, the <b>OSV database</b> and the <b>semgrep packs</b> <code>p/…</code> are pulled <b>on every run</b>, with no PR — already always up to date. We pin the <b>engine</b> (for <code>local == CI</code>), not the <b>data</b> we want fresh. An unknown flaw stays a zero-day: no scanner catches it, pinned or not.</p>
+    </div>
+    <p class="safety"><span class="dot" style="background:var(--auto);margin-top:.4em"></span><span><b>Safety net</b> — a bump that introduces a finding fails <b>its own PR</b>. CI red → no merge → <code>main</code> is never broken for the team.</span></p>
+  </section>
+
+  <section>
+    <p class="eyebrow">The checks</p>
+    <h2>What the CI runs on every PR</h2>
+    <p class="lead">Each tool <b>auto-detects its own scope</b> and tracks the code's drift with no human memory needed (the CodeQL model). Since the switch to full-Renovate, even updates follow this rule: Renovate auto-detects the ecosystems — no more list to maintain by hand.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tool</th><th>What it looks at</th><th>Detection</th><th>What it catches</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tool">CodeQL</span></td><td>languages present</td><td><span class="chip a">auto</span></td><td>code flaws — <span style="color:var(--ink-3)">the model</span></td></tr>
+          <tr><td><span class="tool">gitleaks</span></td><td>the full git history</td><td><span class="chip a">auto</span></td><td>committed secrets</td></tr>
+          <tr><td><span class="tool">actionlint</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>workflow errors</td></tr>
+          <tr><td><span class="tool">zizmor</span></td><td><code>.github/workflows/</code></td><td><span class="chip a">auto</span></td><td>workflow security (pin policy)</td></tr>
+          <tr><td><span class="tool">semgrep</span></td><td>the code · curated packs</td><td><span class="chip a">quasi-auto</span></td><td>security anti-patterns (private phase)</td></tr>
+          <tr><td><span class="tool">osv-scanner</span></td><td><b>all</b> manifests <code>-r .</code> <em>(excluding CI tooling)</em></td><td><span class="chip a">auto ✓</span></td><td>vulnerable deps (blocks the PR)</td></tr>
+          <tr><td><span class="tool">Dependabot alerts</span></td><td>installed deps</td><td><span class="chip a">auto · native</span></td><td>CVE detection — <span style="color:var(--ink-3)">read by Renovate</span></td></tr>
+          <tr><td><span class="tool">Renovate</span></td><td><b>all</b> manifests <b>+</b> 4 binaries</td><td><span class="chip a">auto ✓</span></td><td>deps + tools to bump (version + security)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The decisions</p>
+    <h2>Who decided what, and why</h2>
+    <p class="lead">The thread of this effort, frozen for pickup later.</p>
+    <div class="decks">
+      <div class="dec"><div class="top"><span class="what">Full-Renovate</span><span class="by">the maintainer · 2026-07-20</span></div><p class="why">A single update bot that <b>auto-detects everything</b> from the manifests, C++ included. Dependabot removed from the update role (it required a manual list per ecosystem); its <b>alerts</b> stay (detection), Renovate reads them. Proof: <b>8/8</b> managers detected with no declaration.</p></div>
+      <div class="dec"><div class="top"><span class="what">Keep the pin</span><span class="by">the maintainer</span></div><p class="why">It's not "staying old": it's what guarantees <code>local == github</code>. Without it, everyone grabs "latest" at a different moment → an endless loop.</p></div>
+      <div class="dec"><div class="top"><span class="what">Version = human action</span><span class="by">the maintainer</span></div><p class="why">See the updates go by. A 6-month project would otherwise get dozens of invisible bumps.</p></div>
+      <div class="dec"><div class="top"><span class="what">Security = auto</span><span class="by">the maintainer</span></div><p class="why">The only exception to human review: a CVE fix must land fast. Declarative auto-merge (<code>vulnerabilityAlerts.automerge</code>), which natively bypasses the maturation delay.</p></div>
+      <div class="dec"><div class="top"><span class="what">3-day maturation</span><span class="by">the maintainer</span></div><p class="why"><code>SHA256</code> only protects the transport, not a <b>poisoned</b> release. The delay lets the community spot it. Applies to routine, never to a security fix.</p></div>
+      <div class="dec"><div class="top"><span class="what">semgrep as-is</span><span class="by">analysis</span></div><p class="why"><code>--config auto</code> would turn telemetry back on and make the rules unpredictable, with no security gain. We keep the curated packs + <code>--metrics=off</code>.</p></div>
+      <div class="dec"><div class="top"><span class="what">osv <code>scan -r .</code></span><span class="by">analysis + the maintainer</span></div><p class="why">The scope follows the code instead of being hardwired to npm — a local test proved <b>7 Python CVEs</b> were missed.</p></div>
+      <div class="dec"><div class="top"><span class="what">CI tooling out of osv's scope</span><span class="by">analysis + the maintainer — 2026-07-21</span></div><p class="why"><code>requirements-ci.txt</code> (semgrep, zizmor) is gitignored <b>+</b> <code>git add -f</code>: osv respects the <code>.gitignore</code> patterns, so it doesn't resolve the transitive graph of dev tools <b>never shipped</b> — pure noise (CVEs from <code>python-multipart</code>, <code>mcp</code>…), not the product's attack surface. Renovate indexes <b>tracked</b> files, not the <code>.gitignore</code>: it keeps bumping them. The full <em>why</em> lives in the <code>.gitignore</code>.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    What's left to build — the <b>universal build/test stub</b>: the security checks are already language-agnostic; only build/test remains to be filled in, per language.
+  </footer>
+</div>
+</body>
+</html>

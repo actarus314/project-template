@@ -115,8 +115,8 @@
         "renovate-config-validator, pinned EXACT. It comes from npm, not from a GitHub release:",
         "no `currentDigest` here — an npm version is IMMUTABLE, a checksum would add nothing.",
         "The pin does matter: `renovate@43` re-resolved the newest 43.x ON EVERY RUN, so `main`",
-        "could go red without a line changing. A floating range does not only hand you the fixes,",
-        "it hands you the regressions too — with no known-good version to fall back to.",
+        "could go red without a line changing. A floating range does not only bring in the fixes,",
+        "it brings in the regressions too — with no known-good version to fall back to.",
         "⚠ `check.sh` carries the same version, which is why it is in managerFilePatterns."
       ],
       "customType": "regex",

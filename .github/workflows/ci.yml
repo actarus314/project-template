@@ -46,7 +46,7 @@ jobs:
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
       - name: shellcheck the scripts, the local runner and the hooks (shellcheck is preinstalled)
-        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh open-pr.sh verify-version.sh docs/verifier-checksums.sh .githooks/pre-commit .githooks/pre-push
+        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh open-pr.sh verify-version.sh docs/verify-checksums.sh .githooks/pre-commit .githooks/pre-push
 
   generate-and-lint:
     runs-on: ubuntu-latest
@@ -160,8 +160,8 @@ jobs:
           persist-credentials: false
       # Anti-drift guard: each hand-authored docs/X.html carries the sha256 of the docs/X.md it's
       # the layout of; this fails the PR if the .md moved on without the .html being updated too.
-      - name: Check docs/*.md <-> docs/*.html checksums (docs/verifier-checksums.sh)
-        run: docs/verifier-checksums.sh
+      - name: Check docs/*.md <-> docs/*.html checksums (docs/verify-checksums.sh)
+        run: docs/verify-checksums.sh
 
   version-coherence:
     runs-on: ubuntu-latest
