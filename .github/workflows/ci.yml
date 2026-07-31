@@ -202,3 +202,29 @@ jobs:
           tar -xzf "$f" gitleaks
       - name: Secret scan (full history)
         run: ./gitleaks git --no-banner --redact
+
+  # 🔴 The ruleset requires ONE status check named `checks` — the name every generated project's
+  # ci.yml uses for its single gate. This repo's CI is split across several jobs instead, so
+  # without this aggregator the required check NEVER arrives and every PR sits forever on
+  # "Expected — waiting for status". `configure-repo.sh` is right to demand `checks`; it is this
+  # repo that has to provide one.
+  # `if: always()` is what makes it a real gate: without it the job would be skipped as soon as a
+  # dependency fails, the check would never report, and the PR would block on a green CI.
+  checks:
+    needs: [validate-renovate, lint-scripts, generate-and-lint, docs-checksums, version-coherence, gitleaks]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Every required job succeeded
+        # Through env, never interpolated into the shell: a `${{ }}` inside a `run:` is an
+        # injection vector, and zizmor rejects it.
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          set -euo pipefail
+          echo "job results: $RESULTS"
+          case "$RESULTS" in
+            *failure*|*cancelled*|*skipped*)
+              echo "::error::a required job did not succeed"; exit 1;;
+          esac
