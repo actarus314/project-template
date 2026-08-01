@@ -155,6 +155,13 @@ if [ "${#renovate_files[@]}" -gt 0 ]; then
   [ "$rv" = 1 ] && ok "renovate configs valid" || ko "renovate config invalid"
 fi
 
+# verify-tone.sh — same shared-script model: the rule lives THERE, the CI calls the same file.
+# Copied into generated projects, where the rule applies just as much.
+if [ -x verify-tone.sh ]; then
+  note "verify-tone.sh — second person (standard §1)"
+  if ./verify-tone.sh; then ok "no second person"; else ko "second person in versioned content"; fi
+fi
+
 echo
 if [ "$fail" = 0 ]; then
   printf '\033[32m✓ local == github: all pass.\033[0m\n'
