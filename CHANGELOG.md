@@ -23,14 +23,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **`check.sh` now checks for the second person**, which the standard forbids in versioned content
-  (§1) and which nothing verified — the rule held by discipline alone until it was found in nine
-  files, four of them templates shipped into every generated project. It reads what is **committed**
-  (`git grep`, so an untracked scratch file is nobody's business), and its exceptions are **listed
-  and narrow** rather than a disabled rule: third-party licenses, the lines that state the rule
-  itself, the "By contributing…" clause, and one verbatim quotation. The check travels into every
-  generated project with `check.sh`. ⚠️ **It is not a gate**: the CI does not run it, so nothing
-  blocks a pull request on it.
+- **`verify-tone.sh` — the second person is now checked, and blocks.** The standard forbids it in
+  versioned content (§1) and nothing verified it: the rule held by discipline alone until it was
+  found in nine files, four of them templates shipped into every generated project. The check reads
+  what is **committed** (`git grep`, so an untracked scratch file is nobody's business), and its
+  exceptions are **listed and narrow** rather than a disabled rule: third-party licenses, the lines
+  that state the rule itself, the "By contributing…" clause, and one verbatim quotation.
+  `check.sh` **and the CI run the same script**, never a copy of its grep — two sources drift. It is
+  copied into every generated project, where the same rule applies.
 
 ### Changed
 

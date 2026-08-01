@@ -84,6 +84,12 @@ chmod +x "$DEST/repo/check.sh"
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
+# Same model again: the second-person rule (standard §1) is stated in the project's AGENTS.md, so
+# the check that enforces it has to travel with it — otherwise check.sh finds nothing there and
+# goes silently green on a rule the project is still held to.
+cp "$TPL/verify-tone.sh" "$DEST/repo/verify-tone.sh"
+chmod +x "$DEST/repo/verify-tone.sh"
+
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
 cp "$TPL/templates/repo/.gitattributes"      "$DEST/repo/.gitattributes"
