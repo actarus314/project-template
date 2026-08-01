@@ -335,6 +335,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # but that's not something to bet on). ⚠ Corollary: every file ADDED to the template must be added
 # HERE — otherwise it's created on disk and NEVER committed. The net below makes that loud.
 git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh \
+        verify-tone.sh \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 # requirements-ci.txt is gitignored ON PURPOSE (excluded from the osv scan, see .gitignore): a plain `git add`
 # would skip it SILENTLY → broken CI (`pip install -r`). `-f` versions it anyway (same pattern as .envrc).
