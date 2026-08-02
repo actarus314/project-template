@@ -28,6 +28,7 @@
 
   "enabledManagers": ["github-actions", "pip_requirements", "custom.regex"],
   "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "3 days",
   "prConcurrentLimit": 3,
   "labels": ["dependencies", "ci-tooling"],
 
