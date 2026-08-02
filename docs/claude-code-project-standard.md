@@ -502,6 +502,17 @@ data/
 
 Three stages: `feat/` validated **locally** → merged `--no-ff` into `develop`, validated on the **staging host** → `develop → main` PR merged **as a merge commit** (never squash — that preserves `feat/*` commit history and avoids making `develop` diverge) → `vX.Y.Z` tag pushed to `main`, triggering the release CI. **Exact commands, in order: RUNBOOK §2-3.**
 
+> ⚠️ **A consequence of that merge commit: `develop` reads as "N commits behind `main`" — permanently, and that is CORRECT.**
+> The promotion's merge commit is created **on `main` only**; `develop` never receives it. The gap therefore grows by one **at every cycle**, and **`0 0` is unreachable by construction**. GitHub's *"N commits behind"* banner measures **graph topology**, not content.
+>
+> 🔴 **One measure decides, and it is the content:**
+> ```bash
+> git diff origin/main origin/develop     # EMPTY = nothing to do, whatever the commit count says
+> ```
+> **Empty** — there is nothing to realign, and a `feat/` branch cut from `develop` starts from the right code. **Non-empty** is the real defect *(typically a `develop` recreated from a point before the release: an older CHANGELOG and version)*, and only that case is worth repairing.
+>
+> ⚠️ **Never "fix" the count**, because every way of doing so is worse than the gap: squashing the promotion makes the branches diverge for real *(above)*, and a squashed back-merge lands a **differently-SHA'd** commit on `develop`, creating the divergence it claimed to remove. A fast-forward is possible only where nothing protects `develop` — in **public** its ruleset requires a pull request.
+
 > 🔴 **In PRIVATE, shipping to production USED TO DESTROY the staging branch.**
 > ✅ **Fixed at the root**: on a **private**, 3-stage repo, `configure-repo.sh` **no longer sets** `delete-branch-on-merge` — `feat/*` branches are deleted by hand, the staging branch survives. Going public restores it *(rerunning the script)*. ⚠️ **A repo configured before this fix still carries it.**
 > `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop`**, when the `develop → main` PR merges. **In public**, the `develop` ruleset (`deletion` rule) refuses this; **in private, no ruleset exists** *(§18)* and the branch disappears **silently**.
