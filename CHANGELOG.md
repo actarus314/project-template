@@ -21,6 +21,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Documentation
+
+- **Standard §12 now states that `develop` reading as "N commits behind `main`" is structural and
+  correct.** The promotion's merge commit lands on `main` only, so the gap grows by one every cycle
+  and `0 0` is unreachable — GitHub's banner measures graph topology, not content. The section gives
+  the one measure that decides (`git diff origin/main origin/develop`) and says why every way of
+  "fixing" the count is worse than the gap. Nothing said so, and the silence cost a needless
+  realignment on a live repository before the measurement corrected it.
+
 ### Added
 
 - **`verify-tone.sh` — the second person is now checked, and blocks.** The standard forbids it in
