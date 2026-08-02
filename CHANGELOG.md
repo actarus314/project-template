@@ -21,6 +21,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-02
+
 ### Documentation
 
 - **Standard §12 now states that `develop` reading as "N commits behind `main`" is structural and
