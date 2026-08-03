@@ -222,8 +222,8 @@ Le template s'applique à lui-même la structure d'arborescence qu'il impose *(s
 
 ```
 template/
-├── repo/         ← THIS folder. Versioned → GitHub. The tools and the reference.
-└── workspace/    ← The project's memory. LOCAL git repo, no remote — never pushed.
+├── repo/         ← CE dossier. Versionné → GitHub. Les outils et la référence.
+└── workspace/    ← La mémoire du projet. Dépôt git LOCAL, sans remote — jamais poussé.
 ```
 
 | | Rôle |
