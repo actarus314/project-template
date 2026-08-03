@@ -5,7 +5,7 @@
 # in. Use it for any toolchain the template has no dedicated `--type` for — Android/Kotlin (Gradle),
 # C/C++ (CMake), Rust, Go, .NET… The project is secure on day 1; only the build/test steps get added.
 # The security block below is identical to the other CI templates (single behaviour, kept in sync by
-# Renovate's version pins). Rationale for semgrep + osv-scanner lives in the standard, §17-18.
+# Renovate's version pins). Rationale for semgrep + osv-scanner lives in the template's docs/repo-controls.md.
 name: CI
 
 on:
@@ -63,7 +63,7 @@ jobs:
       # (requirements-ci.txt) is subtracted in .gitignore, which osv honours (dev tools, never shipped
       # — see that file). `--exclude=.github`: workflows have their own linters (actionlint
       # + zizmor) enforcing THIS repo's pin policy, which semgrep's workflow rules would contradict.
-      # Full rationale (and the warnings not to overstate what each tool does): standard §17-18.
+      # Full rationale (and the warnings not to overstate what each tool does): the template's docs/repo-controls.md.
       - name: Static analysis (semgrep, pinned)
         run: |
           set -euo pipefail

@@ -62,7 +62,7 @@ Replays **the CI's security checks** at **pinned versions** (auto-detected from 
 ./init-project.sh --version
 ```
 
-The **git tag** is the single source, because a ruleset makes it immutable — the scripts read it, they never store it *(the why: standard §12)*. `verify-version.sh`, run by `check.sh` and by the CI, fails the build if the tag, the changelog and the scripts ever disagree.
+The **git tag** is the single source, because a ruleset makes it immutable — the scripts read it, they never store it *(the why: `docs/repo-controls.md`)*. `verify-version.sh`, run by `check.sh` and by the CI, fails the build if the tag, the changelog and the scripts ever disagree.
 
 A generated project records the version that built it, in its own `AGENTS.md`: it carries a **frozen copy** of the templates, so knowing which one is what makes a later fix diffable.
 
@@ -94,8 +94,9 @@ template/
 - **`secrets-and-auth.md`** — the two secret locations, the PAT model *(public-RO read · 1-repo write · ephemeral admin)*, and where each permission is derived from.
 - **`claude-code-setup.md`** — configuring the assistant on a project: `CLAUDE.md`, `.claude/`, the persistent memory, delegation.
 - **`docker-hardening.md`** — deployment security for a self-hosted service.
-- **`github-repo-config.md`** — server-side checks, new-repo checklist.
-- **`repo-controls.md`** / **`.html`** — which check runs, where, with what tool. The `.md` version is **authoritative**; the `.html` is its layout.
+- **`repo-controls.md`** / **`.html`** — **how code reaches production, and what verifies it**: the branch policy and the three capabilities, the version pin, the repo configuration, the control matrix. The `.md` version is **authoritative**; the `.html` is its layout.
+- **`security-and-updates.md`** / **`.html`** — **what moves, who decides it moves**: the three bump channels, Renovate as the sole auto-detecting bot, the checks on every PR.
+- **`github-repo-config.md`** — new-repo checklist.
 
 ### At the root
 
@@ -209,7 +210,7 @@ Il est **copié dans chaque projet généré**, et un hook `pre-commit` le rejou
 ./init-project.sh --version
 ```
 
-Le **tag git** est la source unique, parce qu'un ruleset le rend immuable — les scripts le lisent, ils ne le stockent jamais *(le pourquoi : standard §12)*.
+Le **tag git** est la source unique, parce qu'un ruleset le rend immuable — les scripts le lisent, ils ne le stockent jamais *(le pourquoi : `docs/repo-controls.md`)*.
 `verify-version.sh`, exécuté par `check.sh` et par la CI, fait échouer le build si le tag, le changelog et les scripts ne sont pas d'accord.
 
 Un projet généré enregistre la version qui l'a construit, dans son propre `AGENTS.md` : il porte une **copie figée** des templates, donc savoir laquelle est ce qui rend un correctif ultérieur diffable.
@@ -242,8 +243,9 @@ template/
 - **`secrets-and-auth.md`** — les deux lieux du secret, le modèle de PAT *(lecture public-RO · écriture 1 repo · admin éphémère)*, et d'où chaque permission est dérivée.
 - **`claude-code-setup.md`** — configurer l'assistant sur un projet : `CLAUDE.md`, `.claude/`, la mémoire persistante, la délégation.
 - **`docker-hardening.md`** — la sécurité de déploiement d'un service auto-hébergé.
-- **`github-repo-config.md`** — checks côté serveur, checklist de nouveau repo.
-- **`repo-controls.md`** / **`.html`** — quel check tourne, où, avec quel outil. La version `.md` fait **autorité** ; le `.html` en est la mise en forme.
+- **`repo-controls.md`** / **`.html`** — **comment le code arrive en prod, et qui le vérifie** : la politique de branches et les trois capacités, l'épinglage de version, la configuration du repo, la matrice des contrôles. La version `.md` fait **autorité** ; le `.html` en est la mise en forme.
+- **`security-and-updates.md`** / **`.html`** — **ce qui bouge, qui décide que ça bouge** : les trois canaux de bump, Renovate seul bot auto-détectant, les checks de chaque PR.
+- **`github-repo-config.md`** — checklist de nouveau repo.
 
 ### À la racine
 

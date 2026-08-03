@@ -1,7 +1,7 @@
 # Docker hardening — deployment security
 
 > Reference. Extracted from `claude-code-project-standard.md` §14.
-> Security practices validated for **any self-hosted Docker service**. Derived from the `docker-compose-security` skill + the Docker cheatsheet (Security section). Complements `claude-code-project-standard.md` §12-13 (workflow & version pin).
+> Security practices validated for **any self-hosted Docker service**. Derived from the `docker-compose-security` skill + the Docker cheatsheet (Security section). Complements `repo-controls.md` (workflow & version pin).
 
 ## Absolute rules
 
@@ -81,7 +81,7 @@ networks:
 ## Special cases
 
 - **Pure backend (no exposed port)**: no `ports:` block at all; reachable only via the internal Docker network by the other containers in the stack.
-- **SQLite / file bind mount**: `read_only` does not affect mounted volumes → the volume stays writable. Hardened as `root:root`, root writes to the bind mount → **avoids the `claude-code-project-standard.md` §12 pitfall** (distroless `:nonroot` UID 65532 → silent write loss, `SQLITE_READONLY_DIRECTORY`). Keep a **write probe at boot** (loud failure + non-zero exit) as defense-in-depth. Under `read_only`, a SQLite writer sets `PRAGMA temp_store=MEMORY` (+ `SQLITE_TMPDIR=/tmp`).
+- **SQLite / file bind mount**: `read_only` does not affect mounted volumes → the volume stays writable. Hardened as `root:root`, root writes to the bind mount → **avoids the `repo-controls.md` pitfall** (distroless `:nonroot` UID 65532 → silent write loss, `SQLITE_READONLY_DIRECTORY`). Keep a **write probe at boot** (loud failure + non-zero exit) as defense-in-depth. Under `read_only`, a SQLite writer sets `PRAGMA temp_store=MEMORY` (+ `SQLITE_TMPDIR=/tmp`).
 - **Embedded process manager (PM2/supervisord)**: starts as root and manages its own drop → no `user:`.
 
 ## The runtime must NOT carry its package manager
@@ -97,5 +97,5 @@ Scan **green** after this one line. *(A second-stage `distroless` image produces
 
 ## Before prod
 
-- **CVE scan**: `trivy image <image-name>:<tag>` before every deployment — **and as a CI gate** (`claude-code-project-standard.md` §17), not only by hand: scanning at deployment time is scanning too late.
+- **CVE scan**: `trivy image <image-name>:<tag>` before every deployment — **and as a CI gate** (`repo-controls.md`), not only by hand: scanning at deployment time is scanning too late.
 - **Per-service audit checklist**: `cap_drop:[ALL]` · `read_only:true` · `tmpfs` covering every write · `no-new-privileges:true` · `pids_limit` · `mem_limit` · ports on `127.0.0.1` if internal · dedicated bridge network · no `--privileged` · no `version:`.

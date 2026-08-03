@@ -70,7 +70,7 @@ mutate() {
     # DRAIN stdin, otherwise the dry-run KILLS ITSELF. Two calls are PIPED (`… | jq | mutate gh api
     # --input -`): without reading, jq writes into a pipe nobody opens → SIGPIPE, and
     # `set -e` + `pipefail` kill the script AT THE RULESET UPSERT — without a word (exit 141).
-    # Everything after that was then LOST SILENTLY: the `tags` ruleset (so the pin from §13), the
+    # Everything after that was then LOST SILENTLY: the `tags` ruleset (so the version pin), the
     # `develop` ruleset, community health, and even the reminder to REVOKE THE ADMIN PAT. Yet it's
     # precisely on a repo that ALREADY HAS a ruleset — bringing an existing repo into compliance — that dry-run is meant for.
     # Real mode never had the bug: `gh api --input -` consumes stdin, that one does.
@@ -231,18 +231,18 @@ if [ "$SS_OK" -eq 0 ]; then
   echo "  ✓ secret scanning + push protection"
 else
   echo "  ⚠ secret scanning / push protection: NOT enabled."
-  echo "    Expected on a PRIVATE repo on the Free plan (unavailable — standard §18):"
+  echo "    Expected on a PRIVATE repo on the Free plan (unavailable — docs/repo-controls.md):"
   echo "    the gitleaks pre-commit hook is then the ONLY anti-secret safety net."
   echo "    → REPLAY this script when flipping to public."
 fi
 
-# Three-stage flow? Detected RIGHT HERE, not only in §12 which also uses it: §3a needs to know
+# Three-stage flow? Detected RIGHT HERE, not only in the ruleset step which also uses it: §3a needs to know
 # whether to set the Dependabot safety net. A PUT followed by a DELETE further down would NOT be neutral —
 # enabling security updates WAKES the bot up on ALREADY open alerts, and the PR goes out before the DELETE.
 #   TWO probes, because neither is enough alone: the branch may have been DESTROYED by the
-#   promotion (see §12), and the repo still publish a three-stage flow regardless. `CONTRIBUTING.md`
+#   promotion (see docs/repo-controls.md), and the repo still publish a three-stage flow regardless. `CONTRIBUTING.md`
 #   is versioned, and its `## Branching` block is composed by init-project.sh based on the STAGING
-#   capability: if it announces 3 stages, the branch MUST exist — that's what §12 handles the gap for.
+#   capability: if it announces 3 stages, the branch MUST exist — that's what the ruleset step handles the gap for.
 HAS_DEVELOP=0
 gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 WANTS_STAGING=0
@@ -291,7 +291,7 @@ else
   echo "    A researcher then has no way to report privately: they will publish the flaw."
 fi
 
-# 3d. IMMUTABLE RELEASES — the RELEASE-side counterpart of the 'tags' ruleset (§13).
+# 3d. IMMUTABLE RELEASES — the RELEASE-side counterpart of the 'tags' ruleset (docs/repo-controls.md).
 #     The 'tags' ruleset pins the tag; this one pins the release's ASSETS. Without both,
 #     the prod pin `APP_IMAGE_TAG=1.2.3` remains bypassable: the tag isn't moved,
 #     the binary attached under that same tag is swapped instead.
@@ -310,7 +310,7 @@ if mutate gh api -X PUT "repos/$SLUG/immutable-releases" >/dev/null 2>&1; then
   echo "  ✓ immutable releases (a published release's assets can no longer be replaced)"
 else
   echo "  ⚠ immutable releases: FAILED → a published release will be able to have its assets REPLACED."
-  echo "    The pin from §13 becomes bypassable without touching the tag. Enable in the UI:"
+  echo "    The version pin becomes bypassable without touching the tag. Enable in the UI:"
   echo "    Settings → Releases → Enable release immutability (NOT retroactive: before v1)."
 fi
 
@@ -384,7 +384,7 @@ fi
 #       replaced the whole ruleset and wiped them out silently.
 RULESET_NAME="main"
 
-# CodeQL as a REQUIRED check (standard §17). Impossible on a brand-new repo — CodeQL has never run,
+# CodeQL as a REQUIRED check (docs/repo-controls.md). Impossible on a brand-new repo — CodeQL has never run,
 # requiring it would block EVERY PR. So it's set as soon as the 1st analysis exists, instead of
 # deferring it to a manual step "for later" — which means never.
 #
@@ -432,7 +432,7 @@ fi
 # ═══ CodeQL: the native DEFAULT SETUP, and NO LONGER a committed `codeql.yml` ═══════════════════
 # The default setup DETECTS languages and UPDATES ITSELF as the repo changes, scheduled scans
 # included. The WHY, sources, and where the advanced setup would be justified:
-# standard §17. (The check-run keeps the name "CodeQL": the ruleset rule below is
+# docs/repo-controls.md. (The check-run keeps the name "CodeQL": the ruleset rule below is
 # unchanged.)
 # ⚠ `gh api` writes the error's JSON body to STDOUT, not stderr. A naive
 #   `DS=$(gh api … || echo unreadable)` therefore produces "{"message":"403…"}unreadable" — a string
@@ -605,10 +605,10 @@ fi
 # So a REAL JSON list is required before going any further.
 RULESETS=$(gh api "repos/$SLUG/rulesets" 2>/dev/null || true)
 if ! printf '%s' "$RULESETS" | jq -e 'type == "array"' >/dev/null 2>&1; then
-  echo "  ⚠ rulesets UNAVAILABLE on this repo — expected on a PRIVATE repo on the Free plan (standard §18)."
+  echo "  ⚠ rulesets UNAVAILABLE on this repo — expected on a PRIVATE repo on the Free plan (docs/repo-controls.md)."
   echo "    'main' is therefore NOT protected: no PR required, no required checks, force-push possible."
-  echo "    TAGS aren't protected either → the prod version pin (§13) guarantees nothing."
-  echo "    → REPLAY this script on the flip to public (full procedure: standard §18)."
+  echo "    TAGS aren't protected either → the prod version pin guarantees nothing."
+  echo "    → REPLAY this script on the flip to public (full procedure: docs/repo-controls.md)."
   RULESETS=""
 fi
 
@@ -655,13 +655,13 @@ upsert_ruleset() {
 # ⚠ SQUASH-ONLY and a STAGING branch are INCOMPATIBLE.
 #   Squashing `develop` into `main` rewrites the commits: the two branches then diverge on EVERY
 #   cycle (same changes, different SHAs), and the `feat/*` history is lost.
-#   → If `develop` exists, `main` ALSO accepts merge commits (that's what §12 prescribes for
+#   → If `develop` exists, `main` ALSO accepts merge commits (that's what docs/repo-controls.md prescribes for
 #     the staging → prod promotion). `develop` itself stays squash-only: `feat/*` branches get
 #     squashed into a single clean commit there.
 
 # ⚠️ PROMOTING TO PROD DESTROYS STAGING — and the script used to be its silent victim.
 #   `delete_branch_on_merge` (set above, useful for `feat/*` branches) deletes the SOURCE branch
-#   of EVERY merged PR — so `develop` itself, when the `develop → main` PR from §12 gets merged.
+#   of EVERY merged PR — so `develop` itself, when the `develop → main` promotion PR gets merged.
 #   In PUBLIC, the 'develop' ruleset (the `deletion` rule) prevents this. In PRIVATE, there is NO
 #   ruleset at all: the 1st production deploy DELETES the staging branch, without a word.
 #
@@ -676,7 +676,7 @@ if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "    Near-certain cause: 'delete-branch-on-merge' DELETED it on the merge of the develop → main PR."
   echo "    In PRIVATE, no ruleset protects it: putting into production DESTROYS staging."
   echo "    Without it: no 'develop' ruleset, and 'main' falls back to SQUASH-ONLY — so the"
-  echo "    next promotion becomes IMPOSSIBLE (squashing develop into main makes them diverge, §12)."
+  echo "    next promotion becomes IMPOSSIBLE (squashing develop into main makes them diverge, docs/repo-controls.md)."
   echo "    → RECREATE IT, THEN REPLAY THIS SCRIPT:"
   echo "        git switch -c develop main && git push -u origin develop"
   echo "      The 'develop' ruleset ('deletion' rule) will then prevent it from being deleted again."
@@ -685,7 +685,7 @@ fi
 # ⚠️ THE SAME SETTING, BUT TAKEN UPSTREAM — because WARNING WASN'T ENOUGH.
 #   The block above only speaks AFTER the damage, and only if this script is replayed. Yet the
 #   loss is CERTAIN and AUTOMATIC: `delete_branch_on_merge` targets the SOURCE branch of the PR, and
-#   the source of a §12 promotion IS `develop`. What saves it in PUBLIC is the ruleset (its
+#   the source of a promotion IS `develop`. What saves it in PUBLIC is the ruleset (its
 #   `deletion` rule: GitHub never deletes a protected branch, even with the option enabled). In
 #   PRIVATE Free there is NO ruleset at all — so no safety net, and warning isn't enough.
 #   → So here the setting is REMOVED. What's lost is automatic cleanup of `feat/*` branches — a
@@ -741,12 +741,12 @@ if [ "$HAS_DEVELOP" -eq 1 ]; then
   RULESET_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '(.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods) = ["squash","merge"]')
   mutate gh repo edit "$SLUG" --enable-merge-commit >/dev/null 2>&1 \
-    && echo "  ↳ 'develop' exists → 'main' ALSO accepts merge commits (staging → prod promotion, §12)."
+    && echo "  ↳ 'develop' exists → 'main' ALSO accepts merge commits (staging → prod promotion, docs/repo-controls.md)."
 fi
 
 upsert_ruleset "$RULESET_NAME" "$RULESET_JSON"
 
-# 6b. Ruleset 'develop' — ONLY if the branch exists (STAGING capability, standard §12).
+# 6b. Ruleset 'develop' — ONLY if the branch exists (STAGING capability, docs/repo-controls.md).
 if [ -n "$RULESETS" ] && gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1; then
   DEV_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '.name = "develop"
@@ -756,7 +756,7 @@ if [ -n "$RULESETS" ] && gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1; 
   upsert_ruleset "develop" "$DEV_JSON"
 fi
 
-# 6c. TAGS ruleset — THIS is the control that makes the §13 version pin real.
+# 6c. TAGS ruleset — THIS is the control that makes the version pin real.
 #     Without it, a `v1.2.3` tag can be MOVED or DELETED: prod pins `APP_IMAGE_TAG=1.2.3`
 #     believing it freezes an artifact, while the tag could point elsewhere tomorrow. The pin only
 #     holds if the tag is immutable.
@@ -863,7 +863,7 @@ if [ "$IS_PRIVATE" = "false" ] && [ "$(gh_val 'length' 0 "repos/$SLUG/releases")
   else
     PULL_STATE=ko
     echo "  ⚠ ghcr image NOT PULLABLE anonymously (${IMG}:${TAG} → HTTP ${ACODE})."
-    echo "    The PROD host CANNOT pull it: the §13 version pin is WORTHLESS."
+    echo "    The PROD host CANNOT pull it: the version pin is WORTHLESS."
     echo "    Near-certain cause: the ghcr package is PRIVATE."
   fi
 fi

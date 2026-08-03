@@ -14,48 +14,13 @@
 > | **Capability `artefact`** | the repo **publishes an image that SOMEONE ELSE deploys** | `docker-publish.yml` · Trivy · tags ruleset · immutable releases · **public** ghcr package |
 > | **Capability `staging`** | there is a **host to VALIDATE** before prod | `develop` branch · `develop` ruleset · 3-stage flow |
 >
-> 🔴 **`develop` follows from STAGING, never from Docker or the language.** A `node` project with no host to validate **does not** have one. Nor does a static site that publishes an image. *(Standard §12.)*
+> 🔴 **`develop` follows from STAGING, never from Docker or the language.** A `node` project with no host to validate **does not** have one. Nor does a static site that publishes an image. *(`repo-controls.md`.)*
 
 ## 1. Security & code controls — what to enable, where
 
-### Baseline — EVERY repo, no exception
-| Control | Setting | When |
-|---|---|---|
-| **`gitleaks`** | **`pre-commit` hook** (staged files) **+ CI on the FULL history**. **Never optional**: it's the **only** anti-secret net during the whole private phase (no server-side secret scanning on Free). Pinned binary + checksum — **not** `gitleaks-action`, which requires a **license** on an ORG repo. | commit + every PR |
-| **`semgrep`** | static analysis of **application code** (`p/security-audit`, `p/owasp-top-ten`, `--exclude=.github`). Exists because **CodeQL is unavailable on private** — it **precedes** it, doesn't replace it (file-by-file analysis). | every PR |
-| **`osv-scanner`** | vulnerable dependencies (all manifests, `-r .`, OSV database). **The equivalent of `dependency-review`, which does work on private.** | every PR |
-| **`actionlint` + `zizmor`** | workflows are code: a `${{ }}` in a `run:` is a **shell injection**. | every PR |
-| **CodeQL** | native **default setup**, enabled by `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Detects languages and KEEPS THEM UP TO DATE on its own** — the previous `codeql.yml` declared only ONE, and missed `actions` workflows (§17). **Unavailable on private** (GHAS) → arrives at the flip. The two modes are **mutually exclusive**. | push/PR `main` + weekly |
-| **Dependabot alerts** | **CVE detection** — native, free even on private, **everywhere**: it's the dependency graph that Renovate reads. Version updates → **Renovate**. **Security updates**, though, are only the safety net **at 2 stages** — at 3 stages their PRs would target `main` and bypass staging *(→ standard, "Who updates dependencies")*. | continuous |
-| **Renovate** | **only update bot.** Auto-detects **all** the repo's ecosystems (npm, docker, actions, pip…) **with no declaration at all**, + the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (`vulnerabilityAlerts`) for its security PRs. Routine = PR reviewed by a **human**; **security = auto-merge**. Minor/patch grouped. | continuous / weekly |
-| **Secret scanning + push protection** | native, free on **public** (unavailable on private/Free). | every push |
-| **`main` ruleset** | PR required · required checks (**`checks`** + CodeQL + **`build-check` if `artefact` capability**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continuous |
-| **`tags` ruleset + immutable releases** | a `v*` tag that can be neither moved nor deleted, non-replaceable assets. **Without both, the prod pin of §13 is worth NOTHING.** | continuous |
-| **Third-party actions** | **full SHA** (`# vX.Y.Z` as a comment) ; `actions/*` and `github/*`: major tag tolerated. | — |
-| **`permissions:` workflows** | minimal: `{}` deny-all + write scoped **per job** · `persist-credentials: false` on every `checkout`. | — |
+→ **[`repo-controls.md`](repo-controls.md)** — the baseline every repo gets, plus what each toolchain and each capability adds.
 
-### In addition — `node` TOOLCHAIN
-| Control | Setting |
-|---|---|
-| `npm audit --audit-level=high --omit=dev` · `npm test` · `npm run typecheck` | PR gate. |
-
-*(npm **and** docker updates are no longer per-toolchain lines: Renovate auto-detects them — see the **Renovate** line of the baseline.)*
-
-### In addition — `artefact` CAPABILITY *(⚠️ NOT "node": a static site can publish an image)*
-| Control | Setting |
-|---|---|
-| **Trivy as PR gate** | **`build-check`** job of `docker-publish.yml`: build (`load: true`) then `trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1`. **Pinned binary + checksum.** `configure-repo.sh` makes it a **REQUIRED** check — *a scan that isn't required blocks nothing.* |
-| **Docker hardening** | base image pinned by SHA256 **digest** · runtime **with no package manager** (`docker-hardening.md`) · `tmpfs` `noexec,nosuid,nodev,size=` · healthcheck · `:latest` blocked on pre-release. |
-| **PUBLIC ghcr package** | 🔴 Default depends on the **owner**: **personal** account → pullable anonymously (**HTTP 200**) ; **organization** → private by default (**403**), no one can self-host. `configure-repo.sh` **tests the anonymous pull** and only asks for the action if the test fails. **Detail, test provenance, UI procedure: §4 "ghcr package visibility".** |
-
-### In addition — `staging` CAPABILITY
-| Control | Setting |
-|---|---|
-| **`develop` ruleset** | the requirements of `main`, **minus two, by design**: ❌ no `code_scanning` *(CodeQL only analyzes `main` — requiring it here would block every PR on a check that will never arrive)* · ❌ **squash ONLY** *(the merge commit is reserved for `main`, for promotions)*. |
-| **Merge commit allowed on `main`** | squash only is **incompatible** with a staging branch. |
-| **Back-merge `main` → `develop`** | consequence of the two lines above: the only route is a **squashed PR** *(a direct push runs into the `pull_request` rule, a merge commit into squash-only)*. ⚠️ **GitHub's message names the wrong culprit** — *"Merge commits are not allowed on this repository"* is shown even though the repo allows them *(`allow_merge_commit=true`)*: it's the **rule** that blocks, not the repo's setting. Looking in the settings is a dead end. |
-
-> **Plan note**: on a personal account (non-org), public secret scanning only has the **default patterns** — no custom regex nor validity checks (reserved for GitHub Secret Protection, paid/org). Hence the value of gitleaks for non-standard secrets.
+---
 
 ## 2. PAT permissions — two tiers
 
@@ -65,41 +30,15 @@
 
 ## 3. OpenSSF Scorecard — keep / drop (solo, public, small)
 
-- **Keep** (~zero cost): Token-Permissions · Branch-Protection · Pinned-Dependencies · Dangerous-Workflow (no `pull_request_target` + PR checkout) · Security-Policy (`SECURITY.md`) · SAST (CodeQL) · Dependency-Update-Tool (Renovate).
-- **Drop** (overkill solo): Signed-Releases · Fuzzing · CII-Best-Practices badge · signed commits (friction with no gain against oneself).
-- **2FA**: yes, non-negotiable — but an **account** setting, enabled in the UI.
+→ **[`repo-controls.md`](repo-controls.md)**.
+
+---
 
 ## 4. Setup — scriptable vs UI (for `configure-repo.sh`)
 
-> 🔴 **VISIBILITY decides more than the plan.** Five controls are **impossible** on a **private** repo — and **not purchasable**: the org must first move to Team, *then* buy the product. On a **public** repo, they are **free**, even on Free.
->
-> | At the public FLIP only | From CREATION, private included |
-> |---|---|
-> | secret scanning · push protection · CodeQL · **rulesets** · PVR *(VISIBILITY gate, not plan)* | repo core · merge · `GITHUB_TOKEN=read` · Dependabot alerts + security updates · **immutable releases** · fork-PR · retention |
->
-> ➡️ **Practical consequence**: making a repo public is a **security** decision, not just an openness one. And `configure-repo.sh` **reads `visibility`** to apply this split — it is therefore **built to be re-run at the flip**.
->
-> ⚠️ **Never read a missing field as "disabled"**: without `Administration`, `security_and_analysis` doesn't error — the key is simply **omitted**. "Empty" ≠ "off".
+→ **[`repo-controls.md`](repo-controls.md)** — what visibility decides, and the endpoint behind each setting.
 
-| Setting | How |
-|---|---|
-| **Immutable releases** | `gh api -X PUT repos/{o}/{r}/immutable-releases` (`Administration: write` — **already** in the admin PAT's recipe). 🔴 **NOT RETROACTIVE** → set **from private on** *(the setting is available there)*, never deferred to the flip: whatever isn't covered when a release is published **never** will be. |
-| **Private vulnerability reporting** | `gh api -X PUT repos/{o}/{r}/private-vulnerability-reporting` — **public-only** *(moot on private: no external researcher can access it)*. |
-| **`sha_pinning_required`** *("Require actions to be pinned to a full-length commit SHA")* | `PUT /repos/{o}/{r}/actions/permissions` — scriptable, available on private Free. ⏸️ **Deliberately NOT set**: the native toggle is **stricter than the repo's convention**, which tolerates the major tag for `actions/*` and `github/*`. Enabling it would force everything to full SHA, first-party included. *(zizmor already covers third parties.)* |
-| **Dependabot malware alerts** | ⚠️ **UI, no API** *(no `security_and_analysis` field, no endpoint)* — **npm-only**, available from private Free. Detects the **malicious** package, an angle Renovate doesn't cover *(it remedies CVEs via a version bump; a malicious package often has no safe version)*. → the maintainer's action, RUNBOOK §1 step 9. |
-| CodeQL | **`PATCH /repos/{o}/{r}/code-scanning/default-setup`** (`Administration: write`) — **scriptable, and IN `configure-repo.sh`** |
-| Dependabot alerts | `gh api -X PUT repos/{o}/{r}/vulnerability-alerts` |
-| Secret scanning / push protection | `gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled` |
-| **Dependabot security updates** *(the safety net — **2 stages only**: at 3 stages, `DELETE` on the same endpoint, cf. §"Who updates dependencies" of the standard)* | `gh api -X PUT repos/{o}/{r}/automated-security-fixes` — 🔴 **DEDICATED endpoint, NOT a sub-key of `security_and_analysis`**: `dependabot_security_updates` is in the GET's **response** schema, **not** in the PATCH's body params. Passing it to the PATCH **raises no error** — it is ignored, **silently**. |
-| Rulesets | `gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json` (`gh ruleset` = read-only) |
-| Topics / homepage / merge-methods / delete-branch | `gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge` |
-| Renovate · gitleaks · npm audit · CI updates | **committed files** (`.github/renovate.json`, `.github/workflows/*.yml`), no API |
-| 2FA | **UI-only** (no endpoint) |
-| **Reading the packages / ghcr API** | ❌ **IMPOSSIBLE on fine-grained** — GitHub Packages is **not supported** by fine-grained PATs (classic `read:packages` only). There is no point adding the permission: **it doesn't exist**. → **Moot**: the right test is an **ANONYMOUS pull** of the registry (`ghcr.io/token` + `/v2/<img>/manifests/<tag>` → **200 = pullable**), which verifies *exactly* what the prod host does, **with no token at all**. Set by `configure-repo.sh`. |
-| **ghcr package visibility** | ⚠️ **UI, no API** *(fine-grained PATs do NOT cover ghcr — only `classic` PATs do)*. 🔴 **The default DEPENDS ON THE OWNER, and confusing it is costly:** on a **PERSONAL** account, a package published from a **public** repo is pullable **anonymously, WITH NO ACTION AT ALL** *(HTTP 200 — verified on test003)*. On an **ORGANIZATION**, it is **PRIVATE by default** → an anonymous `docker pull` = **403**, and **no one can self-host** *(verified on test004)*. → **`configure-repo.sh` TESTS the anonymous pull** and only asks for the action **IF the test fails**. *(Org-wide: Settings → Packages → Package creation → default visibility.)* **When the action IS needed** *(org)*: Package settings → Danger Zone → *Change visibility* → **Public**. Without it, neither the prod host nor a user can pull the image — and **the production version pin is worth nothing anymore**: it points to an image no one can retrieve. |
-| **Reported content** (moderation) | **UI-only — NO API** (verified: no moderation endpoint exists). Exact path, scope (org only) and item count: **§5, point 6**. ⚠️ The box **is not checked** on "All users". |
-
-> **Dry-run first**: on a personal account, some `security_and_analysis` sub-keys (`advanced_security`, `code_security`) are probably no-ops outside GHAS/org. This should be tested on the target repo before hard-coding it into `configure-repo.sh`.
+---
 
 ## 5. New repo checklist (created private → flipped public)
 
