@@ -14,9 +14,23 @@ They do not replace each other — they answer two different questions. **Confus
 | 🎯 **`docs/RUNBOOK.md`** | **WHAT to do, in what ORDER, and WHO does it.** URLs, exact permissions, complete commands, pitfalls. | **IN FULL, before starting.** It's the thread to follow. |
 | 📖 **`docs/claude-code-project-standard.md`** | **WHY**, and the **conventions to hold while developing**: layout, secrets, branches, README, lifecycle docs. | **Already imposed on every session** by `~/.claude/CLAUDE.md`. **If it hasn't been done in this session: read it NOW** — the runbook keeps referring to it ("standard §3"…), and **an unread reference is a dead reference**. |
 
-**Where they live:** `docs/RUNBOOK.md` and `docs/claude-code-project-standard.md`, **in the template clone**.
-This skill is a symlink into that clone, so both files sit two levels above it — read them from there.
-*(Without a local clone: <https://github.com/actarus314/project-template/tree/main/docs>.)*
+### 🔴 Step 0 — resolve the TEMPLATE ROOT before reading anything
+
+Every `docs/…` path on this page is relative to the **template root**: the directory holding `init-project.sh`.
+That root is **two levels above this skill's own directory**, whose absolute path the runtime states when loading this skill.
+
+**Build that absolute path first, and prefix every `docs/…` read with it.**
+
+```bash
+# <skill-dir> = the absolute path the runtime just stated for this skill
+cd "<skill-dir>/../.." && pwd     # → the template root
+ls "$(cd "<skill-dir>/../.." && pwd)/init-project.sh"   # must resolve
+```
+
+⚠️ **Measured, 2026-08-03 — reading `docs/RUNBOOK.md` as written resolves against the SESSION's working directory**, which is the project being created, **not** the template. It reads the wrong file or nothing at all, without an error worth noticing. `../../docs/…` fails the same way, and `${CLAUDE_PLUGIN_ROOT}` is empty here — the runtime substitutes it in configuration *(hooks, MCP, monitors)*, never in a skill's text.
+**If the `ls` above does not resolve: stop and say so.** Every path below depends on it.
+
+*(No local clone and no plugin install: <https://github.com/actarus314/project-template/tree/main/docs>.)*
 
 > 🔴 **NEVER run through these steps from memory.** They carry URLs, exact permissions and precise pitfalls, and they change. **A step recited from memory is a wrong step.**
 
