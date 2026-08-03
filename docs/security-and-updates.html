@@ -13,7 +13,7 @@
   This file is only its LAYOUT. Every correction happens in the .md,
   then gets carried over here — otherwise the two drift apart, and nobody knows which to trust.
 
-  checksum-source-md: sha256:d98d34e2d386ee5e67d1efaf82039c1ea29a4e05ea7eebb439309996dd4576ce
+  checksum-source-md: sha256:21b6e7b0d4b50a489927d6270e3efb68400f7b2287f914b69d2686f86c709b19
   (filled in by docs/verify-checksums.sh --update ; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -128,7 +128,7 @@
   <header class="mast">
     <p class="eyebrow">Project template · security &amp; dependencies</p>
     <h1>How an update enters the repo — and what checks it</h1>
-    <p class="thesis"><b>Field-level overview</b> — the rules and their rationale are authoritative in the <b>standard §17-18</b> ; this doc introduces no new rule. Three distinct channels bump versions; six tools check the code on every PR. A <b>single update bot — Renovate</b> — auto-detects everything that needs bumping, with no list to maintain. The principle: <b>always up to date, but through reviewed actions</b> — never silent drift, never day-zero adoption.</p>
+    <p class="thesis">This document <b>owns</b> one subject: what moves in a repo, who decides it moves, and what checks it on the way in. <em>(What verifies the code, and where: <code>repo-controls.md</code>.)</em> Three distinct channels bump versions; six tools check the code on every PR. A <b>single update bot — Renovate</b> — auto-detects everything that needs bumping, with no list to maintain. The principle: <b>always up to date, but through reviewed actions</b> — never silent drift, never day-zero adoption.</p>
     <div class="legend">
       <span><i class="dot" style="background:var(--accent)"></i>system / pin</span>
       <span><i class="dot" style="background:var(--auto)"></i>automatic</span>
@@ -136,6 +136,69 @@
       <span><i class="dot" style="background:var(--gap)"></i>gap / manual</span>
     </div>
   </header>
+
+  <section>
+    <p class="eyebrow">The bot</p>
+    <h2>Renovate, the sole auto-detecting bot</h2>
+    <p class="lead">The pin protects against supply chain attacks <b>and</b> rots detection, both at once: a frozen <code>gitleaks</code> misses new secret formats, a frozen <code>semgrep</code> never gets new rules. A frozen security scanner eventually misses what it is supposed to find — hence a bot that bumps, but which one, and over what scope.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Bot</th><th>Scope detection</th><th>Coverage</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tool">Renovate</span></td><td>reads the manifests — npm, pip, docker, actions, gradle, cargo, go, conan… — plus a <code>curl</code>-ed binary inside a <code>run:</code></td><td><span class="chip a">auto ✓</span></td><td>sole update bot, no list to maintain — a language added tomorrow is covered without touching the template</td></tr>
+          <tr><td><span class="tool">Dependabot</span></td><td>required declaring every <code>package-ecosystem</code> by hand — no auto-discovery, the opposite of CodeQL</td><td><span class="chip g">manual list</span></td><td>removed from the update role — a manual list rotting silently</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="band">
+      <span class="lab">Alerts stay</span>
+      <p>Dependabot's CVE detection <em>(native, free even in private)</em> keeps running. Renovate <b>reads</b> it (<code>vulnerabilityAlerts</code>) to open remediation PRs — what changed is who opens the PR, not who detects. <code>configure-repo.sh</code> leaves alerts on everywhere: it is the dependency graph Renovate reads; without it, its security path would be empty, silently.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <caption style="caption-side:top;text-align:left;padding:0 0 10px">Their PRs <b>always</b> target the default branch, and <code>target-branch</code> only redirects <em>version</em> updates — so the answer depends on the number of stages.</caption>
+        <thead><tr><th>Stages</th><th>Dependabot security updates</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>2 stages <span style="color:var(--ink-3)">(<code>main</code> only)</span></td><td><span class="chip a">ON</span></td><td>the safety net — the default target <b>is</b> the right branch; overlap with Renovate's security PRs is tolerated noise, a silent hole is not. Transitional: moves to <code>disabled</code> once a Renovate security PR has been observed on a private repo.</td></tr>
+          <tr><td>3 stages <span style="color:var(--ink-3)">(<code>develop</code> exists)</span></td><td><span class="chip g">OFF</span></td><td>its PR would enter through <code>main</code>, bypassing staging — exactly what the 3 stages prevent. Renovate knows how to target <code>develop</code> (<code>baseBranchPatterns</code>).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="band">
+      <span class="lab">⚠️ Proof required</span>
+      <p>The removal is conditioned on proof Renovate is alive — its Dependency Dashboard updated less than 14 days ago <em>(two weekly cycles)</em>. A dashboard existing proves <b>nothing</b>: a <code>disabled</code> repo keeps its own <em>(lived through it — 6 days of dead bots)</em>. Without the proof, <code>configure-repo.sh</code> keeps Dependabot and says so.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>What</th><th>Mechanism</th><th>Detection</th></tr></thead>
+        <tbody>
+          <tr><td><code>uses:</code> (actions) · npm · docker (<code>FROM</code>) · pip <em>(<code>requirements-ci.txt</code> → zizmor, semgrep)</em> · any other manifest</td><td>auto-detected native manager — no declaration</td><td><span class="chip a">auto</span></td></tr>
+          <tr><td><span class="tool">gitleaks</span> · <span class="tool">actionlint</span> · <span class="tool">osv-scanner</span> · <span class="tool">trivy</span> <em>(binaries pinned by version + SHA256 inside a <code>run:</code>)</em></td><td><code>customManagers</code> regex — <code>github-release-attachments</code> datasource, bumps version <b>and</b> checksum in the same PR</td><td><span class="chip a">auto</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="band">
+      <span class="lab">🟢 Detection</span>
+      <p>No <code>enabledManagers</code>: Renovate auto-detects <b>every</b> manager. The <code>customManagers</code> above cover the 4 pinned binaries; they run regardless. <em>(Removed at the full-Renovate switch — it was the opposite as long as Dependabot handled version updates, to avoid duplicate PRs. Without <code>dependabot.yml</code>, duplicate version-update PRs can no longer happen.)</em></p>
+    </div>
+
+    <div class="band">
+      <span class="lab">Update policy</span>
+      <p>Routine version = PR reviewed by a human (<code>automerge</code> false at the top level); <b>security = auto-merge</b> (<code>vulnerabilityAlerts.automerge</code>). Security PRs natively bypass <code>minimumReleaseAge</code> — the 3-day anti-compromised-release delay stays on routine updates, never on a CVE fix.</p>
+    </div>
+    <p class="safety"><span class="dot" style="background:var(--auto);margin-top:.4em"></span><span><b>Safety net</b> — a wrong checksum makes <code>sha256sum -c</code> fail <b>in CI</b> — loudly, never silently.</span></p>
+
+    <div class="band">
+      <span class="lab">Prerequisite</span>
+      <p>The Renovate app must be installed on the repo <em>(GitHub UI, free)</em>. Without it, <code>renovate.json</code> is <b>inert</b>. Fallback: self-hosting <code>renovatebot/github-action</code> <em>(AGPL-3.0, free forever)</em> runs the same config, at the cost of a classic <code>repo</code>-scoped PAT <em>(fine-grained ones do not work with Renovate)</em>.</p>
+    </div>
+  </section>
 
   <section>
     <p class="eyebrow">The flow</p>
