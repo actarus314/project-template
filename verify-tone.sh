@@ -13,7 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")"   # repo root, regardless of the caller's cwd
 
 # Exceptions are LISTED and NARROW — never a disabled rule, so a real slip inside an exempted file
-# is still caught (the principle the standard states for gitleaks fingerprints, docs/repo-controls.md):
+# is still caught (the principle the standard states for gitleaks fingerprints, §18):
 #   · licenses     — third-party verbatim text, not ours to reword;
 #   · the RULE     — the lines that STATE the rule have to spell the forbidden words out;
 #   · contributing — the "By contributing…" clause, addressed to the contributor by design;
