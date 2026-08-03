@@ -136,6 +136,13 @@ if [ -x docs/verify-checksums.sh ]; then
   if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
+# where the files actually land: a grep of this tree cannot see a path that dies on landing.
+if [ -x verify-travel.sh ]; then
+  note "verify-travel.sh — paths that die where the file lands"
+  if ./verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
+fi
+
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
 if [ -x verify-version.sh ]; then
   note "verify-version.sh — version coherence"

@@ -45,8 +45,15 @@ jobs:
           persist-credentials: false
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
+      # AUTO-DETECTED, never a hand-written list: the list here was already missing a script, and a
+      # forgotten target is a SILENT hole — check.sh has always found them with the same `find`, so
+      # a new script was linted locally and not here, which breaks `local == github` on its own.
       - name: shellcheck the scripts, the local runner and the hooks (shellcheck is preinstalled)
-        run: shellcheck -S warning init-project.sh configure-repo.sh check.sh open-pr.sh verify-version.sh verify-tone.sh docs/verify-checksums.sh .githooks/pre-commit .githooks/pre-push
+        run: |
+          mapfile -t targets < <(find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
+          if [ -d .githooks ]; then mapfile -t -O "${#targets[@]}" targets < <(find .githooks -type f); fi
+          printf 'shellcheck: %s\n' "${targets[@]}"
+          shellcheck -S warning "${targets[@]}"
       # Second person, forbidden by standard §1. The SAME script check.sh runs, never a copy of its
       # grep: two sources drift. Local-only, this check warned; here it blocks.
       - name: No second person in versioned content (verify-tone.sh)

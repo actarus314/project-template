@@ -21,6 +21,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`verify-travel.sh` — a path that resolves here but dies where the file LANDS.** Several files
+  travel into every generated project; a path written in one of them is read by whoever has *that*
+  copy, in a project holding neither `docs/` nor `templates/`. A grep of the tree cannot see it: it
+  proves no file *names* a deleted doc, and stays blind to a path that remains written and resolves
+  nowhere. That blindness cost two fixes. The script generates a throwaway project (~1s, run by
+  `check.sh`) and reads the paths from there. It reports only a **differential** — resolves in the
+  template *and* fails in the generated project — so generic patterns, naming examples and URLs
+  never show up. To declare a path deliberately absent, test it: `[ -f x ]`.
+- **Technical-token coverage in `docs/verify-checksums.sh`.** A checksum proves an `.html` was
+  *touched* after its `.md` moved, nothing more — one assembly passed it green with 29 % of the
+  arriving facts missing. It now also lists the `.md`'s backticked tokens absent from the page.
+  **Advisory, never blocking**: a styled page renders placeholders its own way, and a guard that
+  cries on every run is a guard nobody reads.
+
+### Changed
+
+- **The CI now AUTO-DETECTS which scripts to shellcheck**, instead of listing them by hand. The
+  list had already fallen behind by one script, while `check.sh` had always found them with a
+  `find` — so a new script was linted locally and not in the CI, breaking `local == github`
+  silently. A forgotten target is a hole nothing reports.
+
 ### Fixed
 
 - **The `new-project` skill read its own documents from the wrong place once installed as a plugin.**
