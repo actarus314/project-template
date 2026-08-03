@@ -136,6 +136,13 @@ if [ -x checks/verify-checksums.sh ]; then
   if checks/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
+# lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
+if [ -x checks/verify-links.sh ]; then
+  note "verify-links.sh — dead relative links (both repos)"
+  if ./checks/verify-links.sh; then ok "links"; else ko "links"; fi
+fi
+
 # verify-workspace.sh — the neighbouring workspace/ has NO remote on purpose, which is exactly what
 # makes it invisible: no diff-vs-origin, no CI, and this script runs in repo/ without looking beside it.
 if [ -x checks/verify-workspace.sh ]; then
