@@ -23,6 +23,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Every generated `AGENTS.md` now carries the two structural exceptions to "a missing workflow is
+  not a green".** What is *expected* depends on the **event** and on the **base**, not on the
+  repository: `Publish image` listens on `push: tags`, so it is absent from a push to `main` by
+  design; and CodeQL's *default setup* never runs on a pull request targeting `develop`. Both
+  absences used to read as a failed dispatch, and the documented cure for that is a close/reopen —
+  re-firing a CI that never had to run. The rule shipped without its exceptions, so every generated
+  project was taught to misread its own pipeline.
+
+- **`verify-travel.sh` now runs in the CI.** It was delivered as a check and reachable only through
+  a manual `./check.sh` or the advisory, 24h-throttled `pre-commit` hook — never at the one gate
+  that blocks. It is the check whose entire point is seeing what a grep of the tree cannot, so the
+  gap mattered: it runs in the job that already generates projects, gated to one matrix shard.
+
 - **`verify-links.sh` — a relative link that resolves nowhere, in BOTH repos.** A dead link is
   invisible: nothing renders an error, the reader simply lands nowhere and stops following
   pointers. This repo runs on pointers — a fact lives in one place and everywhere else there is a

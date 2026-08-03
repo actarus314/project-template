@@ -166,6 +166,15 @@ jobs:
           echo "${OSV_SHA256}  $RUNNER_TEMP/osv-scanner" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/osv-scanner"
           ( cd "$RUNNER_TEMP/proj/repo" && "$RUNNER_TEMP/osv-scanner" scan source -r . --allow-no-lockfiles )
+      # A path can resolve HERE and be dead where the file LANDS — no grep of this tree can see that,
+      # only a generated project can. So it belongs in THIS job and nowhere else: the git identity
+      # the generation needs is already set above. The script makes its own throwaway copy and
+      # cleans it up, so it does not disturb the shared $RUNNER_TEMP/proj the later steps read.
+      # Locally it was reachable through ./check.sh and the advisory pre-commit hook alone — that is,
+      # through the manual pass this whole set of checks exists to replace.
+      - name: No path that dies where the file lands (verify-travel.sh)
+        if: matrix.name == 'node-full'
+        run: ./checks/verify-travel.sh
       - name: Generated repos are clean and secrets.md stays untracked
         run: |
           set -euo pipefail
