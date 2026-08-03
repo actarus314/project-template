@@ -29,8 +29,13 @@ fi
 
 # `git grep` on purpose, like verify-tone.sh: the rule is about what is COMMITTED. An untracked
 # scratch file breaking it is nobody's business.
-hits=$(git grep -nE '^[[:space:]]*#.*20[0-9]{2}-[0-9]{2}' -- '*.sh' '*.yml' '*.yaml' '.githooks/*' 2>/dev/null \
-       | grep -v 'archives/' || true)
+scan() { git -C "$1" grep -nE '^[[:space:]]*#.*20[0-9]{2}-[0-9]{2}' -- '*.sh' '*.yml' '*.yaml' '.githooks/*' 2>/dev/null \
+         | sed "s|^|$2|" || true; }
+
+# METHODE holds for BOTH repos: repo/ and the neighbouring workspace/, which has its own git.
+# The tone rule stays repo-only (workspace/ is deliberately French, and that rule imposes English),
+# but a dated narrative in a comment is a METHOD rule — it applies wherever code lives.
+hits=$( { scan . ''; [ -d ../workspace ] && scan ../workspace '../workspace/'; } | grep -v 'archives/' || true)
 
 if [ -z "$hits" ]; then
   echo "✓ no dated narrative in code comments"

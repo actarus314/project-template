@@ -133,6 +133,25 @@ A document no one rereads is no longer of any use. The runbook is read **while d
 
 ---
 
+## What is ARMED, and over which perimeter
+
+**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** What follows is armed: `check.sh` runs it, in this repo and in every project it generates.
+
+| Check | Perimeter | Moment |
+|---|---|---|
+| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch |
+| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after |
+| `checks/verify-memories.sh` | outside both — memories belong to neither | after |
+| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after |
+| `checks/verify-tone.sh` | **`repo/` only** | after |
+| `checks/verify-travel.sh` · `verify-checksums.sh` · `verify-version.sh` | `repo/` only | after |
+
+> 🔴 **Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of **published style**, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter that is explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
+>
+> **The discriminator is the NATURE of the rule.** A rule of **method** *(one fact one place, no dated narrative, the memories)* follows the method everywhere. A rule of **published style** *(English, no second person)* stops where publication stops.
+
+---
+
 ## The reflex, on every write
 
 Before adding a piece of information, **a single question**:
