@@ -64,6 +64,8 @@ jobs:
         run: ./checks/verify-narrative.sh
       - name: No dead relative link (verify-links.sh)
         run: ./checks/verify-links.sh
+      - name: No file NAMED like a secret is tracked (verify-no-secret-tracked.sh)
+        run: ./checks/verify-no-secret-tracked.sh
 
   generate-and-lint:
     runs-on: ubuntu-latest

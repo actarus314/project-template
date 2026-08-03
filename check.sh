@@ -136,6 +136,20 @@ if [ -x checks/verify-checksums.sh ]; then
   if checks/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-no-secret-tracked.sh — gitleaks looks for secret-SHAPED strings, never for a file CALLED
+# .env. An empty one passes it, gets committed, and is filled in at the next commit.
+if [ -x checks/verify-no-secret-tracked.sh ]; then
+  note "verify-no-secret-tracked.sh — a file NAMED like a secret, tracked"
+  if ./checks/verify-no-secret-tracked.sh; then ok "no secret-named file tracked"; else ko "secret-named file tracked"; fi
+fi
+
+# verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
+# the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
+if [ -x checks/verify-growth.sh ]; then
+  note "verify-growth.sh — curated documents that only grow (advisory)"
+  ./checks/verify-growth.sh || true
+fi
+
 # verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
 # lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
 if [ -x checks/verify-links.sh ]; then
