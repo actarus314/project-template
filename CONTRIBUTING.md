@@ -1,50 +1,31 @@
 # Contributing
 
-This repository **builds and configures** projects — it is not a project itself. Its product is
-the **standard**; the scripts are only its automation. Bug reports and fixes are welcome; anything
-that changes what the tool *teaches* deserves an issue first.
+This repository **builds and configures** projects — it is not a project itself.
+Bug reports and fixes are welcome; anything that changes what the tool *teaches* deserves an issue first.
 
-⚠️ **Read [`AGENTS.md`](AGENTS.md) before touching anything.** It carries the structure, the
-commands, the PR-only rule and what must not be broken. It is short, and it is the entry point.
+⚠️ **Read [`AGENTS.md`](AGENTS.md) before touching anything.**
+It is the entry point, and it is short: the structure, the commands, the PR-only rule, the conventions, and what must not be broken.
+**It is also the authority** — this page holds only what it does not, so that no rule here can drift from the rule there.
 
-## Before opening a PR
+## What this page adds
 
-- For anything non-trivial, open an issue first to discuss the approach.
-- **Run `./check.sh`.** It replays everything the CI runs, at the pinned versions, locally. What
-  passes there passes the CI — the CI remains the authority, but it should not be the first to know.
-- Keep code, comments and docs in **English**. The only French left is deliberate: the bilingual
-  README template, whose French half *is* the product.
-- **One idea per sentence, one sentence per line** in the docs.
-- **A fact lives in a single place** — everywhere else, a link. See [`docs/METHODE.md`](docs/METHODE.md).
-  A rule copied into two files is a rule that will contradict itself.
-- User-facing change — a template that changes, a RUNBOOK step that moves, a script's behaviour?
-  Add a line to `CHANGELOG.md` under `Unreleased`. An internal refactor or a typo fix does not go there.
+- For anything non-trivial, **open an issue first** to discuss the approach.
+- Keep commits **atomic**, and their messages descriptive.
+- Branch off `main`, with short-lived `feat/…` branches.
+  There is **no `develop`**: this repository has no host to validate before production — it is read and it is run, it does not deploy.
 
-## Branching
+## Everything else lives in `AGENTS.md`
 
-`main` only, plus short-lived `feat/…` branches. There is **no `develop`**: this repository has no
-host to validate before production — it is read and it is run, it does not deploy.
+Each of these was written here too, until the two copies started to disagree — the merge check in this file had already lost the `--json` filter that makes its result readable.
 
-**Never push to `main` directly.** A `pre-push` hook refuses it.
-
-Open the pull request with `./open-pr.sh <base> <title> <body-file>` rather than by hand: it pushes,
-opens the PR, **and verifies that a CI run actually started**. GitHub occasionally fails to dispatch
-one, and a PR with **zero runs** reads exactly like a green one while never having been tested.
-
-- Keep commits atomic and messages descriptive.
-- **CI must be green before a merge.** Check it:
-
-  ```bash
-  sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
-  gh run list --commit "$sha"
-  ```
-
-  Green means **every expected workflow is `completed / success`**. A workflow **missing** from the
-  list is **not** a green: it has not reported yet.
-
-  **After the merge, check the `push` run on `main` too** — a different event, so a different run.
-  A PR's green says nothing about that one, and `main` is what ships. ⚠️ That run is found by
-  **branch**, not by `--commit`, which returns nothing for a squashed merge.
+| To… | Read |
+|---|---|
+| replay the CI locally before pushing | **Commands** — `./check.sh` |
+| open the pull request, and confirm the CI actually started | **Discipline — PR-only** — `./open-pr.sh` |
+| verify a green before merging, then the `push` run on `main` | **Discipline — PR-only** |
+| know which language to write in, and how to lay a doc out | **Conventions** |
+| decide whether a change earns a `CHANGELOG` line | **Conventions** |
+| avoid the four things that break silently | **Do not break** |
 
 ## Security issues
 

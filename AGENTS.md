@@ -4,6 +4,7 @@ To be read before touching anything in this repo.
 This file follows the [AGENTS.md](https://agents.md) convention; Claude Code reads it via the `@AGENTS.md` import in `CLAUDE.md` (local, untracked).
 
 > **Language**: everything versioned in this repo is in English, just like everything it generates — only local file templates (`templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`) stay in French, since they are gitignored in the generated project.
+> **One versioned exception, and it is deliberate**: the READMEs are bilingual — `README.md` here, `templates/repo/README.md` in every generated project — and their French half *is* part of the product, not a leftover.
 
 ## What this is
 
@@ -59,7 +60,6 @@ The `pre-commit` hook **reruns it on its own, throttled (24h) and CONSULTATIVE**
 
 ## Conventions
 
-- Everything versioned is in **English**, here and in the generated projects.
 - **Docs**: one idea per sentence, one sentence per line. A fact lives in **a single place** — everywhere else, a link *(see `docs/METHODE.md`)*.
 - **`CHANGELOG.md`**: a line in `Unreleased` as soon as a change is visible **to whoever uses the repo** *(a template that changes, a RUNBOOK step that moves, a script's behavior)*. An internal refactor or a typo fix does not go there.
 - **Version**: the **git tag** is the single source — `./init-project.sh --version` reads it, never a stored literal. `verify-version.sh` *(run by `check.sh` and by the CI)* fails the build if the tag, the CHANGELOG and the scripts disagree. Releasing is a deliberate action: **RUNBOOK §3**.
