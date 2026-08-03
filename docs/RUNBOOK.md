@@ -20,7 +20,7 @@
 
 ## 1 · Create a project
 
-**Ask the three questions BEFORE typing the command** — they decide everything *(standard §12)*:
+**Ask the three questions BEFORE typing the command** — they decide everything *(`repo-controls.md`)*:
 
 | | Question | Flag |
 |---|---|---|
@@ -165,7 +165,7 @@ The script **requests the PAT as masked input** *(it appears neither on screen, 
 
 **→ https://github.com/apps/renovate** — *"Install" → Only select repositories → this repo.*
 
-> **Without it, `renovate.json` is INERT**: the 4 pinned binaries *(gitleaks, actionlint, osv-scanner, trivy)* **freeze silently** *(why this matters: §17)*.
+> **Without it, `renovate.json` is INERT**: the 4 pinned binaries *(gitleaks, actionlint, osv-scanner, trivy)* **freeze silently** *(why this matters: `security-and-updates.md`)*.
 
 > 🔴 **THE ORDER IS A TRAP — `renovate.json` MUST be on `main` BEFORE the app is installed.**
 > Renovate checks whether it finds a config on the default branch.
@@ -193,7 +193,7 @@ The script **requests the PAT as masked input** *(it appears neither on screen, 
 
 ## 2 · Working day to day
 
-**`main` is production. Nothing is ever written to it directly.** *(standard §12)*
+**`main` is production. Nothing is ever written to it directly.** *(`repo-controls.md`)*
 
 ```bash
 git switch -c feat/<subject>          # from `develop` if --staging, otherwise from `main`
@@ -225,7 +225,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | # | Who | Action |
 |---|---|---|
 | 1 | Claude | `CHANGELOG.md`: turn `Unreleased` into `X.Y.Z` *(what the release tells the user; the GitHub notes list the PRs — the two are complementary)*. |
-| 2 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — §12)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
+| 2 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — `repo-controls.md`)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
 | 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → the **Release** is created, and the **ghcr image** pushed *(if `--artefact`)*. ⚠️ **With `--artefact`, the Release is the `release` job of `docker-publish.yml`** *(`needs: build-push` — no Release if the image was not published)*; **without** this capability, it is `release.yml`. **Only one of the two exists**, never both. |
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
@@ -235,7 +235,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 > ⚠️ **A repo configured BEFORE this fix still carries the setting**: re-run `configure-repo.sh` before its next promotion, otherwise what follows still applies.
 > `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop` itself**, when the `develop → main` PR merges.
 > **In PUBLIC**, the `develop` ruleset (the `deletion` rule) **prevents this**. **In PRIVATE, no ruleset exists: the branch is deleted, without a word.**
-> **The damage cascades**: at the next run, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **does not set its ruleset** and **switches `main` back to squash-only** → **the next promotion becomes IMPOSSIBLE** *(squashing `develop` into `main` makes the two branches diverge on every cycle — §12)*.
+> **The damage cascades**: at the next run, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **does not set its ruleset** and **switches `main` back to squash-only** → **the next promotion becomes IMPOSSIBLE** *(squashing `develop` into `main` makes the two branches diverge on every cycle — `repo-controls.md`)*.
 > **→ After a promotion on a PRIVATE repo, RECREATE `develop` immediately:**
 > ```bash
 > git switch -c develop main && git push -u origin develop
@@ -258,17 +258,17 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | 3 | **the maintainer** | Flip the visibility *(UI)*. |
 | 4 | **the maintainer** | **Re-run `configure-repo.sh`** *(ephemeral admin PAT)* → rulesets `main`/`develop`/`tags`, secret scanning + push protection, **private vulnerability reporting**, **immutable releases**, Pages, description, topics, and **THE ACTIVATION OF CODEQL** *(default setup — it waits for the 1st analysis, then sets the `code_scanning` rule)*. **The script is idempotent: that is what it is built for.** |
 | 5 | **the maintainer** | **ORG repo only** — Settings → **Moderation options** → **Reported content** → "Prior contributors and collaborators". **No API.** Without this click, community health **caps at 87%**. |
-| 6 | — | **Nothing to do for the workflows**: `pages.yml` carries `if: visibility != 'private'` — it is `skipped` in private and **wakes up on its own**. ⚠️ **CodeQL is NO LONGER a workflow** *(there is no more `codeql.yml`)*: it is activated **by the script**, at **step 4**, in ***default setup*** — GitHub detects the languages there and **keeps them up to date on its own** *(standard §17)*. |
+| 6 | — | **Nothing to do for the workflows**: `pages.yml` carries `if: visibility != 'private'` — it is `skipped` in private and **wakes up on its own**. ⚠️ **CodeQL is NO LONGER a workflow** *(there is no more `codeql.yml`)*: it is activated **by the script**, at **step 4**, in ***default setup*** — GitHub detects the languages there and **keeps them up to date on its own** *(`repo-controls.md`)*. |
 | 7 | — | **Nothing to do for the `code_scanning` rule**: at **step 4**, the script **activates CodeQL, WAITS for its 1st analysis, THEN sets the rule** — in a **single** run *(otherwise `main` would stay UNGUARDED until a re-run — consequence detailed in §1 step 7a)*. |
 | 8 | Claude | Verify by reading: community health **100%** · CodeQL **green** · rulesets **active** · secret scanning **on**. |
 
-> **CodeQL analyzes the entire history at once** at the flip — `semgrep` + `osv-scanner` therefore run **from day one** *(detail: §18)*.
+> **CodeQL analyzes the entire history at once** at the flip — `semgrep` + `osv-scanner` therefore run **from day one** *(detail: `repo-controls.md`)*.
 
 ---
 
 ## 5 · Evolving a live project
 
-**The archetype does not change — a capability is ACQUIRED.** *(standard §18, detailed checklists)*
+**The archetype does not change — a capability is ACQUIRED.** *(`repo-controls.md`, detailed checklists)*
 
 | Need | Capability | ⚠️ The trap |
 |---|---|---|

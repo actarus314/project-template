@@ -109,7 +109,7 @@ gh issue list && gh run list
 
 > 🔴 **ACCEPTED limitation of this model — `gh pr checks` and `gh pr view` do not work.**
 > Both read `statusCheckRollup`, which requires the **`Checks`** permission. It is **documented** by GitHub but **absent from the UI** for fine-grained PATs: **impossible to grant** *(github/community#129512, cli/cli#12597)*. This is **not** an omission in the matrix above — **there is nothing to add to it**.
-> **This is not cosmetic**: the only barrier of the private mode (*"never merge a red PR"*, `claude-code-project-standard.md` §18) relied on `gh pr checks`. → It now goes through `gh run list --commit <sha>` (`Actions: read`, already there). **The exact command, and the false-green pitfall: `claude-code-project-standard.md` §18.**
+> **This is not cosmetic**: the only barrier of the private mode (*"never merge a red PR"*, `repo-controls.md`) relied on `gh pr checks`. → It now goes through `gh run list --commit <sha>` (`Actions: read`, already there). **The exact command, and the false-green pitfall: `repo-controls.md`, "The control matrix".**
 > *(The GitHub App can be granted `Checks` — but it stays out of scope for the reasons in the table below: the auth model isn't reopened for a CLI command that has a zero-cost substitute.)*
 
 ### Expiration: 90 days + automatic alert (never caught by surprise)

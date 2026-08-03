@@ -34,6 +34,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   one-line pointer, so a reference to "standard §5" written in an archive, a memory or a past pull
   request still resolves. The standard becomes the index of what it no longer carries.
 
+- **`repo-controls.md` and `security-and-updates.md` stop being summaries and become owners.** Both
+  used to open by deferring to the standard — *"complements §18"*, *"introduces no new rule"* — which
+  is the definition of a competing source: two documents on one subject, and a reader with no way to
+  know which one is stale. `repo-controls.md` now owns the branch policy, the version pin, the repo
+  configuration and the control matrix *(standard §12, §13, §17, §18 + `github-repo-config.md` §1, §3,
+  §4)*; `security-and-updates.md` owns who updates dependencies and pinned tools *(the Renovate half
+  of §17)*. The standard keeps a one-line pointer at each number, as above.
+  🔴 **A broken cross-reference was found and fixed on the way**: the version-pin section sent the
+  reader to `github-repo-config.md` **§2** *(PAT permissions)* for the ghcr package UI path, which
+  lives in **§4**. It had never resolved.
+  Two passages that had drifted apart are now reconciled: adopting some of OpenSSF Scorecard's
+  **practices** and rejecting the **tool** were stated in two files that never met, and read as a
+  contradiction.
+
 ## [1.1.0] - 2026-08-02
 
 ### Documentation

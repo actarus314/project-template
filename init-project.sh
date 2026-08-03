@@ -228,7 +228,7 @@ fi
 #   These, the script CANNOT guess (`<contact>`, `<one line>`…) — it must especially not
 #   invent them. But staying silent is worse: a published `SECURITY.md` saying "reach out to <contact>"
 #   leaves a researcher WITHOUT any way to report a vulnerability. This is defect #3 (dead links), the
-#   same as before. → they get LISTED, and going public requires them filled in (standard §18).
+#   same as before. → they get LISTED, and going public requires them filled in (docs/repo-controls.md).
 #   README deliberately EXCLUDED: it's obvious to fill in, and its HTML tags (<picture>, <p …>)
 #   are false positives that would drown out the only message that matters — the one about `<contact>`.
 #   LICENSE deliberately EXCLUDED too: its year and holder are substituted right above, so nothing
@@ -342,7 +342,7 @@ git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT che
 git add -f requirements-ci.txt
 git commit -q -m "initial project structure"
 
-# gitleaks pre-commit hook — ARMED AFTER the initial commit (standard §18). LOCAL config: a fresh
+# gitleaks pre-commit hook — ARMED AFTER the initial commit (docs/repo-controls.md). LOCAL config: a fresh
 # clone has to set it again. ⚠ AFTER, not before: the initial commit is clean BY CONSTRUCTION
 # (EXPLICIT list of files, never .env/.envrc), so there's nothing to scan there; arming it BEFORE
 # would require gitleaks to commit this scaffolding, and the hook HARD-FAILING in its absence would block
@@ -359,11 +359,11 @@ if [ -n "$UNTRACKED" ]; then
   printf '     %s\n' $UNTRACKED
 fi
 
-# STAGING capability: `develop` exists FROM THE START (standard §12). Without it, no one ever
+# STAGING capability: `develop` exists FROM THE START (docs/repo-controls.md). Without it, no one ever
 # creates it, and `configure-repo.sh` — which only protects it if it exists — would never see it.
 if [ "$STAGING" = 1 ]; then
   git branch develop
-  echo "  ↳ 'develop' branch created (staging — standard §12). Push it: git push -u origin develop"
+  echo "  ↳ 'develop' branch created (staging — docs/repo-controls.md). Push it: git push -u origin develop"
 fi
 
 R="${SLUG:-<owner>/<repo>}"

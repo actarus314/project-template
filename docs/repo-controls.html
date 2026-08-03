@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Repo controls, from commit to production: pipeline, private-to-public switch, tool reference table.">
+<meta name="description" content="Repo controls, from commit to production: the three capabilities and the branch flows, the version pin, what to enable, the pipeline, the repo configuration, the private-to-public switch, acquiring a capability.">
 <title>Repo controls — commit → production</title>
 <!--
   STANDALONE version: works offline, printable to PDF (Cmd+P).
@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:6efef030af1be5284afd254df8373829bdebcd94414ca5a74d47cd9e28df7153
+  checksum-source-md: sha256:0c896975c471c5d0429bdf6ebfdbbfd883db5b4e4a462a3b18e81d2501a4a6f4
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -248,6 +248,112 @@
   <div><span class="dot" style="background:var(--accent)"></span> <strong>Blocking</strong> stage (nothing passes without it)</div>
 </div>
 
+
+<section>
+  <h2>The three capabilities</h2>
+  <p class="sub"><code>--type</code> decides only the toolchain; everything else follows from three questions that have nothing to do with each other.</p>
+
+  <div class="steps">
+    <div class="step">
+      <b><code>--pages</code></b>
+      <p>Is the site served by GitHub Pages?</p>
+      <span class="cmd">pages.yml</span>
+    </div>
+    <div class="step">
+      <b><code>--artefact</code></b>
+      <p>Does the repo publish an image that someone else deploys? <em>(self-hosters, NUCs…)</em> The base image is bumped by Renovate, auto-detected — nothing to declare.</p>
+      <span class="cmd">docker-publish.yml (build-check + Trivy) · tag ruleset · immutable releases · public ghcr package</span>
+    </div>
+    <div class="step">
+      <b><code>--staging</code></b>
+      <p>Is there a host to VALIDATE before prod?</p>
+      <span class="cmd">develop branch · develop ruleset · merge commit onto main · 3-stage flow</span>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <h3>🔴 <code>develop</code> does NOT follow from Docker — it follows from STAGING</h3>
+    <p>A <strong>node</strong> project with no host to validate does not need <code>develop</code>. Neither does a static site also packaged as an image: there is no intermediate stage — the image <em>is</em> the page served by nginx.</p>
+    <p>The need for a staging stage comes from DEPLOYMENT, not from the language or taste.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:22px 0 4px">The real combinations</h3>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Case</th><th><code>--type</code></th><th>Pages</th><th>Artefact</th><th>Staging</th><th>Flow</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="w">Pages site <span class="h">(shortcut <code>--type static</code>)</span></td>
+          <td class="t">static</td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p">—</td>
+          <td class="p">—</td>
+          <td>GitHub Flow — <code>main</code> + <code>feat/</code></td>
+        </tr>
+        <tr>
+          <td class="w"><strong>Pages site + Docker</strong> <span class="h">(third parties self-host it)</span></td>
+          <td class="t">static</td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p">—</td>
+          <td>GitHub Flow + <code>v*</code> tag → image</td>
+        </tr>
+        <tr>
+          <td class="w">Page hosted outside Pages</td>
+          <td class="t">static</td>
+          <td class="p">—</td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p"><span class="pill off">depends</span></td>
+          <td>Depends on staging</td>
+        </tr>
+        <tr>
+          <td class="w"><strong>Docker app → NUC</strong> <span class="h">(shortcut <code>--type node</code>)</span></td>
+          <td class="t">node</td>
+          <td class="p">—</td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td>3 stages — <code>feat/</code> → <code>develop</code> → <code>main</code> + tag</td>
+        </tr>
+        <tr>
+          <td class="w">Node project without staging</td>
+          <td class="t">node</td>
+          <td class="p">—</td>
+          <td class="p"><span class="pill on">✅</span></td>
+          <td class="p">—</td>
+          <td>GitHub Flow + tag</td>
+        </tr>
+        <tr>
+          <td class="w"><strong>Other toolchain</strong> <span class="h">(Android/Kotlin, C/C++, Rust, Go…)</span></td>
+          <td class="t">generic</td>
+          <td class="p">—</td>
+          <td class="p">—</td>
+          <td class="p">—</td>
+          <td>GitHub Flow — security controls only, build/test left to fill in</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:18px">Backward-compatible shortcuts: <code>--type static</code> ≡ <code>--pages</code> · <code>--type node</code> ≡ <code>--artefact --staging</code> · <code>--type generic</code> ≡ no capability <em>(opt-in via flag)</em>. As soon as a capability is passed explicitly, it composes — <code>--no-staging</code> removes it from the shortcut.</p>
+
+  <div class="note accent">
+    <h3><code>--type generic</code> — the universal case</h3>
+    <p>The toolchain the template doesn't pre-wire. It ships the security controls — language-agnostic: gitleaks, actionlint, zizmor, semgrep, osv <code>-r .</code>, plus CodeQL when public, plus Trivy if <code>--artefact</code> — and a commented build/test stub to fill in. An Android or C++ project is thus secured from day 1; only the language's own <code>./gradlew</code>, <code>cmake</code>, or <code>cargo</code> needs adding.</p>
+    <p>⚠️ osv reminder: it is lockfile-oriented — for Gradle, dependency-locking (<code>gradle.lockfile</code>) needs enabling, otherwise dependencies aren't scanned.</p>
+  </div>
+
+  <div class="note">
+    <h3>⚠️ <code>init-project.sh</code> refuses <code>--staging</code> on a Pages site without an artefact</h3>
+    <p>Pages <em>is</em> prod — there is nothing to validate. The branch would be an empty ritual that drifts until the merge stops happening at all.</p>
+  </div>
+
+  <p>The triple filter catches this kind of regression before it reaches prod <em>(cf. "Why 3 stages")</em> — but only where a host to validate exists. Elsewhere, it would have filtered nothing.</p>
+
+  <p><strong>Git Flow is dead</strong>: <code>nvie/gitflow</code> was archived by its author on 2025-10-14. Do not bring it back.</p>
+</section>
+
 <section>
   <h2>The flow — where the code goes</h2>
   <p class="sub"><strong>The single principle:</strong> <code>main</code> is production. We never write to it directly — the only way in is a pull request with green CI. Everything else follows from that.</p>
@@ -361,6 +467,346 @@
     <p>Without a PR, we push to <code>main</code> and the CI runs <strong>after</strong>: it becomes an <strong>autopsy</strong>, not a barrier — it records the damage on the branch we just declared "production". With a PR, it runs <strong>before</strong>. That's the whole difference between <em>knowing</em> and <em>preventing</em>.</p>
     <p><strong>This has already happened</strong>: a direct push to <code>main</code> removed a <code>user:</code> directive; the image shipped as <code>:latest</code>, the prod host pulled it, and production went down — discovered after the fact.</p>
     <p><strong>Where we do NOT tighten the screws</strong> — <em>too many controls kills the control</em>: no lint at pre-commit · <strong>only one</strong> blocking control locally, secrets (vital, instant, irreversible once pushed) · <strong>zero mandatory review</strong> (<code>required_approving_review_count = 0</code>): solo, self-approving would be theater.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Working on the branches</h2>
+  <p class="sub">The branch roles, the exact three-stage flow with its merge semantics, what breaks when several sessions share one folder, and where the controls deliberately stop.</p>
+
+  <div class="note accent">
+    <h3>Why <code>develop</code> is not the anti-pattern it gets accused of being</h3>
+    <p><em>Environment branches</em> — one branch per environment — are a documented anti-pattern: Fowler (<em>"soon leads to a world of misery"</em>), ThoughtWorks (<em>environmental drift</em>). <strong>But the criterion is not the branch's name — it is what drives the deployment.</strong></p>
+    <p>✅ <strong>This standard is on the right side</strong>: prod never follows a branch, it follows a <strong>pinned tag</strong> (<code>APP_IMAGE_TAG=X.Y.Z</code>, see "Version pin in production" below). An <strong>artefact</strong> is promoted, not a branch — exactly the alternative DORA and ThoughtWorks recommend <em>instead of</em> environment branches.</p>
+    <p>❌ <strong>The switch happens</strong> the day <code>develop</code> grows long-lived (code diverges by environment) or a host does <code>git checkout develop</code> as its deployment's source of truth. <strong>Rule that follows: <code>develop</code> stays short-lived</strong> — merged in days, not weeks. That is the only condition to uphold.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:0 0 4px">Branches</h3>
+  <div class="steps">
+    <div class="step">
+      <b><code>main</code></b>
+      <p>Prod. Protected (ruleset). With the <code>artefact</code> capability, prod runs on a <strong>pinned tag</strong>, never on the branch.</p>
+    </div>
+    <div class="step">
+      <b><code>develop</code></b>
+      <p>Staging. Protected. <strong>Short-lived.</strong> Comes from the <code>staging</code> capability only — <strong>not</strong> "node", <strong>not</strong> "Docker".</p>
+    </div>
+    <div class="step">
+      <b><code>feat/&lt;topic&gt;</code></b>
+      <p>From <code>develop</code> if <code>staging</code>, otherwise from <code>main</code>. Deleted on merge (auto).</p>
+    </div>
+    <div class="step">
+      <b><code>v*</code> tags</b>
+      <p><strong>Immutable</strong> — a ruleset forbids their deletion and their being moved.</p>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <h3>🔴 That immutability is why the tag is the SINGLE SOURCE of the version</h3>
+    <p>Not a <code>VERSION</code> file, not a CHANGELOG heading, not a manifest — all of these can be rewritten in any pull request. Everything able to read the version does so from the tag: <code>--version</code> derives it from <code>git describe</code>. The places that must carry a copy — the CHANGELOG, a plugin manifest — are compared against it by a guard, because a copy nobody watches is a copy that drifts.</p>
+  </div>
+
+  <div class="note" style="margin-top:12px">
+    <h3>⚠️ A tag is pushed AFTER the settings are in place, never before</h3>
+    <p>Immutable releases are <strong>not retroactive</strong> — a release published earlier stays unprotected forever.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">Full flow</h3>
+  <p>Three stages: <code>feat/</code> validated <strong>locally</strong> → merged <code>--no-ff</code> into <code>develop</code>, validated on the <strong>staging host</strong> → <code>develop → main</code> PR merged <strong>as a merge commit</strong> (never squash — that preserves <code>feat/*</code> commit history and avoids making <code>develop</code> diverge) → <code>vX.Y.Z</code> tag pushed to <code>main</code>, triggering the release CI. Exact commands, in order: RUNBOOK §2-3.</p>
+
+  <div class="note" style="margin-top:14px">
+    <h3>⚠️ A consequence of that merge commit: <code>develop</code> reads as "N commits behind <code>main</code>" — permanently, and that is CORRECT</h3>
+    <p>The promotion's merge commit is created <strong>on <code>main</code> only</strong>; <code>develop</code> never receives it. The gap therefore grows by one <strong>at every cycle</strong>, and <strong><code>0 0</code> is unreachable by construction</strong>. GitHub's "N commits behind" banner measures <strong>graph topology</strong>, not content.</p>
+    <p>🔴 <strong>One measure decides, and it is the content:</strong> <code>git diff origin/main origin/develop</code>. <strong>Empty</strong> means nothing to do, whatever the commit count says; non-empty is the real defect — typically a <code>develop</code> recreated from a point before the release: an older CHANGELOG and version.</p>
+    <p>⚠️ <strong>Never "fix" the count</strong>: squashing the promotion makes the branches diverge for real, and a squashed back-merge lands a differently-SHA'd commit on <code>develop</code>, creating the divergence it claimed to remove. A fast-forward is possible only where nothing protects <code>develop</code> — in public its ruleset requires a pull request.</p>
+  </div>
+
+  <div class="note" style="margin-top:12px">
+    <h3>🔴 The delete-branch incident — the most severe on this page</h3>
+    <p>In <strong>PRIVATE</strong>, shipping to production <strong>used to destroy the staging branch</strong>.</p>
+    <p>✅ Fixed at the root: on a private, 3-stage repo, <code>configure-repo.sh</code> no longer sets <code>delete-branch-on-merge</code> — <code>feat/*</code> branches are deleted by hand, the staging branch survives. Going public restores it. ⚠️ A repo configured before this fix still carries it.</p>
+    <p>The mechanism: <code>delete-branch-on-merge</code> deletes the <strong>source</strong> branch of <strong>any</strong> merged PR — so <code>develop</code>, when the <code>develop → main</code> PR merges. In public the <code>develop</code> ruleset refuses this; in private no ruleset exists and the branch disappears <strong>silently</strong>.</p>
+    <p>And the damage <strong>cascades</strong>: on the next rerun the script no longer sees <code>develop</code>, concludes "no staging", doesn't set its ruleset, and puts <code>main</code> back to squash-only — but squashing <code>develop</code> into <code>main</code> makes the two branches diverge on every cycle, so the next promotion becomes <strong>impossible</strong>. <em>Shipping successfully breaks the next cycle.</em></p>
+    <p>→ Recreate <code>develop</code> immediately after promotion: <code>git switch -c develop main &amp;&amp; git push -u origin develop</code>. The script now detects it by comparing what the repo <strong>publishes</strong> — the <code>## Branching</code> block of <code>CONTRIBUTING.md</code> — against what <strong>exists</strong>.</p>
+  </div>
+
+  <p style="margin-top:14px">For trivial changes (doc typo, variable rename, query fix with no runtime impact) on a solo project, pushing directly to <code>main</code> remains acceptable.</p>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">Concurrent work — several sessions / people</h3>
+  <p>The pitfall isn't Git but <strong>sharing the same working folder</strong> — the typical case: two Claude Code sessions launched against the same <code>repo/</code>. What's shared per folder: <code>HEAD</code> (current branch), the <code>index</code> (staging area), and the files on disk.</p>
+
+  <div class="steps">
+    <div class="step">
+      <b>Silent branch switch</b>
+      <p>A <code>git checkout -b</code> switches <strong>the other person's</strong> branch without warning.</p>
+    </div>
+    <div class="step">
+      <b>Silent loss</b>
+      <p>Simultaneous edits of the same file → last writer wins.</p>
+    </div>
+    <div class="step">
+      <b>Swept-up work</b>
+      <p><code>git add</code> can sweep up the other person's uncommitted work.</p>
+    </div>
+    <div class="step">
+      <b>Telltale symptom</b>
+      <p><code>gh pr merge --delete-branch</code> → <em>"'main' is already checked out at …"</em> — the remote merge still succeeds, only the local branch deletion fails; delete the remote branch by hand.</p>
+    </div>
+  </div>
+
+  <div class="note accent" style="margin-top:16px">
+    <h3>Rule: one isolated working tree per person</h3>
+    <p>Separate clones for different people/machines. On one machine, several sessions: <code>git worktree add -b &lt;branch&gt; /path/iso origin/main</code> … <code>git worktree remove &lt;path&gt;</code>.</p>
+    <p>A worktree shares <code>.git</code> (objects, branches, remotes) but has its <strong>own folder and its own <code>HEAD</code></strong> — editing, committing, pushing, opening a PR without ever touching the other tree. Cleanup: <code>git worktree remove &lt;path&gt;</code> + delete the branch.</p>
+    <p>Deploying from a worktree without poisoning the main folder's <code>./data</code>: <code>docker build</code> <strong>from the worktree</strong> (the image is baked), then <code>docker compose up -d</code> <strong>from the main folder</strong> (that's where the real volumes are).</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Option</th><th>When</th><th>Command</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="w">Separate clones</td>
+          <td class="h">different people/machines</td>
+          <td class="t"><code>git clone</code> each on its own side</td>
+        </tr>
+        <tr>
+          <td class="w"><code>git worktree</code></td>
+          <td class="h">same machine, several sessions/tasks</td>
+          <td class="t">git worktree add -b &lt;branch&gt; /path/iso origin/main … git worktree remove &lt;path&gt;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="steps" style="margin-top:16px">
+    <div class="step">
+      <b>Fetch before push</b>
+      <p><code>git fetch</code> + rebase/pull before every push — always push on top of the up-to-date remote state, so there is no non-fast-forward.</p>
+    </div>
+    <div class="step">
+      <b>Never <code>--force</code></b>
+      <p>Not on a shared branch (<code>--force-with-lease</code> if truly necessary).</p>
+    </div>
+    <div class="step">
+      <b>Targeted <code>git add</code></b>
+      <p>Never a blind <code>git add -A</code> in a shared tree.</p>
+    </div>
+  </div>
+
+  <div class="note accent" style="margin-top:16px">
+    <h3>Server-side safety net</h3>
+    <p>Branch protection on <code>main</code> (and <code>develop</code>) turns discipline into an enforced rule: PR required (no direct push), green CI required (<code>npm test</code> + <code>typecheck</code>), force-push and branch deletion forbidden, linear history. This is the most effective net against collisions on the remote.</p>
+  </div>
+
+  <div class="note" style="margin-top:12px">
+    <h3>Deployment / shared state outside Git</h3>
+    <p>Only one person rebuilds/deploys <code>main</code> HEAD at a time. And <strong>never mutate shared state outside Git while a service is running.</strong></p>
+    <p>Example: opening a SQLite file <strong>in WAL mode from the host</strong> while the container is using it breaks the <code>-shm</code> mmap on virtiofs (Docker Desktop macOS) → <code>disk I/O error</code> (data intact; fix: <code>docker restart</code>). To inspect a database: go through the API or <code>docker exec</code> — <strong>never</strong> a direct connection from the Mac.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">Why 3 stages</h3>
+  <p>A push <strong>directly to <code>main</code></strong> can introduce a configuration regression (e.g. a <code>docker-compose</code> directive removed by mistake, incompatible with the runtime image's constraints — enforced non-root UID, volume permissions) that <strong>no build detects</strong>: the code compiles, the image builds, only <strong>real-world behavior</strong> reveals it. Without an intermediate stage, this kind of bug reaches <code>main</code>, then <code>:latest</code>, and a prod host can <strong>pull it before anyone notices</strong>. The triple filter (Mac → NUC/<code>develop</code> → NUC/<code>main</code>) catches this kind of regression <strong>before</strong> it reaches prod — potentially twice.</p>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">Build vs pull of an image</h3>
+  <p>For stages 1 and 2, a <strong>local build</strong> on the target host (<code>docker compose up --build</code>) is enough. It's tempting to extend the GHA pipeline to publish <code>:branch-feat-…</code> or <code>:develop</code> images consumable via <code>docker compose pull</code> — only worth it if:</p>
+  <div class="steps">
+    <div class="step">
+      <b>Several hosts</b>
+      <p>Must share exactly the same artefact (e.g. multi-NUC).</p>
+    </div>
+    <div class="step">
+      <b>No toolchain</b>
+      <p>The target host lacks the build toolchain.</p>
+    </div>
+    <div class="step">
+      <b>Too slow</b>
+      <p>The local build is too slow on the host (older arm64 clusters).</p>
+    </div>
+  </div>
+  <p style="margin-top:14px">For a solo Mac+NUC project, local build is the short path. The CI workflow only serves prod (versioned tag + <code>:latest</code>).</p>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">When to skip a stage</h3>
+  <div class="steps">
+    <div class="step">
+      <b>Hotfix patch</b>
+      <p>Create a <code>fix/&lt;topic&gt;</code> from <code>main</code>, validate locally, merge directly into <code>main</code>, patch tag (<code>vX.Y.Z+1</code>). Skip staging if urgency justifies it AND the regression is very narrow.</p>
+    </div>
+    <div class="step">
+      <b>Documentation or rename</b>
+      <p>With no runtime impact: commit directly to <code>main</code>.</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:14px">
+    <h3>🔴 DB migration or Dockerfile/compose change: never skip staging</h3>
+    <p>The rule.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:26px 0 4px">Where we do NOT tighten the screws — <em>too many controls kills the control</em></h3>
+  <div class="steps">
+    <div class="step">
+      <b>No lint at pre-commit</b>
+      <p>No linter is universal across the three toolchains — <code>static</code> has none, <code>node</code> depends on the project, <code>generic</code> is a stub to fill in. Forcing an <code>eslint</code> that half the projects do not have would fail the hook on the very first commit. Lint belongs to the project, not the template.</p>
+    </div>
+    <div class="step">
+      <b>Only one blocking control locally: secrets</b>
+      <p>Vital, instant, and irreversible once pushed — the three criteria that justify blocking. Everything else waits for the CI, where waiting costs nothing.</p>
+    </div>
+    <div class="step">
+      <b>Zero mandatory review</b>
+      <p><code>required_approving_review_count = 0</code>: solo, self-approving would be theater.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Version pin in production</h2>
+  <p class="sub">The principle: a deployment must require an explicit <code>git tag</code>, never inherit a push to <code>main</code>.</p>
+
+  <div class="note" style="margin:0 0 22px">
+    <h3>The ghcr package can be private — even on a public repo</h3>
+    <p>This gets verified, never assumed.</p>
+    <p><strong>Personal account:</strong> a package published from a public repo inherits its access — pullable right away, no action needed.</p>
+    <p><strong>Organization:</strong> the package can be <strong>PRIVATE</strong> (the org default) → the host's <code>docker compose pull</code> gets <strong>403</strong>, and the pin below is useless: there is nothing to pull.</p>
+    <p><code>configure-repo.sh</code> queries the registry <strong>anonymously</strong>, exactly like the prod host would, and only asks for the manual step <strong>if the pull fails</strong>.</p>
+    <p>A green "Publish image" job proves <strong>nothing</strong>.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <b>Production hosts</b>
+      <p>On production hosts (NUC, deployed servers), pin the image tag in the host's <code>.env</code>. Never <code>:latest</code> in prod.</p>
+      <span class="cmd">APP_IMAGE_TAG=1.1.0</span>
+    </div>
+    <div class="step">
+      <b>Dev hosts</b>
+      <p>On dev hosts (local Mac): <code>:latest</code> or no pin at all is fine.</p>
+    </div>
+  </div>
+
+  <div class="note accent">
+    <h3>Why</h3>
+    <p><code>:latest</code> is a mutable tag that follows the <code>main</code> branch. Without a pin: a WIP push to main → release workflow → <code>:latest</code> updated → a prod-side <code>docker compose pull</code> can bring in unreviewed code. With a versioned pin, prod is frozen and an upgrade requires a conscious human action (changing the tag).</p>
+  </div>
+</section>
+
+<section>
+  <h2>What to enable, and where</h2>
+  <p class="sub">The baseline applies to <strong>every</strong> repo, no exception. A toolchain (<code>node</code>) or a capability (<code>artefact</code>, <code>staging</code>) never replaces it — each only <strong>adds</strong> rows on top.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Control</th><th>Setting</th><th>When</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">BASELINE — EVERY REPO</td></tr>
+        <tr>
+          <td class="w"><code>gitleaks</code></td>
+          <td class="h"><code>pre-commit</code> hook (staged files) <strong>+ CI on the FULL history</strong>. <strong>Never optional</strong>: it is the <strong>only</strong> anti-secret net during the whole private phase (no server-side secret scanning on Free). Pinned binary + checksum — <strong>not</strong> <code>gitleaks-action</code>, which requires a <strong>license</strong> on an ORG repo.</td>
+          <td class="t">commit + every PR</td>
+        </tr>
+        <tr>
+          <td class="w"><code>semgrep</code></td>
+          <td class="h">Static analysis of <strong>application code</strong> (<code>p/security-audit</code>, <code>p/owasp-top-ten</code>, <code>--exclude=.github</code>). Exists because <strong>CodeQL is unavailable on private</strong> — it <strong>precedes</strong> CodeQL, does not replace it (file-by-file analysis).</td>
+          <td class="t">every PR</td>
+        </tr>
+        <tr>
+          <td class="w"><code>osv-scanner</code></td>
+          <td class="h">Vulnerable dependencies (all manifests, <code>-r .</code>, OSV database). <strong>The equivalent of <code>dependency-review</code>, which works on private too.</strong></td>
+          <td class="t">every PR</td>
+        </tr>
+        <tr>
+          <td class="w"><code>actionlint</code> + <code>zizmor</code></td>
+          <td class="h">Workflows are code: a <code>${{ }}</code> in a <code>run:</code> is a <strong>shell injection</strong>.</td>
+          <td class="t">every PR</td>
+        </tr>
+        <tr>
+          <td class="w">CodeQL</td>
+          <td class="h">Native <strong>default setup</strong>, enabled by <code>configure-repo.sh</code> (<code>PATCH /code-scanning/default-setup</code>, <code>Administration: write</code>). <strong>Detects languages and keeps them up to date on its own</strong> — the previous <code>codeql.yml</code> declared only one, and missed <code>actions</code> workflows. <strong>Unavailable on private</strong> (GHAS) → arrives at the flip. The two modes are <strong>mutually exclusive</strong>.</td>
+          <td class="t">push/PR main + weekly</td>
+        </tr>
+        <tr>
+          <td class="w">Dependabot alerts</td>
+          <td class="h"><strong>CVE detection</strong> — native, free even on private, <strong>everywhere</strong>: it is the dependency graph that Renovate reads. Version updates → <strong>Renovate</strong>. Security updates, though, are only the safety net <strong>at 2 stages</strong> — at 3 stages their PRs would target <code>main</code> and bypass staging.</td>
+          <td class="t">continuous</td>
+        </tr>
+        <tr>
+          <td class="w">Renovate</td>
+          <td class="h"><strong>Only update bot.</strong> Auto-detects <strong>all</strong> the repo's ecosystems (npm, docker, actions, pip…) with <strong>no declaration at all</strong>, plus the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (<code>vulnerabilityAlerts</code>) for its security PRs. Routine = PR reviewed by a <strong>human</strong>; <strong>security = auto-merge</strong>. Minor/patch grouped.</td>
+          <td class="t">continuous / weekly</td>
+        </tr>
+        <tr>
+          <td class="w">Secret scanning + push protection</td>
+          <td class="h">Native, free on <strong>public</strong> (unavailable on private/Free).</td>
+          <td class="t">every push</td>
+        </tr>
+        <tr>
+          <td class="w"><code>main</code> ruleset</td>
+          <td class="h">PR required · required checks (<code>checks</code> + CodeQL + <code>build-check</code> if <code>artefact</code> capability) · no force-push/delete · no bypass · <code>required_approving_review_count = 0</code> (solo).</td>
+          <td class="t">continuous</td>
+        </tr>
+        <tr>
+          <td class="w"><code>tags</code> ruleset + immutable releases</td>
+          <td class="h">A <code>v*</code> tag that can be <strong>neither moved nor deleted</strong>, non-replaceable assets. <strong>Without both, the prod pin is worth NOTHING.</strong></td>
+          <td class="t">continuous</td>
+        </tr>
+        <tr>
+          <td class="w">Third-party actions</td>
+          <td class="h"><strong>Full SHA</strong> (<code># vX.Y.Z</code> as a comment); <code>actions/*</code> and <code>github/*</code>: major tag tolerated.</td>
+          <td class="t">—</td>
+        </tr>
+        <tr>
+          <td class="w"><code>permissions:</code> workflows</td>
+          <td class="h">Minimal: <code>{}</code> deny-all + write scoped <strong>per job</strong> · <code>persist-credentials: false</code> on every <code>checkout</code>.</td>
+          <td class="t">—</td>
+        </tr>
+
+        <tr class="grp"><td colspan="3">+ NODE TOOLCHAIN</td></tr>
+        <tr>
+          <td class="w"><code>npm audit --audit-level=high --omit=dev</code> · <code>npm test</code> · <code>npm run typecheck</code></td>
+          <td class="h">PR gate. <em>(npm and docker updates are no longer per-toolchain lines: Renovate auto-detects them — see the Renovate row of the baseline.)</em></td>
+          <td class="t">every PR</td>
+        </tr>
+
+        <tr class="grp"><td colspan="3">+ ARTEFACT CAPABILITY</td></tr>
+        <tr>
+          <td class="w">Trivy as PR gate</td>
+          <td class="h"><code>build-check</code> job of <code>docker-publish.yml</code>: build (<code>load: true</code>) then <code>trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1</code>. <strong>Pinned binary + checksum.</strong> <code>configure-repo.sh</code> makes it a <strong>REQUIRED</strong> check — <em>a scan that is not required blocks nothing.</em></td>
+          <td class="t">every PR</td>
+        </tr>
+        <tr>
+          <td class="w">Docker hardening</td>
+          <td class="h">Base image pinned by SHA256 <strong>digest</strong> · runtime <strong>with no package manager</strong> · <code>tmpfs</code> <code>noexec,nosuid,nodev,size=</code> · healthcheck · <code>:latest</code> blocked on pre-release.</td>
+          <td class="t">image build</td>
+        </tr>
+        <tr>
+          <td class="w">PUBLIC ghcr package</td>
+          <td class="h">🔴 Default depends on the <strong>owner</strong>: <strong>personal</strong> account → pullable anonymously (<strong>HTTP 200</strong>); <strong>organization</strong> → private by default (<strong>403</strong>), no one can self-host. <code>configure-repo.sh</code> <strong>tests the anonymous pull</strong> and only asks for the action if the test fails.</td>
+          <td class="t">repo setup</td>
+        </tr>
+
+        <tr class="grp"><td colspan="3">+ STAGING CAPABILITY</td></tr>
+        <tr>
+          <td class="w"><code>develop</code> ruleset</td>
+          <td class="h">The requirements of <code>main</code>, minus two, <strong>by design</strong>: ❌ no <code>code_scanning</code> (CodeQL only analyzes <code>main</code> — requiring it here would block every PR on a check that will never arrive) · ❌ <strong>squash ONLY</strong> (the merge commit is reserved for <code>main</code>, for promotions).</td>
+          <td class="t">continuous</td>
+        </tr>
+        <tr>
+          <td class="w">Merge commit allowed on <code>main</code></td>
+          <td class="h">Squash only is <strong>incompatible</strong> with a staging branch.</td>
+          <td class="t">—</td>
+        </tr>
+        <tr>
+          <td class="w">Back-merge <code>main</code> → <code>develop</code></td>
+          <td class="h">Consequence of the two rows above: the only route is a <strong>squashed PR</strong> (a direct push runs into the <code>pull_request</code> rule, a merge commit into squash-only). ⚠️ <strong>GitHub's message names the wrong culprit</strong> — <em>"Merge commits are not allowed on this repository"</em> is shown even though the repo allows them (<code>allow_merge_commit=true</code>): it is the <strong>rule</strong> that blocks, not the repo's setting. Looking in the settings is a dead end.</td>
+          <td class="t">promotion</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <h3>Plan note — secret scanning on a personal account</h3>
+    <p>On a personal (non-org) account, public secret scanning has only the <strong>default patterns</strong> — no custom regex, no validity checks (those are GitHub Secret Protection, paid/org). Hence the value of <code>gitleaks</code> for non-standard secrets.</p>
   </div>
 </section>
 
@@ -511,6 +957,273 @@
 </section>
 
 <section>
+  <h2>Repo configuration — one-shot, then forgotten</h2>
+  <p class="sub">The whole config/maintenance spectrum for a public repo is <strong>one-shot</strong>: set at creation via <code>configure-repo.sh</code>, then forgotten — CodeQL in native <strong>default setup</strong>, Dependabot, secret scanning + push protection, <strong>private vulnerability reporting</strong>, <code>main</code> (+ <code>develop</code>) ruleset, <strong>tag ruleset</strong>, <strong>immutable releases</strong>, third-party actions pinned to SHA, minimal <code>permissions:</code>. The assistant's PAT manages alerts autonomously and never touches <code>Administration: write</code> — only the maintainer's ephemeral admin PAT does.</p>
+
+  <div class="note accent" style="margin:0 0 22px">
+    <h3>🔎 Immutable releases is scriptable, not UI-only</h3>
+    <p>The <code>PUT /repos/{o}/{r}/immutable-releases</code> endpoint exists and falls under <code>Administration: write</code>, already part of the admin PAT recipe: nothing to add, everything to automate.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:0 0 4px">🔴 CodeQL: default setup, and above all NO committed <code>codeql.yml</code></h3>
+  <p class="sub" style="margin-bottom:14px">There is no more <code>codeql.yml</code> in the template. <code>configure-repo.sh</code> enables GitHub's <strong>default setup</strong> via the API (<code>PATCH /repos/{o}/{r}/code-scanning/default-setup</code>, <code>Administration: write</code> — already in the admin PAT recipe). Native wins here, and it's not a matter of taste:</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>The old <code>codeql.yml</code></th><th>Default setup</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="w">Languages analyzed</td>
+          <td><strong>ONE, hard-coded</strong></td>
+          <td><strong>all</strong>, <strong>auto-detected</strong></td>
+        </tr>
+        <tr>
+          <td class="w">A language shows up in the repo</td>
+          <td><strong>ignored forever</strong> <span class="h">(no one thinks to edit the YAML)</span></td>
+          <td><strong>analyzed automatically</strong> — GitHub updates the config</td>
+        </tr>
+        <tr>
+          <td class="w">Scheduled scans</td>
+          <td>a <code>cron</code> to maintain</td>
+          <td><strong>included</strong></td>
+        </tr>
+        <tr>
+          <td class="w">Maintenance</td>
+          <td><strong>in-house</strong></td>
+          <td><strong>GitHub's</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <h3>🔴 This wasn't a preference, it was a HOLE</h3>
+    <p>A <code>codeql.yml</code> hard-coded to one language leaves <strong>the rest of the repo unanalyzed</strong> — including its own workflows. The custom code was <strong>degraded</strong> native, and it degraded a <strong>security control</strong>.</p>
+  </div>
+
+  <p style="margin-top:18px"><strong>What default setup can't do</strong> — the exit door, if a project ever needs it: custom query packs · <code>paths-ignore</code> · custom build steps · uploads from an external CI. → <strong>Only then</strong>, go back to a committed <code>codeql.yml</code> — and declare <strong>ALL</strong> the repo's languages by hand, for good.</p>
+
+  <p style="margin-top:18px"><strong>Consequences not to miss:</strong></p>
+  <div class="steps">
+    <div class="step"><b>Private repo (Free)</b><p>Default setup is <strong>unavailable</strong> (GHAS required) — exactly like the workflow was. Nothing changes: <code>semgrep</code> + <code>osv-scanner</code> remain the mitigation.</p></div>
+    <div class="step"><b>No self-wake at the flip</b><p>CodeQL doesn't "wake up" on its own when going public: it's <strong>rerunning <code>configure-repo.sh</code></strong> that enables it — and that rerun is already mandatory in the visibility-flip procedure. No new action.</p></div>
+    <div class="step"><b>A legacy <code>codeql.yml</code></b><p>Enabling default setup on a repo that still carries one moves it to <code>disabled_manually</code> — GitHub refuses both modes at once. The script <strong>says so</strong> instead of doing it silently. Then delete the file: an orphaned workflow is a control nobody reads anymore.</p></div>
+    <div class="step"><b>Check run name unchanged</b><p>The check run <strong>keeps the name <code>CodeQL</code></strong>: the <code>code_scanning</code> ruleset rule (<code>tool: CodeQL</code>) is unchanged, and keeps blocking PRs.</p></div>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:34px 0 4px">Recommended controls (industry best practices)</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Control</th><th>What it prevents</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="w">Ruleset on <code>v*</code> tags (<code>deletion</code>, <code>update</code>)</td>
+          <td>A release tag being <strong>moved or deleted</strong>. <strong>Without it, the version pin guarantees NOTHING</strong>: prod pins <code>X.Y.Z</code> believing it froze an artefact, while the tag can point elsewhere tomorrow.</td>
+          <td class="t">configure-repo.sh</td>
+        </tr>
+        <tr>
+          <td class="w">Immutable releases <span class="h">(GA 2025-10-28)</span></td>
+          <td>A published release's <strong>assets</strong> being <strong>replaced</strong>. It's the counterpart of the <code>tags</code> ruleset: that one freezes the <strong>tag</strong>, this one freezes the <strong>content</strong>. Without both, the version pin can be bypassed without touching the tag — republishing a different binary under the same one. <strong>NOT RETROACTIVE</strong>: "immutability will only apply to future releases" → set <strong>BEFORE v1</strong>.</td>
+          <td class="t">configure-repo.sh <span class="h">(at the public flip)</span></td>
+        </tr>
+        <tr>
+          <td class="w">Private vulnerability reporting</td>
+          <td>An external researcher having <strong>no way to report privately</strong> — and so publishing the flaw as a public issue instead. <strong>Without it, the <code>SECURITY.md</code> link is DEAD.</strong></td>
+          <td class="t">configure-repo.sh</td>
+        </tr>
+        <tr>
+          <td class="w"><code>dependency-review-action</code> <span class="h">(PR)</span></td>
+          <td>A vulnerable or badly-licensed dependency <strong>getting in</strong>. Dependabot only alerts <strong>AFTER</strong> merge: the two are complementary, not redundant.</td>
+          <td class="t">ci-node.yml</td>
+        </tr>
+        <tr>
+          <td class="w"><code>actionlint</code> + <code>zizmor</code> <span class="h">(PR)</span></td>
+          <td><strong>The workflows themselves</strong> being the hole: a <code>${{ }}</code> interpolated into a <code>run:</code> is a <strong>shell injection</strong>.</td>
+          <td class="t">ci-*.yml</td>
+        </tr>
+        <tr>
+          <td class="w"><code>persist-credentials: false</code></td>
+          <td>The <code>GITHUB_TOKEN</code> <strong>lingering in <code>.git/config</code></strong> and leaking via an artefact (the <em>artipacked</em> audit).</td>
+          <td class="t">every checkout</td>
+        </tr>
+        <tr>
+          <td class="w"><code>default_workflow_permissions: read</code></td>
+          <td>A <strong>future</strong> workflow, written without a <code>permissions:</code> block, inheriting a <strong>write</strong> <code>GITHUB_TOKEN</code>. Every workflow here already declares it — this is a safety net, not an immediate gain.</td>
+          <td class="t">configure-repo.sh</td>
+        </tr>
+        <tr>
+          <td class="w">Renovate <code>groupName</code></td>
+          <td><strong>Noise</strong>: minor + patch grouped into <strong>one</strong> PR. <strong>Majors stay isolated</strong> — a major can break things, it deserves to be looked at alone.</td>
+          <td class="t">renovate.json</td>
+        </tr>
+        <tr>
+          <td class="w">Trivy on the image <span class="h">(PR)</span> — capability <code>artefact</code></td>
+          <td>An image carrying a <strong>CRITICAL/HIGH</strong> CVE reaching <code>main</code>. Scanning <strong>at deployment is too late</strong>: the image is already tagged and prod pins it. The <code>build-check</code> job is a <strong>REQUIRED</strong> check — otherwise the scan is <strong>decorative</strong>.</td>
+          <td class="t">docker-publish.yml</td>
+        </tr>
+        <tr>
+          <td class="w">Weekly Trivy on the PUBLISHED image — capability <code>artefact</code></td>
+          <td>An image <strong>already in prod</strong> becoming vulnerable <strong>with nothing saying so</strong>. The PR gate no longer looks at anything after merge, and Renovate only catches up if the base image <strong>moves</strong>: a line of images that stops being rebuilt produces no bump, no PR, no scan — the CVE keeps being served. <strong>This is a watch scan, not a gate</strong>: it isn't required anywhere, it <strong>alerts</strong>.</td>
+          <td class="t">docker-publish.yml</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <h3>Pinning policy — <code>.github/zizmor.yml</code></h3>
+    <p>Full SHA required for <strong>any</strong> third-party action; <strong>a major-version tag tolerated for <code>actions/*</code> and <code>github/*</code></strong> (compromising them means compromising GitHub itself). This isn't fussiness: in <strong>March 2026, 75 of the 76 tags of <code>aquasecurity/trivy-action</code> were force-pushed</strong>. A tag is mutable; a SHA is not.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:34px 0 4px">Setup — scriptable vs UI (for <code>configure-repo.sh</code>)</h3>
+
+  <div class="note">
+    <h3>🔴 VISIBILITY decides more than the plan</h3>
+    <p>Five controls are <strong>impossible</strong> on a <strong>private</strong> repo — and <strong>not purchasable</strong>: the org must first move to Team, <em>then</em> buy the product. On a <strong>public</strong> repo, they are <strong>free</strong>, even on Free.</p>
+  </div>
+
+  <div class="flip" style="margin-top:16px">
+    <div class="col">
+      <h3>At the public FLIP only</h3>
+      <p class="cap">visibility gate, not plan</p>
+      <ul>
+        <li><span class="dot off st"></span><span>secret scanning</span></li>
+        <li><span class="dot off st"></span><span>push protection</span></li>
+        <li><span class="dot off st"></span><span>CodeQL</span></li>
+        <li><span class="dot off st"></span><span>rulesets</span></li>
+        <li><span class="dot off st"></span><span>PVR</span></li>
+      </ul>
+    </div>
+    <div class="arrow"><b>vs</b></div>
+    <div class="col">
+      <h3>From CREATION, private included</h3>
+      <p class="cap">already free on Free</p>
+      <ul>
+        <li><span class="dot on st"></span><span>repo core</span></li>
+        <li><span class="dot on st"></span><span>merge</span></li>
+        <li><span class="dot on st"></span><span><code>GITHUB_TOKEN=read</code></span></li>
+        <li><span class="dot on st"></span><span>Dependabot alerts + security updates</span></li>
+        <li><span class="dot on st"></span><span>immutable releases</span></li>
+        <li><span class="dot on st"></span><span>fork-PR</span></li>
+        <li><span class="dot on st"></span><span>retention</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:16px">
+    <p><strong>Practical consequence</strong>: making a repo public is a <strong>security</strong> decision, not just an openness one. And <code>configure-repo.sh</code> <strong>reads <code>visibility</code></strong> to apply this split — it is therefore built to be re-run at the flip.</p>
+    <p>⚠️ <strong>Never read a missing field as "disabled"</strong>: without <code>Administration</code>, <code>security_and_analysis</code> doesn't error — the key is simply <strong>omitted</strong>. "Empty" ≠ "off".</p>
+  </div>
+
+  <div class="tablewrap" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Setting</th><th>How</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="w">Immutable releases</td>
+          <td><code>gh api -X PUT repos/{o}/{r}/immutable-releases</code> (<code>Administration: write</code> — already in the admin PAT's recipe). 🔴 <strong>NOT RETROACTIVE</strong> → set <strong>from private on</strong> (the setting is available there), never deferred to the flip: whatever isn't covered when a release is published <strong>never</strong> will be.</td>
+        </tr>
+        <tr>
+          <td class="w">Private vulnerability reporting</td>
+          <td><code>gh api -X PUT repos/{o}/{r}/private-vulnerability-reporting</code> — <strong>public-only</strong> (moot on private: no external researcher can access it).</td>
+        </tr>
+        <tr>
+          <td class="w"><code>sha_pinning_required</code> <span class="h">("Require actions to be pinned to a full-length commit SHA")</span></td>
+          <td><code>PUT /repos/{o}/{r}/actions/permissions</code> — scriptable, available on private Free. ⏸️ <strong>Deliberately NOT set</strong>: the native toggle is <strong>stricter than the repo's convention</strong>, which tolerates the major tag for <code>actions/*</code> and <code>github/*</code>. Enabling it would force everything to full SHA, first-party included <span class="h">(zizmor already covers third parties)</span>.</td>
+        </tr>
+        <tr>
+          <td class="w">Dependabot malware alerts</td>
+          <td>⚠️ <strong>UI, no API</strong> (no <code>security_and_analysis</code> field, no endpoint) — <strong>npm-only</strong>, available from private Free. Detects the <strong>malicious</strong> package, an angle Renovate doesn't cover (it remedies CVEs via a version bump; a malicious package often has no safe version). → the maintainer's action, RUNBOOK §1 step 9.</td>
+        </tr>
+        <tr>
+          <td class="w">CodeQL</td>
+          <td><code>PATCH /repos/{o}/{r}/code-scanning/default-setup</code> (<code>Administration: write</code>) — <strong>scriptable, and IN <code>configure-repo.sh</code></strong>.</td>
+        </tr>
+        <tr>
+          <td class="w">Dependabot alerts</td>
+          <td><code>gh api -X PUT repos/{o}/{r}/vulnerability-alerts</code></td>
+        </tr>
+        <tr>
+          <td class="w">Secret scanning / push protection</td>
+          <td><code>gh api -X PATCH repos/{o}/{r} -f security_and_analysis[...][status]=enabled</code></td>
+        </tr>
+        <tr>
+          <td class="w">Dependabot security updates <span class="h">(the safety net — 2 stages only: at 3 stages, <code>DELETE</code> on the same endpoint)</span></td>
+          <td><code>gh api -X PUT repos/{o}/{r}/automated-security-fixes</code> — 🔴 <strong>DEDICATED endpoint, NOT a sub-key of <code>security_and_analysis</code></strong>: <code>dependabot_security_updates</code> is in the GET's <strong>response</strong> schema, <strong>not</strong> in the PATCH's body params. Passing it to the PATCH <strong>raises no error</strong> — it is ignored, <strong>silently</strong>.</td>
+        </tr>
+        <tr>
+          <td class="w">Rulesets</td>
+          <td><code>gh api -X POST repos/{o}/{r}/rulesets --input ruleset.json</code> (<code>gh ruleset</code> = read-only)</td>
+        </tr>
+        <tr>
+          <td class="w">Topics / homepage / merge-methods / delete-branch</td>
+          <td><code>gh repo edit --add-topic … --homepage … --enable-squash-merge --delete-branch-on-merge</code></td>
+        </tr>
+        <tr>
+          <td class="w">Renovate · gitleaks · npm audit · CI updates</td>
+          <td><strong>committed files</strong> (<code>.github/renovate.json</code>, <code>.github/workflows/*.yml</code>), no API</td>
+        </tr>
+        <tr>
+          <td class="w">2FA</td>
+          <td><strong>UI-only</strong> (no endpoint)</td>
+        </tr>
+        <tr>
+          <td class="w">Reading the packages / ghcr API</td>
+          <td>❌ <strong>IMPOSSIBLE on fine-grained</strong> — GitHub Packages is <strong>not supported</strong> by fine-grained PATs (classic <code>read:packages</code> only). There is no point adding the permission: <strong>it doesn't exist</strong>. → <strong>Moot</strong>: the right test is an <strong>ANONYMOUS pull</strong> of the registry (<code>ghcr.io/token</code> + <code>/v2/&lt;img&gt;/manifests/&lt;tag&gt;</code> → <strong>200 = pullable</strong>), which verifies <em>exactly</em> what the prod host does, <strong>with no token at all</strong>. Set by <code>configure-repo.sh</code>.</td>
+        </tr>
+        <tr>
+          <td class="w">ghcr package visibility</td>
+          <td>⚠️ <strong>UI, no API</strong> (fine-grained PATs do NOT cover ghcr — only <code>classic</code> PATs do). 🔴 <strong>The default DEPENDS ON THE OWNER, and confusing it is costly</strong>: on a <strong>PERSONAL</strong> account, a package published from a <strong>public</strong> repo is pullable <strong>anonymously, WITH NO ACTION AT ALL</strong> (HTTP 200 — verified on test003). On an <strong>ORGANIZATION</strong>, it is <strong>PRIVATE by default</strong> → an anonymous <code>docker pull</code> = <strong>403</strong>, and <strong>no one can self-host</strong> (verified on test004). → <code>configure-repo.sh</code> <strong>TESTS the anonymous pull</strong> and only asks for the action <strong>IF the test fails</strong> (org-wide: Settings → Packages → Package creation → default visibility). <strong>When the action IS needed</strong> (org): Package settings → Danger Zone → <em>Change visibility</em> → <strong>Public</strong>. Without it, neither the prod host nor a user can pull the image — and <strong>the production version pin is worth nothing anymore</strong>: it points to an image no one can retrieve.</td>
+        </tr>
+        <tr>
+          <td class="w">Reported content <span class="h">(moderation)</span></td>
+          <td><strong>UI-only — NO API</strong> (verified: no moderation endpoint exists). Exact path, scope (org only) and item count are tracked separately. ⚠️ The box <strong>is not checked</strong> on "All users".</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note" style="margin-top:16px">
+    <p><strong>Dry-run first</strong>: on a personal account, some <code>security_and_analysis</code> sub-keys (<code>advanced_security</code>, <code>code_security</code>) are probably no-ops outside GHAS/org. This should be tested on the target repo before hard-coding it into <code>configure-repo.sh</code>.</p>
+  </div>
+
+  <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:34px 0 4px">OpenSSF Scorecard — keep / drop (solo, public, small)</h3>
+
+  <div class="flip" style="margin-top:12px">
+    <div class="col">
+      <h3>Keep <span class="cap">(~zero cost)</span></h3>
+      <ul>
+        <li><span class="dot on st"></span><span>Token-Permissions</span></li>
+        <li><span class="dot on st"></span><span>Branch-Protection</span></li>
+        <li><span class="dot on st"></span><span>Pinned-Dependencies</span></li>
+        <li><span class="dot on st"></span><span>Dangerous-Workflow <span class="h">(no <code>pull_request_target</code> + PR checkout)</span></span></li>
+        <li><span class="dot on st"></span><span>Security-Policy (<code>SECURITY.md</code>)</span></li>
+        <li><span class="dot on st"></span><span>SAST (CodeQL)</span></li>
+        <li><span class="dot on st"></span><span>Dependency-Update-Tool (Renovate)</span></li>
+      </ul>
+    </div>
+    <div class="arrow"><b>vs</b></div>
+    <div class="col">
+      <h3>Drop <span class="cap">(overkill solo)</span></h3>
+      <ul>
+        <li><span class="dot off st"></span><span>Signed-Releases</span></li>
+        <li><span class="dot off st"></span><span>Fuzzing</span></li>
+        <li><span class="dot off st"></span><span>CII-Best-Practices badge</span></li>
+        <li><span class="dot off st"></span><span>Signed commits <span class="h">(friction with no gain against oneself)</span></span></li>
+      </ul>
+    </div>
+  </div>
+
+  <p style="margin-top:12px"><strong>2FA</strong>: yes, non-negotiable — but an <strong>account</strong> setting, enabled in the UI.</p>
+
+  <div class="note accent" style="margin-top:16px">
+    <p>⚠️ <strong>Adopting some of Scorecard's practices is not running Scorecard.</strong> The lists above pick the <em>checks whose practice is worth holding</em>; the <strong>tool itself</strong> is rejected below, and the two are not in conflict.</p>
+  </div>
+
+  <p style="margin-top:16px"><strong>Rejected, after review</strong>: SLSA attestations (no one else consumes the images → signing into a void) · OpenSSF Scorecard <strong>as a tool</strong> (measures <em>process</em> compliance, a gameable score) · CODEOWNERS and merge queue (multi-contributor territory).</p>
+</section>
+
+<section>
   <h2>The private → public switch</h2>
   <p class="sub">The nominal cycle: the repo is born private, it becomes public. Everything that was dormant activates all at once — it's the most dangerous moment of its life.</p>
 
@@ -543,6 +1256,14 @@
       </ul>
     </div>
   </div>
+
+  <div class="note" style="margin-top:22px">
+    <h3>⚠️ What the switch requires — the whole history goes public at once</h3>
+    <p>Including a secret buried in a six-month-old commit, pushed during the phase where <strong>no server-side secret scanning existed at all</strong>. Hence <code>gitleaks detect</code> over <strong>every ref</strong>, not just <code>main</code>, from a detached worktree — non-negotiable.</p>
+    <p><strong>Rerun <code>configure-repo.sh</code></strong> with the ephemeral admin PAT: it sets the <code>main</code> ruleset, secret scanning + push protection, Dependabot, immutable releases, the description, the topics, <strong>enables CodeQL</strong> in default setup, and picks the merge method from the <code>staging</code> capability. It is idempotent — safe to rerun. Exact sequence, and who does what: RUNBOOK §4.</p>
+    <p><strong>Nothing to do for the workflows.</strong> <code>pages.yml</code> carries <code>if: github.event.repository.visibility != 'private'</code>: it is <code>skipped</code> in private and wakes up on its own at the flip. The condition is written <code>!= 'private'</code> and never <code>== 'public'</code>, so a missing field makes the job <strong>run</strong> (noise) rather than <strong>silently disable a security control</strong>. ⚠️ CodeQL is <strong>no longer a workflow</strong> — rerunning the script is what enables it, and the script waits for its first analysis before setting the <code>code_scanning</code> rule, otherwise <code>main</code> would be left unguarded.</p>
+    <p><strong>ORG repo — systematic, never an exception</strong>: the "Reported content" moderation setting is UI-only and is applied by default only to repos <em>created</em> public — so never to ours, born private. Without it, community health caps out. Then verify, read-only: community health <strong>100 %</strong> · CodeQL green · ruleset active · secret scanning on.</p>
+  </div>
 </section>
 
 <section>
@@ -552,8 +1273,152 @@
     <p>On a private repo on Free, GitHub would accept a direct push to <code>main</code>, and a red PR can be merged. A discipline that's only written down doesn't exist: it's carried by tools everywhere possible.</p>
     <p><strong>The <code>pre-commit</code> hook</strong> refuses a secret. <strong>The <code>pre-push</code> hook</strong> refuses direct writes to <code>main</code> — it's the missing ruleset, brought back onto the developer's machine. Both can be bypassed with <code>--no-verify</code>: a decision, not an accident.</p>
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
-    <p>⚠️ <strong>This is not <code>gh pr checks</code></strong>: it requires the <code>Checks</code> permission, <strong>absent from the UI</strong> of fine-grained PATs — so impossible to grant. The rule was written everywhere, and <strong>unenforceable everywhere</strong>. → <code>gh run list --commit &lt;sha&gt;</code>, and <strong>green ⇔ every expected workflow is <code>completed / success</code></strong> (a workflow that's <strong>absent</strong> is not a green: it just hasn't reported yet). Detail: standard §18.</p>
+    <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>: it reads <code>statusCheckRollup</code>, which requires the <code>Checks</code> permission — <strong>documented by GitHub but absent from the UI</strong> of fine-grained PATs, so impossible to grant. The result is <code>Resource not accessible by personal access token</code>, and <code>gh pr view &lt;n&gt;</code> alone fails for the same reason. The rule was written everywhere, and <strong>unenforceable everywhere</strong>.</p>
+    <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha"</code>. The <code>--json</code> form targets a field, so no rollup is requested.</p>
+    <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong>: <code>CI</code>, plus <code>Publish image</code> if <code>docker-publish.yml</code> exists — the same set as the ruleset's required checks, derived the same way. ⚠️ <strong>A MISSING workflow is not a green.</strong> GitHub registers workflows one by one: for a few seconds after a push, <code>CI</code> can be <code>success</code> while <code>Publish image</code> has not been created yet. <strong>"Nothing red" ≠ "everything green".</strong></p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Holding the controls</h2>
+  <p class="sub">Two hard problems remain after the matrix is drawn: the private phase has a real analysis gap, and the anti-secret net has to survive both a bypassed hook and a wrong branch. This is how each is held.</p>
+
+  <p>A repo spends its whole youth private. Yet on private/Free, <strong>CodeQL and <code>dependency-review</code> are unavailable</strong> (they require GHAS). Without a mitigation, the code is never statically analysed until flip day — and CodeQL then dumps the entire backlog at once.</p>
+
+  <div class="note">
+    <h3>🚫 Verified dead end: CodeQL is forbidden on private code — by license, not by a technical limit</h3>
+    <p>The CodeQL CLI license excludes <em>"any codebase that is not an Open Source Codebase (e.g., code in a private repo)"</em> except with a paid GHAS license (~$30/committer/month, Team plan). No legal workaround, even locally.</p>
+    <p>→ GHAS rejected: paying for a transitional state, when everything becomes free as soon as the repo goes public.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Tool</th><th>In private</th><th>Role</th><th>Limitation to know</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="t">Semgrep OSS</td>
+          <td class="p"><span class="pill on">free, no account or token</span></td>
+          <td>Static analysis — partial but real overlap with CodeQL</td>
+          <td class="h">File by file: no cross-file analysis. It precedes CodeQL, it does not replace it.</td>
+        </tr>
+        <tr>
+          <td class="t">osv-scanner</td>
+          <td class="p"><span class="pill on">free (Apache-2.0)</span></td>
+          <td>The equivalent of <code>dependency-review</code>, which does work in private</td>
+          <td class="h">The OSV database has no license check, so <code>dependency-review</code> stays useful in public.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Kept <strong>permanently</strong>, not just in private: Semgrep catches what CodeQL misses, and the private phase is when the most code gets written — so it is when <em>more</em> signal is wanted, not less.</p>
+
+  <div class="note">
+    <h3>⚠️ <code>--exclude=.github</code> on Semgrep is deliberate</h3>
+    <p>Its rules on workflows <strong>contradict</strong> the pinning policy (SHA for third parties, major tag tolerated for <code>actions/*</code>). Without this exclusion, every fresh scaffold fails on its very first PR. Workflows already have their own dedicated linters (<code>actionlint</code> + <code>zizmor</code>). <strong>One scope per tool, no overlap.</strong></p>
+  </div>
+
+  <p>What this does not solve: CodeQL's first pass at the flip remains an assumed triage step — but on code already cleared it is a <em>residue</em>, not an <em>avalanche</em>.</p>
+
+  <h3 style="margin:26px 0 4px">Implementation</h3>
+  <div class="steps">
+    <div class="step">
+      <b>Hook — <code>.githooks/pre-commit</code></b>
+      <p>Versioned, hence shared. Enabled via <code>git config core.hooksPath .githooks</code>, set by <code>init-project.sh</code> — a fresh clone must set it again. Exit 1 blocks the commit, silent when everything is fine. <strong>Hard failure if gitleaks is missing</strong>: a missing scanner must never look like a clean scan.</p>
+      <span class="cmd">gitleaks git --staged --redact</span>
+    </div>
+    <div class="step">
+      <b>CI — the <code>checks</code> job</b>
+      <p>A pinned <code>gitleaks</code> binary with a verified checksum, run with <code>fetch-depth: 0</code> so it scans the full history, on both toolchains. <strong>Not <code>gitleaks-action</code></strong>: it requires a license on an organization repo, which would leave CI red by default.</p>
+    </div>
+  </div>
+
+  <div class="note accent" style="margin-top:18px">
+    <h3>Why pre-commit alone is not enough</h3>
+    <p>A local hook is bypassable (<code>git commit --no-verify</code>) and only exists on the machine that installed it. Hence the duplication with gitleaks in CI: the hook catches early, CI <strong>guarantees</strong>. Both, not either.</p>
+  </div>
+
+  <div class="note">
+    <h3>⚠ Auditing a history: scan <code>main</code>, not the current branch</h3>
+    <p><code>gitleaks git</code> scans the history reachable from <strong>HEAD</strong>. Run from a working branch, it says nothing about the state of <code>main</code> — the two histories diverge as soon as they have their own clean commits.</p>
+  </div>
+
+  <p>Correct procedure — from a detached worktree on the target, so as not to disturb the working tree:</p>
+  <div class="steps">
+    <div class="step">
+      <b>1. Fetch the target</b>
+      <p>Pull the reference for <code>main</code> from the remote.</p>
+      <span class="cmd">git fetch origin main</span>
+    </div>
+    <div class="step">
+      <b>2. Add a detached worktree</b>
+      <p>Check out <code>origin/main</code> on the side, without touching the working tree.</p>
+      <span class="cmd">git worktree add --detach /tmp/scan origin/main</span>
+    </div>
+    <div class="step">
+      <b>3. Scan from there</b>
+      <p>Run gitleaks against that detached copy.</p>
+      <span class="cmd">( cd /tmp/scan &amp;&amp; gitleaks git --no-banner --redact )</span>
+    </div>
+    <div class="step">
+      <b>4. Remove the worktree</b>
+      <p>Clean up once the scan is done.</p>
+      <span class="cmd">git worktree remove --force /tmp/scan</span>
+    </div>
+  </div>
+
+  <p>Before a private → public switch, it is <strong>every ref</strong> that needs covering, not just <code>main</code>: a secret in an old pushed branch becomes public too.</p>
+
+  <div class="note" style="margin-top:18px">
+    <h3>False positives: pin by fingerprint, never disable the rule</h3>
+    <p>A public identifier shaped like a secret (contract address <code>0x…</code> / <code>C…</code> / <code>G…</code>, XDR transaction, password hash) triggers the <code>generic-api-key</code> rule.</p>
+    <p>These cases are neutralised in a versioned <code>.gitleaksignore</code>, by fingerprint (<code>commit:file:rule:line</code>) and commented — never by disabling the rule: a real secret in the same file must still get caught.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Acquiring a capability on a live repo</h2>
+  <p class="sub">The repo keeps everything else: the category does not change, a capability is <strong>ACQUIRED</strong>. A Pages site that starts publishing an image <strong>stays</strong> a Pages site. <code>init-project.sh</code> only sets capabilities at creation — here the repo already has history, rulesets, and required checks, so the generator is <strong>not rerun</strong>: capabilities are added, in the right order.</p>
+
+  <div class="note" style="margin:0 0 22px">
+    <h3>🔴 The order is the trap — and it is counter-intuitive</h3>
+    <p><code>configure-repo.sh</code> makes <code>build-check</code> <strong>required</strong> as soon as it sees <code>docker-publish.yml</code> on <code>main</code>. Run <strong>before</strong> the workflow is there, it demands a check <strong>that will never report</strong>: every PR stays blocked forever on <em>"Expected — waiting for status"</em> — <strong>including the one that brings the workflow</strong>. The repo locks itself out.</p>
+    <p><strong>→ The workflow must reach <code>main</code> before the script requires it.</strong> This applies to any capability that adds a required check.</p>
+  </div>
+
+  <div class="note">
+    <h3>Acquiring <code>--artefact</code> — third parties should be able to self-host the project</h3>
+    <p>The Pages-site-plus-Docker case: a Pages page later packaged as an image so third parties can deploy it and track updates. <strong>Pages stays</strong>, and there is <strong>no <code>develop</code> to create</strong> — no host exists that needs validation. <em>(Exact sequence — who does what, in what order: RUNBOOK §5.)</em></p>
+    <p><code>Dockerfile</code> and <code>docker-publish.yml</code> arrive <strong>via PR</strong>, before <code>build-check</code> becomes required — that is what avoids the ordering trap above.</p>
+    <p>A static page uses <strong><code>FROM nginx:alpine</code></strong>, followed by <strong><code>RUN apk upgrade --no-cache</code></strong>. 🔴 <strong>This line is not cosmetic</strong>: <code>nginx:alpine</code> lags behind Alpine's own packages and can carry HIGH CVEs already fixed upstream. Trivy runs with <code>--ignore-unfixed</code>: it surfaces <strong>all</strong> of them, and <code>build-check</code> goes <strong>RED</strong> — the template's own scanner then rejects the image the template itself recommends, without this line.</p>
+    <p>The base image is bumped automatically: Renovate auto-detects the <code>Dockerfile</code>'s <code>FROM</code> as soon as it lands — nothing to declare.</p>
+    <p>The <code>## Branching</code> block is left untouched, and <code>develop</code> is not created: with no host to validate, that would be an empty ritual.</p>
+    <p>Once the workflow is on <code>main</code>, <code>configure-repo.sh</code> is rerun: it detects <code>docker-publish.yml</code>, requires <code>build-check</code>, sets the <code>tags</code> ruleset and immutable releases, and verifies the image is anonymously pullable.</p>
+    <p>The ghcr package can be private even when the repo is public: on a personal account it is pullable by default; on an org, it may need a manual step (UI, no API) — made public only if that test fails.</p>
+    <p><strong>Immutable releases: before v1, never after</strong> — they are not retroactive. Self-hosting is documented in the README with a <strong>pinned tag, never <code>:latest</code></strong>.</p>
+  </div>
+
+  <div class="note">
+    <h3>Acquiring <code>--staging</code> — a host has appeared, it needs validating before prod</h3>
+    <p><em>(Exact sequence: RUNBOOK §5.)</em> The <code>## Branching</code> block in <code>CONTRIBUTING.md</code> <strong>and</strong> in <code>AGENTS.md</code> must be rewritten for 3 stages — otherwise both still advertise GitHub Flow even though <code>develop</code> exists.</p>
+    <p>Pushing <code>develop</code> goes through fine: the <code>pre-push</code> hook lets branch <strong>creation</strong> through.</p>
+    <p>Once <code>develop</code> is detected, <code>configure-repo.sh</code> sets its ruleset and <strong>allows merge commits</strong> on <code>main</code> — squash-only is <strong>incompatible</strong> with a staging branch.</p>
+    <p><code>docker-publish.yml</code> already listens for PRs to <code>main</code> <strong>and</strong> <code>develop</code>: without that, a PR to <code>develop</code> would stay blocked forever.</p>
+  </div>
+
+  <div class="note">
+    <h3>Acquiring / removing <code>--pages</code></h3>
+    <p><strong>Acquiring</strong>: copy <code>pages.yml</code>, fill in the <code>&lt;web-dir&gt;</code>, and create the site (<code>configure-repo.sh</code> does it — <code>Pages: write</code>). No required check is added → <strong>no lockout risk</strong>, order is free.</p>
+    <p><strong>Removing</strong>: delete <code>pages.yml</code>. <strong>Never</strong> leave it running "just in case" — an orphaned workflow is a control nobody reads anymore.</p>
+  </div>
+
+  <div class="note">
+    <h3>Removing a capability — the reverse direction</h3>
+    <p>It only <strong>removes</strong> controls: no lockout risk… <strong>except one</strong>, symmetric to the ordering trap described above.</p>
+    <p>⚠️ <strong>Remove <code>build-check</code> from the required checks before deleting <code>docker-publish.yml</code>.</strong> The other way around, the check stays required while nothing produces it anymore → <strong>every PR is blocked forever</strong>.</p>
   </div>
 </section>
 
@@ -676,6 +1541,16 @@
           <td class="p"><span class="pill on">active</span></td>
         </tr>
         <tr>
+          <td class="w">Weekly</td><td>CVEs of the <strong>PUBLISHED</strong> image (CRITICAL/HIGH)</td>
+          <td class="t">trivy</td><td class="h"><code>docker-publish.yml</code> › <code>scheduled-scan</code> — same flags as <code>build-check</code>. A <strong>watch</strong> scan, not a gate: it alerts.</td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
+          <td class="w">Rotation</td><td>Write PAT — <strong>J-14 alert</strong> in <code>.envrc</code></td>
+          <td class="t">every 90 days</td><td class="h">Claude alerts · the maintainer regenerates <em>(the PAT model: <code>secrets-and-auth.md</code>)</em></td>
+          <td class="p"><span class="pill on">active</span></td>
+        </tr>
+        <tr>
           <td class="w">Continuous</td><td>Dependency CVEs (<strong>detection</strong>)</td>
           <td class="t">Dependabot alerts</td><td class="h">native — free even in private; Renovate <strong>reads</strong> these alerts and opens the fix PR</td>
           <td class="p"><span class="pill on">active</span></td>
@@ -685,7 +1560,7 @@
   </div>
 </section>
 
-<footer>Project standard — claude-code-project-standard.md §18</footer>
+<footer>Source of truth for this page: docs/repo-controls.md · neighbouring subjects: secrets-and-auth.md (auth, the PAT matrix) · security-and-updates.md (who updates what) · docker-hardening.md (deployment) · github-repo-config.md (new-repo checklist)</footer>
 </div>
 </body>
 </html>

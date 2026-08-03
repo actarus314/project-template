@@ -12,7 +12,7 @@ They do not replace each other — they answer two different questions. **Confus
 | Document | Answers | When to read it |
 |---|---|---|
 | 🎯 **`docs/RUNBOOK.md`** | **WHAT to do, in what ORDER, and WHO does it.** URLs, exact permissions, complete commands, pitfalls. | **IN FULL, before starting.** It's the thread to follow. |
-| 📖 **`docs/claude-code-project-standard.md`** | **WHY**, and the **conventions to hold while developing**: layout, secrets, branches, README, lifecycle docs. | **Already imposed on every session** by `~/.claude/CLAUDE.md`. **If it hasn't been done in this session: read it NOW** — the runbook keeps referring to it ("standard §12"…), and **an unread reference is a dead reference**. |
+| 📖 **`docs/claude-code-project-standard.md`** | **WHY**, and the **conventions to hold while developing**: layout, secrets, branches, README, lifecycle docs. | **Already imposed on every session** by `~/.claude/CLAUDE.md`. **If it hasn't been done in this session: read it NOW** — the runbook keeps referring to it ("standard §3"…), and **an unread reference is a dead reference**. |
 
 **Where they live:** `docs/RUNBOOK.md` and `docs/claude-code-project-standard.md`, **in the template clone**.
 This skill is a symlink into that clone, so both files sit two levels above it — read them from there.
@@ -24,8 +24,8 @@ This skill is a symlink into that clone, so both files sit two levels above it �
 This skill is a symlink into the repo, so it is always the clone's version; saying it out loud makes a stale clone visible instead of silent.
 
 **The standard's sections actually involved here** *(to open when the runbook refers to them, not to recite)*:
-**§10** initiating a project · **§12** branch policy (the 3 capabilities) · **§17** repo config · **§18** the controls matrix + the procedures *(flip private→public, acquire a capability)*.
-GitHub auth and the PAT matrix have their own file next to it: **`docs/secrets-and-auth.md`**.
+**§10** initiating a project · **§16** the lifecycle docs.
+The rest lives in the files beside it: **`docs/secrets-and-auth.md`** *(GitHub auth, the PAT matrix)* · **`docs/repo-controls.md`** *(branch policy and the 3 capabilities, repo config, the controls matrix, and the procedures — flip private→public, acquire a capability)* · **`docs/security-and-updates.md`** *(who updates what)*.
 
 > ⚠️ **In case of CONTRADICTION between the two: the RUNBOOK governs the PROCEDURE** (the order, the values, the URLs — it is kept up to date for execution). **The STANDARD governs the CONVENTIONS** (the why, the substantive rules).
 > **And the contradiction must be FLAGGED to the maintainer** instead of choosing silently: two docs that diverge is a defect in the template — not a call to make in passing.
