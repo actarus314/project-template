@@ -56,18 +56,6 @@ Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, descrip
 
 Replays **the CI's security checks** at **pinned versions** (auto-detected from `ci.yml`, so nothing to maintain by hand): what passes here passes the CI. It is **copied into every generated project**, and a `pre-commit` hook replays it on its own — throttled (24h) and **advisory** (it has never blocked a commit).
 
-## Which version am I running?
-
-```bash
-./init-project.sh --version
-```
-
-The **git tag** is the single source, because a ruleset makes it immutable — the scripts read it, they never store it *(the why: `docs/repo-controls.md`)*. `verify-version.sh`, run by `check.sh` and by the CI, fails the build if the tag, the changelog and the scripts ever disagree.
-
-A generated project records the version that built it, in its own `AGENTS.md`: it carries a **frozen copy** of the templates, so knowing which one is what makes a later fix diffable.
-
----
-
 ## What's in this folder
 
 The template applies to itself the tree structure it imposes *(standard §2)*: **two distinct git repos**, side by side.
@@ -88,14 +76,10 @@ template/
 
 ### `docs/` — the reference
 
-- 🎯 **`RUNBOOK.md`** — **the full lifecycle, end to end**: create · work · release a version · switch private→public · evolve · maintain. **It states the ORDER OF ACTIONS and WHO does them**; the standard states the *why*. **This is the operational document — start with it.**
-- **`METHODE.md`** — **a single source of truth**: a fact lives in one place, everywhere else a link. **Read at every session** *(imposed by `~/.claude/CLAUDE.md`)*.
-- **`claude-code-project-standard.md`** — the standard. **Read at every session** *(same)*. It is also the **index**: a section that moved into its own file is kept there as a one-line pointer, so its number still resolves.
-- **`secrets-and-auth.md`** — the two secret locations, the PAT model *(public-RO read · 1-repo write · ephemeral admin)*, and where each permission is derived from.
-- **`claude-code-setup.md`** — configuring the assistant on a project: `CLAUDE.md`, `.claude/`, the persistent memory, delegation.
-- **`docker-hardening.md`** — deployment security for a self-hosted service.
-- **`repo-controls.md`** / **`.html`** — **how code reaches production, and what verifies it**: the branch policy and the three capabilities, the version pin, the repo configuration, the control matrix. The `.md` version is **authoritative**; the `.html` is its layout.
-- **`security-and-updates.md`** / **`.html`** — **what moves, who decides it moves**: the three bump channels, Renovate as the sole auto-detecting bot, the checks on every PR.
+🎯 **`RUNBOOK.md` is the operational document — start with it**: the full lifecycle, in order, and **who** performs each step.
+
+The rest is **one file per subject** — the method · the standard · secrets and auth · assistant setup · docker hardening · repo controls · security and updates.
+**`claude-code-project-standard.md` is their index**: it says which file answers which question, and keeps a one-line pointer for every section that moved out, so an old *"standard §12"* still resolves.
 
 ### At the root
 
@@ -105,14 +89,6 @@ template/
 
 - **`SUIVI.md`** — the log *(the hot one)*. **To open first** to resume work. Short, it **points** to the archives.
 - **`archives/`** — *the cold one*: one folder per closed stage *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, each **synthesized** *(what/how/why)*. The three pieces of research that settled things live in **`archives/conception/`**.
-
----
-
-## Two things not to break
-
-**The global pointer.** `~/.claude/CLAUDE.md` references `docs/` **via an absolute path**. Moving these files breaks every Claude Code session, silently.
-
-**`workspace/` is not in this repo — and it must never enter it.** It carries the internal memory (private repo names, incidents). Its own git, **with no remote**, is what protects this repo the day it goes public.
 
 ---
 
@@ -134,8 +110,6 @@ Honest about the edges, so no one discovers them the hard way:
 | **What the tool FABRICATES** — `check.sh`, `open-pr.sh`, everything under `templates/` | **MIT** *(`LICENSE-MIT`)* |
 
 The exception is not a detail: `init-project.sh` copies those files **verbatim** into every project it generates. Under a single noncommercial license, **every generated project would inherit that restriction** — including projects whose author never asked for it and had no way of knowing. The tool is protected; what it produces is free.
-
-🔴 **PolyForm Noncommercial is not an open source license** — the OSI definition forbids restricting the field of use — and GitHub therefore displays this repository as *"Other"*. That is deliberate, not an oversight.
 
 ---
 
@@ -203,19 +177,6 @@ Le script est **idempotent**, c'est fait pour ça — et c'est ce rejeu qui **ac
 Rejoue **les checks de sécurité de la CI** à des **versions épinglées** (auto-détectées depuis `ci.yml`, donc rien à maintenir à la main) : ce qui passe ici passe la CI.
 Il est **copié dans chaque projet généré**, et un hook `pre-commit` le rejoue de lui-même — limité à une fois par 24h et **consultatif** (il n'a jamais bloqué un commit).
 
-## Quelle version est en cours d'utilisation ?
-
-```bash
-./init-project.sh --version
-```
-
-Le **tag git** est la source unique, parce qu'un ruleset le rend immuable — les scripts le lisent, ils ne le stockent jamais *(le pourquoi : `docs/repo-controls.md`)*.
-`verify-version.sh`, exécuté par `check.sh` et par la CI, fait échouer le build si le tag, le changelog et les scripts ne sont pas d'accord.
-
-Un projet généré enregistre la version qui l'a construit, dans son propre `AGENTS.md` : il porte une **copie figée** des templates, donc savoir laquelle est ce qui rend un correctif ultérieur diffable.
-
----
-
 ## Ce que contient ce dossier
 
 Le template s'applique à lui-même la structure d'arborescence qu'il impose *(standard §2)* : **deux repos git distincts**, côte à côte.
@@ -236,14 +197,10 @@ template/
 
 ### `docs/` — la référence
 
-- 🎯 **`RUNBOOK.md`** — **le cycle de vie complet, de bout en bout** : créer · travailler · publier une version · basculer privé→public · faire évoluer · maintenir. **Il énonce l'ORDRE DES ACTIONS et QUI les fait** ; le standard énonce le *pourquoi*. **C'est le document opérationnel — à commencer par lui.**
-- **`METHODE.md`** — **une source unique de vérité** : un fait vit à un seul endroit, partout ailleurs un lien. **À lire à chaque session** *(imposé par `~/.claude/CLAUDE.md`)*.
-- **`claude-code-project-standard.md`** — le standard. **À lire à chaque session** *(idem)*. Il en est aussi l'**index** : une section partie dans son propre fichier y reste en pointeur d'une ligne, si bien que son numéro résout toujours.
-- **`secrets-and-auth.md`** — les deux lieux du secret, le modèle de PAT *(lecture public-RO · écriture 1 repo · admin éphémère)*, et d'où chaque permission est dérivée.
-- **`claude-code-setup.md`** — configurer l'assistant sur un projet : `CLAUDE.md`, `.claude/`, la mémoire persistante, la délégation.
-- **`docker-hardening.md`** — la sécurité de déploiement d'un service auto-hébergé.
-- **`repo-controls.md`** / **`.html`** — **comment le code arrive en prod, et qui le vérifie** : la politique de branches et les trois capacités, l'épinglage de version, la configuration du repo, la matrice des contrôles. La version `.md` fait **autorité** ; le `.html` en est la mise en forme.
-- **`security-and-updates.md`** / **`.html`** — **ce qui bouge, qui décide que ça bouge** : les trois canaux de bump, Renovate seul bot auto-détectant, les checks de chaque PR.
+🎯 **`RUNBOOK.md` est le document opérationnel — c'est par lui qu'on commence** : le cycle de vie complet, dans l'ordre, et **qui** fait chaque geste.
+
+Le reste est **un fichier par sujet** — la méthode · le standard · les secrets et l'authentification · la configuration de l'assistant · le durcissement Docker · les contrôles du repo · la sécurité et les mises à jour.
+**`claude-code-project-standard.md` en est l'index** : il dit quel fichier répond à quelle question, et garde un pointeur d'une ligne pour chaque section qui en est partie, si bien qu'un ancien *« standard §12 »* résout toujours.
 
 ### À la racine
 
@@ -253,16 +210,6 @@ template/
 
 - **`SUIVI.md`** — le journal *(le chaud)*. **À ouvrir en premier** pour reprendre le travail. Court, il **pointe** vers les archives.
 - **`archives/`** — *le froid* : un dossier par étape close *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, chacune **synthétisée** *(quoi/comment/pourquoi)*. Les trois recherches qui ont tranché vivent dans **`archives/conception/`**.
-
----
-
-## Deux choses à ne pas casser
-
-**Le pointeur global.** `~/.claude/CLAUDE.md` référence `docs/` **via un chemin absolu**.
-Déplacer ces fichiers casse chaque session Claude Code, silencieusement.
-
-**`workspace/` n'est pas dans ce repo — et ne doit jamais y entrer.** Il porte la mémoire interne (noms de repos privés, incidents).
-Son propre git, **sans remote**, est ce qui protège ce repo le jour où il passe en public.
 
 ---
 
@@ -286,7 +233,4 @@ Honnête sur ses limites, pour que personne ne les découvre à ses dépens :
 L'exception n'est pas un détail : `init-project.sh` copie ces fichiers **tels quels** dans chaque projet qu'il génère.
 Sous une licence noncommercial unique, **chaque projet généré hériterait de cette restriction** — y compris des projets dont l'auteur ne l'a jamais demandée et n'avait aucun moyen de le savoir.
 L'outil est protégé ; ce qu'il produit est libre.
-
-🔴 **PolyForm Noncommercial n'est pas une licence open source** — la définition de l'OSI interdit de restreindre le champ d'usage — et GitHub affiche donc ce repo comme *« Other »*.
-C'est délibéré, pas un oubli.
 
