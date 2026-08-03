@@ -23,6 +23,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`verify-links.sh` — a relative link that resolves nowhere, in BOTH repos.** A dead link is
+  invisible: nothing renders an error, the reader simply lands nowhere and stops following
+  pointers. This repo runs on pointers — a fact lives in one place and everywhere else there is a
+  link — so a broken one silently turns *one source* back into *none*. It found three on its first
+  run, two of them real breakages created hours earlier while archiving.
+- **`verify-no-secret-tracked.sh` — a file NAMED like a secret, tracked, in BOTH repos.** gitleaks
+  cannot see this by design: it looks for secret-*shaped strings*, never for a file *called* `.env`
+  or `secrets.md`. An empty one passes it, gets committed, and is filled in at the next commit — the
+  leak then lands on a path nobody watches any more. `templates/` is exempt: those are the models
+  copied into every project, tracked on purpose.
+- **`verify-workspace.sh` — the neighbouring `workspace/`, which nothing else can see.** It has no
+  remote *on purpose* — that is what lets `repo/` be public — and the same property makes it
+  invisible: no diff against a remote, no CI, and `check.sh` runs inside `repo/` without looking
+  beside it. Checks that it is a git repository, has **no remote**, tracks nothing secret-named, and
+  holds a single tracking document.
+- **`verify-growth.sh` — curated documents that only ever grow.** Advisory. An absolute size would
+  be arbitrary, so the yardstick is the project's own history: growth since the last **release**.
+  What it makes impossible is growing without noticing.
 - **`verify-narrative.sh` — dated narrative in a code comment, which `METHODE.md` forbids.** The
   code says what it does; a comment says only what the code cannot. The story of how a defect was
   found — the date, the incident, the evidence — belongs to the archive.
@@ -62,6 +80,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **The sub-checks moved to `checks/`; the root keeps the four commands.** Two natures were mixed
+  at the root: what the maintainer *runs* (`init-project.sh`, `configure-repo.sh`, `check.sh`,
+  `open-pr.sh`) and what `check.sh` *calls*. `verify-checksums.sh` already sat apart in `docs/`
+  while its siblings cluttered the root — one nature, two treatments.
+- **The checks are now triggered by the CI, where they block.** Several were reachable only through
+  a manual `./check.sh` — a guard built to replace manual passes, triggered only by a manual pass.
+  The `pre-commit` hook replays `check.sh` **advisory** and throttled to 24 h, so it never was the
+  net; the pull request is.
 - **Two more checks now travel into generated projects** — `verify-narrative.sh` and
   `verify-memories.sh`, alongside `check.sh`, `open-pr.sh` and `verify-tone.sh`. `METHODE` holds
   for every project this repo generates: their code carries comments, and **every** project has
@@ -73,6 +99,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   silently. A forgotten target is a hole nothing reports.
 
 ### Fixed
+
+- **The CI-verification command existed in two forms, one degraded.** `AGENTS.md` carried
+  `gh run list --commit "$sha" --json workflowName,status,conclusion`; the RUNBOOK, `repo-controls.md`
+  and **both templates** had lost the `--json` filter — so every generated project was teaching the
+  form that cannot be read workflow by workflow, which is exactly what the rule demands. Not a
+  textual duplication: the same instruction, written two ways.
 
 - **The `new-project` skill read its own documents from the wrong place once installed as a plugin.**
   It stated they sat *"two levels above it"*, which held only because it is reached through a symlink
