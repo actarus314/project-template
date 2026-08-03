@@ -18,8 +18,9 @@
 #   "hooks": { "PreToolUse": [ { "matcher": "Agent",
 #     "hooks": [ { "type": "command", "command": "<abs>/verify-delegation.sh" } ] } ] }
 #
-# Verified on 2026-08-03: PreToolUse DOES fire on a subagent launch (tool_name = Agent), and
-# tool_input carries `prompt`, `model` and `subagent_type` as separate fields.
+# PreToolUse DOES fire on a subagent launch (tool_name = Agent), and tool_input carries `prompt`,
+# `model` and `subagent_type` as separate fields — measured, not assumed.
+# (How it was measured — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then

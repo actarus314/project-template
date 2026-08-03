@@ -6,9 +6,8 @@
 # project that holds neither docs/ nor templates/.
 #
 # ⚠ A grep of the tree cannot see this. It proves no file NAMES a deleted doc; it is blind to a
-#   path that stays written and simply resolves nowhere once it has travelled. That blindness cost
-#   two fixes on 2026-08-03: verify-tone.sh pointed at docs/repo-controls.md, absent from every
-#   generated project, and the new-project skill read its docs from the session's cwd.
+#   path that stays written and simply resolves nowhere once it has travelled.
+#   (That blindness cost two fixes — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
 #
 # So the only way to see it is to GENERATE a project and read the paths from THERE.
 #
@@ -23,7 +22,7 @@
 # Usage:
 #   ./verify-travel.sh          # generates a throwaway project, compares, cleans up; exits 1 on a find
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"

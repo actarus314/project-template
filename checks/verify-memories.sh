@@ -6,12 +6,12 @@
 # recalled — it exists and does nothing. A broken [[link]] is reported by nothing at all.
 #
 # They live OUTSIDE the repo, under ~/.claude/projects/<slug>/memory/, where <slug> is the project's
-# absolute path with every / turned into - (see docs/claude-code-setup.md). So this check is
+# absolute path with every / turned into a dash. So this check is
 # LOCAL-ONLY by nature: the CI has no memories to look at, and that is not a gap.
 #
 # Silent no-op when the folder does not exist — most projects have none.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"

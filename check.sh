@@ -128,32 +128,67 @@ if [ -n "$GITLEAKS_VERSION" ]; then
   if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
 fi
 
-# docs/verify-checksums.sh — whenever it exists (this repo only: no generated project ships doc
+# checks/verify-checksums.sh — whenever it exists (this repo only: no generated project ships doc
 # pairs like docs/X.md + hand-authored docs/X.html). Guards against the .html drifting from its
 # source .md; silent no-op elsewhere.
-if [ -x docs/verify-checksums.sh ]; then
-  note "docs/verify-checksums.sh — .md/.html checksum guard"
-  if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
+if [ -x checks/verify-checksums.sh ]; then
+  note "checks/verify-checksums.sh — .md/.html checksum guard"
+  if checks/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
+fi
+
+# verify-no-secret-tracked.sh — gitleaks looks for secret-SHAPED strings, never for a file CALLED
+# .env. An empty one passes it, gets committed, and is filled in at the next commit.
+if [ -x checks/verify-no-secret-tracked.sh ]; then
+  note "verify-no-secret-tracked.sh — a file NAMED like a secret, tracked"
+  if ./checks/verify-no-secret-tracked.sh; then ok "no secret-named file tracked"; else ko "secret-named file tracked"; fi
+fi
+
+# verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
+# the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
+if [ -x checks/verify-growth.sh ]; then
+  note "verify-growth.sh — curated documents that only grow (advisory)"
+  ./checks/verify-growth.sh || true
+fi
+
+# verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
+# lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
+if [ -x checks/verify-links.sh ]; then
+  note "verify-links.sh — dead relative links (both repos)"
+  if ./checks/verify-links.sh; then ok "links"; else ko "links"; fi
+fi
+
+# verify-workspace.sh — the neighbouring workspace/ has NO remote on purpose, which is exactly what
+# makes it invisible: no diff-vs-origin, no CI, and this script runs in repo/ without looking beside it.
+if [ -x checks/verify-workspace.sh ]; then
+  note "verify-workspace.sh — the neighbouring workspace (no remote, no secret tracked)"
+  if ./checks/verify-workspace.sh; then ok "workspace"; else ko "workspace"; fi
+fi
+
+# verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
+# this repo generates, and a generated project's code carries comments too.
+if [ -x checks/verify-narrative.sh ]; then
+  note "verify-narrative.sh — dated narrative in code comments"
+  if ./checks/verify-narrative.sh; then ok "no dated narrative"; else ko "dated narrative"; fi
 fi
 
 # verify-memories.sh — the only check whose subject lives OUTSIDE the repo, so the CI structurally
 # cannot run it: no diff, no workflow, nothing else watches that place. Silent where there are none.
-if [ -x verify-memories.sh ]; then
+if [ -x checks/verify-memories.sh ]; then
   note "verify-memories.sh — index and links of the memories"
-  if ./verify-memories.sh; then ok "memories"; else ko "memories"; fi
+  if ./checks/verify-memories.sh; then ok "memories"; else ko "memories"; fi
 fi
 
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
-if [ -x verify-travel.sh ]; then
+if [ -x checks/verify-travel.sh ]; then
   note "verify-travel.sh — paths that die where the file lands"
-  if ./verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
+  if ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
 
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
-if [ -x verify-version.sh ]; then
+if [ -x checks/verify-version.sh ]; then
   note "verify-version.sh — version coherence"
-  if ./verify-version.sh; then ok "version"; else ko "version"; fi
+  if ./checks/verify-version.sh; then ok "version"; else ko "version"; fi
 fi
 
 # renovate-config-validator — whenever a renovate.json exists (beyond a project's CI: anti silent-freeze).
@@ -171,9 +206,9 @@ fi
 
 # verify-tone.sh — same shared-script model: the rule lives THERE, the CI calls the same file.
 # Copied into generated projects, where the rule applies just as much.
-if [ -x verify-tone.sh ]; then
+if [ -x checks/verify-tone.sh ]; then
   note "verify-tone.sh — second person (standard §1)"
-  if ./verify-tone.sh; then ok "no second person"; else ko "second person in versioned content"; fi
+  if ./checks/verify-tone.sh; then ok "no second person"; else ko "second person in versioned content"; fi
 fi
 
 echo

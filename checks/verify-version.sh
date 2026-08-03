@@ -11,7 +11,7 @@
 # Usage:
 #   ./verify-version.sh          # checks; exits 1 on any mismatch
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
 if [ -z "$TAG" ]; then
@@ -31,7 +31,7 @@ fi
 
 # 2. Each shipped script must PRINT that version. This is what catches a constant hardcoded back
 #    in: reading the tag cannot drift, a copied literal can.
-for s in init-project.sh configure-repo.sh docs/verify-checksums.sh; do
+for s in init-project.sh configure-repo.sh checks/verify-checksums.sh; do
   got=$("./$s" --version 2>/dev/null | tail -1 | awk '{print $NF}')
   if [ "$got" != "$TAG" ]; then
     echo "✗ $s --version prints '${got:-nothing}', expected '$TAG'"

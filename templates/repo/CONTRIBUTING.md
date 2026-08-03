@@ -18,7 +18,7 @@ reports, fixes, and small improvements are welcome.
 
   ```bash
   sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
-  gh run list --commit "$sha"
+  gh run list --commit "$sha" --json workflowName,status,conclusion
   ```
 
   Green means **every expected workflow is `completed / success`** — `CI`, plus `Publish image`

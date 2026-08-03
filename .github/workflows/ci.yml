@@ -57,7 +57,15 @@ jobs:
       # Second person, forbidden by standard §1. The SAME script check.sh runs, never a copy of its
       # grep: two sources drift. Local-only, this check warned; here it blocks.
       - name: No second person in versioned content (verify-tone.sh)
-        run: ./verify-tone.sh
+        run: ./checks/verify-tone.sh
+      # These two were reachable ONLY through a manual ./check.sh — that is, through the very
+      # manual pass this whole effort exists to replace. A guard nothing triggers is not a guard.
+      - name: No dated narrative in code comments (verify-narrative.sh)
+        run: ./checks/verify-narrative.sh
+      - name: No dead relative link (verify-links.sh)
+        run: ./checks/verify-links.sh
+      - name: No file NAMED like a secret is tracked (verify-no-secret-tracked.sh)
+        run: ./checks/verify-no-secret-tracked.sh
 
   generate-and-lint:
     runs-on: ubuntu-latest
@@ -172,7 +180,7 @@ jobs:
       # Anti-drift guard: each hand-authored docs/X.html carries the sha256 of the docs/X.md it's
       # the layout of; this fails the PR if the .md moved on without the .html being updated too.
       - name: Check docs/*.md <-> docs/*.html checksums (docs/verify-checksums.sh)
-        run: docs/verify-checksums.sh
+        run: checks/verify-checksums.sh
 
   version-coherence:
     runs-on: ubuntu-latest
@@ -188,7 +196,7 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
       - name: Tag <-> CHANGELOG <-> --version coherence (verify-version.sh)
-        run: ./verify-version.sh
+        run: ./checks/verify-version.sh
 
   gitleaks:
     runs-on: ubuntu-latest

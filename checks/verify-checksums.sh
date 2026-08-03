@@ -29,9 +29,10 @@ sha256() {
 
 # Technical-token coverage — the check the checksum CANNOT do.
 #
-# A checksum proves the .html was TOUCHED after the .md moved. Nothing more. On 2026-08-03 an
-# assembly of repo-controls.html passed the checksum GREEN while 29% of the arriving facts were
-# missing — a whole block, sources included, rendered nowhere.
+# A checksum proves the .html was TOUCHED after the .md moved. Nothing more: an assembly has
+# already passed it GREEN with 29% of the arriving facts missing — a whole block, sources
+# included, rendered nowhere.
+# (The full account — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
 #
 # So this lists the .md's technical tokens (whatever it puts between backticks: commands, files,
 # flags — what cannot be reworded without becoming false) that appear nowhere in the .html's text.
