@@ -21,6 +21,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `new-project` skill read its own documents from the wrong place once installed as a plugin.**
+  It stated they sat *"two levels above it"*, which held only because it is reached through a symlink
+  into the template clone. Packaged as a plugin, every `docs/…` path resolved against **the session's
+  working directory** — the project being created — so the runbook and the standard were read from
+  there, or not at all, with no error worth noticing.
+  A `Step 0` now builds the template root from the **absolute skill directory the runtime states at
+  load time**, and verifies `init-project.sh` resolves before anything else runs.
+  🔴 **Measured on a real plugin load**, symlink removed to isolate the source: `../../docs/…` fails,
+  a bare `docs/…` resolves only when the working directory *is* the template, and
+  `${CLAUDE_PLUGIN_ROOT}` is empty — the runtime substitutes it in configuration *(hooks, MCP,
+  monitors)*, never in a skill's text.
+
+### Added
+
+- **A minimal `.claude-plugin/plugin.json`**, so the repo can be loaded as a Claude Code plugin.
+  Nothing is published yet: it exists to make the packaging testable rather than assumed.
+
 ### Changed
 
 - **The standard is being split by SUBJECT — one subject, one file, one owner.** It had grown to
