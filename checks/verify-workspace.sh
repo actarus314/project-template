@@ -16,7 +16,7 @@
 #
 # Silent no-op where there is no neighbouring workspace.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"

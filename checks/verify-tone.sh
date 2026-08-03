@@ -10,7 +10,7 @@
 # ⚠ `git grep` on purpose, never a filesystem walk: the rule is about what is COMMITTED. An
 #   untracked scratch file breaking it is nobody's business.
 set -euo pipefail
-cd "$(dirname "$0")"   # repo root, regardless of the caller's cwd
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/   # repo root, regardless of the caller's cwd
 
 # Exceptions are LISTED and NARROW — never a disabled rule, so a real slip inside an exempted file
 # is still caught (the principle the standard states for gitleaks fingerprints, §18):

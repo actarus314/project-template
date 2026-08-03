@@ -57,7 +57,7 @@ jobs:
       # Second person, forbidden by standard §1. The SAME script check.sh runs, never a copy of its
       # grep: two sources drift. Local-only, this check warned; here it blocks.
       - name: No second person in versioned content (verify-tone.sh)
-        run: ./verify-tone.sh
+        run: ./checks/verify-tone.sh
 
   generate-and-lint:
     runs-on: ubuntu-latest

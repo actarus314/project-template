@@ -11,7 +11,7 @@
 #
 # Silent no-op when the folder does not exist — most projects have none.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"

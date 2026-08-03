@@ -22,7 +22,7 @@
 # Usage:
 #   ./verify-travel.sh          # generates a throwaway project, compares, cleans up; exits 1 on a find
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
