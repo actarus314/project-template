@@ -136,6 +136,13 @@ if [ -x docs/verify-checksums.sh ]; then
   if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-workspace.sh — the neighbouring workspace/ has NO remote on purpose, which is exactly what
+# makes it invisible: no diff-vs-origin, no CI, and this script runs in repo/ without looking beside it.
+if [ -x verify-workspace.sh ]; then
+  note "verify-workspace.sh — the neighbouring workspace (no remote, no secret tracked)"
+  if ./verify-workspace.sh; then ok "workspace"; else ko "workspace"; fi
+fi
+
 # verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
 # this repo generates, and a generated project's code carries comments too.
 if [ -x verify-narrative.sh ]; then
