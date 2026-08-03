@@ -65,6 +65,20 @@ red pull request. The safety net is local, and partly human.
   is not a green**: it has simply not reported yet. "Nothing is red" and "everything is green" are
   not the same claim, and the gap between them is exactly where a broken change slips into `main`.
 
+  > 🔴 **What is EXPECTED depends on the event and on the base — not on the repository.** Two
+  > absences are structural. Reading either one as a failed dispatch triggers a close/reopen that
+  > re-fires a CI which never had to run:
+  >
+  > - **`Publish image` does not run on a push to `main`.** `docker-publish.yml` listens on
+  >   `push: tags: ['v*']` — **tags, not branches** (plus `pull_request` on `main` and `develop`).
+  >   The image ships **at a tag**, never at every merge. Present on the pull request, absent from
+  >   the `push` runs: that is the normal shape.
+  > - **On a three-stage repository, `CodeQL` does not run on a pull request targeting `develop`.**
+  >   The *default setup* analyses the **default branch** and the pull requests aiming at it, and
+  >   nothing else — which is also why the `develop` ruleset deliberately drops `code_scanning`.
+  >   Its consequence is worth knowing: **the CodeQL verdict lands at the promotion**, not during
+  >   the work on `develop`.
+
   > ⚠️ **Match on `workflowName`, never on `name`.** CodeQL runs through GitHub's *default setup*,
   > so it has no workflow file in the repository: its run is `dynamic`, and its `name` field reads
   > `Push on main` — the run's *title*, not the workflow's. Only `workflowName` says `CodeQL`.

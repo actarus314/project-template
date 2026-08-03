@@ -137,14 +137,23 @@ A document no one rereads is no longer of any use. The runbook is read **while d
 
 **A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** What follows is armed: `check.sh` runs it, in this repo and in every project it generates.
 
-| Check | Perimeter | Moment |
-|---|---|---|
-| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch |
-| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after |
-| `checks/verify-memories.sh` | outside both — memories belong to neither | after |
-| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after |
-| `checks/verify-tone.sh` | **`repo/` only** | after |
-| `checks/verify-travel.sh` · `verify-checksums.sh` · `verify-version.sh` | `repo/` only | after |
+**This table is the single place that list lives.** Anything else that needs it — a tracking doc, a
+note — links here rather than repeating it: three partial copies of it once coexisted, and the three
+disagreed on how many there were.
+
+| Check | Perimeter | Moment | Runs at the **gate**? |
+|---|---|---|---|
+| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
+| `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
+| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
+| `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
+| `checks/verify-no-secret-tracked.sh` | `repo/` AND `workspace/` | after | ✅ |
+| `checks/verify-changelog.sh` | the **branch** — needs `fetch-depth: 0` | after | ✅ |
+| `checks/verify-checksums.sh` · `verify-version.sh` | `repo/` only | after | ✅ |
+| `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
+| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
+| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
+| `checks/verify-growth.sh` | `repo/` only | after | ❌ **deliberate** — advisory, it blocks nowhere |
 
 > 🔴 **Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of **published style**, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter that is explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
 >
