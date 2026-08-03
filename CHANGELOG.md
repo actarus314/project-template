@@ -48,6 +48,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **practices** and rejecting the **tool** were stated in two files that never met, and read as a
   contradiction.
 
+- **The standard becomes the index of what it no longer carries — 1012 lines down to ~320.** It now
+  answers a single question, *where does this go?*, and opens with a table routing every other
+  question to its owner. `docs/` holds **eight files, eight subjects, eight owners**.
+  **`github-repo-config.md` is removed.** It owned nothing: four of its five sections had already
+  moved, and the fifth was a checklist restating the RUNBOOK. Its three genuinely unique facts were
+  relocated first — the list of files present from the first commit and the LICENSE decision to the
+  standard, and the reason an org repo caps at 87 % *(its checklist counts 8 items, a personal
+  account's 7 — so comparing the two scores means nothing)* to the RUNBOOK, next to the click it
+  qualifies.
+  **Standard §11 is removed**: thirteen of its entries restated §4-§8, two are held elsewhere.
+  🔴 **Its last entry was not an orphan but a CONTRADICTION**: §11 said a stale `.gitignore` entry
+  should be pruned periodically, §9 said leaving it in is defensive. Both are now stated once, and
+  reconciled — an entry covering a path generated only inside a container stays; one that matches
+  nothing at all goes.
+  **The circular reference is broken.** The tracking doc was owned by nobody: `METHODE.md` named the
+  standard §16 as its source, and §16 named `METHODE.md` as its source. `METHODE.md` owns it now.
+  Section numbers remain stable throughout: a removed section keeps its number as a one-line pointer,
+  so `standard §11` or `standard §16` written anywhere still resolves.
+
 ## [1.1.0] - 2026-08-02
 
 ### Documentation

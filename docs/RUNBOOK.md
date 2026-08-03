@@ -7,7 +7,7 @@
 > `secrets-and-auth.md`, which explains **where each permission is derived from** (a called endpoint
 > = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** —
 > two copies always diverge, and a missing permission **fails SILENTLY**.
-> Standard: `claude-code-project-standard.md` · Secrets & auth: `secrets-and-auth.md` · Server config: `github-repo-config.md` · Checks: `repo-controls.md`
+> Standard: `claude-code-project-standard.md` · Secrets & auth: `secrets-and-auth.md` · Controls, branches & repo config: `repo-controls.md` · Updates: `security-and-updates.md`
 
 **Two rules that run through the entire document:**
 
@@ -257,7 +257,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | 2 | Claude | Verify that **no `<placeholder>` remains** in the versioned files — especially `<contact>` in `SECURITY.md`. |
 | 3 | **the maintainer** | Flip the visibility *(UI)*. |
 | 4 | **the maintainer** | **Re-run `configure-repo.sh`** *(ephemeral admin PAT)* → rulesets `main`/`develop`/`tags`, secret scanning + push protection, **private vulnerability reporting**, **immutable releases**, Pages, description, topics, and **THE ACTIVATION OF CODEQL** *(default setup — it waits for the 1st analysis, then sets the `code_scanning` rule)*. **The script is idempotent: that is what it is built for.** |
-| 5 | **the maintainer** | **ORG repo only** — Settings → **Moderation options** → **Reported content** → "Prior contributors and collaborators". **No API.** Without this click, community health **caps at 87%**. |
+| 5 | **the maintainer** | **ORG repo only** — Settings → **Moderation options** → **Reported content** → "Prior contributors and collaborators". **No API.** Without this click, community health **caps at 87%**. ⚠️ **This item exists ONLY on an ORG repo** *([GitHub changelog, 2020](https://github.blog/changelog/2020-06-23-community-content-reports-included-in-community-profile/))*: an org repo's checklist counts **8 items**, a personal account's **7**. **A personal repo at 100 % and an org repo at 87 % can hold EXACTLY the same files** — comparing the two scores means nothing. |
 | 6 | — | **Nothing to do for the workflows**: `pages.yml` carries `if: visibility != 'private'` — it is `skipped` in private and **wakes up on its own**. ⚠️ **CodeQL is NO LONGER a workflow** *(there is no more `codeql.yml`)*: it is activated **by the script**, at **step 4**, in ***default setup*** — GitHub detects the languages there and **keeps them up to date on its own** *(`repo-controls.md`)*. |
 | 7 | — | **Nothing to do for the `code_scanning` rule**: at **step 4**, the script **activates CodeQL, WAITS for its 1st analysis, THEN sets the rule** — in a **single** run *(otherwise `main` would stay UNGUARDED until a re-run — consequence detailed in §1 step 7a)*. |
 | 8 | Claude | Verify by reading: community health **100%** · CodeQL **green** · rulesets **active** · secret scanning **on**. |

@@ -1,6 +1,6 @@
 # Secrets and authentication — accessing without leaking
 
-> Reference. Extracted from `claude-code-project-standard.md` §4 and §5, and from `github-repo-config.md` §2.
+> Reference. This document **owns** one subject: secrets and GitHub authentication *(standard §4, §5, and the PAT matrix that used to live in a separate config file)*.
 > It answers one question: **how does a machine authenticate against GitHub without a secret ever reaching a versioned file.**
 
 ---

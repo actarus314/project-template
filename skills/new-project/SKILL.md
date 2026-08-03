@@ -24,7 +24,7 @@ This skill is a symlink into that clone, so both files sit two levels above it �
 This skill is a symlink into the repo, so it is always the clone's version; saying it out loud makes a stale clone visible instead of silent.
 
 **The standard's sections actually involved here** *(to open when the runbook refers to them, not to recite)*:
-**§10** initiating a project · **§16** the lifecycle docs.
+**§10** initiating a project · **§16** what a project ships *(the tracking doc itself: `docs/METHODE.md`)*.
 The rest lives in the files beside it: **`docs/secrets-and-auth.md`** *(GitHub auth, the PAT matrix)* · **`docs/repo-controls.md`** *(branch policy and the 3 capabilities, repo config, the controls matrix, and the procedures — flip private→public, acquire a capability)* · **`docs/security-and-updates.md`** *(who updates what)*.
 
 > ⚠️ **In case of CONTRADICTION between the two: the RUNBOOK governs the PROCEDURE** (the order, the values, the URLs — it is kept up to date for execution). **The STANDARD governs the CONVENTIONS** (the why, the substantive rules).
@@ -97,7 +97,7 @@ The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND
    **Use `find-skills`** — that's exactly what it's for. Also look at the **agents**, the **plugins**, the **marketplace**, the **native features**.
    **Only build custom as a last resort, and SAY SO.**
 
-> **The principle itself holds regardless of which tool carries it** *(standard §16)*:
+> **The principle itself holds regardless of which tool carries it** *(`docs/METHODE.md`)*:
 > a **CONCISE** resumption doc that **REFERS** to the detail · a **BRIEF** backlog that **POINTS** to a plan · **what's delivered is PURGED**.
 > *A tracking doc that no longer gets reread no longer tracks anything.*
 
