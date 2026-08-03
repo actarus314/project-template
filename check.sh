@@ -136,6 +136,13 @@ if [ -x docs/verify-checksums.sh ]; then
   if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
+# this repo generates, and a generated project's code carries comments too.
+if [ -x verify-narrative.sh ]; then
+  note "verify-narrative.sh — dated narrative in code comments"
+  if ./verify-narrative.sh; then ok "no dated narrative"; else ko "dated narrative"; fi
+fi
+
 # verify-memories.sh — the only check whose subject lives OUTSIDE the repo, so the CI structurally
 # cannot run it: no diff, no workflow, nothing else watches that place. Silent where there are none.
 if [ -x verify-memories.sh ]; then

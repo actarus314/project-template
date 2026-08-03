@@ -89,6 +89,15 @@ chmod +x "$DEST/repo/open-pr.sh"
 # goes silently green on a rule the project is still held to.
 cp "$TPL/verify-tone.sh" "$DEST/repo/verify-tone.sh"
 chmod +x "$DEST/repo/verify-tone.sh"
+# And the same again for the dated narrative: METHODE applies to every write, in this project AND
+# in each one it generates, so a generated project needs the check too — its code carries comments.
+cp "$TPL/verify-narrative.sh" "$DEST/repo/verify-narrative.sh"
+chmod +x "$DEST/repo/verify-narrative.sh"
+# And the memories, for the same reason plus one: EVERY project has them, under a path derived
+# from its own location — and they are the only place with no Git structure, so nothing else
+# would ever report an unindexed memory or a dangling link there.
+cp "$TPL/verify-memories.sh" "$DEST/repo/verify-memories.sh"
+chmod +x "$DEST/repo/verify-memories.sh"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"

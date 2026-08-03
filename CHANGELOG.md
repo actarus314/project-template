@@ -23,6 +23,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`verify-narrative.sh` — dated narrative in a code comment, which `METHODE.md` forbids.** The
+  code says what it does; a comment says only what the code cannot. The story of how a defect was
+  found — the date, the incident, the evidence — belongs to the archive.
+  🔴 **The rule was recorded as "already respected, nothing to build"** — a verdict taken on a
+  snapshot right after a manual review pass, so it measured a rule *freshly tidied*, not a rule
+  *kept*. Three violations appeared within hours, in the very scripts written to enforce other
+  rules. The discriminator comes from the one conforming case rather than from theory: **a date is
+  allowed only on a line that points into `archives/`**.
 - **`verify-memories.sh` — the index and the links of the persistent memories.** Memories are the
   sixth place a fact can live and the **only one with no Git structure**: no diff shows them, no CI
   sees them, so they rot unnoticed. A memory missing from `MEMORY.md` is **never recalled** — it
@@ -54,6 +62,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Two more checks now travel into generated projects** — `verify-narrative.sh` and
+  `verify-memories.sh`, alongside `check.sh`, `open-pr.sh` and `verify-tone.sh`. `METHODE` holds
+  for every project this repo generates: their code carries comments, and **every** project has
+  memories, under a path derived from its own location. Memories being the only place with no Git
+  structure, nothing else would ever report an unindexed one there.
 - **The CI now AUTO-DETECTS which scripts to shellcheck**, instead of listing them by hand. The
   list had already fallen behind by one script, while `check.sh` had always found them with a
   `find` — so a new script was linted locally and not in the CI, breaking `local == github`
