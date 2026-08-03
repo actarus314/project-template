@@ -23,6 +23,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`verify-memories.sh` — the index and the links of the persistent memories.** Memories are the
+  sixth place a fact can live and the **only one with no Git structure**: no diff shows them, no CI
+  sees them, so they rot unnoticed. A memory missing from `MEMORY.md` is **never recalled** — it
+  exists and does nothing — and a broken `[[link]]` is reported by nothing at all. Run by
+  `check.sh`, silent where a project has no memories, and **local-only by nature**: they live
+  outside the repo, so the CI has nothing to look at, which is not a gap.
 - **`verify-delegation.sh` — the three delegation instructions, checked BEFORE the subagent starts.**
   The first check in this repo that runs *a priori*: a `PreToolUse` hook that refuses a subagent
   launch when the prompt omits *"does not re-delegate"* or *"does not call the advisor"*, or when

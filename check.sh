@@ -136,6 +136,13 @@ if [ -x docs/verify-checksums.sh ]; then
   if docs/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
+# verify-memories.sh — the only check whose subject lives OUTSIDE the repo, so the CI structurally
+# cannot run it: no diff, no workflow, nothing else watches that place. Silent where there are none.
+if [ -x verify-memories.sh ]; then
+  note "verify-memories.sh — index and links of the memories"
+  if ./verify-memories.sh; then ok "memories"; else ko "memories"; fi
+fi
+
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
 if [ -x verify-travel.sh ]; then
