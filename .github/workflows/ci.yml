@@ -96,7 +96,7 @@ jobs:
       # (templates/repo/.github/zizmor.yml — single source, no second copy to drift). Only the
       # workflow linters apply here: semgrep needs app code and osv-scanner a lockfile, neither
       # of which this scripts-and-docs repo has.
-      # ponytail: gated to one matrix shard — the tools are already installed here; a dedicated
+      # Gated to one matrix shard — the tools are already installed here; a dedicated
       # job would duplicate the pinned install for a 2-second lint.
       - name: Lint the template's OWN workflow (actionlint + zizmor, its shipped config)
         if: matrix.name == 'node-full'
