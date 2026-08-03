@@ -135,13 +135,20 @@ A document no one rereads is no longer of any use. The runbook is read **while d
 
 ## What is ARMED, and over which perimeter
 
-**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** What follows is armed: `check.sh` runs it, in this repo and in every project it generates.
+**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** What follows is armed: `check.sh` runs it.
 
 **This table is the single place that list lives.** Anything else that needs it — a tracking doc, a
 note — links here rather than repeating it: three partial copies of it once coexisted, and the three
 disagreed on how many there were.
 
-| Check | Perimeter | Moment | Runs at the **gate**? |
+🔴 **The table describes THIS repository.** Three of these checks travel into a generated project —
+`verify-tone.sh`, `verify-narrative.sh`, `verify-memories.sh`, at its root, run by **its** `check.sh`.
+The rest stay here, either because their target does *(`templates/`, `docs/*.html`, the neighbouring
+`workspace/`)* or because they are still to be carried over. And **no generated workflow calls a
+`verify-*` script**, so those three run **locally only** over there: a generated project has the
+checks, not the gate. Measured by generating one, not by reading the tree.
+
+| Check | Perimeter | Moment | Runs at **this repo's** gate? |
 |---|---|---|---|
 | `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
 | `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
