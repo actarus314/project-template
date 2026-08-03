@@ -23,6 +23,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`verify-delegation.sh` — the three delegation instructions, checked BEFORE the subagent starts.**
+  The first check in this repo that runs *a priori*: a `PreToolUse` hook that refuses a subagent
+  launch when the prompt omits *"does not re-delegate"* or *"does not call the advisor"*, or when
+  the model is not a cheaper one. All three are **opt-ins** — left unwritten, the default does the
+  opposite of all three, silently, which is why discipline alone never held.
+  It blocks rather than warns because nothing here is a judgement: `model` is a field, the other
+  two are strings present or absent. Trigger deliberately **narrow** — anything that is not a
+  subagent launch exits immediately, since a guard that fires everywhere earns overrides until
+  nobody reads it. The hook registration lives in the local settings, never versioned.
 - **`verify-travel.sh` — a path that resolves here but dies where the file LANDS.** Several files
   travel into every generated project; a path written in one of them is read by whoever has *that*
   copy, in a project holding neither `docs/` nor `templates/`. A grep of the tree cannot see it: it
