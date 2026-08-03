@@ -66,3 +66,21 @@ Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<pa
 - **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **as much as possible and as much as relevant**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass.
 
 The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
+
+### 🔴 The three above are OPT-INS — and `verify-delegation.sh` is what checks them
+
+Left unwritten in the prompt, **the default does the opposite of all three, silently**. Nothing reports the omission, in either direction, which is why discipline alone never held.
+
+`verify-delegation.sh` is a **`PreToolUse` hook** that refuses a subagent launch when the prompt omits *"does not re-delegate"* or *"does not call the advisor"*, or when the model is not a cheaper one. It **blocks** rather than warns, because nothing in it is a judgement: `model` is a field of the event, and the other two are strings that are present or absent.
+
+**It ships inactive, and activating it is a deliberate choice.** A hook only acts once declared, so the file travels without doing anything until it is wired — appropriate, since it enforces a working method that not every project shares.
+
+- **For one machine, every project** — in `~/.claude/settings.json` *(local, never versioned)*:
+  ```json
+  "hooks": { "PreToolUse": [ { "matcher": "Agent",
+    "hooks": [ { "type": "command", "command": "bash <abs-path>/verify-delegation.sh" } ] } ] }
+  ```
+  ⚠️ The path is **absolute**: moving the folder breaks the hook, exactly like the pointer in `~/.claude/CLAUDE.md`.
+- **For a plugin distribution** — a `hooks/hooks.json` beside the manifest, where `${CLAUDE_PLUGIN_ROOT}` **does** resolve *(the runtime substitutes it in hooks, MCP servers and monitors — never in a skill's text)*.
+
+⚠️ **Keep the trigger narrow.** Anything that is not a subagent launch must exit at once: a guard that fires everywhere earns overrides until nobody reads it any more.

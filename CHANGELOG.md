@@ -21,6 +21,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`verify-memories.sh` — the index and the links of the persistent memories.** Memories are the
+  sixth place a fact can live and the **only one with no Git structure**: no diff shows them, no CI
+  sees them, so they rot unnoticed. A memory missing from `MEMORY.md` is **never recalled** — it
+  exists and does nothing — and a broken `[[link]]` is reported by nothing at all. Run by
+  `check.sh`, silent where a project has no memories, and **local-only by nature**: they live
+  outside the repo, so the CI has nothing to look at, which is not a gap.
+- **`verify-delegation.sh` — the three delegation instructions, checked BEFORE the subagent starts.**
+  The first check in this repo that runs *a priori*: a `PreToolUse` hook that refuses a subagent
+  launch when the prompt omits *"does not re-delegate"* or *"does not call the advisor"*, or when
+  the model is not a cheaper one. All three are **opt-ins** — left unwritten, the default does the
+  opposite of all three, silently, which is why discipline alone never held.
+  It blocks rather than warns because nothing here is a judgement: `model` is a field, the other
+  two are strings present or absent. Trigger deliberately **narrow** — anything that is not a
+  subagent launch exits immediately, since a guard that fires everywhere earns overrides until
+  nobody reads it. The hook registration lives in the local settings, never versioned.
+- **`verify-travel.sh` — a path that resolves here but dies where the file LANDS.** Several files
+  travel into every generated project; a path written in one of them is read by whoever has *that*
+  copy, in a project holding neither `docs/` nor `templates/`. A grep of the tree cannot see it: it
+  proves no file *names* a deleted doc, and stays blind to a path that remains written and resolves
+  nowhere. That blindness cost two fixes. The script generates a throwaway project (~1s, run by
+  `check.sh`) and reads the paths from there. It reports only a **differential** — resolves in the
+  template *and* fails in the generated project — so generic patterns, naming examples and URLs
+  never show up. To declare a path deliberately absent, test it: `[ -f x ]`.
+- **Technical-token coverage in `docs/verify-checksums.sh`.** A checksum proves an `.html` was
+  *touched* after its `.md` moved, nothing more — one assembly passed it green with 29 % of the
+  arriving facts missing. It now also lists the `.md`'s backticked tokens absent from the page.
+  **Advisory, never blocking**: a styled page renders placeholders its own way, and a guard that
+  cries on every run is a guard nobody reads.
+
+### Changed
+
+- **The CI now AUTO-DETECTS which scripts to shellcheck**, instead of listing them by hand. The
+  list had already fallen behind by one script, while `check.sh` had always found them with a
+  `find` — so a new script was linted locally and not in the CI, breaking `local == github`
+  silently. A forgotten target is a hole nothing reports.
+
 ### Fixed
 
 - **The `new-project` skill read its own documents from the wrong place once installed as a plugin.**

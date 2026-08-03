@@ -27,6 +27,47 @@ sha256() {
   fi
 }
 
+# Technical-token coverage — the check the checksum CANNOT do.
+#
+# A checksum proves the .html was TOUCHED after the .md moved. Nothing more. On 2026-08-03 an
+# assembly of repo-controls.html passed the checksum GREEN while 29% of the arriving facts were
+# missing — a whole block, sources included, rendered nowhere.
+#
+# So this lists the .md's technical tokens (whatever it puts between backticks: commands, files,
+# flags — what cannot be reworded without becoming false) that appear nowhere in the .html's text.
+# Comparing SENTENCES does not work: these pages REINTERPRET their source, and only 42% of the
+# sentences survive, which drowns the signal.
+#
+# ADVISORY, never blocking — deliberately. A styled page renders a placeholder its own way, so a
+# residue of two or three is normal, and a guard that cries on every run is a guard nobody reads.
+# What it catches is the ORDER OF MAGNITUDE: 2 residual tokens against 23 when a block disappears.
+coverage() {
+  command -v python3 >/dev/null 2>&1 || { echo "  (python3 absent — coverage skipped)"; return 0; }
+  python3 - "$1" "$2" <<'PY'
+import re, sys, pathlib
+md, html = sys.argv[1], sys.argv[2]
+t = pathlib.Path(html).read_text()
+t = re.sub(r"<(script|style)\b.*?</\1>", " ", t, flags=re.S | re.I)
+t = re.sub(r"<!--.*?-->", " ", t, flags=re.S)
+t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))
+NOISE = {"main", "develop", "yes", "read", "write", "true", "false"}
+toks = set()
+for raw in re.findall(r"`([^`\n]{2,60})`", pathlib.Path(md).read_text()):
+    tok = re.sub(r"^[*_]{1,3}|[*_]{1,3}$", "", raw).strip()
+    if "**" in tok:                       # capture ran across an unpaired backtick
+        continue
+    tok = re.split(r"[<{]", tok)[0].strip().rstrip("=-/ ")   # `gh pr view <n>` -> `gh pr view`
+    if len(tok) >= 3 and tok.lower() not in NOISE:
+        toks.add(tok)
+absent = sorted(k for k in toks if k not in t)
+print(f"  coverage: {len(toks)} technical tokens, {len(absent)} absent from the page")
+for a in absent[:12]:
+    print(f"    absent  {a}")
+if len(absent) > 12:
+    print(f"    … and {len(absent)-12} more")
+PY
+}
+
 fail=0
 shopt -s nullglob
 for html in docs/*.html; do
@@ -43,6 +84,9 @@ for html in docs/*.html; do
   current=$(sha256 "$md")
 
   if [ "$update" = 1 ]; then
+    # BEFORE sealing: sealing is the moment the author states "the change has been carried over",
+    # so it is the moment that claim is worth measuring.
+    coverage "$md" "$html"
     sed -i.bak "s/checksum-source-md: sha256:[0-9a-f]*/checksum-source-md: sha256:$current/" "$html"
     rm -f "$html.bak"
     echo "✓ $html: checksum updated ($current)"
@@ -51,6 +95,7 @@ for html in docs/*.html; do
 
   if [ "$current" = "$recorded" ]; then
     echo "✓ $html up to date with $md"
+    coverage "$md" "$html"
   else
     echo "✗ $md changed since the last update of $html — carry the change over, then update the checksum with: docs/verify-checksums.sh --update" >&2
     fail=1
