@@ -2,7 +2,21 @@
 
 > Personal reference. Applies to every new project built with Claude Code (via Claude Desktop or CLI).
 > Goal: simple, replicable organization, backupable as a single folder, with a clean separation between what goes on GitHub and what stays private.
-> **Sections that moved into their own file are kept here as a one-line pointer** — so a reference to "standard §N" still resolves.
+
+**This document answers one question: *where does this go?*** It owns the layout, the decision rule, the `.gitignore`, the README, and what a project ships. Everything else has its own file — **one subject, one owner** — and this is the index of it.
+
+| To… | Read |
+|---|---|
+| **found** a project — layout, where a file goes, what it ships | **this document** *(§1-3, §9, §15, §16, §19)* |
+| **authenticate** without leaking — secrets, the PAT model, the permission matrix | [`secrets-and-auth.md`](secrets-and-auth.md) |
+| **configure the assistant** — `CLAUDE.md`, `.claude/`, memory, delegation | [`claude-code-setup.md`](claude-code-setup.md) |
+| **ship and verify** — branches, the version pin, repo config, the control matrix | [`repo-controls.md`](repo-controls.md) *(+ its `.html` view)* |
+| **keep up to date** — the bump channels, Renovate, the PR checks | [`security-and-updates.md`](security-and-updates.md) *(+ its `.html` view)* |
+| **deploy** a self-hosted service | [`docker-hardening.md`](docker-hardening.md) |
+| **write** — where a fact lives, the tracking doc, archives, code comments | [`METHODE.md`](METHODE.md) |
+| **act** — the gestures, in order, and who performs each | [`RUNBOOK.md`](RUNBOOK.md) |
+
+> 🔴 **The section NUMBERS below are stable.** A section that moved keeps its number here as a one-line pointer, so *"standard §12"* written in an archive, a memory or a merged pull request **still resolves**. Renumbering would have silently falsified every archive — and an archive is immutable.
 
 ---
 
@@ -187,7 +201,8 @@ data/
 *.bak-*
 ```
 
-**Keeping this file alive**: if an entry matches no file in the project (e.g. `dist/`, generated only inside Docker, never on the Mac), leaving it in is not harmful — it's defensive. On the other hand, once a new type of personal file has been added, add it to `.gitignore` immediately.
+**Keeping this file alive**: once a new type of personal file has been added, add it to `.gitignore` immediately.
+An entry that matches no file is **not harmful** — for a path generated only inside Docker and never on the Mac (`dist/`), it is **defensive, and it stays**. What is worth pruning is the entry that no longer corresponds to anything at all: it costs nothing but muddies the reading. *(These two statements used to live in two sections, and read as a contradiction.)*
 
 ---
 
@@ -214,28 +229,9 @@ data/
 
 ## 11. Classic pitfalls to avoid
 
-- **Duplicating an API key** into `.env` and `settings.local.json` → ambiguous source of truth. Always a single copy, in `.env`.
-- **Putting a secret in `CLAUDE.md`** even though it's ignored → zero-secret discipline applies to any file *named by convention*. One day `.gitignore` gets misconfigured, and the secret leaks.
-- **Creating `launch.json` in `.claude/`** thinking Claude Code reads it → it doesn't. For VS Code debugging, it's `.vscode/launch.json`.
-- **Putting thinking docs in `repo/docs/`** → they end up on GitHub even though they're personal. `repo/docs/` is for technical docs meant for a cloner; thinking notes go in `workspace/docs/`.
-- **Renaming the folder without merging Claude Code's memory** → loss of `/resume` history.
-- **Doing `gh auth login` in web/OAuth flow** → it reinstates the `repo` scope (RW on ALL repositories), exactly what's being avoided. Always `gh auth login --with-token` with the public-RO PAT.
-- **Putting the PAT in the remote's URL** (`https://<PAT>@github.com/...`) → secret in clear text in `.git/config`. Remote as a bare URL, PAT exposed by direnv only.
-- **Forgetting `direnv allow`** → `direnv exec` **refuses** `.envrc` *("…is blocked. Run `direnv allow`")* and launches nothing — self-diagnosing. *(Interactively: the hook doesn't load → `git push` falls back to public-RO.)*
-- **Believing direnv loads the PAT inside Claude Code's Bash tool.**
-  It launches **non-interactive** shells: the direnv hook doesn't run → `git`/`gh` return **403, even for reads**.
-  Fix: local credential helper reading `$GITHUB_PAT`, + **prefix git/gh with `direnv exec`** (`secrets-and-auth.md`, "Non-interactive shell").
-  ⚠️ **Never** work around it by putting the PAT in the remote's URL — that's a clear-text leak into `.git/config`.
-- **Using `dotenv` (direnv builtin) in `.envrc`** → it is no longer **sourceable in bash**: the `source ./.envrc` fallback then breaks with `dotenv: command not found`. Keep `.envrc` bash-pure; load `.env` via `set -a; [ -f .env ] && . ./.env; set +a`.
-- **Putting the PAT in `.env` instead of `.envrc`** → a `docker-compose.yaml` with `env_file: .env` **injects the GitHub PAT into the container** (visible via `docker inspect`). `.env` = **app** keys only; the PAT lives in `.envrc`, nowhere else.
-- **Letting a PAT expire without seeing it coming** → surprise outage mid `git push`. The `.envrc` J-14 alert (`secrets-and-auth.md`) flags it in advance: don't strip it out when copying the file.
-- **Running two Claude Code sessions (or two people) against the same `repo/`.**
-  They share `HEAD`, the index, and the files on disk — so they collide.
-  A `checkout -b` **switches the other one's branch** without warning · simultaneous edits overwrite each other silently · `gh pr merge --delete-branch` fails (*"main already checked out"*).
-  Fix: **one isolated working tree per session** — `git worktree` or a separate clone (`repo-controls.md`, "Concurrent work").
-- **Creating an owner-scoped PAT instead of 1-repo** → a leak exposes every repo the owner has. Always *Only select repositories* = this repo.
-- **Letting `.gitignore` grow with stale entries** → not harmful, but muddies the reading. Clean it up periodically.
-- **Setting a calendar reminder for PATs** → pointless now: the `.envrc` **J-14** alert (`secrets-and-auth.md`) handles it. Write PATs are **90 days**; `claude-ro` (public read) does **not** expire, deliberately.
+→ **Removed.** Its thirteen entries all restated §4-§8, now owned by **[`secrets-and-auth.md`](secrets-and-auth.md)** and **[`claude-code-setup.md`](claude-code-setup.md)**; two more are held by **[`repo-controls.md`](repo-controls.md)** *(concurrent work)* and by §9 *(a `.gitignore` entry matching nothing)*.
+
+*(The number is kept so a reference to "standard §11" still resolves.)*
 
 ---
 
@@ -276,35 +272,11 @@ Polished, concise, **zero fluff**. Bilingual **English then French**, separated 
 
 Model: `templates/repo/README.md`.
 
-## 16. Project lifecycle docs — **a PRINCIPLE, not mandated files**
+## 16. Project lifecycle docs, and what a project ships
 
-> 🔴 **This template initializes EVERY project — including ones that will later be run by a third-party management system** (GSD, superpowers, or other).
-> **Forcing our tracking files on them would COLLIDE with theirs** (`.planning/` & co.).
-> **Two competing tracking systems in one project means zero system actually kept up.**
+**The tracking doc is a PRINCIPLE, not a mandated file** → **[`METHODE.md`](METHODE.md)** — what a resume doc must carry, why the shipped gets purged, why `SUIVI.md` is a replaceable default, and why two tracking systems in parallel means none.
 
-### The PRINCIPLE — true regardless of which tool carries it
-
-| Role | The rule |
-|---|---|
-| **A RESUME doc** | **CONCISE.** Read and edited **very often** → it must stay short. It **POINTS** to the detail *(ADRs, plans, notes)*, **it does not absorb it**. It also carries **what's left to do** *(brief — **POINTS** to a plan if it's heavy)*. |
-| **What's shipped gets PURGED** | A resume doc that accumulates the shipped is no longer a tracking doc: **it's a journal**. The shipped moves into its history. |
-
-**Goal**: for a human **or** an AI reopening the project 6 months later to find their footing **without reading a wall of text**.
-
-> **Same rule as `repo/docs/` vs `workspace/` in the template itself**: *the doc read often stays short and points elsewhere; the detail lives elsewhere.* A tracking doc no longer re-read is no longer tracking anything.
-> **The general rule, and the fact that the tracking tool is a REPLACEABLE default: `METHODE.md`.**
-
-### The IMPLEMENTATION — replaceable
-
-**By default**, `init-project.sh` places in `workspace/docs/` (never pushed) **one single living doc**:
-- **`SUIVI.md`** — the cold-resume doc *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** (`workspace/plans/`).
-
-**This file is the DEFAULT, not a dogma.**
-→ **`init-project.sh --no-lifecycle-docs`** omits it, **when another system takes over**.
-
-> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, native features.
-> **If no system is explicitly in use on this project, look for one BEFORE building one.** *(`find-skills` exists exactly for this.)*
-> **Only build custom as a last resort** — and say so.
+*(This subject used to live in two places, each naming the other as the source. It now has one owner.)*
 
 ### Structural decisions → `repo/docs/adr/`
 **Versioned, immutable.** An ADR is not edited when the decision changes: **a new one is written that supersedes the old one**. What matters is preserving the **why** — which the code can't express.
@@ -317,7 +289,16 @@ Model: `templates/repo/README.md`.
 | **`CHANGELOG.md`** | What changed **for a user** — [Keep a Changelog](https://keepachangelog.com) format, **inline link** per version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | The GitHub Release carries the **auto-generated PR list**; the CHANGELOG carries the **meaning**. *(Sources call this duplication superfluous solo — kept anyway, for the meaning it adds beyond the PR list.)* |
 | **`docs/adr/`** | One entry per **structural** decision (stack, schema, boundary) — [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) format | Preserves the **why**, which the code never states. Worth it even solo (near-zero cost). **Immutable**: an outdated decision isn't edited, it's *superseded*. |
 
-**Deliberately left out** (solo-project theater, verified): `llms.txt` (SEO fad, not a standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (`SUIVI.md` covers it).
+**Present from the FIRST commit** *(all created by `init-project.sh`)*: `LICENSE` · `README` *(dual target, §15)* · `SECURITY.md` *(private advisories)* · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` *(CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template)* · `.gitattributes` if a vendored library.
+
+**Deliberately left out** (solo-project theater, verified): `llms.txt` (SEO fad, not a standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (the tracking doc covers it).
+
+### The LICENSE — a one-file decision, and the right moment to make it
+
+**PolyForm Noncommercial 1.0.0** by default (`templates/repo/LICENSE`): attribution required, noncommercial use allowed, commercial use closed — **including partial use**. Year and holder are substituted by `init-project.sh`, nothing to fill in.
+🔴 **It is NOT open source** *(the OSI definition forbids restricting the field of use)*, and GitHub displays it as **"Other"**. A repo aimed at professional users, or meant to be adopted widely, wants a permissive license instead — **swapping `LICENSE` is a one-file decision**, and the moment to make it is **before the first release, not after**.
+**`LICENSE-MIT` stays whatever the project chooses**: the files inherited from the template are MIT, so a generated project never inherits a restriction from the tool that built it.
+Before locking it in, check: ① no dependency nor vendored code under copyleft *(GPL/AGPL)* imposing something stricter · ② does this project have a commercial future, in which case noncommercial is the wrong default? · ③ when in doubt, ask the maintainer.
 
 **Other defaults**: eng/fr i18n with a **separate dictionary** (never inline ternaries) + parity checked in CI.
 

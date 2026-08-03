@@ -253,7 +253,7 @@ fi
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
 
-# Lifecycle docs — default from the 1st commit (standard §16).
+# Lifecycle docs — default from the 1st commit (docs/METHODE.md).
 # A SKELETON, not just a title: an empty file doesn't get filled in, it gets ignored. The sections
 # below are exactly the questions someone — human or AI — asks when reopening the
 # project 6 months later and remembers nothing.
@@ -301,7 +301,7 @@ mv "$DEST/workspace/docs/SUIVI.tmp" "$DEST/workspace/docs/SUIVI.md"
 
 else
   echo "  ↳ SUIVI.md NOT created (--no-lifecycle-docs)."
-  echo "    The PRINCIPLE still stands (standard §16), whatever tool carries it:"
+  echo "    The PRINCIPLE still stands (docs/METHODE.md), whatever tool carries it:"
   echo "    a single CONCISE recap doc that POINTS to the detail · what's left, BRIEF · delivered PURGED."
 fi
 

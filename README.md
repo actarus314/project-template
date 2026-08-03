@@ -96,7 +96,6 @@ template/
 - **`docker-hardening.md`** — deployment security for a self-hosted service.
 - **`repo-controls.md`** / **`.html`** — **how code reaches production, and what verifies it**: the branch policy and the three capabilities, the version pin, the repo configuration, the control matrix. The `.md` version is **authoritative**; the `.html` is its layout.
 - **`security-and-updates.md`** / **`.html`** — **what moves, who decides it moves**: the three bump channels, Renovate as the sole auto-detecting bot, the checks on every PR.
-- **`github-repo-config.md`** — new-repo checklist.
 
 ### At the root
 
@@ -245,7 +244,6 @@ template/
 - **`docker-hardening.md`** — la sécurité de déploiement d'un service auto-hébergé.
 - **`repo-controls.md`** / **`.html`** — **comment le code arrive en prod, et qui le vérifie** : la politique de branches et les trois capacités, l'épinglage de version, la configuration du repo, la matrice des contrôles. La version `.md` fait **autorité** ; le `.html` en est la mise en forme.
 - **`security-and-updates.md`** / **`.html`** — **ce qui bouge, qui décide que ça bouge** : les trois canaux de bump, Renovate seul bot auto-détectant, les checks de chaque PR.
-- **`github-repo-config.md`** — checklist de nouveau repo.
 
 ### À la racine
 

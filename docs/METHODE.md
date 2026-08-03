@@ -65,13 +65,35 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 
 ---
 
-## The tracking tool is a DEFAULT, not a dogma
+## The tracking doc — a PRINCIPLE, not mandated files
 
-`SUIVI.md` is what the generator sets up **by default** *(the tracking doc AND "what remains" in a single living doc; a heavy undertaking moves into a plan)*. It is the **roles** that matter, not the files: GSD's `.planning/`, a Linear, a Notion **satisfy the same rule** as long as a fact keeps living in **a single place**.
+> 🔴 **The template initializes EVERY project — including ones later run by a third-party management system** *(GSD, superpowers, or other)*.
+> **Forcing our tracking files on them would COLLIDE with theirs** *(`.planning/` & co.)*.
+> **Two competing tracking systems in one project means zero system actually kept up.**
 
-- What each document must carry: **`claude-code-project-standard.md` §16**.
+### The PRINCIPLE — true regardless of which tool carries it
+
+| Role | The rule |
+|---|---|
+| **A RESUME doc** | **CONCISE.** Read and edited **very often** → it must stay short. It **POINTS** to the detail *(ADRs, plans, notes)*, **it does not absorb it**. It also carries **what's left to do** *(brief — **POINTS** to a plan if it's heavy)*. |
+| **What's shipped gets PURGED** | A resume doc that accumulates the shipped is no longer a tracking doc: **it's a journal**. The shipped moves into its history. |
+
+**Goal**: for a human **or** an AI reopening the project 6 months later to find their footing **without reading a wall of text**.
+
+> **Same rule as `repo/docs/` vs `workspace/` in the template itself**: *the doc read often stays short and points elsewhere; the detail lives elsewhere.* A tracking doc no longer re-read is no longer tracking anything.
+
+### The IMPLEMENTATION — replaceable
+
+`SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*.
+
+It is the **roles** that matter, not the files: GSD's `.planning/`, a Linear, a Notion **satisfy the same rule** as long as a fact keeps living in **a single place**.
+
 - Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 - 🔴 **Two tracking systems in parallel = two competing sources** — precisely what this rule forbids. **ONE gets chosen.**
+
+> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, native features.
+> **If no system is explicitly in use on this project, look for one BEFORE building one.** *(`find-skills` exists exactly for this.)*
+> **Only build custom as a last resort** — and say so.
 
 ---
 
