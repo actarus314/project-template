@@ -43,6 +43,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          # verify-changelog.sh compares against the merge base with the default branch. On a
+          # truncated history there IS no merge base, and the script exits 0 in silence — a guard
+          # that looks installed and watches nothing. The full history is what makes it real.
+          fetch-depth: 0
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
       # AUTO-DETECTED, never a hand-written list: the list here was already missing a script, and a
@@ -66,6 +70,9 @@ jobs:
         run: ./checks/verify-links.sh
       - name: No file NAMED like a secret is tracked (verify-no-secret-tracked.sh)
         run: ./checks/verify-no-secret-tracked.sh
+      # Needs the branch, so it needs full history: fetch-depth 0 on this job's checkout.
+      - name: A user-visible change carries a CHANGELOG line (verify-changelog.sh)
+        run: ./checks/verify-changelog.sh
 
   generate-and-lint:
     runs-on: ubuntu-latest

@@ -150,6 +150,12 @@ if [ -x checks/verify-growth.sh ]; then
   ./checks/verify-growth.sh || true
 fi
 
+# verify-changelog.sh — two thirds of the CHANGELOG rule are PATHS, so two thirds are mechanical.
+if [ -x checks/verify-changelog.sh ]; then
+  note "verify-changelog.sh — a user-visible change with no CHANGELOG line"
+  if ./checks/verify-changelog.sh; then ok "changelog"; else ko "changelog"; fi
+fi
+
 # verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
 # lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
 if [ -x checks/verify-links.sh ]; then
