@@ -90,8 +90,11 @@ template/
 
 - 🎯 **`RUNBOOK.md`** — **the full lifecycle, end to end**: create · work · release a version · switch private→public · evolve · maintain. **It states the ORDER OF ACTIONS and WHO does them**; the standard states the *why*. **This is the operational document — start with it.**
 - **`METHODE.md`** — **a single source of truth**: a fact lives in one place, everywhere else a link. **Read at every session** *(imposed by `~/.claude/CLAUDE.md`)*.
-- **`claude-code-project-standard.md`** — the standard. **Read at every session** *(same)*.
-- **`github-repo-config.md`** — server-side checks, PAT matrix, new-repo checklist.
+- **`claude-code-project-standard.md`** — the standard. **Read at every session** *(same)*. It is also the **index**: a section that moved into its own file is kept there as a one-line pointer, so its number still resolves.
+- **`secrets-and-auth.md`** — the two secret locations, the PAT model *(public-RO read · 1-repo write · ephemeral admin)*, and where each permission is derived from.
+- **`claude-code-setup.md`** — configuring the assistant on a project: `CLAUDE.md`, `.claude/`, the persistent memory, delegation.
+- **`docker-hardening.md`** — deployment security for a self-hosted service.
+- **`github-repo-config.md`** — server-side checks, new-repo checklist.
 - **`repo-controls.md`** / **`.html`** — which check runs, where, with what tool. The `.md` version is **authoritative**; the `.html` is its layout.
 
 ### At the root
@@ -235,8 +238,11 @@ template/
 
 - 🎯 **`RUNBOOK.md`** — **le cycle de vie complet, de bout en bout** : créer · travailler · publier une version · basculer privé→public · faire évoluer · maintenir. **Il énonce l'ORDRE DES ACTIONS et QUI les fait** ; le standard énonce le *pourquoi*. **C'est le document opérationnel — à commencer par lui.**
 - **`METHODE.md`** — **une source unique de vérité** : un fait vit à un seul endroit, partout ailleurs un lien. **À lire à chaque session** *(imposé par `~/.claude/CLAUDE.md`)*.
-- **`claude-code-project-standard.md`** — le standard. **À lire à chaque session** *(idem)*.
-- **`github-repo-config.md`** — checks côté serveur, matrice des PAT, checklist de nouveau repo.
+- **`claude-code-project-standard.md`** — le standard. **À lire à chaque session** *(idem)*. Il en est aussi l'**index** : une section partie dans son propre fichier y reste en pointeur d'une ligne, si bien que son numéro résout toujours.
+- **`secrets-and-auth.md`** — les deux lieux du secret, le modèle de PAT *(lecture public-RO · écriture 1 repo · admin éphémère)*, et d'où chaque permission est dérivée.
+- **`claude-code-setup.md`** — configurer l'assistant sur un projet : `CLAUDE.md`, `.claude/`, la mémoire persistante, la délégation.
+- **`docker-hardening.md`** — la sécurité de déploiement d'un service auto-hébergé.
+- **`github-repo-config.md`** — checks côté serveur, checklist de nouveau repo.
 - **`repo-controls.md`** / **`.html`** — quel check tourne, où, avec quel outil. La version `.md` fait **autorité** ; le `.html` en est la mise en forme.
 
 ### À la racine

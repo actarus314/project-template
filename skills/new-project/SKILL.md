@@ -24,7 +24,8 @@ This skill is a symlink into that clone, so both files sit two levels above it �
 This skill is a symlink into the repo, so it is always the clone's version; saying it out loud makes a stale clone visible instead of silent.
 
 **The standard's sections actually involved here** *(to open when the runbook refers to them, not to recite)*:
-**§5** GitHub auth and the PAT matrix · **§10** initiating a project · **§12** branch policy (the 3 capabilities) · **§17** repo config · **§18** the controls matrix + the procedures *(flip private→public, acquire a capability)*.
+**§10** initiating a project · **§12** branch policy (the 3 capabilities) · **§17** repo config · **§18** the controls matrix + the procedures *(flip private→public, acquire a capability)*.
+GitHub auth and the PAT matrix have their own file next to it: **`docs/secrets-and-auth.md`**.
 
 > ⚠️ **In case of CONTRADICTION between the two: the RUNBOOK governs the PROCEDURE** (the order, the values, the URLs — it is kept up to date for execution). **The STANDARD governs the CONVENTIONS** (the why, the substantive rules).
 > **And the contradiction must be FLAGGED to the maintainer** instead of choosing silently: two docs that diverge is a defect in the template — not a call to make in passing.

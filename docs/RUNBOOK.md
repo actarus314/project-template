@@ -4,10 +4,10 @@
 > Each step refers to the section that explains it — the reasoning is not copied here.
 >
 > 🔴 **SOURCE OF TRUTH — the PAT permission tables (§1) ARE AUTHORITATIVE.** They are *also* in
-> `github-repo-config.md §2`, which explains **where each permission is derived from** (a called endpoint
+> `secrets-and-auth.md`, which explains **where each permission is derived from** (a called endpoint
 > = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** —
 > two copies always diverge, and a missing permission **fails SILENTLY**.
-> Standard: `claude-code-project-standard.md` · Server config: `github-repo-config.md` · Checks: `repo-controls.md`
+> Standard: `claude-code-project-standard.md` · Secrets & auth: `secrets-and-auth.md` · Server config: `github-repo-config.md` · Checks: `repo-controls.md`
 
 **Two rules that run through the entire document:**
 
@@ -70,7 +70,7 @@ Creates the tree, the first commit, the remote as a **bare URL**, and an **EMPTY
 | **Dependabot alerts** | Read and write | handle alerts **autonomously** |
 | **Code scanning alerts** | Read and write | same |
 | **Secret scanning alerts** | **Read** *(not write)* | 🔴 **dismissing is reserved for the maintainer** — wrongly dismissing a real leak has too much impact |
-| **Administration** | **Read** *(NEVER write)* | **verify** the security settings that a script's `✓` claims — derivation: `github-repo-config.md §2` |
+| **Administration** | **Read** *(NEVER write)* | **verify** the security settings that a script's `✓` claims — derivation: `secrets-and-auth.md` |
 | *Metadata* | *Read* | *checked automatically* |
 
 > 🔴 **`Administration: WRITE`: NEVER** — that is the entire security matrix, and it remains the sole preserve of the **ephemeral admin PAT** *(§ next)*. **`read` is admitted, and only that.** **Everything else: No access.**
@@ -294,7 +294,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 ## 7 · The actions Claude CANNOT perform
 
-*(These are not oversights: this is the security model — §5, `github-repo-config.md` §2.)*
+*(These are not oversights: this is the security model — `secrets-and-auth.md`.)*
 
 - **Create** or **delete** a repo · **change visibility** → **account**-scoped right.
 - **Everything requiring `Administration`**: rulesets, secret scanning, Pages, immutable releases, description, **topics** → **ephemeral admin PAT, run by the maintainer**. ⚠️ **These are actions performed by the SCRIPT, not "by hand" actions**: `configure-repo.sh` sets all of them *(topics included: `PUT /repos/{o}/{r}/topics` requires `administration=write`)*.
@@ -317,4 +317,4 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 >
 > ⛔ **What the org does NOT bring, despite appearances**: **org rulesets** require **Team** *(explicit banner on `/settings/rules`)* · a **code security configuration** only replaces the repo action from **several** repos onward *(below that, `configure-repo.sh` already does everything)* · the **"Advanced Security"** screen suggests **Dependabot** is behind the paywall: **that is false**, it is free, private included — it is `/settings/security_analysis` that tells the truth.
 
-> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `github-repo-config.md` §2. *(In a word: **revoking is binary; downgrading rights is not** — and a manual removal is forgettable.)*
+> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `secrets-and-auth.md`. *(In a word: **revoking is binary; downgrading rights is not** — and a manual removal is forgettable.)*

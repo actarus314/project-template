@@ -16,7 +16,7 @@ brew install gh direnv
 # https://github.com/settings/personal-access-tokens
 #   Resource owner = <the account> · Repository access = Public repositories (read-only)
 #   Account permissions = none · expiration = NONE (accepted: RO on public data, a leak
-#   only grants access to what is already public — see standard §5. WRITE PATs, on the other hand, are 90 days.)
+#   only grants access to what is already public — see `docs/secrets-and-auth.md`. WRITE PATs, on the other hand, are 90 days.)
 echo "<PAT-public-RO>" | gh auth login --with-token
 gh auth setup-git        # git delegates its auth to gh (helper "gh auth git-credential")
 echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # direnv hook
@@ -37,7 +37,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
 **Value**: in `repo/.envrc` as `GITHUB_PAT` — nowhere else, **never in the remote URL**.
 **Regeneration**: https://github.com/settings/personal-access-tokens
 **Repository access**: Only select repositories → this repo only.
-**Permissions (uniform standard — full matrix: `docs/github-repo-config.md §2`)**:
+**Permissions (uniform standard — full matrix: `docs/secrets-and-auth.md`)**:
   - Contents: Read & Write
   - Metadata: Read (mandatory / automatic)
   - Pull requests: Read & Write
@@ -50,7 +50,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
   - Administration: **Read** (NEVER write) — verify the security settings a script's `✓` claims
   - **Everything else: No access** — `Administration: WRITE` reserved for the maintainer's ephemeral admin PAT
 
-**Duration**: **90 days** (standard §5 — every new PAT).
+**Duration**: **90 days** (`docs/secrets-and-auth.md` — every new PAT).
 **Last generated**: YYYY-MM-DD
 **Expires on**: YYYY-MM-DD
 

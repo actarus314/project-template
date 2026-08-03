@@ -326,7 +326,7 @@ git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
 [ -n "$SLUG" ] && git remote add origin "https://github.com/$SLUG.git"   # bare URL, no PAT
 
-# direnv — the PAT lives in .envrc (NEVER in .env: see standard §5).
+# direnv — the PAT lives in .envrc (NEVER in .env: see docs/secrets-and-auth.md).
 # NB: editing .envrc to paste in the PAT will invalidate this authorization → `direnv allow` must be redone.
 if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv missing — 'brew install direnv' then 'direnv allow')"; fi
 
@@ -375,7 +375,7 @@ cat <<EOF
 
   ── MAINTAINER ────────────────────────────────────────────────────────
    1. CURRENT PAT — fine-grained, **90 days**, restricted to $R, WITHOUT Administration: write
-      (permissions: standard §5). → paste it into repo/.envrc (GITHUB_PAT)
+      (permissions: docs/secrets-and-auth.md). → paste it into repo/.envrc (GITHUB_PAT)
       then 'direnv allow' (editing .envrc invalidates the authorization).
    2. Record the expiration date in workspace/secrets.md.
       (After that, .envrc warns on its own 14 days before the deadline.)
