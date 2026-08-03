@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:d7d6c25db4806dcbb945e515055a94385cc1d69558c14e56be5e4d34fe598316
+  checksum-source-md: sha256:2c531340f90412fb7c72f49f592e6743d7bed232b3b87ab4e786bf784dc72c69
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -404,7 +404,7 @@
     <div class="step"><b>1 · Branch</b><p>Always from <code>main</code>.<span class="cmd">git switch -c feat/&lt;topic&gt;</span></p></div>
     <div class="step"><b>2 · Commit</b><p>The hook refuses a secret.<span class="cmd">git commit</span></p></div>
     <div class="step"><b>3 · Open the PR</b><p>The CI runs <em>before</em> the code touches <code>main</code>.<span class="cmd">gh pr create --fill</span></p></div>
-    <div class="step"><b>4 · Merge</b><p>Only if the CI is green — <b>not</b> <code>gh pr checks</code> (the <code>Checks</code> permission cannot be granted).<span class="cmd">gh run list --commit "$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)"</span><span class="cmd">gh pr merge --squash</span></p></div>
+    <div class="step"><b>4 · Merge</b><p>Only if the CI is green — <b>not</b> <code>gh pr checks</code> (the <code>Checks</code> permission cannot be granted).<span class="cmd">gh run list --commit "$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)" --json workflowName,status,conclusion</span><span class="cmd">gh pr merge --squash</span></p></div>
   </div>
 
   <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:34px 0 4px">With <code>staging</code> — three tiers, because there's a host to validate</h3>
@@ -1274,7 +1274,7 @@
     <p><strong>The <code>pre-commit</code> hook</strong> refuses a secret. <strong>The <code>pre-push</code> hook</strong> refuses direct writes to <code>main</code> — it's the missing ruleset, brought back onto the developer's machine. Both can be bypassed with <code>--no-verify</code>: a decision, not an accident.</p>
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
     <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>: it reads <code>statusCheckRollup</code>, which requires the <code>Checks</code> permission — <strong>documented by GitHub but absent from the UI</strong> of fine-grained PATs, so impossible to grant. The result is <code>Resource not accessible by personal access token</code>, and <code>gh pr view &lt;n&gt;</code> alone fails for the same reason. The rule was written everywhere, and <strong>unenforceable everywhere</strong>.</p>
-    <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha"</code>. The <code>--json</code> form targets a field, so no rollup is requested.</p>
+    <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha" --json workflowName,status,conclusion</code>. The <code>--json</code> form targets a field, so no rollup is requested — and it is what makes each workflow's <code>completed / success</code> readable one by one.</p>
     <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong>: <code>CI</code>, plus <code>Publish image</code> if <code>docker-publish.yml</code> exists — the same set as the ruleset's required checks, derived the same way. ⚠️ <strong>A MISSING workflow is not a green.</strong> GitHub registers workflows one by one: for a few seconds after a push, <code>CI</code> can be <code>success</code> while <code>Publish image</code> has not been created yet. <strong>"Nothing red" ≠ "everything green".</strong></p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
   </div>

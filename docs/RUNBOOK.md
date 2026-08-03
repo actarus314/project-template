@@ -203,7 +203,7 @@ gh pr create --fill
 
 # Is the CI green? (see the warning below — NOT `gh pr checks`)
 sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
-gh run list --commit "$sha"
+gh run list --commit "$sha" --json workflowName,status,conclusion
 
 gh pr merge --squash                # ONLY if all expected workflows are completed/success
 ```

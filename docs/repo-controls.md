@@ -462,7 +462,7 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 >
 > ```bash
 > sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # --json targets → no rollup requested
-> gh run list --commit "$sha"
+> gh run list --commit "$sha" --json workflowName,status,conclusion
 > ```
 >
 > **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists — *the same set as the ruleset's required checks, derived the same way (presence of the workflow)*, so the human barrier and the server that will replace it at the flip say exactly the same thing.
