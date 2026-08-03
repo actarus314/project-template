@@ -39,8 +39,9 @@ for s in init-project.sh configure-repo.sh docs/verify-checksums.sh; do
   fi
 done
 
-# 3. The plugin manifest, once this repo is distributed as one. Absent today — the check arms
-#    itself the day the file appears, so the manifest cannot be the copy nobody watches.
+# 3. The plugin manifest, so it cannot become the copy nobody watches. Written before the file
+#    existed and armed on its own the day it landed — the guard was in place before the drift
+#    could happen, which is the only order that works for a silent one.
 if [ -f .claude-plugin/plugin.json ]; then
   pv=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .claude-plugin/plugin.json | head -1)
   if [ "$pv" != "$VER" ]; then
