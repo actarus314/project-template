@@ -21,6 +21,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The standard is being split by SUBJECT — one subject, one file, one owner.** It had grown to
+  1012 lines and covered ten subjects it shared with three satellite documents, none of which owned
+  a subject of its own: they restated §5, §12, §17 and §18. Competing sources is exactly what
+  `METHODE.md` forbids, and the standard was the largest instance of it in the repo.
+  **This batch moves the first three families out**: `secrets-and-auth.md` *(§4, §5 and the PAT
+  permission matrix from `github-repo-config.md` §2)*, `claude-code-setup.md` *(§6, §7, §8 and the
+  delegation rule from `METHODE.md`)*, and `docker-hardening.md` *(§14)*.
+  🔴 **The section NUMBERS are unchanged**: every section that moved is kept in the standard as a
+  one-line pointer, so a reference to "standard §5" written in an archive, a memory or a past pull
+  request still resolves. The standard becomes the index of what it no longer carries.
+
 ## [1.1.0] - 2026-08-02
 
 ### Documentation

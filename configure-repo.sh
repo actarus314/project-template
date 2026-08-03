@@ -5,7 +5,7 @@ set -euo pipefail
 # One-shot, IDEMPOTENT (rerunnable without creating a duplicate).
 #
 # ⚠ Run by THE MAINTAINER — NEVER by the assistant, which never has Administration: write
-#   (PAT matrix: see docs/github-repo-config.md §2).
+#   (PAT matrix: see docs/secrets-and-auth.md).
 #
 # AUTH — EPHEMERAL fine-grained PAT, to create then REVOKE right after:
 #   Permissions: EXACT recipe in docs/RUNBOOK.md, step 7a

@@ -1,6 +1,6 @@
 # GitHub repo configuration — reference
 
-> **One-shot** complement to the standard (`claude-code-project-standard.md` ; auth = §5).
+> **One-shot** complement to the standard (`claude-code-project-standard.md` ; auth = `secrets-and-auth.md`).
 > What gets set **once** when a repo is created, + the PAT model.
 > ⚠️ **Nominal cycle: repo created PRIVATE, then flipped PUBLIC.** `configure-repo.sh` is therefore run **twice**: at creation (it sets what the Free plan allows) then **at the flip** (it sets the rest — rulesets, secret scanning, Pages). It is **idempotent**: that's by design.
 > **The model: one TOOLCHAIN + three CAPABILITIES.** A rigid archetype ("static" vs "Node/Docker")
@@ -45,7 +45,7 @@
 | Control | Setting |
 |---|---|
 | **Trivy as PR gate** | **`build-check`** job of `docker-publish.yml`: build (`load: true`) then `trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1`. **Pinned binary + checksum.** `configure-repo.sh` makes it a **REQUIRED** check — *a scan that isn't required blocks nothing.* |
-| **Docker hardening** | base image pinned by SHA256 **digest** · runtime **with no package manager** (§14) · `tmpfs` `noexec,nosuid,nodev,size=` · healthcheck · `:latest` blocked on pre-release. |
+| **Docker hardening** | base image pinned by SHA256 **digest** · runtime **with no package manager** (`docker-hardening.md`) · `tmpfs` `noexec,nosuid,nodev,size=` · healthcheck · `:latest` blocked on pre-release. |
 | **PUBLIC ghcr package** | 🔴 Default depends on the **owner**: **personal** account → pullable anonymously (**HTTP 200**) ; **organization** → private by default (**403**), no one can self-host. `configure-repo.sh` **tests the anonymous pull** and only asks for the action if the test fails. **Detail, test provenance, UI procedure: §4 "ghcr package visibility".** |
 
 ### In addition — `staging` CAPABILITY
@@ -59,69 +59,9 @@
 
 ## 2. PAT permissions — two tiers
 
-> 🎯 **To EXECUTE** (create the token, check the boxes) → **`RUNBOOK.md` §1**, which carries the ready-to-use tables
-> and **is authoritative**. **This section explains WHY** each permission is there:
-> it is **derived from the endpoints called**, never discovered by trial and error.
-> **It must never be discovered by trial and error**: every missing permission
-> **fails SILENTLY** — everything else passes, and the missing control doesn't show.
+→ **[`secrets-and-auth.md`](secrets-and-auth.md)** — the two tiers *(recurring assistant PAT / one-shot admin)*, the derivation of each permission from the endpoint it opens, `Administration: read`, and why the admin token is EPHEMERAL.
 
-Mirror of one-shot/recurring: **the assistant handles all the recurring work autonomously; the one-shot admin stays manual (the maintainer)**.
-
-| RECURRING → assistant PAT (fine-grained, 1 repo) | ONE-SHOT → the maintainer (Administration: write) |
-|---|---|
-| Contents: **write** | Enable the security features (secret scanning, push protection ; **Dependabot alerts ON** everywhere, **security updates ON at 2 stages only** ; Renovate adds security auto-merge) |
-| Pull requests: **write** | Create/edit rulesets & branch protection |
-| Issues: **write** | `PATCH /repos`: visibility, merge-methods, delete-branch, topics, homepage |
-| Actions: **read/write** (re-run/cancel runs) | Enable **CodeQL default setup** *(`configure-repo.sh` does it)* |
-| Dependabot alerts: **write** (dismiss/reopen) | Dependabot **secrets** (values), webhooks, deploy keys |
-| Code scanning alerts: **write** (dismiss) | 2FA (**account** setting, not repo — UI/mobile only) |
-| **Secret scanning alerts: read** — dismiss reserved for the maintainer (wrongly rejecting a real leak = too much impact) | |
-| **Administration: read** *(NEVER write)* — what a `✓` claims must be **VERIFIED**: `GET /automated-security-fixes` · `GET /vulnerability-alerts` · `GET /branches/{b}/protection` | |
-| Metadata: read (implicit) · **Workflows: write** — the assistant edits the CI YAML | |
-
-**Verified**: handling (dismiss/reopen) a Dependabot or code scanning alert **only** requires the dedicated permission in *write* — **no Administration**. Opening a PR = Contents + Pull requests write ; merging = Contents write.
-The PAT keeps the **uniform permissions** from standard §5 (`Metadata R`, `Contents R/W`, `PR R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`) **+** the 3 alerts above **+ `Administration: read`**. **`Administration: write`: never.**
-
-#### `Administration: read` — why one more permission, and why that one
-
-**It mutates nothing.** What makes `Administration` formidable *(deleting the repo, flipping visibility, rewriting a ruleset)* is in the **write**, reserved for the ephemeral admin PAT.
-
-It closes a **verification** gap, derived from three endpoints that no other permission opens:
-
-| Read | Otherwise |
-|---|---|
-| `GET /automated-security-fixes` · `GET /vulnerability-alerts` | the state of the security toggles is **not readable**: the only check is a screenshot from the maintainer |
-| `GET /branches/{b}/protection` *(+ `/required_status_checks`)* | **CLASSIC** protection stays invisible — the `rulesets` API doesn't show it, and it can lock `main` **forever** |
-
-🔴 **The underlying reason: a `✓` printed by a script is not an applied setting.** A `--dry-run` once announced 3 settings, of which **2 were impossible**, and classic protection once blocked every PR on a repo, CI green. Without reading, these two failures are **structurally undetectable** by the assistant — leaving autonomous security maintenance to fall back on the maintainer.
-
-> 🔴 **`Checks` is NOT in this list — and CANNOT be.** Documented by GitHub, **absent from the UI** of fine-grained PATs → `gh pr checks` and `gh pr view` fail (they read `statusCheckRollup`). CI green is verified via `gh run list --commit <sha>` (`Actions: read`, already there) instead. **Detail, citations, exact command, the false-green trap: standard §18.**
-
-> **One-shot admin — EPHEMERAL token, no dormant token**
->
-> The Administration PAT lives **nowhere**: not in the keychain, not in `.envrc`, not in shell history.
-> **Created → used → revoked**, within minutes. `configure-repo.sh` asks for it as **masked input**.
->
-> - Fine-grained · **"Only select repositories" = THIS repo** → blast radius **1 repo**. **Complete** recipe, one permission per endpoint called *(verified against the REST doc "Permissions required for fine-grained PATs" — derived from the endpoints, **NEVER** discovered by trial and error)*:
->
->   | Permission | Level | Why |
->   |---|---|---|
->   | **Administration** | **write** | `PATCH /repos` (merge, description, homepage) · `PUT /vulnerability-alerts` · `*/rulesets` · `PUT /immutable-releases` *(same permission — nothing to add to the recipe)* |
->   | **Pages** | **write** | `POST`/`PUT /pages` — site creation, source = workflow |
->   | **Code scanning alerts** | **read** | `GET /code-scanning/analyses` — knowing whether CodeQL has run |
->   | **Actions** | **read** | 🔴 `GET /actions/runs/{id}` — **track the run of the 1st CodeQL analysis**. Without it, the script doesn't know when it finishes → it **doesn't set the `code_scanning` rule**, and **`main` stays UNGUARDED**. |
->   | **Contents** | **read** | `GET /contents/…` — detecting `pages.yml` (private repo) |
->   | **Issues** | **read** | `GET /repos/{o}/{r}/issues` — dating Renovate's *Dependency Dashboard* (proof of life before removing the Dependabot safety net) |
->   | **Metadata** | read | implicit |
->
->   ⚠ **`Administration` IS NOT ENOUGH**, and **every missing permission fails SILENTLY**: everything else passes, and the missing control doesn't show.
->   ⚠ The `enablement: true` of `actions/configure-pages` **does not compensate for** the absence of `Pages: write`: a workflow's `GITHUB_TOKEN` doesn't have that right → Pages site creation fails on **every** deployment.
-> - Sufficient: **all** of the script's calls are **repo-level** (`PATCH /repos/{o}/{r}`, `PUT …/vulnerability-alerts`, `POST …/rulesets`). No account-level right is required.
-> - **Repo creation**, though, requires an account-scoped right: it is therefore done **in the UI** (30 s, a few times a year) — which simply removes the need for a broad token.
->
-> **Why not a single PAT that has `Administration` removed afterwards**: that would give the assistant, for the duration of the config, the right to **change visibility** or **delete the repo** — and removing the permission would be **manual, so forgettable**, leaving a token alive for 90 days. Revoking a disposable token is **binary**; downgrading its rights is not.
->
-> **The assistant NEVER has `Administration: write`.** `configure-repo.sh` is run by the maintainer.
+---
 
 ## 3. OpenSSF Scorecard — keep / drop (solo, public, small)
 
@@ -167,7 +107,7 @@ It closes a **verification** gap, derived from three endpoints that no other per
    **(a)** is the site served by **Pages**? → `--pages` · **(b)** does the repo **publish an image that someone ELSE deploys**? → `--artefact` · **(c)** is there a **host to VALIDATE** before prod? → `--staging`.
    Then: `./init-project.sh <project> <owner/repo> [--type static|node|generic] [--pages] [--artefact] [--staging]`.
    *Shortcuts: `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ no capability (any other toolchain — security controls only, build/test to be filled in).*
-1. Create the repo — **PRIVATE** (the nominal case), remote as a **bare URL**, 1-repo PAT in `.envrc` (standard §5) — with the **3 alert permissions** from §2.
+1. Create the repo — **PRIVATE** (the nominal case), remote as a **bare URL**, 1-repo PAT in `.envrc` (`secrets-and-auth.md`) — with the **3 alert permissions** listed there.
 2. `configure-repo.sh`: rulesets (`main` · `develop` **if staging** · `tags`) · secret scanning + push protection · **Dependabot alerts + security updates** *(safety net **at 2 stages only** — Renovate adds security auto-merge ; at 3 stages their PRs would target `main` and bypass staging)* · **immutable releases** · topics · homepage · delete-branch-on-merge *(**removed** if 3-stage flow **without** a ruleset — on private Free, it would delete `develop` at the 1st promotion)* · **merge method depending on the `staging` capability** — squash only, **+ merge commit if `develop` exists** *(squash only is incompatible with a staging branch)*. *(**CodeQL is included**: the script enables the **default setup**, waits for the 1st analysis, then sets the `code_scanning` rule. There is no more `codeql.yml`.)*
 3. Files present from the 1st commit: `LICENSE` · `README` (dual-target, standard §15) · `SECURITY.md` (private advisories) · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` (CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template) · `.gitattributes` if a vendored lib.
 4. **Before going public**: `gitleaks detect` on the **full history** (not just HEAD) — a secret in an old commit leaks at the visibility flip.

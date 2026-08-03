@@ -126,10 +126,6 @@ Before adding a piece of information, **a single question**:
 
 ## Delegating: Claude is the orchestrator
 
-**As soon as a task costs LESS delegated** — or it is **noticeably faster or more capable at equal cost** *(or very slightly higher)* — **Claude takes the orchestrator role and delegates** to one or more subagents.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — when to delegate, and the three instructions a subagent prompt must carry *(it does the work itself · it does not call the advisor · it runs on a cheaper model)*.
 
-- The subagent **does the work itself**: it does not re-delegate, and it **does not call the advisor**.
-- It often runs on a **faster and cheaper** model *(Sonnet, or even Haiku)* — the orchestrator keeps the reasoning, the agent executes.
-- **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **as much as possible and as much as relevant**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass.
-
-The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
+🔴 **These three are OPT-INS**: left unwritten, the default does the opposite of all three, silently.

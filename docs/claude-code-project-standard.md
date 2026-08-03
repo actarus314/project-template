@@ -2,6 +2,7 @@
 
 > Personal reference. Applies to every new project built with Claude Code (via Claude Desktop or CLI).
 > Goal: simple, replicable organization, backupable as a single folder, with a clean separation between what goes on GitHub and what stays private.
+> **Sections that moved into their own file are kept here as a one-line pointer** — so a reference to "standard §N" still resolves.
 
 ---
 
@@ -125,232 +126,31 @@ Three questions, in order:
 
 ## 4. Secrets management
 
-**Strict rule**: no secret in a versioned file. Ever.
-
-### The 2 secret locations
-
-| Location | Content | Usage |
-|---|---|---|
-| `repo/.env` | **App** API keys (`ALCHEMY_API_KEY`, `DUNE_API_KEY`, `TELEGRAM_BOT_TOKEN`, …) — **not the PAT** | Consumed by the app at runtime and by Claude Code in dev |
-| `repo/.envrc` | The repo's **`GITHUB_PAT`** (dev secret) + loads `.env` + `export GH_TOKEN=$GITHUB_PAT` | direnv: exposes the PAT to git/gh, confined to the folder |
-| `workspace/secrets.md` | Auth procedures, pointers, human-readable values, expiration dates, where to regenerate | Human reference + pointer for Claude Code |
-
-> **The GitHub secret lives in exactly one place: `repo/.envrc` (`GITHUB_PAT`).** The git remote stays a **bare URL** (never `https://<PAT>@github.com/...`), and `.envrc` re-exports this PAT as `GH_TOKEN` in the folder's shell. No secret in clear text in `.git/config`.
-
-### Why this separation
-
-- `.env` = a technical format consumable by the app and scripts (no explanations, just key=value pairs).
-- `workspace/secrets.md` = human format: *where* to find it, *how* to regenerate it, *which* scopes, *when* it expires. Essential for resuming from a NAS backup on a new machine.
-
-### Duplication to avoid
-
-- An API key must exist **in exactly one place**: `.env`. If Claude Code needs it, it reads `.env` directly. NEVER duplicate it into `settings.local.json`.
+→ **[`secrets-and-auth.md`](secrets-and-auth.md)** — the two secret locations, why `.env` and `.envrc` are separate, and the duplication to avoid.
 
 ---
 
 ## 5. GitHub authentication
 
-**Principle: separate reading (broad, harmless) from writing (narrow, per repo). No broad RW token anywhere.** Two watertight auth channels: **cloud** (claude.ai) and **local** (CC in terminal/desktop) do not share the same mechanism — changing one does not affect the other.
-
-### Access overview
-
-| Actor | Token / mechanism | Scope | Duration |
-|---|---|---|---|
-| **The maintainer** | github.com web interface | Everything | — |
-| **Chat / Projects (cloud)** | Claude GitHub App, installed by the owner | Read-only on authorized repos (personal + orgs) | revocable |
-| **CC — read** | **public-RO** fine-grained PAT (`claude-ro`) in `gh` | All of public GitHub, 5000 req/h, **zero private** | **no expiration — deliberate** (see below) |
-| **CC — write** | fine-grained RW PAT, **1 per repo**, in `repo/.envrc` | This repo only | **90 days** + J-14 alert |
-| **Container host** | classic RO PAT, read-only — the owner account | All repos (personal + orgs) | 1 year |
-
-### Public reading + default Git auth → `gh` in public-RO
-
-The `gh` CLI carries a **fine-grained "Public repositories (read-only)"** PAT: reads all of public GitHub at 5000 req/h, **zero access to private repos**. It is the default token for every CC session, and it is harmless if leaked.
-
-> ⚠️ **Do NOT use `gh auth login` in web/OAuth flow**: it always forces the `repo` scope (RW on ALL repositories). A PAT with hand-picked rights is installed instead, via `--with-token`.
-
-**Initial setup (once per machine):**
-```bash
-brew install gh direnv
-# Create a fine-grained "Public repositories (read-only)" PAT on github.com
-echo "<public-RO-PAT>" | gh auth login --with-token
-gh auth setup-git                              # git delegates to "gh auth git-credential"
-echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # direnv hook
-```
-
-**Verification:**
-```bash
-gh auth status
-gh api rate_limit --jq .rate     # limit = 5000
-```
-
-Reading **private** repos from CC is deliberately not configured locally (a classic `repo` scope would be RW in disguise; a fine-grained PAT only covers one owner at a time). That happens via the **GitHub App on the Chat/Projects side**.
-Accepted corollary: from a terminal, Claude **sees neither organizations nor private repos** — they must be named for it.
-
-> ⚠️ **Pitfall — an org CAN reject `claude-ro`, even for public reads.**
-> An organization can impose a **maximum lifetime** on fine-grained PATs *(org Settings → Personal access tokens → "Require tokens to expire")*.
-> If this limit exists, `claude-ro` — **no expiration** — is rejected with a **403** on **every** repo in the org, **including public ones**:
-> *"The '<org>' organization forbids access via a fine-grained personal access tokens if the token's lifetime is greater than 90 days."*
-> **Confusing symptom**: the same `gh api` call **succeeds from `repo/`** (direnv exposes the 1-repo, 90-day PAT there) and **fails from elsewhere** (`gh` falls back to `claude-ro`). The token at fault is not the one assumed.
-> The pitfall applies to any org that enables this — and the limit can also be lifted afterward, org-side.
-
-> **`claude-ro` is deliberately WITHOUT EXPIRATION.** This is not an oversight.
-> A short lifetime only protects against **persistence after the secret is stolen** — and this token is read-only on **public** data: an attacker who steals it only gets what is already public. Forcing rotation on it would be a recurring chore for zero gain.
-> *(GitHub's only safeguard here: automatic revocation after 1 year of inactivity.)*
-> **The opposite reasoning applies to write PATs** — they touch private code and publish: 90 days, with a J-14 alert.
-
-### Writing (push, PR, issues) → 1-repo fine-grained PAT exposed by direnv
-
-- **One PAT per repo**, created fine-grained, *Only select repositories* → **this repo only** (owner = the repo's account or org).
-- **Consistent standard permissions**: `Contents R/W`, `Metadata R`, `Pull requests R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`.
-  **+ alert permissions**, for autonomous security maintenance: Dependabot & Code scanning `R/W`, Secret scanning `R`.
-  **+ `Administration: read`** *(never write)*.
-  *(Detailed matrix, derivation of `Administration: read`: `github-repo-config.md` §2.)*
-  **Everything else: No access** — and **never** `Administration: write`.
-- Stored in `repo/.envrc` as `GITHUB_PAT`. **Remote as a bare URL** (never a PAT in the URL).
-- Exposed to git/gh **only inside the folder** via direnv. `repo/.envrc` (gitignored) holds the PAT and stays **sourceable in bash** *(no `dotenv` builtin — a safety net if a `source` ever replaces `direnv exec`, cf. §5)*:
-  ```
-  set -a; [ -f .env ] && . ./.env; set +a   # loads the app vars from .env (bash equivalent of `dotenv`)
-  export GITHUB_PAT=<PAT 1-repo>
-  export GH_TOKEN="$GITHUB_PAT"
-  ```
-  then `direnv allow` once. Entering the folder → push/PR via the repo's PAT; leaving it → back to public-RO.
-- Documented in `workspace/secrets.md`: expiration date, target repo, regeneration link.
-
-**Usage (direnv loads everything, no `source .env`):**
-```bash
-git push                                   # auth via the repo's PAT
-gh pr create --title "..." --base main
-gh issue list && gh run list
-```
-
-> **Workflows pitfall:** without the `Workflows: R/W` permission, GitHub **rejects** any push touching `.github/workflows/`, even with `Contents: R/W`. Keeping it in the standard avoids the surprise.
-
-> 🔴 **ACCEPTED limitation of this model — `gh pr checks` and `gh pr view` do not work.**
-> Both read `statusCheckRollup`, which requires the **`Checks`** permission. It is **documented** by GitHub but **absent from the UI** for fine-grained PATs: **impossible to grant** *(github/community#129512, cli/cli#12597)*. This is **not** an omission in the matrix above — **there is nothing to add to it**.
-> **This is not cosmetic**: the only barrier of the private mode (*"never merge a red PR"*, §18) relied on `gh pr checks`. → It now goes through `gh run list --commit <sha>` (`Actions: read`, already there). **The exact command, and the false-green pitfall: §18.**
-> *(The GitHub App can be granted `Checks` — but it stays out of scope for the reasons in the table below: the auth model isn't reopened for a CLI command that has a zero-cost substitute.)*
-
-### Expiration: 90 days + automatic alert (never caught by surprise)
-
-**Every new write PAT is bounded to 90 days.** The expiration must **never** be discovered mid-session, with a `git push` in hand.
-
-`repo/.envrc` embeds an **automatic alert**: GitHub returns the end date in the `GitHub-Authentication-Token-Expiration` header, read once a day (cached in `.git/`, never committed). At **J-14**, the terminal prints:
-
-```
-  /!\  GITHUB_PAT expire dans 12 jour(s), le 2026-10-11.
-      Regenerer (90 j, memes permissions) : https://github.com/settings/personal-access-tokens
-      Puis : remplacer le PAT de ce .envrc + la date dans ../workspace/secrets.md
-```
-
-Silent when everything is fine, offline, or if the PAT doesn't expire. Distinct message if the PAT is **already** dead.
-This is what makes the 90 days painless: the rotation is **announced**, not endured. Without this alert, a short duration is just one more surprise outage.
-
-### One convention for `.envrc` — the old one is banned
-
-| | ✅ Current convention | ❌ Old convention (to migrate) |
-|---|---|---|
-| Loading `.env` | `set -a; [ -f .env ] && . ./.env; set +a` | `dotenv` (**direnv** builtin) |
-| Where the PAT lives | `repo/.envrc` (`GITHUB_PAT`) | `repo/.env` |
-
-Two reasons:
-- **Keep `.envrc` sourceable in pure bash.** Push goes through `direnv exec` *(which does handle `dotenv`)*; `.envrc` is kept bash-pure as a **safety net**: if someone falls back on `source ./.envrc`, a `dotenv` there breaks it *(`dotenv: command not found`)*. Pure bash works everywhere.
-- **A PAT in `.env` leaks into containers.** A `docker-compose.yaml` with `env_file: .env` injects `GITHUB_PAT` into the container — visible via `docker inspect`. `.env` is reserved for **app** keys; the PAT lives in `.envrc`, and **nowhere else**.
-
-### Mechanisms evaluated then rejected — do not reopen without new facts
-
-The **1-repo** fine-grained PAT is the optimum *(full research: `workspace/archives/conception/RECHERCHE-auth-github.md`)*. Evaluated then **rejected**:
-
-| Mechanism | Reason for rejection (verified) |
-|---|---|
-| **GitHub App** (installation token) | In a `git push` workflow, it brings **neither a `[bot]` identity nor `Verified` commits**: the token only authenticates the **transport**, the commit author is fixed by `git config`. Those benefits only exist for commits created **via the API**. What's left: a `.pem` key that **never expires** and a third-party dependency. |
-| **GitHub App + `ghtkn`** (8h user token) | No silent refresh: device flow **browser prompt ~3×/day**, and the tool **refuses by design** to let an agent trigger it. Incompatible with any autonomy. |
-| **Classic PAT** | `repo` scope = **all-or-nothing**: RW on every repo, public **and** private, of every owner. `public_repo` opens no private repo. No scope targets **one** repo only. Maximum blast radius. |
-| **1 PAT per owner** (instead of 1 per repo) | Saves a few minutes/year while **multiplying a session's blast radius by N**. 1-PAT-per-repo **is** the scoping. |
-| **PAT in the Keychain** | Breaks the "one folder to copy" principle (§2/§18): the secret would no longer travel with the folder to a new machine. |
-
-> **What no auth mechanism solves.**
-> Facing a **prompt injection** (cf. GitLost, 2026), the hijacked agent holds a token that is **valid at the moment of the attack** — its lifetime changes nothing about that.
-> A short expiration only limits **persistence after the secret is stolen**, not immediate misuse.
-> The only mitigation that actually bites is **scope**: public-RO by default, private access escalated **deliberately**, and **never** the combination of a broad credential + a shell + ingestion of untrusted content.
-
-### Non-interactive shell (Claude Code's Bash tool) — direnv NOT loaded
-
-Everything above assumes an **interactive** shell, where the direnv hook has run.
-But **Claude Code's Bash tool launches non-interactive shells**: the direnv hook **does not fire**.
-Chain of consequences: `GITHUB_PAT`/`GH_TOKEN` are **absent from the env** → `git` falls back to the machine's credential helper (often `osxkeychain`, which carries the **public-RO** PAT) → **403 even on a plain read of a private repo**.
-All while the right PAT is **indeed present** in `.envrc` — hence a thoroughly confusing symptom.
-
-> **Symptom**: `git fetch/pull/push origin` → `403` / `Write access to repository not granted`, while `repo/.envrc` holds the correct `GITHUB_PAT`.
-
-**The wrong reflex to ban**: putting the PAT in the URL (`https://x-access-token:$TOKEN@github.com/...`) — that exposes it (ps, history, reflog, `.git/config`). **The URL stays bare, always.**
-
-**Clean procedure (verified)** — a **local** credential helper that reads `$GITHUB_PAT` from the env, configured once (persists in `repo/.git/config`, **no secret stored**, just the variable name; the initial `""` resets the list to run ahead of osxkeychain):
-```bash
-git config --local credential."https://github.com".helper ""
-git config --local --add credential."https://github.com".helper \
-  '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
-```
-Then **prefix every `git`/`gh` call with `direnv exec`**: direnv evaluates `.envrc` *(the `allow` safety net respected)* and launches the command with `GITHUB_PAT`/`GH_TOKEN` in its env — the helper reads `GITHUB_PAT`.
-```bash
-direnv exec . git push origin <ref>       # from repo/ — BARE URL, token via the helper
-direnv exec . gh pr create / gh pr merge   # gh via GH_TOKEN
-```
-> ⚠️ `direnv exec` **does not change the CWD**: outside `repo/`, targeting the repo requires `direnv exec <repo> git -C <repo> …`.
-> Without `direnv allow`, `direnv exec` **refuses** `.envrc` *("…is blocked. Run `direnv allow`")* and launches nothing — no more confusing 403.
-> Equivalent alternative if `gh auth setup-git` is configured **globally** on the machine: a plain `export GH_TOKEN="$GITHUB_PAT"` suffices (git delegates to `gh auth git-credential`, which returns `GH_TOKEN`). The local helper above is more robust because it doesn't depend on the machine's global state.
+→ **[`secrets-and-auth.md`](secrets-and-auth.md)** — read/write separation, the public-RO PAT, the 1-repo write PAT and its permissions, the 90-day expiration, the mechanisms rejected, and the non-interactive shell.
 
 ---
 
 ## 6. `CLAUDE.md` — local instructions for Claude Code
 
-File present at `repo/CLAUDE.md` but **ignored by Git**. Claude Code reads it automatically every session (it's in the cwd).
-
-**Typical content**:
-- Short project description (one line).
-- Useful commands (`docker compose up`, `npm run dev`, etc.).
-- Pointers into `workspace/`: where plans, docs, secrets live.
-- Project-specific code conventions.
-- What must absolutely not be touched (submodules, third-party code, etc.).
-
-**What `CLAUDE.md` NEVER contains**:
-- No secret, token, API key (even though it's ignored, zero-secret discipline applies to any file *named by convention* → if `.gitignore` is ever misconfigured, nothing leaks).
-- No volatile value that changes every week.
-
-A future cloner who doesn't have `workspace/` (because they only got the repo from GitHub) will work without `CLAUDE.md`, and that's intentional: the repo stays 100% impersonal.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — what `CLAUDE.md` carries, and what it never carries.
 
 ---
 
 ## 7. `.claude/` — project-level Claude Code config
 
-Folder entirely **ignored by Git**. Contains:
-
-- `settings.local.json`: permissions granted for this project, Claude-Code-specific env variables, local hooks.
-- Possibly `commands/`, `agents/`, `skills/` if project-specific tools are created for Claude Code.
-
-**Files Claude Code reads in `.claude/`**:
-`settings.json`, `settings.local.json`, `commands/`, `agents/`, `skills/`, `rules/`.
-
-**Files NOT to create in `.claude/`**:
-- `launch.json` (VS Code format, ignored by Claude Code, a classic confusion).
-- Any other file not on the list above.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — which files Claude Code reads there, and which must not be created.
 
 ---
 
 ## 8. Claude Code's persistent memory
 
-Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<path-hash>` is derived from the project's absolute path (e.g. `-Users-<user>-Documents-Claude-<project>`).
-
-**Consequence**: renaming the project folder makes Claude Code create a **new** memory folder and lose the link to the old one.
-
-**Rename procedure**:
-1. Rename the project folder (`~/Documents/Claude/old` → `~/Documents/Claude/new`).
-2. Merge the old memory folder's content into the new one:
-   ```bash
-   rsync -av ~/.claude/projects/-Users-<user>-Documents-Claude-old/ \
-             ~/.claude/projects/-Users-<user>-Documents-Claude-new/
-   rm -rf ~/.claude/projects/-Users-<user>-Documents-Claude-old/
-   ```
-3. Verify that `/resume` does offer the past conversations.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — where the memory lives, and the rename procedure that preserves it.
 
 ---
 
@@ -424,18 +224,18 @@ data/
 - **Forgetting `direnv allow`** → `direnv exec` **refuses** `.envrc` *("…is blocked. Run `direnv allow`")* and launches nothing — self-diagnosing. *(Interactively: the hook doesn't load → `git push` falls back to public-RO.)*
 - **Believing direnv loads the PAT inside Claude Code's Bash tool.**
   It launches **non-interactive** shells: the direnv hook doesn't run → `git`/`gh` return **403, even for reads**.
-  Fix: local credential helper reading `$GITHUB_PAT`, + **prefix git/gh with `direnv exec`** (§5, "Non-interactive shell").
+  Fix: local credential helper reading `$GITHUB_PAT`, + **prefix git/gh with `direnv exec`** (`secrets-and-auth.md`, "Non-interactive shell").
   ⚠️ **Never** work around it by putting the PAT in the remote's URL — that's a clear-text leak into `.git/config`.
 - **Using `dotenv` (direnv builtin) in `.envrc`** → it is no longer **sourceable in bash**: the `source ./.envrc` fallback then breaks with `dotenv: command not found`. Keep `.envrc` bash-pure; load `.env` via `set -a; [ -f .env ] && . ./.env; set +a`.
 - **Putting the PAT in `.env` instead of `.envrc`** → a `docker-compose.yaml` with `env_file: .env` **injects the GitHub PAT into the container** (visible via `docker inspect`). `.env` = **app** keys only; the PAT lives in `.envrc`, nowhere else.
-- **Letting a PAT expire without seeing it coming** → surprise outage mid `git push`. The `.envrc` J-14 alert (§5) flags it in advance: don't strip it out when copying the file.
+- **Letting a PAT expire without seeing it coming** → surprise outage mid `git push`. The `.envrc` J-14 alert (`secrets-and-auth.md`) flags it in advance: don't strip it out when copying the file.
 - **Running two Claude Code sessions (or two people) against the same `repo/`.**
   They share `HEAD`, the index, and the files on disk — so they collide.
   A `checkout -b` **switches the other one's branch** without warning · simultaneous edits overwrite each other silently · `gh pr merge --delete-branch` fails (*"main already checked out"*).
   Fix: **one isolated working tree per session** — `git worktree` or a separate clone (§12, "Concurrent work").
 - **Creating an owner-scoped PAT instead of 1-repo** → a leak exposes every repo the owner has. Always *Only select repositories* = this repo.
 - **Letting `.gitignore` grow with stale entries** → not harmful, but muddies the reading. Clean it up periodically.
-- **Setting a calendar reminder for PATs** → pointless now: the `.envrc` **J-14** alert (§5) handles it. Write PATs are **90 days**; `claude-ro` (public read) does **not** expire, deliberately.
+- **Setting a calendar reminder for PATs** → pointless now: the `.envrc` **J-14** alert (`secrets-and-auth.md`) handles it. Write PATs are **90 days**; `claude-ro` (public read) does **not** expire, deliberately.
 
 ---
 
@@ -605,104 +405,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 ## 14. Docker hardening (deployment security)
 
-> Security practices validated for **any self-hosted Docker service**. Derived from the `docker-compose-security` skill + the Docker cheatsheet (Security section). Complements §12-13 (workflow & version pin).
-
-### Absolute rules
-
-| Rule | Detail |
-|---|---|
-| `version:` in compose | **Never** — a forbidden line in every `docker-compose.yml` |
-| `sudo` | Always prefix docker commands (NUC) |
-| Volume convention | `/docker/<service>/` for every bind mount on the host |
-| Image naming | Full path from the build onward: `ghcr.io/<owner>/<image>:tag` |
-| `--privileged` | **Never**, except for a documented, absolute necessity |
-| Internal ports | `127.0.0.1:HOST_PORT:CONTAINER_PORT` unless explicit public exposure |
-| Network | A dedicated **bridge network** per service/stack |
-
-### Hardening philosophy
-
-`root:root` is **kept** (Docker default). A non-root UID *shared* across containers buys nothing: lateral movement is still possible. The real gain comes from **compose directives**. Real order of impact:
-
-1. Regular kernel + docker-ce updates → blocks CVE escapes.
-2. `cap_drop: [ALL]` + `no-new-privileges` → strong, easy to add.
-3. `read_only: true` + `tmpfs` → blocks write payloads.
-4. `pids_limit` + `mem_limit` → anti host-resource-exhaustion.
-5. Non-root UID **distinct per service** → useful only when a different UID per service matters.
-
-### Hardened compose template
-
-```yaml
-services:
-  backend:
-    image: ghcr.io/<owner>/my-image:${IMAGE_TAG:-latest}
-    restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp                      # only write path in the container, in RAM
-    cap_drop: [ALL]               # zero Linux capability
-    security_opt:
-      - no-new-privileges:true    # blocks escalation via setuid/setgid
-    pids_limit: 256               # fork bomb protection
-    mem_limit: 512m               # memory exhaustion protection
-    volumes:
-      - /docker/myapp/data:/app/data    # bind mount: stays writable despite read_only
-    env_file: .env
-    networks: [myapp]
-    # pure backend: NO ports: block (reachable through the internal network only)
-
-  frontend:
-    image: ghcr.io/<owner>/my-image-frontend:${IMAGE_TAG:-latest}
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:${PORT:-3000}:8080"
-    read_only: true
-    tmpfs:                        # nginx-unprivileged writes to these 3 paths
-      - /tmp
-      - /var/cache/nginx
-      - /var/run
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETGID, SETUID]   # bare minimum for nginx-unprivileged (init, then drop)
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 128
-    mem_limit: 128m
-    depends_on: [backend]
-    networks: [myapp]
-
-networks:
-  myapp:
-    driver: bridge
-```
-
-### Key directives
-
-- **`cap_drop: [ALL]`**: strips every Linux capability (the highest-impact one). `cap_add` at the strict minimum, case by case — nginx-unprivileged: `CHOWN`/`SETGID`/`SETUID` (init then drop to non-root); Caddy Alpine (`setcap +ep` on the binary): `NET_BIND_SERVICE` even on a high port.
-- **`read_only: true`**: container FS read-only (blocks a dropped payload). **Mounted volumes stay writable** (SQLite/file case). Complement with `tmpfs` for the image's write paths (backend: `/tmp`; nginx-unprivileged: + `/var/cache/nginx` + `/var/run`). Crash on startup → often a missing `tmpfs` path.
-- **`no-new-privileges: true`**: blocks escalation via setuid/setgid binaries in the image.
-- **`pids_limit` / `mem_limit`**: anti fork-bomb / anti host-OOM. Indicative: backend 256 pids / 512m, light frontend 128 / 128m.
-- **`user:` (if used)**: always **numeric UID:GID** (the image has no host `/etc/passwd`). Images with an embedded process manager (PM2, supervisord): **no `user:`**, manage via `chown` of the volume host-side.
-
-### Special cases
-
-- **Pure backend (no exposed port)**: no `ports:` block at all; reachable only via the internal Docker network by the other containers in the stack.
-- **SQLite / file bind mount**: `read_only` does not affect mounted volumes → the volume stays writable. Hardened as `root:root`, root writes to the bind mount → **avoids the §12 pitfall** (distroless `:nonroot` UID 65532 → silent write loss, `SQLITE_READONLY_DIRECTORY`). Keep a **write probe at boot** (loud failure + non-zero exit) as defense-in-depth. Under `read_only`, a SQLite writer sets `PRAGMA temp_store=MEMORY` (+ `SQLITE_TMPDIR=/tmp`).
-- **Embedded process manager (PM2/supervisord)**: starts as root and manages its own drop → no `user:`.
-
-### The runtime must NOT carry its package manager
-
-**`npm` is a BUILD tool.** Leaving it in the runtime image ships **its entire dependency tree — and its CVEs — along with it**.
-A Trivy scan already found **CRITICAL/HIGH** CVEs (`pacote`, `picomatch`, bundled inside `npm`) on an app with **zero production dependencies**. The vulnerabilities didn't come from the code, but from the **tool that was forgotten and left in**.
-
-```dockerfile
-RUN npm ci --omit=dev \
-    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /root/.npm
-```
-Scan **green** after this one line. *(A second-stage `distroless` image produces the same effect — heavier to maintain for an identical gain here.)*
-
-### Before prod
-
-- **CVE scan**: `trivy image <image-name>:<tag>` before every deployment — **and as a CI gate** (§17), not only by hand: scanning at deployment time is scanning too late.
-- **Per-service audit checklist**: `cap_drop:[ALL]` · `read_only:true` · `tmpfs` covering every write · `no-new-privileges:true` · `pids_limit` · `mem_limit` · ports on `127.0.0.1` if internal · dedicated bridge network · no `--privileged` · no `version:`.
+→ **[`docker-hardening.md`](docker-hardening.md)** — the absolute rules, the hardened compose template, the key directives, and the pre-prod checks.
 
 ---
 
@@ -864,7 +567,7 @@ In short: **CodeQL in native *default setup*** · Dependabot · secret scanning 
 | **PR** *(CI)* | **gitleaks** (**full** history) · **actionlint** + **zizmor** (the workflows) · **Semgrep** + **osv-scanner** *(the only ones that run in PRIVATE — see below)* · **CodeQL** *(public only)* · tests + typecheck + `npm audit` + **dependency-review** *(public only)* + **Trivy on the image** (*`artefact` capability* — **not** "node": a `static` site that publishes an image has it too) · syntax-check (`static` toolchain) | on every PR | GitHub Actions |
 | **Server** | `main` ruleset (+ `develop` if it exists): PR required, **required checks (`checks` + CodeQL + `build-check` if a Docker image)**, no force-push/deletion · **`v*` tags ruleset** (no deletion or moving) **+ immutable releases** (no asset replacement) — *both, otherwise the §13 pin can be bypassed* · secret scanning · **private vulnerability reporting** | continuously | GitHub |
 | **Scheduled** | CodeQL · **Dependabot alerts** *(CVE detection)* · **Renovate** *(version updates + auto-merged security remediation)* · **Trivy on the published image** *(`artefact` capability)* | weekly | GitHub · Renovate · GitHub Actions |
-| **Rotation** | Write PAT — **J-14 alert** in `.envrc` (§5) | every 90 days | Claude alerts · the maintainer regenerates |
+| **Rotation** | Write PAT — **J-14 alert** in `.envrc` (`secrets-and-auth.md`) | every 90 days | Claude alerts · the maintainer regenerates |
 
 > **Three barriers actually block, and they're redundant on purpose**: the **hook** catches early but is *local*, bypassable (`--no-verify`), and **absent from a fresh clone**; **push protection** only catches *known* GitHub patterns; **CI** scans the whole history and **guarantees** — it's the only one nobody can skip, because the ruleset requires it before merge.
 
@@ -882,7 +585,7 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 
 > 🔴 **`gh pr checks <n>` is UNUSABLE with this standard's PAT — the rule was written everywhere, and unusable everywhere.**
 > It reads `statusCheckRollup`, which requires the **`Checks`** permission. This permission is **documented** by GitHub but **absent from the UI** for fine-grained PATs: it **cannot be granted** *(github/community#129512, cli/cli#12597)*. Result: `Resource not accessible by personal access token`. *(`gh pr view <n>` alone fails for the same reason.)*
-> **Nothing to add to the PAT** — the command below only needs `Actions: read`, already in the matrix (§5).
+> **Nothing to add to the PAT** — the command below only needs `Actions: read`, already in the matrix (`secrets-and-auth.md`).
 >
 > ```bash
 > sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # --json targets → no rollup requested
@@ -980,7 +683,7 @@ The repo keeps everything else: the category doesn't change, a capability is **A
 *(Exact sequence — who does what, in what order: RUNBOOK §5.)*
 
 - `Dockerfile` + `docker-publish.yml` arrive **via PR**, before `build-check` becomes required — that's what avoids the ordering pitfall (above: "the order is the trap").
-- **Static page → `FROM nginx:alpine`** *(a web server, not a toolchain — §14)*, **followed by `RUN apk upgrade --no-cache`.** 🔴 **This line is NOT cosmetic**: `nginx:alpine` lags behind Alpine packages and can carry HIGH CVEs already fixed upstream. Trivy runs with `--ignore-unfixed`: it surfaces **all** of them, and `build-check` goes **RED** — the template's own scanner then rejects the image the template itself recommends, without this line.
+- **Static page → `FROM nginx:alpine`** *(a web server, not a toolchain — `docker-hardening.md`)*, **followed by `RUN apk upgrade --no-cache`.** 🔴 **This line is NOT cosmetic**: `nginx:alpine` lags behind Alpine packages and can carry HIGH CVEs already fixed upstream. Trivy runs with `--ignore-unfixed`: it surfaces **all** of them, and `build-check` goes **RED** — the template's own scanner then rejects the image the template itself recommends, without this line.
 - **The base image is bumped automatically**: Renovate auto-detects the `Dockerfile`'s `FROM` as soon as it lands — **nothing to declare**. *(Without a bot bumping it, Trivy would block PRs on an image CVE with nothing proposing the fix — the control detects, nobody fixes. Renovate closes that hole by construction.)*
 - **Don't touch the `## Branching` block** or create `develop`: with no host to validate, that would be an empty ritual (§12).
 - Once the workflow is on `main`, rerun `configure-repo.sh`: it detects `docker-publish.yml`, requires `build-check`, sets the `tags` ruleset and immutable releases, and **verifies the image is anonymously pullable**.
