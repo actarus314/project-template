@@ -33,8 +33,12 @@ changed=$(git diff --name-only "$merge_base"...HEAD 2>/dev/null || true)
 
 # The two mechanical limbs of the rule, and nothing else.
 visible=$(printf '%s\n' "$changed" | grep -E '^(templates/|docs/RUNBOOK\.md$)' || true)
-# A shipped script appearing or disappearing is visible too: it changes what a project receives.
-scripts=$(git diff --name-status --diff-filter=AD "$merge_base"...HEAD -- '*.sh' 2>/dev/null | awk '{print $2}' || true)
+# A shipped script appearing, disappearing OR CHANGING is visible: all three change what a
+# project receives. Only the ones that TRAVEL count — an internal check of this repo alone is
+# the refactor the rule deliberately leaves out.
+scripts=$(git diff --name-only "$merge_base"...HEAD -- 'check.sh' 'open-pr.sh' 'init-project.sh' \
+          'configure-repo.sh' 'checks/verify-tone.sh' 'checks/verify-narrative.sh' \
+          'checks/verify-memories.sh' 2>/dev/null || true)
 visible=$(printf '%s\n%s\n' "$visible" "$scripts" | grep -v '^$' || true)
 
 [ -n "$visible" ] || { echo "✓ no user-visible change in this branch"; exit 0; }

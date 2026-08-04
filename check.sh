@@ -34,7 +34,11 @@ mkdir -p "$CACHE"
 MODE=full
 [ "${1:-}" = "--commit" ] && MODE=commit
 changed=""
-[ "$MODE" = commit ] && changed=$(git diff --name-only HEAD 2>/dev/null || true)
+# The neighbouring workspace/ is a SEPARATE git repository, so a diff run here is blind to it —
+# and two checks (verify-echo, verify-growth) read its prose. Without this, a SUIVI.md that
+# doubles in size wakes nothing unless a .md happens to move here in the same commit.
+[ "$MODE" = commit ] && changed=$( { git diff --name-only HEAD 2>/dev/null || true
+                                     git -C ../workspace diff --name-only HEAD 2>/dev/null || true; } )
 touched() { [ "$MODE" = full ] || printf '%s\n' "$changed" | grep -qE "$1"; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
@@ -176,7 +180,10 @@ if in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/
   if "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
 fi
 
-if in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
+# Its CONFIG counts as much as the workflows: tightening or loosening a rule in
+# templates/repo/.github/zizmor.yml changes the verdict, and that path is not under
+# .github/workflows/ — so gating on the workflows alone left the config unwatched.
+if in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/|zizmor\.yml$'; then
   note "zizmor — workflows (config $zconfig)"
   if "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
@@ -317,7 +324,9 @@ fi
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-if [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$'; then
+# The pinned renovate version is read from ci.yml, and a bump can flip a valid config to
+# invalid or back — so the workflow carrying the pin wakes the validator too.
+if [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$|^\.github/workflows/ci\.yml$'; then
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
   # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
   # validator takes a file list and still names each file it rejects.

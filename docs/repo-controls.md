@@ -4,6 +4,24 @@
 > **The "Private" column is the key**: a private repo on the Free plan has **no ruleset**.
 > The controls run, but **nothing requires them** — a red PR can be merged.
 
+<!-- Table of contents. GitHub renders its own from the headings; this one is for whoever
+     reads the file from disk, where nothing generates it. `verify-links.sh` checks that every
+     anchor below resolves to a real heading, so it cannot quietly go stale. -->
+## Contents
+
+- [The flow — where the code goes](#the-flow-where-the-code-goes)
+- [Version pin in production](#version-pin-in-production)
+- [What to enable, and where](#what-to-enable-and-where)
+- [The controls — what verifies the code](#the-controls-what-verifies-the-code)
+- [The house checks — the rules this repo arms itself](#the-house-checks-the-rules-this-repo-arms-itself)
+  - [The THREE RHYTHMS — what triggers each, and what each costs](#the-three-rhythms-what-triggers-each-and-what-each-costs)
+- [GitHub repo configuration](#github-repo-configuration)
+- [The control matrix — what, where, when, by whom](#the-control-matrix-what-where-when-by-whom)
+- [The private → public switch — a normal step in the flow, not a special case](#the-private-public-switch-a-normal-step-in-the-flow-not-a-special-case)
+- [Acquiring a CAPABILITY on an already-live repo](#acquiring-a-capability-on-an-already-live-repo)
+
+---
+
 ## The flow — where the code goes
 
 **The single principle: `main` is production.**
@@ -366,7 +384,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 | `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
 | `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
 
-### At which RHYTHM, and what it costs
+### The THREE RHYTHMS — what triggers each, and what each costs
 
 The split is not how long a check takes, it is **what has to change for it to say something other than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
 
@@ -384,11 +402,13 @@ The split is not how long a check takes, it is **what has to change for it to sa
 | a workflow | `actionlint` · `zizmor` | **1,5 s** |
 | a `.md` | `verify-echo` · `verify-growth` | **1,9 s** |
 | a `.sh` | `verify-comment-drift` · `shellcheck` *(whole tree)* | **2,2 s** |
-| `templates/` | `verify-travel` *(it generates a project)* + both `.md` ones | **2,2 s** |
+| `templates/` | `verify-travel` *(it generates **four** projects)* + both `.md` ones | **3,7 s** |
 | `.md` + `.sh` + a workflow | everything above | **2,6 s** |
-| `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **3,7 – 4,1 s** |
+| `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,0 – 5,6 s** |
 
-**Parallelism absorbs, and the numbers say so**: the house checks add up to **3,9 s** of their own time, and the full lot takes **3,7 – 4,1 s** while adding osv, semgrep and gitleaks on top. **The three slowest are `verify-echo` (1,36 s), `verify-comment-drift` (0,83 s) and `verify-growth` (0,48 s)**; every other one sits under 0,11 s. Adding a check below ~0,4 s does not show.
+**Parallelism absorbs, and the numbers say so**: the house checks add up to **5,1 s** of their own time, and the full lot takes **5,0 – 5,6 s** while adding osv, semgrep and gitleaks on top. **The slowest by far is `verify-travel` (1,66 s), which generates four projects in series**, then `verify-echo` (1,36 s), `verify-comment-drift` (0,83 s) and `verify-growth` (0,48 s); every other one sits under 0,11 s. Adding a check below ~0,4 s does not show.
+
+> ⚠️ **`verify-travel` costs what it costs because it covers five toolchain/capability combinations instead of one** *(0,46 s → 1,66 s, measured 2026-08-04)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
 
 > **The three hooks are outside all of this.** `verify-delegation.sh`, `verify-turn-claims.sh` and `verify-forbidden-command.sh` are fired by the assistant's own events, not by `check.sh` — which must never start them: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.
 

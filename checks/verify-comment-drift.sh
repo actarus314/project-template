@@ -47,7 +47,11 @@ count_pair() {           # <revision|--worktree> <path> <marker> -> "<comments> 
     
     { line=$0; sub(/^[ \t]+/,"",line)
       if (line == "") next
-      if (index(line, m) == 1) c++; else k++ }
+      # A trailing comment counts as ONE of each: the line carries code AND comment. Counting
+      # it as pure code was blind to the very shape that grows a comment invisibly.
+      if (index(line, m) == 1) c++
+      else if (index(line, m) > 1) { c++; k++ }
+      else k++ }
     END { if (c+k > 0) print c, k }'
 }
 

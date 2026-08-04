@@ -13,12 +13,57 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:3dc08498080a7f1b5227c37ed5d51d1d160fddc1ba914f8ae7032d7265ecd3da
+  checksum-source-md: sha256:c524f6036e5dc9f467693ff9f54f39e7edfbc063fb6bd93cf095379d1af1a40a
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
 -->
-<style>html{color-scheme:light dark}</style>
+<style>html{color-scheme:light dark}
+  /* Table of contents — BUILT at load time from the page's own headings, never written by hand.
+     A hand-kept list of sections is a second source, and it drifts the day a section is renamed. */
+  .toc{margin:0 0 44px; padding:18px 22px; border:1px solid var(--line); border-radius:10px;
+       background:var(--surface); box-shadow:var(--shadow)}
+  .toc p{font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11px; letter-spacing:.13em;
+         text-transform:uppercase; color:var(--accent); margin:0 0 12px}
+  .toc ol{margin:0; padding:0; list-style:none; columns:2; column-gap:36px}
+  .toc li{margin:0 0 7px; break-inside:avoid; line-height:1.4}
+  .toc li.lv3{padding-left:16px; font-size:.88em}
+  .toc a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent}
+  .toc a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+
+  /* Wide tables break OUT of the text column: the prose stays readable at its own width while the
+     table takes the screen. Before this, the first column ate the space, the others were squeezed
+     to nothing, and the whole thing scrolled sideways. */
+  .tablewrap{width:min(calc(100vw - 32px), 1560px); margin-left:50%; transform:translateX(-50%)}
+  /* …and the first column may WRAP. `nowrap` suited the short labels it was written for ("Commit",
+     "Pull request"); a 34-character script path under the same rule pushes everything else out. */
+  td.w{white-space:normal; max-width:32ch}
+  td.w code, td.h code{overflow-wrap:anywhere}
+
+  /* Breathing room. Every block sat flush against the next one, so a table, the paragraph
+     explaining it and the note qualifying it read as a single wall. Spacing is applied BETWEEN
+     siblings (`* + *`) rather than on each block, so the first child never pushes its section down
+     and the rhythm stays the same whatever a section happens to contain. */
+  section{margin-bottom:88px}
+  section > * + *{margin-top:32px}
+  section > h3{margin-top:56px}
+  section > p{margin-top:20px; margin-bottom:0}
+  section > .sub{margin-top:10px}
+  .tablewrap{margin-top:36px; margin-bottom:36px}
+  .note{margin-top:36px; margin-bottom:36px}
+  .rail{margin-top:36px}
+  .stage{margin-bottom:8px}
+  .note > * + *{margin-top:14px}
+  .note h3{margin-top:0}
+  h2{margin-bottom:6px}
+  .toc{margin-bottom:64px}
+
+  /* …and inside the tables, which carry most of the content: 12px rows read as a block of text. */
+  td{padding:16px 18px}
+  th{padding-top:14px; padding-bottom:14px}
+  tbody tr.grp td{padding-top:18px; padding-bottom:18px}
+  .toc li{margin-bottom:10px}
+</style>
 <style>
   :root{
     --ground:#fbfcfd; --surface:#fff; --sunk:#f2f5f8;
@@ -219,6 +264,8 @@
   .note.accent{border-left-color:var(--accent)}
 
   @media (max-width:760px){
+    .tablewrap{width:auto; margin-left:0; transform:none}
+    .toc ol{columns:1}
     .wrap{padding:32px 16px 64px}
     .stage{grid-template-columns:1fr; gap:14px}
     .when{padding-left:26px}
@@ -248,6 +295,11 @@
   <div><span class="dot" style="background:var(--accent)"></span> <strong>Blocking</strong> stage (nothing passes without it)</div>
 </div>
 
+
+<nav class="toc" id="toc" hidden aria-label="On this page">
+  <p>On this page</p>
+  <ol></ol>
+</nav>
 
 <section>
   <h2>The three capabilities</h2>
@@ -1542,7 +1594,7 @@
     </table>
   </div>
 
-  <h3>At which rhythm, and what it costs</h3>
+  <h3>The three rhythms — what triggers each, and what each costs</h3>
   <p>The split is not how long a check takes, it is <strong>what has to change for it to say something other than yesterday</strong>. There are only two answers, and they give the rhythms <code>check.sh</code> implements.</p>
 
   <div class="tablewrap">
@@ -1585,14 +1637,20 @@
         <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>1,5 s</strong></td></tr>
         <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,9 s</strong></td></tr>
         <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>2,2 s</strong></td></tr>
-        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates a project) + both <code>.md</code> ones</td><td class="t"><strong>2,2 s</strong></td></tr>
+        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>3,7 s</strong></td></tr>
         <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>2,6 s</strong></td></tr>
-        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>3,7 – 4,1 s</strong></td></tr>
+        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5,0 – 5,6 s</strong></td></tr>
       </tbody>
     </table>
   </div>
 
-  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the house checks add up to <strong>3,9 s</strong> of their own time, and the full lot takes 3,7 – 4,1 s while adding osv, semgrep and gitleaks on top. The three slowest are <code>verify-echo</code> (1,36 s), <code>verify-comment-drift</code> (0,83 s) and <code>verify-growth</code> (0,48 s); every other one sits under 0,11 s. <strong>Adding a check below ~0,4 s does not show.</strong></p>
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the house checks add up to <strong>5,1 s</strong> of their own time, and the full lot takes 5,0 – 5,6 s while adding osv, semgrep and gitleaks on top. The slowest by far is <code>verify-travel</code> (1,66 s), which generates four projects in series, then <code>verify-echo</code> (1,36 s), <code>verify-comment-drift</code> (0,83 s) and <code>verify-growth</code> (0,48 s); every other one sits under 0,11 s. <strong>Adding a check below ~0,4 s does not show.</strong></p>
+
+  <div class="note">
+    <h3>⚠️ Why <code>verify-travel</code> costs a second and a half</h3>
+    <p>It covers <strong>five toolchain/capability combinations instead of one</strong> (0,46 s → 1,66 s, measured 2026-08-04). It only starts when <code>templates/</code>, <code>checks/</code>, <code>check.sh</code> or <code>init-project.sh</code> moved, so it is paid on four file paths and nowhere else.</p>
+    <p><strong>The generations run in series on purpose</strong>: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.</p>
+  </div>
 
   <div class="note">
     <h3>Two invariants that cost a green each</h3>
@@ -1742,5 +1800,32 @@
 
 <footer>Source of truth for this page: docs/repo-controls.md · neighbouring subjects: secrets-and-auth.md (auth, the PAT matrix) · security-and-updates.md (who updates what) · docker-hardening.md (deployment) · RUNBOOK.md (the gestures, in order)</footer>
 </div>
+
+<script>
+// The list is derived from the document: a section renamed, added or removed carries its own entry
+// with it. Nothing to keep in sync, so nothing that can go stale.
+(function () {
+  var nav = document.getElementById('toc');
+  if (!nav) { return; }
+  var list = nav.querySelector('ol');
+  var seen = {};
+  var heads = document.querySelectorAll('.wrap section > h2, .wrap section > h3');
+  Array.prototype.forEach.call(heads, function (h) {
+    var base = h.textContent.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+    if (!base) { base = 'section'; }
+    var id = base;
+    if (seen[base]) { id = base + '-' + (++seen[base]); } else { seen[base] = 1; }
+    if (!h.id) { h.id = id; }
+    var li = document.createElement('li');
+    if (h.tagName === 'H3') { li.className = 'lv3'; }
+    var a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    li.appendChild(a);
+    list.appendChild(li);
+  });
+  if (list.children.length) { nav.hidden = false; }
+})();
+</script>
 </body>
 </html>

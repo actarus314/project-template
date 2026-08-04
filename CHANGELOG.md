@@ -22,6 +22,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **The three hooks were watched by nothing.** They live in the assistant's local settings, outside
+  every repository: an entry that drops simply stops firing — no error, no trace, and the session
+  reads as it always did. `verify-do-not-break.sh` now checks them, **deducing which checks are
+  hooks from the table** rather than listing them. Silent when none is declared *(the documented
+  inactive mode)*, loud when some are and one is missing.
+- **`check.sh --commit` was blind to the neighbouring `workspace/`** — a separate git repository, so
+  a diff run here never saw it. A `SUIVI.md` doubling in size woke neither `verify-echo` nor
+  `verify-growth` unless a `.md` happened to move here in the same commit.
+- **`verify-comment-drift.sh` counted a TRAILING comment as pure code**, blind to the very shape
+  that grows a comment invisibly. Such a line now counts as one of each.
+- **Two gates missed their own input**: `zizmor` watched the workflows but not its config *(which
+  lives under `templates/`)*, and the Renovate validator missed the pinned version that decides its
+  verdict.
+- **`verify-changelog.sh` saw a `.sh` added or deleted, never one CHANGED** — while the rule it
+  enforces names *"a script's behaviour"* outright. It now watches the scripts that **travel**.
+- **`verify-version.sh` compared 3 scripts out of the 18 that handle `--version`.** The list is
+  derived from the flag being *handled*, and an empty read fails rather than passing.
+- **`verify-secret-blindspots.sh` knew `.env` and `secrets`** — a private key, an `.npmrc`, a
+  `.netrc` or a service-account file are just as readable, and gitleaks reads none of them by name.
+- **`verify-links.sh` read inside fenced code blocks.** Its header promised the opposite; only the
+  inline pattern delivered it. It also **resolves anchors** now, which is what makes a table of
+  contents safe to write.
+- **`verify-travel.sh` looked at one project shape out of five.** It generated a single `--type node`
+  project, so `ci-static.yml`, `ci-generic.yml` and `pages.yml` — files that never land in a `node`
+  project — were read by nobody. It now generates **one project per toolchain plus one carrying every
+  capability**, and the toolchains are **read from `init-project.sh`** rather than listed, so one
+  added there is covered the day it is accepted. **It found a real dead path on its first run**: the
+  `generic` CI template pointed twice at `docs/repo-controls.md`, which exists in the template and in
+  no generated project — shipped since the docs split and invisible until now.
+  ⚠️ **The cost is real and published**: 0,46 s → **1,66 s**, and a commit touching `templates/` goes
+  from 2,2 s to 3,7 s. It only starts on four file paths.
 - **`verify-tone.sh` no longer misses the capitalised second person.** `git grep` is case-sensitive,
   so `You can run…` and `Your project…` — the second person at the *start of a sentence*, which is
   where it lands most often — went through untouched, while the lowercase forms were caught. The
