@@ -22,6 +22,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **`verify-travel.sh` looked at one project shape out of five.** It generated a single `--type node`
+  project, so `ci-static.yml`, `ci-generic.yml` and `pages.yml` — files that never land in a `node`
+  project — were read by nobody. It now generates **one project per toolchain plus one carrying every
+  capability**, and the toolchains are **read from `init-project.sh`** rather than listed, so one
+  added there is covered the day it is accepted. **It found a real dead path on its first run**: the
+  `generic` CI template pointed twice at `docs/repo-controls.md`, which exists in the template and in
+  no generated project — shipped since the docs split and invisible until now.
+  ⚠️ **The cost is real and published**: 0,46 s → **1,66 s**, and a commit touching `templates/` goes
+  from 2,2 s to 3,7 s. It only starts on four file paths.
 - **`verify-tone.sh` no longer misses the capitalised second person.** `git grep` is case-sensitive,
   so `You can run…` and `Your project…` — the second person at the *start of a sentence*, which is
   where it lands most often — went through untouched, while the lowercase forms were caught. The

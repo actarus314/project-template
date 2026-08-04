@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:3dc08498080a7f1b5227c37ed5d51d1d160fddc1ba914f8ae7032d7265ecd3da
+  checksum-source-md: sha256:467116a6fe5a66ddadd199ef1c071f911801b92b4c7f7dcf3c286490de9ae596
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1585,14 +1585,20 @@
         <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>1,5 s</strong></td></tr>
         <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,9 s</strong></td></tr>
         <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>2,2 s</strong></td></tr>
-        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates a project) + both <code>.md</code> ones</td><td class="t"><strong>2,2 s</strong></td></tr>
+        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>3,7 s</strong></td></tr>
         <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>2,6 s</strong></td></tr>
-        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>3,7 – 4,1 s</strong></td></tr>
+        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5,0 – 5,6 s</strong></td></tr>
       </tbody>
     </table>
   </div>
 
-  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the house checks add up to <strong>3,9 s</strong> of their own time, and the full lot takes 3,7 – 4,1 s while adding osv, semgrep and gitleaks on top. The three slowest are <code>verify-echo</code> (1,36 s), <code>verify-comment-drift</code> (0,83 s) and <code>verify-growth</code> (0,48 s); every other one sits under 0,11 s. <strong>Adding a check below ~0,4 s does not show.</strong></p>
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the house checks add up to <strong>5,1 s</strong> of their own time, and the full lot takes 5,0 – 5,6 s while adding osv, semgrep and gitleaks on top. The slowest by far is <code>verify-travel</code> (1,66 s), which generates four projects in series, then <code>verify-echo</code> (1,36 s), <code>verify-comment-drift</code> (0,83 s) and <code>verify-growth</code> (0,48 s); every other one sits under 0,11 s. <strong>Adding a check below ~0,4 s does not show.</strong></p>
+
+  <div class="note">
+    <h3>⚠️ Why <code>verify-travel</code> costs a second and a half</h3>
+    <p>It covers <strong>five toolchain/capability combinations instead of one</strong> (0,46 s → 1,66 s, measured 2026-08-04). It only starts when <code>templates/</code>, <code>checks/</code>, <code>check.sh</code> or <code>init-project.sh</code> moved, so it is paid on four file paths and nowhere else.</p>
+    <p><strong>The generations run in series on purpose</strong>: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.</p>
+  </div>
 
   <div class="note">
     <h3>Two invariants that cost a green each</h3>
