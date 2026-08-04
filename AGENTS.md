@@ -20,7 +20,9 @@ Its product is the **standard** *(the manual version of project deployment)*; th
 
 **`skills/new-project/` is the CANONICAL version of the skill**, and `~/.claude/skills/new-project` is a **symlink** to it.
 It used to live outside any repo: not versioned, not run through CI, not diffable — even though it drives the RUNBOOK, which changes every session. *(The integration audit found 5 drifts, including a command formally forbidden elsewhere in this repo.)*
-It sits at the **root**, never under `templates/`: `init-project.sh` copies **exclusively** from `templates/`, so nothing here gets duplicated into generated projects.
+It sits at the **root**, never under `templates/` — and **not** because `init-project.sh` only copies from there. It copies **five files from the root too**: `check.sh`, `open-pr.sh` and the three travelling `checks/verify-*.sh`. What protects the skill is that each of those is named in an **explicit `cp`**, one by one, and the skill is not among them.
+
+> 🔴 **`templates/repo/` is therefore NOT the full picture of what a generated project receives.** Reading it suggests a project ships without `check.sh`, without `open-pr.sh` and without `checks/` — it ships all three. They are **not duplicated under `templates/` on purpose**: the template runs them on itself, and a second copy would drift. **To see what a project really receives, generate one** *(`verify-travel.sh` does exactly that, and it is why it generates rather than reads)*.
 
 `workspace/` **must NEVER gain a remote**: it carries private repo names and incident accounts. This is what lets `repo/` flip to public one day without cleaning anything up.
 

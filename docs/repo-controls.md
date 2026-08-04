@@ -4,6 +4,24 @@
 > **The "Private" column is the key**: a private repo on the Free plan has **no ruleset**.
 > The controls run, but **nothing requires them** — a red PR can be merged.
 
+<!-- Table of contents. GitHub renders its own from the headings; this one is for whoever
+     reads the file from disk, where nothing generates it. `verify-links.sh` checks that every
+     anchor below resolves to a real heading, so it cannot quietly go stale. -->
+## Contents
+
+- [The flow — where the code goes](#the-flow-where-the-code-goes)
+- [Version pin in production](#version-pin-in-production)
+- [What to enable, and where](#what-to-enable-and-where)
+- [The controls — what verifies the code](#the-controls-what-verifies-the-code)
+- [The house checks — the rules this repo arms itself](#the-house-checks-the-rules-this-repo-arms-itself)
+  - [The THREE RHYTHMS — what triggers each, and what each costs](#the-three-rhythms-what-triggers-each-and-what-each-costs)
+- [GitHub repo configuration](#github-repo-configuration)
+- [The control matrix — what, where, when, by whom](#the-control-matrix-what-where-when-by-whom)
+- [The private → public switch — a normal step in the flow, not a special case](#the-private-public-switch-a-normal-step-in-the-flow-not-a-special-case)
+- [Acquiring a CAPABILITY on an already-live repo](#acquiring-a-capability-on-an-already-live-repo)
+
+---
+
 ## The flow — where the code goes
 
 **The single principle: `main` is production.**
@@ -366,7 +384,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 | `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
 | `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
 
-### At which RHYTHM, and what it costs
+### The THREE RHYTHMS — what triggers each, and what each costs
 
 The split is not how long a check takes, it is **what has to change for it to say something other than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
 

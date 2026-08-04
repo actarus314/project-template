@@ -26,8 +26,30 @@ command -v python3 >/dev/null 2>&1 || { echo "  (python3 absent — links not ch
 python3 - . ../workspace <<'PY'
 import re, sys, pathlib
 
-LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:|#)([^)\s]+)\)")
+LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)\s]+)\)")
 CODE = re.compile(r"`[^`\n]*`")
+
+# The heading slug: lowercased, inline markup dropped, anything that is not a word character or a
+# dash removed, spaces turned into dashes.
+# ⚠ Close to GitHub's, not identical: `\w` keeps characters GitHub strips (a circled digit, say).
+#   What matters here is that ONE convention is applied to both sides — the anchor and the heading
+#   it aims at — so a link and its target agree or they do not. For a page GitHub actually renders,
+#   its own rendering stays the authority.
+def slug(s):
+    s = re.sub(r"`|\*\*|\*|_", "", s)
+    s = re.sub(r"[^\w\s-]", "", s, flags=re.U)
+    return re.sub(r"\s+", "-", s.strip()).lower()
+
+_heads = {}
+def headings(path):
+    key = str(path)
+    if key not in _heads:
+        try:
+            text = path.read_text()
+        except OSError:
+            _heads[key] = set(); return _heads[key]
+        _heads[key] = {slug(m.group(1)) for m in re.finditer(r"^#{1,6}\s+(.+?)\s*$", text, re.M)}
+    return _heads[key]
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 bad = []
 # What was actually READ, and it gets published. A root that is not there reads exactly like a root
@@ -46,12 +68,20 @@ for root in (pathlib.Path(a) for a in sys.argv[1:]):
         # blank out inline code FIRST: a backticked path is an example, not a link
         text = CODE.sub(lambda m: " " * len(m.group(0)), md.read_text())
         for target in sorted(set(LINK.findall(text))):
-            tgt = target.split("#", 1)[0]
+            tgt, _, frag = target.partition("#")
             # a placeholder is a naming EXAMPLE, never a link: 0000-<slug>.md, 000Y-….md
-            if not tgt or any(c in tgt for c in "…<>*"):
+            if any(c in target for c in "…<>*"):
                 continue
-            if not (md.parent / tgt).exists():
+            dest = md if not tgt else md.parent / tgt
+            if tgt and not dest.exists():
                 bad.append(f"{md}: {target}")
+                continue
+            # The anchor, which used to be dropped on the floor. A table of contents is a page full
+            # of them, and a section renamed leaves every one of them pointing nowhere — silently,
+            # since a dead anchor scrolls to the top instead of raising anything.
+            if frag and dest.suffix == ".md":
+                if slug(frag) not in headings(dest):
+                    bad.append(f"{md}: {target} — no heading matches that anchor")
 
 for b in bad:
     print(f"✗ dead link — {b}", file=sys.stderr)
