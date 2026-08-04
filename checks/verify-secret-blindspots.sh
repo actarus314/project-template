@@ -25,7 +25,9 @@ fi
 
 # .env.example and .gitleaksignore are DELIBERATE: one is the documented template, the other the
 # exception list. Both are meant to be tracked, and both would match a naive pattern.
-pattern='(^|/)(\.env|\.envrc|secrets?)(\.[a-z]+)?$'
+# The names that betray, and they are not only .env: a private key, a registry credentials file
+# and a cloud service account are all just as readable, and gitleaks reads none of them by NAME.
+pattern='(^|/)(\.env|\.envrc|secrets?|credentials?|id_rsa|id_ed25519|\.npmrc|\.netrc|\.pypirc|service-account|serviceaccount)([._-][A-Za-z0-9._-]*)?$|\.(pem|key|p12|pfx|keystore|jks)$'
 fail=0
 
 # Which repositories were actually read, published with the verdict: the final message claimed

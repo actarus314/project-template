@@ -11,8 +11,9 @@
 # ⚠ NEVER read inside backticks. `docs/X.md` and `(…/releases/tag/vX.Y.Z)` are FORMAT EXAMPLES,
 #   not links — reading them produced the only false positive of the manual pass.
 #
-# Scope: relative links only. An http(s) target is someone else's uptime, and an anchor (#…) would
-# need the heading table — worth having one day, not worth a false positive today.
+# Scope: relative links, and their ANCHORS. An http(s) target is someone else's uptime and stays
+# out; an anchor is checked against the headings of the file it aims at, which is what makes a
+# table of contents safe to write — a section renamed otherwise leaves every pointer dangling.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -28,6 +29,7 @@ import re, sys, pathlib
 
 LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)\s]+)\)")
 CODE = re.compile(r"`[^`\n]*`")
+FENCE = re.compile(r"```.*?```", re.S)
 
 # The heading slug: lowercased, inline markup dropped, anything that is not a word character or a
 # dash removed, spaces turned into dashes.
@@ -66,7 +68,12 @@ for root in (pathlib.Path(a) for a in sys.argv[1:]):
             continue
         files += 1
         # blank out inline code FIRST: a backticked path is an example, not a link
-        text = CODE.sub(lambda m: " " * len(m.group(0)), md.read_text())
+        raw = md.read_text()
+        # FENCED blocks first, then inline code. The inline pattern excludes newlines, so it
+        # never matched a ```…``` block: a link shown as an EXAMPLE inside one was read as a
+        # real link, which the header already promised never to do.
+        raw = FENCE.sub(lambda m: " " * len(m.group(0)), raw)
+        text = CODE.sub(lambda m: " " * len(m.group(0)), raw)
         for target in sorted(set(LINK.findall(text))):
             tgt, _, frag = target.partition("#")
             # a placeholder is a naming EXAMPLE, never a link: 0000-<slug>.md, 000Y-….md

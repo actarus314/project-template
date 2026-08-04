@@ -66,5 +66,29 @@ else
   echo "  (no assistant instructions here — nothing to check)"
 fi
 
-[ "$fail" = 0 ] && echo "✓ nothing quietly unplugged: skill link, forced-add files, absolute pointers"
+# 4 — the hooks. They are the only checks nothing else can see running: they live in the
+#     assistant's settings, a LOCAL file outside any repository, and a hook that is not declared
+#     simply never fires. No error, no output, no trace — the guard is gone and the session reads
+#     exactly as it did before. Which of them are hooks is DEDUCED from the table (their gate cell
+#     reads "n/a"), never listed here.
+settings="$HOME/.claude/settings.json"
+table=docs/repo-controls.md
+if [ -f "$settings" ] && [ -f "$table" ]; then
+  hooks=$(grep -oE '^\| `checks/(verify-[a-z-]+)\.sh`.*\| n/a' "$table" | grep -oE 'verify-[a-z-]+' || true)
+  if [ -n "$hooks" ]; then
+    declared=0 missing=""
+    for h in $hooks; do
+      if grep -q "$h" "$settings"; then declared=$((declared + 1)); else missing="$missing $h"; fi
+    done
+    # All or nothing. None declared is the documented inactive mode — a deliberate choice, and this
+    # is not the place to argue with it. SOME declared and others not is the dangerous shape: the
+    # hooks are in use, and one of them quietly stopped being.
+    if [ "$declared" -gt 0 ] && [ -n "$missing" ]; then
+      echo "✗ hooks wired in $settings, but NOT these:$missing — they exist and never fire"
+      fail=1
+    fi
+  fi
+fi
+
+[ "$fail" = 0 ] && echo "✓ nothing quietly unplugged: skill link, forced-add files, absolute pointers, hooks"
 exit "$fail"
