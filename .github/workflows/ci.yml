@@ -77,7 +77,7 @@ jobs:
       - name: Nothing quietly unplugged (verify-do-not-break.sh)
         run: ./checks/verify-do-not-break.sh
       # The three hand-written lists that name the checks one by one: these CI steps, what
-      # init-project.sh copies, and the METHODE table. A check added or renamed has to reach all
+      # init-project.sh copies, and the repo-controls table. A check added or renamed has to reach all
       # three by hand, and every way of missing one is silent.
       - name: Every check declared and wired as declared (verify-checks-wiring.sh)
         run: ./checks/verify-checks-wiring.sh

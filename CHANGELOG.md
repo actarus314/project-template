@@ -21,6 +21,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **`verify-tone.sh` no longer misses the capitalised second person.** `git grep` is case-sensitive,
+  so `You can run…` and `Your project…` — the second person at the *start of a sentence*, which is
+  where it lands most often — went through untouched, while the lowercase forms were caught. The
+  flag found a real violation on its first run, in `templates/workflows/ci-generic.yml`, copied into
+  every generic project. **This check travels**, so every generated project was equally blind.
+- **A check whose verdict `check.sh` dropped.** `verify-checks-wiring.sh` was started with the
+  others and no block read its result back: a check deleted from `checks/` left the local lot
+  **green** while the CI, running the same file, went red — against the one promise `check.sh`
+  makes, *local == github*. It cannot catch this class itself: it compares the table against
+  `ci.yml` and `init-project.sh`, never against `check.sh`.
+- **A failing check now prints its own error.** The subshell that captures each result inherited
+  `set -e`, so a check exiting non-zero died *before* writing its return code — and the missing file
+  was then reported as **"it never ran"**, with the real message left unread in the capture. Every
+  failure looked alike, and a genuine never-ran became indistinguishable from an ordinary red.
+- **A check no longer claims a perimeter it did not read.** With the neighbouring `workspace/`
+  renamed away, `verify-links.sh`, `verify-secret-blindspots.sh` and `verify-growth.sh` still
+  announced *"in both repos"*. Each now names what it read **and what it did not**, and
+  `verify-workspace.sh` says so out loud instead of exiting mute. An absent root, a glob matching
+  nothing and a swallowed error all produce zero targets — and zero targets read exactly like a
+  clean tree.
+- **`verify-checksums.sh` pointed at a path that no longer exists**: its error message told the
+  reader to run `docs/verify-checksums.sh --update`, moved to `checks/` some time ago. Following the
+  instruction failed.
+
+### Changed
+- **The list of checks, their perimeter, their rhythm and their gate moved from `METHODE.md` to
+  [`repo-controls.md`](docs/repo-controls.md)** — the document the standard names as the owner of
+  the control matrix. `METHODE.md` keeps what is a question of *writing*: the discriminator that
+  decides a perimeter *(a rule of method follows the method everywhere; a rule of published style
+  stops where publication stops)*. **What a commit costs is published with it**, by what it touches
+  rather than per check — the same `--commit` spans 0,8 s to 2,6 s, and a duration without its case
+  says nothing.
+
 ### Added
 - **A check for the invariants whose breakage is silent** *(`checks/verify-do-not-break.sh`)*: the
   skill reached through a symlink rather than a drifting copy, the three files kept tracked against

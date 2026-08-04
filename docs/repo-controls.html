@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:2c531340f90412fb7c72f49f592e6743d7bed232b3b87ab4e786bf784dc72c69
+  checksum-source-md: sha256:4b5661136565b3607082838b438bf40e1e9f92222263e4768e3343e6bf45d5ab
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1419,6 +1419,186 @@
     <h3>Removing a capability — the reverse direction</h3>
     <p>It only <strong>removes</strong> controls: no lockout risk… <strong>except one</strong>, symmetric to the ordering trap described above.</p>
     <p>⚠️ <strong>Remove <code>build-check</code> from the required checks before deleting <code>docker-publish.yml</code>.</strong> The other way around, the check stays required while nothing produces it anymore → <strong>every PR is blocked forever</strong>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The house checks</h2>
+  <p class="sub">Eighteen scripts under <code>checks/</code>, each arming one rule that discipline alone kept losing. This table is the single place that list lives — three partial copies once coexisted, and the three disagreed on how many there were.</p>
+
+  <p>A rule held by discipline alone is a rule re-established by periodic manual passes — never a rule that holds. Everything below is armed: <code>check.sh</code> runs it, and so does the CI.</p>
+
+  <div class="note">
+    <h3>The table describes THIS repository</h3>
+    <p>Three of these checks travel into a generated project — <code>verify-tone.sh</code>, <code>verify-narrative.sh</code>, <code>verify-memories.sh</code>, at its root, run by <strong>its</strong> <code>check.sh</code>. The rest stay here, either because their target does (<code>templates/</code>, <code>docs/*.html</code>, the neighbouring <code>workspace/</code>) or because they are still to be carried over.</p>
+    <p>⚠️ And <strong>no generated workflow calls a <code>verify-*</code> script</strong>, so those three run <strong>locally only</strong> over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.</p>
+    <p>→ <strong>Why a check stops where it stops</strong> is a question of writing, not of tooling: a rule of <strong>method</strong> follows the method everywhere, a rule of <strong>published style</strong> stops where publication stops. That discriminator lives in <code>METHODE.md</code>, and it is what the <em>Perimeter</em> column applies.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Check</th><th>Perimeter</th><th>Moment</th><th>At this repo's gate?</th></tr>
+      </thead>
+      <tbody>
+        <tr class="grp" role="row"><td colspan="4">Fired by the assistant's own events — <code>check.sh</code> never starts them</td></tr>
+        <tr>
+          <td class="w"><code>checks/verify-delegation.sh</code></td>
+          <td>any delegation, wherever it happens</td>
+          <td class="t"><strong>before</strong> — refuses the launch</td>
+          <td class="h">n/a — a <code>PreToolUse</code> hook, declared by absolute path in the assistant's settings, so it covers the sessions that declare it and no generated project</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-forbidden-command.sh</code></td>
+          <td>any shell command, wherever it is run</td>
+          <td class="t"><strong>before</strong> — refuses the three whose verdict is literal, states the question on the fourth</td>
+          <td class="h">n/a — a <code>PreToolUse</code> hook on <code>Bash</code>, same wiring</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-turn-claims.sh</code></td>
+          <td>what the assistant ASSERTS as a turn ends, against what that turn ran — the others watch files, none watched this</td>
+          <td class="t"><strong>as the turn ends</strong> — reports, never blocks</td>
+          <td class="h">n/a — a <code>Stop</code> hook. Its patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 %</td>
+        </tr>
+
+        <tr class="grp" role="row"><td colspan="4">Run by <code>check.sh</code> and required by the CI</td></tr>
+        <tr>
+          <td class="w"><code>checks/verify-tone.sh</code></td><td><code>repo/</code> only</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-narrative.sh</code></td>
+          <td><code>repo/</code> AND <code>workspace/</code> — a method rule follows the method</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-links.sh</code></td><td><code>repo/</code> AND <code>workspace/</code></td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-secret-blindspots.sh</code></td>
+          <td><code>repo/</code> AND <code>workspace/</code> — a tracked file NAMED like a secret, and a credential pasted into a remote URL (<code>.git/config</code> is never tracked, so gitleaks never reads it)</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-changelog.sh</code></td>
+          <td>the <strong>branch</strong> — needs <code>fetch-depth: 0</code></td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-checksums.sh</code> · <code>verify-version.sh</code></td>
+          <td><code>repo/</code> only</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-travel.sh</code></td>
+          <td><code>repo/</code> only — reads a <strong>generated</strong> project</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-checks-wiring.sh</code></td>
+          <td>this table and the two hand-written lists that must obey it (the CI steps, and what <code>init-project.sh</code> copies)</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-do-not-break.sh</code></td>
+          <td>the skill symlink and the assistant's absolute pointers, outside both — <strong>plus</strong> the force-added files, inside</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill on">gate</span> for the third target: <code>git rm --cached</code> happens in a pull request, and it ships silently into every generated project</td>
+        </tr>
+
+        <tr class="grp" role="row"><td colspan="4">Run by <code>check.sh</code>, outside the gate — and it is deliberate</td></tr>
+        <tr>
+          <td class="w"><code>checks/verify-memories.sh</code></td>
+          <td>outside both — memories belong to neither</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill off">structural</span> the target lives outside the repository, so the CI has nothing to look at</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-workspace.sh</code></td>
+          <td><code>workspace/</code> only — no remote, nothing secret tracked</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill off">structural</span> same reason</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-echo.sh</code></td>
+          <td><code>repo/</code> AND <code>workspace/</code>, each on its own — a method rule follows the method, but the two repositories are in different languages</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill off">advisory</span> it draws a list, some pairs being legitimate</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-comment-drift.sh</code></td>
+          <td><code>repo/</code> — the scripts, not the prose</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill off">advisory</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-growth.sh</code></td>
+          <td><code>repo/</code> AND <code>workspace/</code> — concision is a rule of method, and the document named as the one that must shrink lives there</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill off">advisory</span> it blocks nowhere</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>At which rhythm, and what it costs</h3>
+  <p>The split is not how long a check takes, it is <strong>what has to change for it to say something other than yesterday</strong>. There are only two answers, and they give the rhythms <code>check.sh</code> implements.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Rhythm</th><th>What makes the verdict new</th><th>What runs there</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="w">every commit — <code>./check.sh --commit</code></td>
+          <td>any file of the tree</td>
+          <td class="h">every check in the table above except the four below and the three hooks, plus <code>gitleaks</code> over what is not pushed yet — a cost that stays flat as the repo grows</td>
+        </tr>
+        <tr>
+          <td class="w">every commit, if its target moved</td>
+          <td>a <code>.sh</code>, a workflow, a <code>renovate.json</code>, a file that travels, a <code>.md</code></td>
+          <td class="h"><code>shellcheck</code> · <code>actionlint</code> + <code>zizmor</code> · the Renovate validator · <code>verify-travel.sh</code> (it generates a whole project) · <code>verify-echo.sh</code> and <code>verify-growth.sh</code> on a <code>.md</code>, <code>verify-comment-drift.sh</code> on a <code>.sh</code> — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts</td>
+        </tr>
+        <tr>
+          <td class="w">every 6 h — <code>./check.sh</code>, and the CI</td>
+          <td>an external base, or a tool version</td>
+          <td class="h"><code>osv-scanner</code> (the OSV database is queried online) · <code>semgrep</code> (its packs are downloaded) · <code>gitleaks</code> over the full history (its rules are baked into a pinned binary)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <h3>⏱ What a commit costs, by what it touches <span class="tool">measured 2026-08-04, Darwin arm64</span></h3>
+    <p>🔴 <strong>A duration only means something alongside WHAT MOVED.</strong> The same <code>--commit</code> spans 0,8 s to 2,6 s, and a figure once quoted without its case was read as wrong by a factor of 2,7 when it was simply measuring another one.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>The commit touches…</th><th>What that wakes on top</th><th>Wall clock</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="w">nothing (clean tree)</td><td>—</td><td class="t"><strong>0,8 s</strong></td></tr>
+        <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>1,5 s</strong></td></tr>
+        <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,9 s</strong></td></tr>
+        <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>2,2 s</strong></td></tr>
+        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates a project) + both <code>.md</code> ones</td><td class="t"><strong>2,2 s</strong></td></tr>
+        <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>2,6 s</strong></td></tr>
+        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>3,7 – 4,1 s</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the house checks add up to <strong>3,9 s</strong> of their own time, and the full lot takes 3,7 – 4,1 s while adding osv, semgrep and gitleaks on top. The three slowest are <code>verify-echo</code> (1,36 s), <code>verify-comment-drift</code> (0,83 s) and <code>verify-growth</code> (0,48 s); every other one sits under 0,11 s. <strong>Adding a check below ~0,4 s does not show.</strong></p>
+
+  <div class="note">
+    <h3>Two invariants that cost a green each</h3>
+    <p>🔴 <strong>A check that reads the tree reads ALL of it, in both modes.</strong> Narrowing one to the diff is blind by construction: deleting a file breaks a link in another one, and no diff mentions that. What the changed files decide is whether a check <strong>runs</strong>, never what it looks at.</p>
+    <p>🔴 <strong>A check publishes WHAT IT READ, never a bare tick.</strong> An absent root, a glob matching nothing and a <code>|| true</code> swallowing an error all produce zero targets, and zero targets reads exactly like a clean tree. Three checks were caught claiming <em>"in both repos"</em> with the neighbouring <code>workspace/</code> renamed away; each now names what it read and what it did not.</p>
+    <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
   </div>
 </section>
 

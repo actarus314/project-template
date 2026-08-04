@@ -2,15 +2,19 @@
 # Every check is declared, and every hand-written list obeys that declaration.
 #
 # 🔴 Three lists name the checks one by one: the CI steps, the files init-project.sh copies into a
-# generated project, and the table in METHODE.md. A check added, renamed or moved has to be carried
-# into all three by hand — and the failure is SILENT in every direction: a check missing from the CI
-# passes no gate, a check missing from init-project.sh ships nowhere, a check missing from the table
-# is armed but undocumented. Each of those has already happened here.
+# generated project, and the table in repo-controls.md. A check added, renamed or moved has to be
+# carried into all three by hand — and the failure is SILENT in every direction: a check missing
+# from the CI passes no gate, a check missing from init-project.sh ships nowhere, a check missing
+# from the table is armed but undocumented. Each of those has already happened here.
 #
 # Auto-detecting the CI list is not the answer: four checks have no business there, because their
 # subject lives outside the repository or because they are advisory on purpose. That exception is
-# already WRITTEN DOWN, in the METHODE table — so the table is the source, and this compares the
-# lists against it rather than against a guess.
+# already WRITTEN DOWN, in the table — so the table is the source, and this compares the lists
+# against it rather than against a guess.
+#
+# ⚠ It cannot see its OWN wiring: it compares the table against ci.yml and init-project.sh, never
+#   against check.sh. check.sh started it and dropped its verdict for a while, and nothing here
+#   could have said so — the reap block that reads it back is what closes that one.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -24,19 +28,19 @@ command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 
 python3 - <<'PY'
 import re, pathlib, sys
 
-METHODE = pathlib.Path("docs/METHODE.md")
+TABLE   = pathlib.Path("docs/repo-controls.md")
 CI      = pathlib.Path(".github/workflows/ci.yml")
 INIT    = pathlib.Path("init-project.sh")
 bad = []
 
-if not METHODE.exists():
-    print("  (no docs/METHODE.md — skipped)"); sys.exit(0)
-methode = METHODE.read_text(encoding="utf-8")
+if not TABLE.exists():
+    print("  (no docs/repo-controls.md — skipped)"); sys.exit(0)
+table = TABLE.read_text(encoding="utf-8")
 
 # The table rows: first cell names one or more scripts, last cell says whether the CI runs it.
 # A row may carry two scripts on one line, so every name in the first cell is taken.
 declared = {}
-for row in re.findall(r"^\|\s*`checks/.+\|\s*$", methode, re.M):
+for row in re.findall(r"^\|\s*`checks/.+\|\s*$", table, re.M):
     # .strip() BEFORE stripping the pipes. `\s*$` is greedy and swallows the newline on the LAST
     # row of the table, so the closing pipe is no longer final and survives strip("|") — that row
     # alone then splits into an extra, empty cell, and its verdict reads as absent. The bug hits
@@ -50,9 +54,9 @@ for row in re.findall(r"^\|\s*`checks/.+\|\s*$", methode, re.M):
 on_disk = {p.stem for p in pathlib.Path("checks").glob("verify-*.sh")}
 
 for n in sorted(on_disk - set(declared)):
-    bad.append(f"checks/{n}.sh exists but has no row in the METHODE table — armed and undocumented")
+    bad.append(f"checks/{n}.sh exists but has no row in the repo-controls table — armed and undocumented")
 for n in sorted(set(declared) - on_disk):
-    bad.append(f"the METHODE table lists {n}.sh, which no longer exists under checks/")
+    bad.append(f"the repo-controls table lists {n}.sh, which no longer exists under checks/")
 
 # The CI list: only what a `run:` actually invokes. A name appearing in a comment is not a step.
 ci_runs = set()
@@ -69,7 +73,7 @@ for n in sorted(set(declared) & on_disk):
 
 # The travelling checks: the table's own paragraph names them, and init-project.sh copies them.
 # Two hand-written lists for one fact — so they have to agree.
-para = re.search(r"travel into a generated project[^|]*", methode)
+para = re.search(r"travel into a generated project[^|]*", table)
 if para:
     travel_declared = {m for m in re.findall(r"(verify-[a-z-]+)\.sh", para.group(0))}
     travel_copied = set()
@@ -78,7 +82,7 @@ if para:
     for n in sorted(travel_declared - travel_copied):
         bad.append(f"{n}.sh is declared as travelling, but init-project.sh does not copy it")
     for n in sorted(travel_copied - travel_declared):
-        bad.append(f"init-project.sh copies {n}.sh into generated projects, undeclared in METHODE")
+        bad.append(f"init-project.sh copies {n}.sh into generated projects, undeclared in repo-controls.md")
 
 for b in bad:
     print(f"✗ {b}")

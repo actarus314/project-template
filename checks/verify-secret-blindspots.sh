@@ -28,9 +28,16 @@ fi
 pattern='(^|/)(\.env|\.envrc|secrets?)(\.[a-z]+)?$'
 fail=0
 
+# Which repositories were actually read, published with the verdict: the final message claimed
+# "in either repo" whether the neighbour was there or not, so an absent workspace/ was reported as
+# a workspace/ with nothing wrong in it.
+scanned=""
+skipped=""
+
 scan() {
   local dir="$1" label="$2" hit
-  [ -d "$dir" ] || return 0
+  [ -d "$dir" ] || { skipped="$skipped $label"; return 0; }
+  scanned="$scanned $label"
   # templates/ holds TEMPLATES, not secrets: templates/repo/.envrc is the model copied into every
   # generated project, tracked on purpose with `git add -f` (AGENTS.md forbids un-tracking it).
   hit=$(git -C "$dir" ls-files 2>/dev/null | grep -iE "$pattern" \
@@ -73,5 +80,7 @@ scan_config() {
 scan_config . 'repo/'
 scan_config ../workspace 'workspace/'
 
-[ "$fail" = 0 ] && echo "✓ no secret-named file tracked, no credential in a remote URL, in either repo"
+scope="read:${scanned:- nothing}"
+[ -n "$skipped" ] && scope="$scope — NOT read:$skipped (absent)"
+[ "$fail" = 0 ] && echo "✓ no secret-named file tracked, no credential in a remote URL — $scope"
 exit "$fail"

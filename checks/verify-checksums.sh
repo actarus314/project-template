@@ -8,8 +8,8 @@
 # none of these files).
 #
 # Usage:
-#   docs/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
-#   docs/verify-checksums.sh --update    # recomputes and rewrites the checksum in each .html
+#   checks/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
+#   checks/verify-checksums.sh --update    # recomputes and rewrites the checksum in each .html
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
 
@@ -98,7 +98,7 @@ for html in docs/*.html; do
     echo "✓ $html up to date with $md"
     coverage "$md" "$html"
   else
-    echo "✗ $md changed since the last update of $html — carry the change over, then update the checksum with: docs/verify-checksums.sh --update" >&2
+    echo "✗ $md changed since the last update of $html — carry the change over, then update the checksum with: checks/verify-checksums.sh --update" >&2
     fail=1
   fi
 done

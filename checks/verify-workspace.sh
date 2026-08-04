@@ -24,7 +24,10 @@ if [ "${1:-}" = "--version" ]; then
 fi
 
 ws=../workspace
-[ -d "$ws" ] || exit 0
+# Saying so out loud rather than exiting mute: an absent neighbour and a clean neighbour produced
+# the very same empty output, and this is the one check whose whole reason to exist is that nothing
+# else looks over there.
+[ -d "$ws" ] || { echo "  (no $ws beside this repo — nothing to check)"; exit 0; }
 
 fail=0
 say() { echo "✗ workspace/: $1" >&2; fail=1; }
@@ -43,9 +46,12 @@ else
   [ -n "$tracked" ] && say "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
 
   # One living tracking document. Archives are excluded: a closed stage keeps its own account.
+  # Zero is not a fault — METHODE allows another system entirely (GSD's .planning/, a Linear) as
+  # long as there is only one. So the number gets REPORTED rather than judged: the message used to
+  # claim "one tracking doc" whatever the count, including none.
   n=$(git -C "$ws" ls-files 2>/dev/null | grep -icE '(^|/)(SUIVI|TRACKING|PROGRESS)\.md$' || true)
   [ "${n:-0}" -gt 1 ] && say "$n tracking documents — two sources compete, and the stale one gets read first"
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, one tracking doc"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${n:-0} tracking doc(s)"
 exit "$fail"

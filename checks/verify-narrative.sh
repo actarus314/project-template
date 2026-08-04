@@ -75,10 +75,15 @@ for f in sys.stdin.buffer.read().split(b"\0"):
 # METHODE holds for BOTH repos: repo/ and the neighbouring workspace/, which has its own git.
 # The tone rule stays repo-only (workspace/ is deliberately French, and that rule imposes English),
 # but a dated narrative in a comment is a METHOD rule — it applies wherever code lives.
+scope="repo/ only"
+[ -d ../workspace ] && scope="repo/ and workspace/"
 hits=$( { scan . ''; [ -d ../workspace ] && scan ../workspace '../workspace/'; } | grep -v 'archives/' || true)
 
 if [ -z "$hits" ]; then
-  echo "✓ no dated narrative in code comments"
+  # The perimeter is published with the verdict: a neighbour that is not there and a neighbour with
+  # nothing to report produced the same tick, and this check TRAVELS, where it lands beside no
+  # workspace at all.
+  echo "✓ no dated narrative in code comments — $scope"
   exit 0
 fi
 

@@ -30,13 +30,19 @@ LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:|#)([^)\s]+)\)")
 CODE = re.compile(r"`[^`\n]*`")
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 bad = []
+# What was actually READ, and it gets published. A root that is not there reads exactly like a root
+# with nothing wrong in it, so a count is the only thing that tells the two apart.
+read, absent, files = [], [], 0
 
 for root in (pathlib.Path(a) for a in sys.argv[1:]):
     if not root.is_dir():
+        absent.append(str(root))
         continue
+    read.append(str(root))
     for md in sorted(root.rglob("*.md")):
         if any(s in md.parts for s in SKIP):
             continue
+        files += 1
         # blank out inline code FIRST: a backticked path is an example, not a link
         text = CODE.sub(lambda m: " " * len(m.group(0)), md.read_text())
         for target in sorted(set(LINK.findall(text))):
@@ -49,7 +55,10 @@ for root in (pathlib.Path(a) for a in sys.argv[1:]):
 
 for b in bad:
     print(f"✗ dead link — {b}", file=sys.stderr)
-print("✓ every relative link resolves, in both repos" if not bad
-      else f"✗ {len(bad)} dead link(s)", file=sys.stderr)
+scope = f"{files} file(s) in {', '.join(read) or 'nothing'}"
+if absent:
+    scope += f" — NOT read: {', '.join(absent)} (absent)"
+print(f"✓ every relative link resolves — {scope}" if not bad
+      else f"✗ {len(bad)} dead link(s) — {scope}", file=sys.stderr)
 sys.exit(1 if bad else 0)
 PY

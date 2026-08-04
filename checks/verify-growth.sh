@@ -89,7 +89,12 @@ if [ -d ../workspace/.git ]; then
     echo "  ⚠ workspace: no commit predates $tag — nothing to compare against"
     grown=1
   fi
+  scope="repo/ and workspace/"
+else
+  # Said out loud: the verdict used to claim "in either repository" with the neighbour absent.
+  echo "  (no ../workspace/.git beside this repo — repo/ only)"
+  scope="repo/ only"
 fi
 
-[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag, in either repository"
+[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope"
 exit 0        # advisory, never blocking

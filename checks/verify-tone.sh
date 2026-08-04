@@ -27,8 +27,12 @@ cd "$(dirname "$0")/.."   # repo root: this script lives in checks/   # repo roo
 PRONOUNS='(you|your|yours|vous|votre|vos|tu|toi|ton|ta|tes)'   # tone-self
 ALLOW='(2nd|second) person|2e personne|By contributing|wish to opt-out of having Renovate|# tone-self|# fr-pattern'
 
-hits=$(git grep -nIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
-       | grep -vE "$ALLOW" || true)
+# -i, and it is not cosmetic: `git grep` is case-sensitive, so the capitalised forms went through
+# untouched — the second person at the START of a sentence, which is where it lands most often.   # tone-self
+# The repo held none in prose, so the guard never had the chance to give itself away; the flag
+# found one on the first run, in a workflow template copied into every generic project.
+hits=$(git grep -inIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
+       | grep -viE "$ALLOW" || true)
 
 if [ -z "$hits" ]; then
   echo "✓ no second person in versioned content"
