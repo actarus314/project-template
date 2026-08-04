@@ -344,7 +344,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 🔴 **The table describes THIS repository.** Three of these checks travel into a generated project — `verify-tone.sh`, `verify-narrative.sh`, `verify-memories.sh`, at its root, run by **its** `check.sh`. The rest stay here, either because their target does *(`templates/`, `docs/*.html`, the neighbouring `workspace/`)* or because they are still to be carried over. And **no generated workflow calls a `verify-*` script**, so those three run **locally only** over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.
 
-> **Why a check stops where it stops** is a question of writing, not of tooling: a rule of **method** follows the method everywhere, a rule of **published style** stops where publication stops. That discriminator lives in [`METHODE.md`](METHODE.md) and is what the *Perimeter* column applies.
+> **Why a check stops where it stops** is a question of writing, not of tooling. The *Perimeter* column below **applies** a discriminator it does not restate: → [`METHODE.md`](METHODE.md), *"What is ARMED — and how far a rule travels"*.
 
 | Check | Perimeter | Moment | Runs at **this repo's** gate? |
 |---|---|---|---|

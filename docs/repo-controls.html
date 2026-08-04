@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:4b5661136565b3607082838b438bf40e1e9f92222263e4768e3343e6bf45d5ab
+  checksum-source-md: sha256:3dc08498080a7f1b5227c37ed5d51d1d160fddc1ba914f8ae7032d7265ecd3da
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1432,7 +1432,7 @@
     <h3>The table describes THIS repository</h3>
     <p>Three of these checks travel into a generated project — <code>verify-tone.sh</code>, <code>verify-narrative.sh</code>, <code>verify-memories.sh</code>, at its root, run by <strong>its</strong> <code>check.sh</code>. The rest stay here, either because their target does (<code>templates/</code>, <code>docs/*.html</code>, the neighbouring <code>workspace/</code>) or because they are still to be carried over.</p>
     <p>⚠️ And <strong>no generated workflow calls a <code>verify-*</code> script</strong>, so those three run <strong>locally only</strong> over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.</p>
-    <p>→ <strong>Why a check stops where it stops</strong> is a question of writing, not of tooling: a rule of <strong>method</strong> follows the method everywhere, a rule of <strong>published style</strong> stops where publication stops. That discriminator lives in <code>METHODE.md</code>, and it is what the <em>Perimeter</em> column applies.</p>
+    <p>→ <strong>Why a check stops where it stops</strong> is a question of writing, not of tooling. The <em>Perimeter</em> column applies a discriminator it does not restate: see <code>METHODE.md</code>, <em>"What is ARMED — and how far a rule travels"</em>.</p>
   </div>
 
   <div class="tablewrap">
