@@ -122,66 +122,20 @@ A document no one rereads is no longer of any use. The runbook is read **while d
 
 ---
 
-## What is ARMED, and over which perimeter
+## What is ARMED — and how far a rule travels
 
-**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** What follows is armed: `check.sh` runs it.
+**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** These rules are armed: `check.sh` runs them.
 
-**This table is the single place that list lives.** Anything else that needs it — a tracking doc, a
-note — links here rather than repeating it: three partial copies of it once coexisted, and the three
-disagreed on how many there were.
+**The list of checks, their perimeter, their rhythm, their gate and what they cost live in
+[`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere
+else.** Three partial copies of that list once coexisted, and the three disagreed on how many there
+were.
 
-🔴 **The table describes THIS repository.** Three of these checks travel into a generated project —
-`verify-tone.sh`, `verify-narrative.sh`, `verify-memories.sh`, at its root, run by **its** `check.sh`.
-The rest stay here, either because their target does *(`templates/`, `docs/*.html`, the neighbouring
-`workspace/`)* or because they are still to be carried over. And **no generated workflow calls a
-`verify-*` script**, so those three run **locally only** over there: a generated project has the
-checks, not the gate. Measured by generating one, not by reading the tree.
+**What belongs HERE is the question that decides a perimeter**, because it is a question of writing:
 
-| Check | Perimeter | Moment | Runs at **this repo's** gate? |
-|---|---|---|---|
-| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
-| `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
-| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
-| `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
-| `checks/verify-secret-blindspots.sh` | `repo/` AND `workspace/` — a tracked file NAMED like a secret, and a credential pasted into a remote URL *(`.git/config` is never tracked, so gitleaks never reads it)* | after | ✅ |
-| `checks/verify-changelog.sh` | the **branch** — needs `fetch-depth: 0` | after | ✅ |
-| `checks/verify-checksums.sh` · `verify-version.sh` | `repo/` only | after | ✅ |
-| `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
-| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
-| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
-| `checks/verify-forbidden-command.sh` | any shell command, wherever it is run | **before** — refuses the three whose verdict is literal, states the question on the fourth | n/a — a `PreToolUse` hook on `Bash`, declared **by absolute path** in the assistant's settings |
-| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
-| `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
-| `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
-| `checks/verify-comment-drift.sh` | `repo/` — the scripts, not the prose | after | ❌ **deliberate** — advisory |
-| `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
-| `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
+> 🔴 **The discriminator is the NATURE of the rule.** A rule of **method** *(one fact one place, no dated narrative, the memories)* follows the method **everywhere** — into the neighbouring `workspace/` included. A rule of **published style** *(English, no second person)* **stops where publication stops.**
 
-### At which RHYTHM
-
-The split is not how long a check takes, it is **what has to change for it to say something other
-than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
-
-| Rhythm | What makes the verdict new | What runs there |
-|---|---|---|
-| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above **except the four below and the three hooks**, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
-| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels, **a `.md`** | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* · **`verify-echo.sh`** and **`verify-growth.sh`** on a `.md`, **`verify-comment-drift.sh`** on a `.sh` — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts |
-| **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
-
-> **The three hooks are outside all of this.** `verify-delegation.sh`, `verify-turn-claims.sh` and
-> `verify-forbidden-command.sh` are fired by the assistant's own events, not by `check.sh` — which
-> must never start them: each reads its payload from STDIN, and inside the parallel lot they would
-> compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing
-> capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real
-> breakage stops being noticed.
-
-🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind
-by construction: deleting a file breaks a link in another one, and no diff mentions that. What the
-changed files decide is whether a check **runs**, never what it looks at.
-
-> 🔴 **Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of **published style**, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter that is explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
->
-> **The discriminator is the NATURE of the rule.** A rule of **method** *(one fact one place, no dated narrative, the memories)* follows the method everywhere. A rule of **published style** *(English, no second person)* stops where publication stops.
+**Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of published style, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
 
 ---
 

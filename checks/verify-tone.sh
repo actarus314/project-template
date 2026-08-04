@@ -27,7 +27,16 @@ cd "$(dirname "$0")/.."   # repo root: this script lives in checks/   # repo roo
 PRONOUNS='(you|your|yours|vous|votre|vos|tu|toi|ton|ta|tes)'   # tone-self
 ALLOW='(2nd|second) person|2e personne|By contributing|wish to opt-out of having Renovate|# tone-self|# fr-pattern'
 
-hits=$(git grep -nIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
+# -i, and it is not cosmetic: `git grep` is case-sensitive, so the capitalised forms went through
+# untouched — the second person at the START of a sentence, which is where it lands most often.   # tone-self
+# The repo held none in prose, so the guard never had the chance to give itself away; the flag
+# found one on the first run, in a workflow template copied into every generic project.
+#
+# The -i stops at the PRONOUNS. ALLOW carries line markers (`# tone-self`) and literal quotations,
+# and matching those case-insensitively would widen the only exception mechanism this script has —
+# a `# TONE-SELF` would exempt a line. The defect was in the pronouns; the exceptions keep their
+# original precision.
+hits=$(git grep -inIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
        | grep -vE "$ALLOW" || true)
 
 if [ -z "$hits" ]; then

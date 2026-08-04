@@ -84,7 +84,7 @@ jobs:
           python3 -m pip install --quiet -r requirements-ci.txt
           zizmor --persona regular --config .github/zizmor.yml .github/workflows/
       # ──────────────────────────────────────────────────────────────────────────────────────────
-      # PROJECT BUILD & TEST — add the steps YOUR toolchain needs. Everything above is language-
+      # PROJECT BUILD & TEST — add the steps this project's toolchain needs. Everything above is language-
       # agnostic and already protects the repo; a `checks` job with no build step is valid and green.
       # ⚠ osv-scanner reads LOCKFILES: for Gradle, enable dependency locking so a `gradle.lockfile`
       #   is committed, otherwise the dependencies are not scanned. (Go/pip manifests need no lock.)

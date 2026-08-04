@@ -336,6 +336,68 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 ---
 
+## The house checks — the rules this repo arms itself
+
+**A rule held by discipline alone is a rule re-established by periodic manual passes — never a rule that holds.** Everything below is armed: `check.sh` runs it, and so does the CI.
+
+**This table is the single place that list lives.** Anything else needing it — a tracking doc, a note — links here rather than repeating it: three partial copies once coexisted, and the three disagreed on how many there were.
+
+🔴 **The table describes THIS repository.** Three of these checks travel into a generated project — `verify-tone.sh`, `verify-narrative.sh`, `verify-memories.sh`, at its root, run by **its** `check.sh`. The rest stay here, either because their target does *(`templates/`, `docs/*.html`, the neighbouring `workspace/`)* or because they are still to be carried over. And **no generated workflow calls a `verify-*` script**, so those three run **locally only** over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.
+
+> **Why a check stops where it stops** is a question of writing, not of tooling. The *Perimeter* column below **applies** a discriminator it does not restate: → [`METHODE.md`](METHODE.md), *"What is ARMED — and how far a rule travels"*.
+
+| Check | Perimeter | Moment | Runs at **this repo's** gate? |
+|---|---|---|---|
+| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
+| `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
+| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
+| `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
+| `checks/verify-secret-blindspots.sh` | `repo/` AND `workspace/` — a tracked file NAMED like a secret, and a credential pasted into a remote URL *(`.git/config` is never tracked, so gitleaks never reads it)* | after | ✅ |
+| `checks/verify-changelog.sh` | the **branch** — needs `fetch-depth: 0` | after | ✅ |
+| `checks/verify-checksums.sh` · `verify-version.sh` | `repo/` only | after | ✅ |
+| `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
+| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
+| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
+| `checks/verify-forbidden-command.sh` | any shell command, wherever it is run | **before** — refuses the three whose verdict is literal, states the question on the fourth | n/a — a `PreToolUse` hook on `Bash`, declared **by absolute path** in the assistant's settings |
+| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
+| `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
+| `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
+| `checks/verify-comment-drift.sh` | `repo/` — the scripts, not the prose | after | ❌ **deliberate** — advisory |
+| `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
+| `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
+
+### At which RHYTHM, and what it costs
+
+The split is not how long a check takes, it is **what has to change for it to say something other than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
+
+| Rhythm | What makes the verdict new | What runs there |
+|---|---|---|
+| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above **except the four below and the three hooks**, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
+| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels, **a `.md`** | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* · **`verify-echo.sh`** and **`verify-growth.sh`** on a `.md`, **`verify-comment-drift.sh`** on a `.sh` — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts |
+| **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
+
+**What a commit costs, by what it touches** *(wall clock, measured 2026-08-04 — Darwin arm64)*. 🔴 **A duration only means something alongside WHAT MOVED**: the same `--commit` spans 0,8 s to 2,6 s, and a figure quoted without its case was once read as wrong by a factor of 2,7 when it was simply measuring another one.
+
+| The commit touches… | What that wakes on top | Wall clock |
+|---|---|---|
+| nothing *(clean tree)* | — | **0,8 s** |
+| a workflow | `actionlint` · `zizmor` | **1,5 s** |
+| a `.md` | `verify-echo` · `verify-growth` | **1,9 s** |
+| a `.sh` | `verify-comment-drift` · `shellcheck` *(whole tree)* | **2,2 s** |
+| `templates/` | `verify-travel` *(it generates a project)* + both `.md` ones | **2,2 s** |
+| `.md` + `.sh` + a workflow | everything above | **2,6 s** |
+| `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **3,7 – 4,1 s** |
+
+**Parallelism absorbs, and the numbers say so**: the house checks add up to **3,9 s** of their own time, and the full lot takes **3,7 – 4,1 s** while adding osv, semgrep and gitleaks on top. **The three slowest are `verify-echo` (1,36 s), `verify-comment-drift` (0,83 s) and `verify-growth` (0,48 s)**; every other one sits under 0,11 s. Adding a check below ~0,4 s does not show.
+
+> **The three hooks are outside all of this.** `verify-delegation.sh`, `verify-turn-claims.sh` and `verify-forbidden-command.sh` are fired by the assistant's own events, not by `check.sh` — which must never start them: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.
+
+🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind by construction: deleting a file breaks a link in another one, and no diff mentions that. What the changed files decide is whether a check **runs**, never what it looks at.
+
+🔴 **A check publishes WHAT IT READ, never a bare tick.** An absent root, a glob matching nothing and a `|| true` swallowing an error all produce zero targets, and zero targets reads exactly like a clean tree. Three checks were caught claiming *"in both repos"* with the neighbouring `workspace/` renamed away; each now names what it read and what it did not.
+
+---
+
 ## GitHub repo configuration
 
 The whole config/maintenance spectrum for a public repo is **one-shot**: set at creation via `configure-repo.sh`, then forgotten.

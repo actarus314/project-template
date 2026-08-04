@@ -152,7 +152,12 @@ for s in checks/verify-*.sh; do
   esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
-  ( "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
+  # `set +e` inside the subshell, and it is what makes the capture work at all: this file runs
+  # under `set -e`, which the subshell inherits, so a check exiting non-zero killed it BEFORE the
+  # .rc was written. A missing .rc then reads as "it never ran" — announced instead of the check's
+  # own error message, which stayed in the .out and was never printed. Every failure looked alike,
+  # and a real never-ran became indistinguishable from an ordinary red.
+  ( set +e; "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
 done
 
 if in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
@@ -283,6 +288,16 @@ fi
 if [ -x checks/verify-do-not-break.sh ]; then
   note "verify-do-not-break.sh — invariants whose breakage is silent"
   if reap verify-do-not-break; then ok "nothing unplugged"; else ko "something unplugged"; fi
+fi
+
+# verify-checks-wiring.sh — the loop above started it like the others, and NOTHING read its verdict
+# back: a check deleted from the tree left this lot green while the CI, which runs the same file,
+# went red. The one promise this script makes is local == github, and the guard of that very wiring
+# was the one it dropped. It cannot catch this class itself — it compares the table against ci.yml
+# and init-project.sh, never against check.sh.
+if [ -x checks/verify-checks-wiring.sh ]; then
+  note "verify-checks-wiring.sh — every check declared, and wired as declared"
+  if reap verify-checks-wiring; then ok "checks wired"; else ko "a check is not wired as declared"; fi
 fi
 
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from

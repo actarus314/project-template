@@ -54,7 +54,7 @@ Rulesets, secret scanning, Dependabot alerts, immutable releases, Pages, descrip
 ./check.sh
 ```
 
-Replays **the CI's security checks** at **pinned versions** (auto-detected from `ci.yml`, so nothing to maintain by hand): what passes here passes the CI. It is **copied into every generated project**, and a `pre-commit` hook replays it on its own — on every commit, and **blocking**. It runs on [three rhythms](docs/METHODE.md), set by what has to change for a check to say something new.
+Replays **the CI's security checks** at **pinned versions** (auto-detected from `ci.yml`, so nothing to maintain by hand): what passes here passes the CI. It is **copied into every generated project**, and a `pre-commit` hook replays it on its own — on every commit, and **blocking**. It runs on [three rhythms](docs/repo-controls.md), set by what has to change for a check to say something new.
 
 ## What's in this folder
 
@@ -175,7 +175,7 @@ Le script est **idempotent**, c'est fait pour ça — et c'est ce rejeu qui **ac
 ```
 
 Rejoue **les checks de sécurité de la CI** à des **versions épinglées** (auto-détectées depuis `ci.yml`, donc rien à maintenir à la main) : ce qui passe ici passe la CI.
-Il est **copié dans chaque projet généré**, et un hook `pre-commit` le rejoue de lui-même — à chaque commit, et **bloquant**. Il tourne sur [trois rythmes](docs/METHODE.md), fixés par ce qui doit changer pour qu'un contrôle rende un verdict neuf.
+Il est **copié dans chaque projet généré**, et un hook `pre-commit` le rejoue de lui-même — à chaque commit, et **bloquant**. Il tourne sur [trois rythmes](docs/repo-controls.md), fixés par ce qui doit changer pour qu'un contrôle rende un verdict neuf.
 
 ## Ce que contient ce dossier
 
