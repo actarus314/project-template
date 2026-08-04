@@ -21,7 +21,54 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Every check now travels into a generated project, and every check has a gate there.** A project
+  received three of the eighteen, and **no generated workflow called any of them**: the checks
+  shipped, ran locally at best, and gated nothing. `init-project.sh` copies `checks/` whole, and
+  each project's `ci.yml` carries one line — **`./check.sh --house`** — behind which everything
+  under `checks/` runs. Adding a check is dropping a file in: no list to update, no workflow to
+  edit, in any project.
+- **`./check.sh --house`** — the house checks and nothing else. The external tools *(gitleaks,
+  semgrep, osv-scanner, actionlint, zizmor)* stay the CI's own steps, at the versions it pins and
+  checksums; replaying them inside the same job would download and rerun the lot for one verdict.
+- **`verify-checks-wiring.sh` guards the gate itself**: the line missing from any gating workflow
+  — this repo's `ci.yml` or the three shipped templates — fails the build. It also compares the
+  hooks the table calls `n/a` against the ones the runner actually keeps out, closing the gap it
+  used to state about itself.
+
+### Changed
+- **A check is universal: it detects whether its subject exists where it lands.** Present, it
+  bites; absent, it **says so** and returns 0. This is what made the travel possible at all — and
+  what a *"which ones deserve to travel?"* list could never answer, since only the check, at the
+  place, knows.
+- **This repository's `ci.yml` calls the same one line**, in place of twelve hand-written steps.
+  That list was one of the three that had to be kept in agreement by hand, and a check missing from
+  it passed no gate at all.
+- **`CONTRIBUTING.md` and `AGENTS.md` stop restating each other in generated projects.** The
+  `## Branching` block was injected into **both**, and the merge-verification procedure was written
+  out twice — so every project was born with the duplication METHODE forbids, in the two files that
+  teach its rules. `AGENTS.md` keeps both *(it is the authority, and what an agent reads)*;
+  `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
+
 ### Fixed
+- **Two checks would have FAILED in every generated project, not merely gone quiet.**
+  `verify-travel.sh` demanded an `init-project.sh` no project has, and `verify-do-not-break.sh`
+  demanded three `templates/repo/` files and a skill symlink that belong to the generator alone.
+  Each target now detects whether it applies, and **names what it did not read**.
+- **Four checks returned a silent 0 where they had read nothing** — `verify-memories.sh`,
+  `verify-checksums.sh`, `verify-changelog.sh` *(four exits)*, and one target of
+  `verify-do-not-break.sh`. The caller printed a tick over each: the bare ✓ this repo arms itself
+  against, in the checks that carry the arming.
+- **`verify-changelog.sh` carried a hand-written list of what counts as user-visible** — three
+  shipped scripts, while ten travelled. The perimeter is now **detected** from what the repository
+  holds, and a project holding none of it says so instead of reporting a permanent "nothing
+  visible". *(A branch-name trigger was measured and rejected: 11 of the last 40 pull requests here
+  carry no CHANGELOG line and are right not to.)*
+- **`verify-travel.sh` reported three checks that guard their targets correctly.** It only honoured
+  a shell test on the same line as the path; it now also honours a negated test, a Python existence
+  test, a literal bound to a name tested elsewhere, and a tested parent folder.
+- **The three hooks pointed at `docs/claude-code-setup.md`** in their own messages — a path that
+  resolves nowhere once they travel. Named by URL now, which resolves from anywhere.
 - **The three hooks were watched by nothing.** They live in the assistant's local settings, outside
   every repository: an entry that drops simply stops firing — no error, no trace, and the session
   reads as it always did. `verify-do-not-break.sh` now checks them, **deducing which checks are

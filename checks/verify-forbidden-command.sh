@@ -17,7 +17,7 @@
 #   sized these rules were shell commands CONTAINING these strings inside a heredoc. A naive match
 #   would have blocked the work that justified it.
 #
-# Wiring (the settings file is local, never versioned — see docs/claude-code-setup.md):
+# Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 #   "hooks": { "PreToolUse": [ { "matcher": "Bash",
 #     "hooks": [ { "type": "command", "command": "<abs>/verify-forbidden-command.sh" } ] } ] }
 set -euo pipefail

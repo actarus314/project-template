@@ -63,7 +63,11 @@ scan_config() {
     [ -n "$name" ] || continue
     url=$(git -C "$dir" remote get-url "$name" 2>/dev/null || true)
     case "$url" in
-      *://*@*) echo "✗ $label remote '$name' carries credentials in its URL — strip it with: git -C $dir remote set-url $name https://github.com/<owner>/<repo>.git" >&2; fail=1;;
+      # The example URL is written in CAPITALS, and deliberately not in angle brackets: this file
+      # travels into every generated project, where the generator scans what it just wrote for
+      # placeholders it failed to substitute. An angle-bracketed owner and repo inside a message is
+      # indistinguishable from one, and reads to whoever generated the project as a template bug.
+      *://*@*) echo "✗ $label remote '$name' carries credentials in its URL — strip it with: git -C $dir remote set-url $name https://github.com/OWNER/REPO.git" >&2; fail=1;;
     esac
   done < <(git -C "$dir" remote 2>/dev/null || true)
 

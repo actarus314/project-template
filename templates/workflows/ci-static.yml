@@ -115,6 +115,15 @@ jobs:
       # Real check with no per-project wiring: syntax-check every JS file.
       - name: Syntax check (all JS)
         run: find . -name '*.js' -not -path './node_modules/*' -not -path './.git/*' -exec node --check {} +
+      # ── The house checks — the rules this project arms itself ──────────────────────────────────
+      # ONE line, and everything under checks/ runs behind it. A check added to the project means
+      # a file dropped in; there is no workflow to edit here, in any project.
+      # Each check DETECTS whether its subject exists here: present, it bites; absent, it says so
+      # and returns 0 — so this step is the same in every toolchain, and stays right as they grow.
+      # It runs the house checks ONLY: gitleaks, semgrep, osv-scanner, actionlint and zizmor are the
+      # steps above, at the versions this file pins and checksums.
+      - name: House checks (checks/verify-*.sh, via check.sh --house)
+        run: ./check.sh --house
       # Uncomment the checks the project actually has:
       # - name: i18n parity
       #   run: node scripts/check-i18n.mjs

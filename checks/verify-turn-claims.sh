@@ -22,7 +22,7 @@
 # wordings fired on ~15% of turns, which is unreadable. Each narrowing below is what brought them
 # under 1%. Anything loosened here must be re-measured the same way, not eyeballed.
 #
-# Wiring (the settings file is local, never versioned — see docs/claude-code-setup.md):
+# Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 #   "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "<abs>/verify-turn-claims.sh" } ] } ] }
 set -euo pipefail
 

@@ -44,9 +44,20 @@ jobs:
         with:
           persist-credentials: false
           # verify-changelog.sh compares against the merge base with the default branch. On a
-          # truncated history there IS no merge base, and the script exits 0 in silence — a guard
-          # that looks installed and watches nothing. The full history is what makes it real.
+          # truncated history there IS no merge base, and the script says so and returns 0 — a
+          # guard that looks installed and watches nothing. The full history is what makes it real.
           fetch-depth: 0
+          # 🔴 checkout fetches NO tags by default, and the tag is the single source of the version:
+          # without this, verify-version.sh finds nothing to compare and passes by being BLIND.
+          # It runs inside `--house` here, so the condition it needs belongs to THIS checkout.
+          fetch-tags: true
+      # verify-travel.sh generates throwaway projects, and generating one ends in `git commit`,
+      # which refuses to run without an identity. Set here for the same reason the generation job
+      # sets it: a runner has none.
+      - name: Git identity (verify-travel.sh generates projects, and a generation commits)
+        run: |
+          git config --global user.email ci@example.com
+          git config --global user.name  ci
       # -S warning: these are mature scripts; report real problems (warning/error), not the info/style
       # nitpicks (SC2086 on a deliberate word-split, etc.) that would fail the job for no real defect.
       # AUTO-DETECTED, never a hand-written list: the list here was already missing a script, and a
@@ -58,32 +69,17 @@ jobs:
           if [ -d .githooks ]; then mapfile -t -O "${#targets[@]}" targets < <(find .githooks -type f); fi
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"
-      # Second person, forbidden by standard §1. The SAME script check.sh runs, never a copy of its
-      # grep: two sources drift. Local-only, this check warned; here it blocks.
-      - name: No second person in versioned content (verify-tone.sh)
-        run: ./checks/verify-tone.sh
-      # These two were reachable ONLY through a manual ./check.sh — that is, through the very
-      # manual pass this whole effort exists to replace. A guard nothing triggers is not a guard.
-      - name: No dated narrative in code comments (verify-narrative.sh)
-        run: ./checks/verify-narrative.sh
-      - name: No dead relative link (verify-links.sh)
-        run: ./checks/verify-links.sh
-      - name: No secret where gitleaks never looks (verify-secret-blindspots.sh)
-        run: ./checks/verify-secret-blindspots.sh
-      # Two of its three targets live outside the repository and skip cleanly here; the third one
-      # does not. `git rm --cached` on a force-added file happens in a PULL REQUEST, and it ships
-      # silently into every generated project — so the gate that has to see it is this one, not a
-      # local replay that only runs if the maintainer commits from that machine.
-      - name: Nothing quietly unplugged (verify-do-not-break.sh)
-        run: ./checks/verify-do-not-break.sh
-      # The three hand-written lists that name the checks one by one: these CI steps, what
-      # init-project.sh copies, and the repo-controls table. A check added or renamed has to reach all
-      # three by hand, and every way of missing one is silent.
-      - name: Every check declared and wired as declared (verify-checks-wiring.sh)
-        run: ./checks/verify-checks-wiring.sh
+      # ── The house checks — ONE step, and it is the SAME line every generated project runs ───────
+      # This used to be a step per check, written by hand. That list was one of three naming the
+      # checks one by one, and each way of missing one was silent: a check absent from here passed
+      # no gate at all. Behind `--house` runs whatever sits under checks/, so adding one is dropping
+      # a file in — here and in every project, with no workflow to edit.
+      # Each check states what it READ: an absent target is announced, never folded into a tick.
+      # `--house` runs the house checks ONLY — gitleaks, semgrep, osv-scanner, actionlint and zizmor
+      # have their own jobs, at the versions this file pins and checksums.
       # Needs the branch, so it needs full history: fetch-depth 0 on this job's checkout.
-      - name: A user-visible change carries a CHANGELOG line (verify-changelog.sh)
-        run: ./checks/verify-changelog.sh
+      - name: House checks (checks/verify-*.sh, via check.sh --house)
+        run: ./check.sh --house
 
   generate-and-lint:
     runs-on: ubuntu-latest
@@ -177,15 +173,6 @@ jobs:
           echo "${OSV_SHA256}  $RUNNER_TEMP/osv-scanner" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/osv-scanner"
           ( cd "$RUNNER_TEMP/proj/repo" && "$RUNNER_TEMP/osv-scanner" scan source -r . --allow-no-lockfiles )
-      # A path can resolve HERE and be dead where the file LANDS — no grep of this tree can see that,
-      # only a generated project can. So it belongs in THIS job and nowhere else: the git identity
-      # the generation needs is already set above. The script makes its own throwaway copy and
-      # cleans it up, so it does not disturb the shared $RUNNER_TEMP/proj the later steps read.
-      # Locally it was reachable through ./check.sh and the advisory pre-commit hook alone — that is,
-      # through the manual pass this whole set of checks exists to replace.
-      - name: No path that dies where the file lands (verify-travel.sh)
-        if: matrix.name == 'node-full'
-        run: ./checks/verify-travel.sh
       - name: Generated repos are clean and secrets.md stays untracked
         run: |
           set -euo pipefail
@@ -195,35 +182,6 @@ jobs:
           if git -C "$p/workspace" ls-files --error-unmatch secrets.md >/dev/null 2>&1; then
             echo "::error::secrets.md is tracked in workspace/"; exit 1
           fi
-
-  docs-checksums:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      # Anti-drift guard: each hand-authored docs/X.html carries the sha256 of the docs/X.md it's
-      # the layout of; this fails the PR if the .md moved on without the .html being updated too.
-      - name: Check docs/*.md <-> docs/*.html checksums (docs/verify-checksums.sh)
-        run: checks/verify-checksums.sh
-
-  version-coherence:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          # 🔴 checkout fetches NO tags by default, and the tag is the single source of the
-          # version: without this, `git describe` finds nothing and the guard would pass by
-          # being blind — the exact false green this repo exists to catch.
-          fetch-tags: true
-          fetch-depth: 0
-      - name: Tag <-> CHANGELOG <-> --version coherence (verify-version.sh)
-        run: ./checks/verify-version.sh
 
   gitleaks:
     runs-on: ubuntu-latest
@@ -257,7 +215,7 @@ jobs:
   # `if: always()` is what makes it a real gate: without it the job would be skipped as soon as a
   # dependency fails, the check would never report, and the PR would block on a green CI.
   checks:
-    needs: [validate-renovate, lint-scripts, generate-and-lint, docs-checksums, version-coherence, gitleaks]
+    needs: [validate-renovate, lint-scripts, generate-and-lint, gitleaks]
     if: always()
     runs-on: ubuntu-latest
     permissions: {}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # A PreToolUse hook: the three delegation instructions, checked BEFORE the subagent is launched.
 #
-# The rule (docs/claude-code-setup.md): a subagent does the work ITSELF, does not re-delegate,
+# The rule (https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md): a subagent does the work ITSELF, does not re-delegate,
 # does not call the advisor, and runs on a cheaper model.
 #
 # 🔴 All three are OPT-INS. Left unwritten, the default does the opposite of all three, SILENTLY —
@@ -14,7 +14,7 @@
 # ⚠ Deliberately NARROW: everything other than a subagent launch exits immediately. A guard that
 #   fires everywhere earns overrides until nobody reads it any more.
 #
-# Wiring (the settings file is local, never versioned — see docs/claude-code-setup.md):
+# Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 #   "hooks": { "PreToolUse": [ { "matcher": "Agent",
 #     "hooks": [ { "type": "command", "command": "<abs>/verify-delegation.sh" } ] } ] }
 #
@@ -69,7 +69,7 @@ print(json.dumps({
     "hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny"},
     "systemMessage": ("Delegation instructions missing: " + detail
                       + ". All three are opt-ins: unwritten, the default does the opposite of all "
-                        "three, silently (docs/claude-code-setup.md). Add them, then relaunch."),
+                        "three, silently (https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md). Add them, then relaunch."),
 }), file=sys.stderr)
 sys.exit(2)
 PY

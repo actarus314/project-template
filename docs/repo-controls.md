@@ -14,6 +14,7 @@
 - [What to enable, and where](#what-to-enable-and-where)
 - [The controls — what verifies the code](#the-controls-what-verifies-the-code)
 - [The house checks — the rules this repo arms itself](#the-house-checks-the-rules-this-repo-arms-itself)
+  - [The GATE — one line, and it is the same one everywhere](#the-gate-one-line-and-it-is-the-same-one-everywhere)
   - [The THREE RHYTHMS — what triggers each, and what each costs](#the-three-rhythms-what-triggers-each-and-what-each-costs)
 - [GitHub repo configuration](#github-repo-configuration)
 - [The control matrix — what, where, when, by whom](#the-control-matrix-what-where-when-by-whom)
@@ -360,29 +361,41 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 **This table is the single place that list lives.** Anything else needing it — a tracking doc, a note — links here rather than repeating it: three partial copies once coexisted, and the three disagreed on how many there were.
 
-🔴 **The table describes THIS repository.** Three of these checks travel into a generated project — `verify-tone.sh`, `verify-narrative.sh`, `verify-memories.sh`, at its root, run by **its** `check.sh`. The rest stay here, either because their target does *(`templates/`, `docs/*.html`, the neighbouring `workspace/`)* or because they are still to be carried over. And **no generated workflow calls a `verify-*` script**, so those three run **locally only** over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.
+🔴 **ALL of them travel, and none of them is told where it is.** `init-project.sh` copies `checks/` whole, and every check **DETECTS whether its subject exists where it lands**: present, it bites; absent, it says so and returns 0. Three used to be named one by one, and the other fifteen stayed behind for no reason beyond the order they were written in — the question *"does this one deserve to travel?"* has no addressee, because only the check, at the place, can answer it.
+
+🔴 **And a generated project has the GATE, not just the checks.** Its `ci.yml` carries the same single line this repository's does — `./check.sh --house` — behind which everything under `checks/` runs. A check added is a file dropped in, with no workflow to edit, in any project. *(Before that line existed, no generated workflow called a `verify-*` at all: the checks shipped, ran locally at best, and gated nothing.)* `verify-checks-wiring.sh` fails the build if that line leaves any gating workflow, here or in the templates.
 
 > **Why a check stops where it stops** is a question of writing, not of tooling. The *Perimeter* column below **applies** a discriminator it does not restate: → [`METHODE.md`](METHODE.md), *"What is ARMED — and how far a rule travels"*.
+>
+> ⚠️ **The perimeter is what a check READS, never where it is allowed to run.** A check whose subject lives outside the repository still runs at the gate — it reports there that it had nothing to read, which is a verdict, where a silence was not.
 
-| Check | Perimeter | Moment | Runs at **this repo's** gate? |
+| Check | Perimeter | Moment | Blocks at the gate? |
 |---|---|---|---|
 | `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
 | `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
 | `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
 | `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
 | `checks/verify-secret-blindspots.sh` | `repo/` AND `workspace/` — a tracked file NAMED like a secret, and a credential pasted into a remote URL *(`.git/config` is never tracked, so gitleaks never reads it)* | after | ✅ |
-| `checks/verify-changelog.sh` | the **branch** — needs `fetch-depth: 0` | after | ✅ |
-| `checks/verify-checksums.sh` · `verify-version.sh` | `repo/` only | after | ✅ |
-| `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
-| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
-| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
+| `checks/verify-changelog.sh` | the **branch**, against a perimeter of published paths **detected, never listed** — needs `fetch-depth: 0` | after | ✅ |
+| `checks/verify-checksums.sh` · `verify-version.sh` | the `.md`/`.html` pairs, and the tag — each absent from a fresh project, each said out loud | after | ✅ *(`verify-version.sh` needs `fetch-tags: true`: without the tags it passes by finding nothing)* |
+| `checks/verify-travel.sh` | wherever a **generator** is — it reads a project it generates | after | ✅ — silent-no-more where no `init-project.sh` exists, which is every generated project |
+| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ✅ — it runs there and **names the folder it found none in**. A CI has no memories, and saying so is the verdict |
+| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ✅ — same shape: at the gate it reports that no `workspace/` sits beside the checkout |
 | `checks/verify-forbidden-command.sh` | any shell command, wherever it is run | **before** — refuses the three whose verdict is literal, states the question on the fourth | n/a — a `PreToolUse` hook on `Bash`, declared **by absolute path** in the assistant's settings |
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
-| `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
+| `checks/verify-checks-wiring.sh` | this table, the runner's hook exclusions, **and the gate line in every gating workflow** — the part that says something in a generated project too | after | ✅ |
 | `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
 | `checks/verify-comment-drift.sh` | `repo/` — the scripts, not the prose | after | ❌ **deliberate** — advisory |
 | `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
 | `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
+
+### The GATE — one line, and it is the same one everywhere
+
+`./check.sh --house` runs the house checks **and nothing else**: `gitleaks`, `semgrep`, `osv-scanner`, `actionlint` and `zizmor` are the CI's own steps, at versions it pins and checksums itself, and replaying them inside the same job would download and rerun the whole lot for the same verdict.
+
+That single line is what every gating workflow calls — this repository's `ci.yml` and the three shipped `templates/workflows/ci-*.yml`. **It used to be a step per check, written by hand in each file**, which is a list, in four places, that has to be edited in every direction the day a check is added. `verify-checks-wiring.sh` fails the build if the line goes missing from any of them.
+
+⚠️ **Two conditions belong to the checkout, not to the script**, and each one turns a guard blind without failing: `fetch-depth: 0` *(`verify-changelog.sh` compares against a merge base)* and `fetch-tags: true` *(`verify-version.sh` reads the tag, and finds nothing without them)*.
 
 ### The THREE RHYTHMS — what triggers each, and what each costs
 

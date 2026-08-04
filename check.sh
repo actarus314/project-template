@@ -10,6 +10,7 @@
 #
 # Usage:  ./check.sh            everything
 #         ./check.sh --commit   only what a commit can make say something new (see MODE below)
+#         ./check.sh --house    ONLY the house checks — the gate a CI calls (see MODE below)
 #
 # Versions are NEVER hardcoded: read from `ci.yml` (+ `requirements-ci.txt`). Binaries are cached
 # under `.ci-tools/` (gitignored). CI itself verifies the SHA256 of the Linux asset; here we pin the
@@ -31,15 +32,30 @@ mkdir -p "$CACHE"
 # The checks that DO read the tree read ALL of it, in both modes: a check narrowed to the diff is
 # blind by construction — deleting a file breaks a link in another one, which no diff mentions.
 # What `touched` decides is whether a check RUNS, never what it looks at.
+#
+# --house is the CI's door, and the reason it exists is that the alternative is a hand-kept list.
+# A workflow naming its checks one step at a time has to be edited in every template the day a check
+# is added, in every direction, silently — the failure this repository has already paid for. One
+# line calls this mode, and whatever sits under checks/ runs behind it.
+# It runs the house checks and NOTHING else: gitleaks, semgrep, osv-scanner, actionlint and zizmor
+# are the CI's OWN steps, at versions it pins and checksums itself. Replaying them here would
+# download and rerun the whole lot a second time, in the same job, for the same verdict.
 MODE=full
-[ "${1:-}" = "--commit" ] && MODE=commit
+case "${1:-}" in
+  --commit) MODE=commit;;
+  --house)  MODE=house;;
+esac
 changed=""
 # The neighbouring workspace/ is a SEPARATE git repository, so a diff run here is blind to it —
 # and two checks (verify-echo, verify-growth) read its prose. Without this, a SUIVI.md that
 # doubles in size wakes nothing unless a .md happens to move here in the same commit.
 [ "$MODE" = commit ] && changed=$( { git diff --name-only HEAD 2>/dev/null || true
                                      git -C ../workspace diff --name-only HEAD 2>/dev/null || true; } )
-touched() { [ "$MODE" = full ] || printf '%s\n' "$changed" | grep -qE "$1"; }
+# Only --commit narrows anything: in every other mode a check runs, and what it READS is never
+# narrowed in any of them.
+touched() { [ "$MODE" != commit ] || printf '%s\n' "$changed" | grep -qE "$1"; }
+# The external tools are the CI's own steps — skipped at the gate, run in the other two modes.
+external() { [ "$MODE" != house ]; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
 uarch=$(uname -m)
@@ -125,15 +141,19 @@ SEMGREP_SPEC=$(grep -m1 '^semgrep==' "$reqfile" 2>/dev/null || true)
 RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 || true)
 [ -n "$RENOVATE_PKG" ] || RENOVATE_PKG=renovate@43.288.0
 
-note "Pinned tools (auto-detected from $CI)"
-[ -n "$GITLEAKS_VERSION" ]   && ensure_gitleaks "$GITLEAKS_VERSION"
-[ -n "$ACTIONLINT_VERSION" ] && ensure_actionlint "$ACTIONLINT_VERSION"
-if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION"; fi
-venv_specs=()
-if in_ci zizmor  && [ -n "$ZIZMOR_SPEC" ];  then venv_specs+=("$ZIZMOR_SPEC");  fi
-if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); fi
-[ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
-ok "ready under $CACHE/"
+if external; then
+  note "Pinned tools (auto-detected from $CI)"
+  [ -n "$GITLEAKS_VERSION" ]   && ensure_gitleaks "$GITLEAKS_VERSION"
+  [ -n "$ACTIONLINT_VERSION" ] && ensure_actionlint "$ACTIONLINT_VERSION"
+  if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION"; fi
+  venv_specs=()
+  if in_ci zizmor  && [ -n "$ZIZMOR_SPEC" ];  then venv_specs+=("$ZIZMOR_SPEC");  fi
+  if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); fi
+  [ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
+  ok "ready under $CACHE/"
+else
+  note "House checks only (--house) — the external tools are the CI's own steps"
+fi
 
 # The house checks read the tree and write nothing, so they all start here, at once: their sum
 # becomes their slowest, and it runs under the external tools instead of after them. Each output is
@@ -164,7 +184,7 @@ for s in checks/verify-*.sh; do
   ( set +e; "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
 done
 
-if in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
+if external && in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
   note "shellcheck — shell scripts"
   targets=()
   while IFS= read -r f; do targets+=("$f"); done < <(
@@ -175,7 +195,7 @@ if in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
   elif shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
 fi
 
-if in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
+if external && in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "actionlint — workflows"
   if "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
 fi
@@ -183,7 +203,7 @@ fi
 # Its CONFIG counts as much as the workflows: tightening or loosening a rule in
 # templates/repo/.github/zizmor.yml changes the verdict, and that path is not under
 # .github/workflows/ — so gating on the workflows alone left the config unwatched.
-if in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/|zizmor\.yml$'; then
+if external && in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/|zizmor\.yml$'; then
   note "zizmor — workflows (config $zconfig)"
   if "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
@@ -203,7 +223,7 @@ fi
 # answered. What has NOT been pushed is the part that can still hold something new, and that scope
 # costs the same on a repository of any size. It also sees a secret from a local commit whose file
 # has since been deleted, which scanning the last commit alone misses.
-if [ -n "$GITLEAKS_VERSION" ]; then
+if external && [ -n "$GITLEAKS_VERSION" ]; then
   upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
   if [ "$MODE" = commit ] && [ -n "$upstream" ]; then
     note "gitleaks — what is not on $upstream yet"
@@ -326,7 +346,7 @@ while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
 # The pinned renovate version is read from ci.yml, and a bump can flip a valid config to
 # invalid or back — so the workflow carrying the pin wakes the validator too.
-if [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$|^\.github/workflows/ci\.yml$'; then
+if external && [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$|^\.github/workflows/ci\.yml$'; then
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
   # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
   # validator takes a file list and still names each file it rejects.
