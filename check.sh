@@ -249,6 +249,14 @@ if [ -x checks/verify-memories.sh ]; then
   if reap verify-memories; then ok "memories"; else ko "memories"; fi
 fi
 
+# verify-do-not-break.sh — the invariants of AGENTS.md, "Do not break". Two of its three targets
+# sit outside the repository, like the memories above; the third one, the force-added files, is
+# inside and so it still says something under the CI.
+if [ -x checks/verify-do-not-break.sh ]; then
+  note "verify-do-not-break.sh — invariants whose breakage is silent"
+  if reap verify-do-not-break; then ok "nothing unplugged"; else ko "something unplugged"; fi
+fi
+
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
 if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then

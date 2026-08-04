@@ -149,7 +149,8 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
 | `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
 | `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
-| `checks/verify-growth.sh` | `repo/` only | after | ❌ **deliberate** — advisory, it blocks nowhere |
+| `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
+| `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
 
 ### At which RHYTHM
 

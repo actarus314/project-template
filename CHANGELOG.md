@@ -21,6 +21,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A check for the invariants whose breakage is silent** *(`checks/verify-do-not-break.sh`)*: the
+  skill reached through a symlink rather than a drifting copy, the three files kept tracked against
+  the neighbouring template `.gitignore`, and the absolute paths the assistant's own instructions
+  read at every session start. Nothing reported any of the three, in either direction — and none of
+  them raises an error when it breaks: the skill just vanishes from the list, a session quietly
+  loses the documents it reasons from, a generated project quietly ships without three files.
+
+### Fixed
+- **The concision check was blind where it mattered most** *(`checks/verify-growth.sh`)*. Concision
+  is a rule of method, so it follows the method into the neighbouring workspace — where the very
+  document the method names as the one that must shrink lives. It now reads both repositories,
+  against the release timestamp rather than a tag the workspace does not carry, and compares
+  **bytes as well as lines**: the curated documents run from 57 to 175 bytes per line, so one
+  written a sentence per line can swell by a quarter in bytes while its line count goes *down*.
+
 ## [1.2.0] - 2026-08-04
 
 ### Added

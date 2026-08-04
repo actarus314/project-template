@@ -121,6 +121,9 @@ red pull request. The safety net is local, and partly human.
 
 - **pre-commit hook** — `gitleaks` on staged files (a commit carrying a secret is rejected), then a
   BLOCKING replay of `./check.sh --commit` on every commit, with the full lot every 6h (`CHECK_MAX_AGE_HOURS`).
+  *(Stated here rather than linked: this is a generated project, and the document that owns the
+  three rhythms lives in the template repository, where no link from here resolves. The behaviour
+  itself is carried by `.githooks/pre-commit` — that file is what decides, this line describes it.)*
 - **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
   Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
 - **`./check.sh`** — replays the CI's security checks locally at the pinned versions, so `local == github`.
