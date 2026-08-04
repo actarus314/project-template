@@ -110,8 +110,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   list had already fallen behind by one script, while `check.sh` had always found them with a
   `find` — so a new script was linted locally and not in the CI, breaking `local == github`
   silently. A forgotten target is a hole nothing reports.
+- **`check.sh` runs in about half the time** *(6,25 s → 3,87 s here)*, which is what makes it
+  affordable to run often rather than once a day. Most of it was never a check: asking each Python
+  tool for its version booted an interpreter to print a string, 1.5 s of every run, where pip
+  already named the directory it installed. `verify-growth.sh` now reads the release's line counts
+  in one `git` call instead of one per document, and the Renovate configs are validated in a single
+  `npx` call instead of one per file.
+- **A venv left behind by a moved project directory now rebuilds itself.** Moving the directory
+  leaves every absolute shebang under `.ci-tools/venv/` pointing nowhere, `pip` included — so
+  nothing could repair it in place, and the cure was knowing to run `rm -rf .ci-tools/venv` by hand.
 
 ### Fixed
+
+- **`check.sh` did not validate the Renovate configs at the pinned version.** The version was read
+  up to the first dot, which turns `renovate@43.288.0` into `renovate@43` — a RANGE. `npx` then
+  resolved whatever `43.x` npm serves that day, so the local run stopped executing what the CI
+  executes, which is the single guarantee this script exists to give.
 
 - **The CI-verification command existed in two forms, one degraded.** `AGENTS.md` carried
   `gh run list --commit "$sha" --json workflowName,status,conclusion`; the RUNBOOK, `repo-controls.md`

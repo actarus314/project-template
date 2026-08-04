@@ -61,12 +61,24 @@ ensure_osv() {
   chmod +x "$bin"
 }
 # Shared Python venv for zizmor and semgrep; only reinstalls if a version is missing.
+#
+# The installed version is read from disk: asking each tool booted a Python interpreter, 1.5 s per run.
+# That no longer proves the tool STARTS, and one way to break it is known — moving the project
+# directory leaves the venv's absolute shebangs pointing nowhere, `pip` included, so it cannot be
+# repaired in place. The interpreter pip's shebang names is checked instead, and the venv rebuilt.
 ensure_venv() {
-  local need=0 spec tool ver
+  local need=0 spec tool ver interp
+  if [ -f "$CACHE/venv/bin/pip" ]; then
+    interp=$(head -1 "$CACHE/venv/bin/pip"); interp="${interp#\#!}"; interp="${interp%% *}"
+    [ -x "$interp" ] || { echo "  venv points at a path that no longer exists — rebuilding"; rm -rf "$CACHE/venv"; }
+  fi
   [ -d "$CACHE/venv" ] || { python3 -m venv "$CACHE/venv"; need=1; }
   for spec in "$@"; do
     tool="${spec%%==*}"; ver="${spec#*==}"
-    "$CACHE/venv/bin/$tool" --version 2>/dev/null | grep -q "$ver" || need=1
+    if [ ! -x "$CACHE/venv/bin/$tool" ] ||
+       ! compgen -G "$CACHE/venv/lib/python*/site-packages/${tool}-${ver}.dist-info" >/dev/null; then
+      need=1
+    fi
   done
   [ "$need" = 0 ] && return
   "$CACHE/venv/bin/pip" install --quiet --upgrade pip >/dev/null
@@ -78,7 +90,10 @@ ACTIONLINT_VERSION=$(pin ACTIONLINT_VERSION)
 OSV_VERSION=$(pin OSV_VERSION)
 ZIZMOR_SPEC=$(grep -m1 '^zizmor==' "$reqfile" 2>/dev/null || true)
 SEMGREP_SPEC=$(grep -m1 '^semgrep==' "$reqfile" 2>/dev/null || true)
-RENOVATE_PKG=$(grep -m1 -o 'renovate@[0-9]*' "$CI" | head -1 || true)
+# The WHOLE version, not up to the first dot: `renovate@43` is a RANGE, and npx would then resolve
+# whatever 43.x npm serves today instead of the version the CI pins — the one thing this file exists
+# to guarantee.
+RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 || true)
 [ -n "$RENOVATE_PKG" ] || RENOVATE_PKG=renovate@43.288.0
 
 note "Pinned tools (auto-detected from $CI)"
@@ -203,11 +218,10 @@ while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
 if [ "${#renovate_files[@]}" -gt 0 ]; then
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
-  rv=1
-  for f in "${renovate_files[@]}"; do
-    npx --yes --package "$RENOVATE_PKG" renovate-config-validator "$f" >/dev/null 2>&1 || rv=0
-  done
-  [ "$rv" = 1 ] && ok "renovate configs valid" || ko "renovate config invalid"
+  # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
+  # validator takes a file list and still names each file it rejects.
+  if npx --yes --package "$RENOVATE_PKG" renovate-config-validator "${renovate_files[@]}" >/dev/null 2>&1
+  then ok "renovate configs valid"; else ko "renovate config invalid"; fi
 fi
 
 # verify-tone.sh — same shared-script model: the rule lives THERE, the CI calls the same file.
