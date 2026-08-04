@@ -68,14 +68,19 @@ jobs:
         run: ./checks/verify-narrative.sh
       - name: No dead relative link (verify-links.sh)
         run: ./checks/verify-links.sh
-      - name: No file NAMED like a secret is tracked (verify-no-secret-tracked.sh)
-        run: ./checks/verify-no-secret-tracked.sh
+      - name: No secret where gitleaks never looks (verify-secret-blindspots.sh)
+        run: ./checks/verify-secret-blindspots.sh
       # Two of its three targets live outside the repository and skip cleanly here; the third one
       # does not. `git rm --cached` on a force-added file happens in a PULL REQUEST, and it ships
       # silently into every generated project — so the gate that has to see it is this one, not a
       # local replay that only runs if the maintainer commits from that machine.
       - name: Nothing quietly unplugged (verify-do-not-break.sh)
         run: ./checks/verify-do-not-break.sh
+      # The three hand-written lists that name the checks one by one: these CI steps, what
+      # init-project.sh copies, and the METHODE table. A check added or renamed has to reach all
+      # three by hand, and every way of missing one is silent.
+      - name: Every check declared and wired as declared (verify-checks-wiring.sh)
+        run: ./checks/verify-checks-wiring.sh
       # Needs the branch, so it needs full history: fetch-depth 0 on this job's checkout.
       - name: A user-visible change carries a CHANGELOG line (verify-changelog.sh)
         run: ./checks/verify-changelog.sh

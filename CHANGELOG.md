@@ -29,6 +29,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   them raises an error when it breaks: the skill just vanishes from the list, a session quietly
   loses the documents it reasons from, a generated project quietly ships without three files.
 
+- **A check that the checks are wired as declared** *(`checks/verify-checks-wiring.sh`)*. Three
+  hand-written lists name them one by one — the CI steps, what `init-project.sh` copies into a
+  generated project, and the table in `METHODE.md` — and a check added, renamed or moved has to
+  reach all three by hand. Every way of missing one is silent: absent from the CI it passes no
+  gate, absent from `init-project.sh` it ships nowhere, absent from the table it is armed and
+  undocumented. Auto-detecting the CI list would be wrong, since four checks have no business
+  there; that exception was already written down in the table, so the table is now the source and
+  the lists are compared against it.
+
+### Changed
+- **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
+  place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
+  gitleaks reads it neither on staged files nor over the full history — a
+  `https://<token>@github.com/…` remote therefore sits in plain text where nothing in the
+  repository looks, and survives every clone of the working copy. The credential helper is checked
+  with it: it must name a variable, never carry a literal. The offending value is never printed —
+  reporting a leak by repeating it moves it into a terminal, a log and a CI transcript.
+
 ### Fixed
 - **The concision check was blind where it mattered most** *(`checks/verify-growth.sh`)*. Concision
   is a rule of method, so it follows the method into the neighbouring workspace — where the very

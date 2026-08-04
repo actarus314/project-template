@@ -143,12 +143,13 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
 | `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
 | `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
-| `checks/verify-no-secret-tracked.sh` | `repo/` AND `workspace/` | after | ✅ |
+| `checks/verify-secret-blindspots.sh` | `repo/` AND `workspace/` — a tracked file NAMED like a secret, and a credential pasted into a remote URL *(`.git/config` is never tracked, so gitleaks never reads it)* | after | ✅ |
 | `checks/verify-changelog.sh` | the **branch** — needs `fetch-depth: 0` | after | ✅ |
 | `checks/verify-checksums.sh` · `verify-version.sh` | `repo/` only | after | ✅ |
 | `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
 | `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
 | `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
+| `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
 | `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
 | `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
 

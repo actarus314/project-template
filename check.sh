@@ -201,11 +201,11 @@ if [ -x checks/verify-checksums.sh ]; then
   if reap verify-checksums; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
-# verify-no-secret-tracked.sh — gitleaks looks for secret-SHAPED strings, never for a file CALLED
+# verify-secret-blindspots.sh — gitleaks looks for secret-SHAPED strings, never for a file CALLED
 # .env. An empty one passes it, gets committed, and is filled in at the next commit.
-if [ -x checks/verify-no-secret-tracked.sh ]; then
-  note "verify-no-secret-tracked.sh — a file NAMED like a secret, tracked"
-  if reap verify-no-secret-tracked; then ok "no secret-named file tracked"; else ko "secret-named file tracked"; fi
+if [ -x checks/verify-secret-blindspots.sh ]; then
+  note "verify-secret-blindspots.sh — where a secret sits that gitleaks never reads"
+  if reap verify-secret-blindspots; then ok "no secret in a blind spot"; else ko "secret in a blind spot"; fi
 fi
 
 # verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
