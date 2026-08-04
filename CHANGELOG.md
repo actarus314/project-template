@@ -45,6 +45,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
   turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
   unreadable; these fire on under 1 %.
+- **A guard on the commands this repo forbids** *(`checks/verify-forbidden-command.sh`, a
+  `PreToolUse` hook on Bash)*. Three are refused outright because their verdict is a literal string,
+  present or absent: `git rm --cached` on a force-added template file, `gh pr merge --admin`, and
+  `gh pr checks`. A fourth — opening a pull request — is only WARNED about, since a second one is
+  sometimes right and a guard wrong one time in three teaches its own bypass. Heredoc bodies are
+  stripped before matching: the very measurements that sized these rules were commands containing
+  those strings, and a naive match would have blocked the work that justified it.
 - **A check for the same fact stated twice in different words** *(`checks/verify-echo.sh`, advisory)*.
   Verbatim copying was already covered; restatement was not. Sentence embeddings were tried first
   and **rejected on measurement** — a static model flagged 1840 pairs against this check's 45, and

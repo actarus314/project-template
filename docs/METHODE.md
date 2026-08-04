@@ -149,6 +149,7 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-travel.sh` | `repo/` only — reads a **generated** project | after | ✅ |
 | `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
 | `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
+| `checks/verify-forbidden-command.sh` | any shell command, wherever it is run | **before** — refuses the three whose verdict is literal, states the question on the fourth | n/a — a `PreToolUse` hook on `Bash`, declared **by absolute path** in the assistant's settings |
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
 | `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
 | `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
