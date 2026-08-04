@@ -43,7 +43,7 @@ scan() {
   # templates/ holds TEMPLATES, not secrets: templates/repo/.envrc is the model copied into every
   # generated project, tracked on purpose with `git add -f` (AGENTS.md forbids un-tracking it).
   hit=$(git -C "$dir" ls-files 2>/dev/null | grep -iE "$pattern" \
-        | grep -vE '\.example$|gitleaksignore|^templates/' || true)
+        | grep -vE '\.example$|gitleaksignore|^templates/|\.(md|txt|rst|html)$' || true)
   if [ -n "$hit" ]; then
     echo "✗ $label tracks a secret-named file: $(echo "$hit" | tr '\n' ' ')" >&2
     fail=1

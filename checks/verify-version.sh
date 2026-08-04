@@ -35,10 +35,13 @@ fi
 # added is covered the day it lands. A hand-kept list held 3 of the 16 that handle it.
 # The pattern is the one that handles the flag, not one that mentions it — check.sh names it in
 # a comment and answers it by running the whole lot, which a looser grep would then execute.
-scripts=$(grep -lE '"\$\{1:-\}" = "--version"' ./*.sh checks/*.sh 2>/dev/null || true)
+scripts=$(grep -lE '"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)' ./*.sh checks/*.sh 2>/dev/null || true)
 [ -n "$scripts" ] || { echo "✗ no script handles --version — this check would pass by looking at nothing"; exit 1; }
 for s in $scripts; do
-  got=$("$s" --version 2>/dev/null | tail -1 | awk '{print $NF}')
+  # STDIN closed: three of these are hooks that read their payload from it, and asking a
+  # script its version must never leave one waiting on the terminal — inside check.sh's
+  # parallel lot that is a hang with no output at all.
+  got=$("$s" --version </dev/null 2>/dev/null | tail -1 | awk '{print $NF}')
   if [ "$got" != "$TAG" ]; then
     echo "✗ $s --version prints '${got:-nothing}', expected '$TAG'"
     fail=1
