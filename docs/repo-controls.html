@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:221f6aa0322acf3c1f90ac0b9c5a683ed414d16535483e5292fa98bd0f261bc3
+  checksum-source-md: sha256:42d74c3a836c0792a0af186b1b39a91bb22cb782cdedfe9efbe8a29433758013
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1666,7 +1666,8 @@
     <h3>Two invariants that cost a green each</h3>
     <p>🔴 <strong>A check that reads the tree reads ALL of it, in both modes.</strong> Narrowing one to the diff is blind by construction: deleting a file breaks a link in another one, and no diff mentions that. What the changed files decide is whether a check <strong>runs</strong>, never what it looks at.</p>
     <p>🔴 <strong>A check publishes WHAT IT READ, never a bare tick.</strong> An absent root, a glob matching nothing and a <code>|| true</code> swallowing an error all produce zero targets, and zero targets reads exactly like a clean tree. Three checks were caught claiming <em>"in both repos"</em> with the neighbouring <code>workspace/</code> renamed away; each now names what it read and what it did not.</p>
-    <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
+    <p><strong>A hook declares itself</strong>, in its own header — <code># hook: &lt;event&gt;</code>. <code>check.sh</code> detects that line rather than naming the hooks, which was the last hand-written list left in it, and the one that travelled into every project with nothing to guard it. A fifth hook dropped into <code>checks/</code> would have joined the parallel lot and hung on STDIN, with no output at all.</p>
+  <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
   </div>
 </section>
 

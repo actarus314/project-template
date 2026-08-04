@@ -37,6 +37,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   used to state about itself.
 
 ### Changed
+- **A hook declares itself** — `# hook: <event>` in its own header — and `check.sh` detects that
+  line instead of naming the three. That was the **last hand-written list left in the runner**, and
+  the one that travelled into every project with nothing to guard it: a fifth hook dropped into
+  `checks/` would have joined the parallel lot and **hung on STDIN, with no output at all**.
 - **A check is universal: it detects whether its subject exists where it lands.** Present, it
   bites; absent, it **says so** and returns 0. This is what made the travel possible at all — and
   what a *"which ones deserve to travel?"* list could never answer, since only the check, at the

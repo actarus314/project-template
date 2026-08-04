@@ -59,34 +59,31 @@ if TABLE.exists():
 else:
     unread.append(f"the control table ({TABLE} is this repository's own, absent here)")
 
-# ── 2. The hooks the table calls "n/a" are exactly the ones the runner keeps out ───────────────
+# ── 2. The hooks declare themselves, and the runner detects them ──────────────────────────────
 # A hook reads its payload from STDIN: started inside the parallel lot it competes for stdin with
-# every sibling. Which ones they are is stated in the table and applied in check.sh — two places,
-# so they are compared rather than trusted. This is the wiring this script used to be blind to.
-if declared and RUNNER.exists():
-    table_hooks = {n for n, gate in declared.items() if gate.startswith("n/a")}
+# every sibling, and hangs with no output. Which checks are hooks is written in ONE place — their
+# own header, `# hook: <event>` — so the runner detects rather than lists, and this compares the
+# detection against the declaration. It works in a generated project too, where the table is
+# absent: the headers are there, and so is the runner.
+self_declared = {p.stem for p in pathlib.Path("checks").glob("verify-*.sh")
+                 if re.search(r"^# hook: ", p.read_text(encoding="utf-8"), re.M)}
+if RUNNER.exists():
     runner = RUNNER.read_text(encoding="utf-8")
-    # An UNCONDITIONAL skip only: `) continue;;`. The lines carrying `touched` are the second
-    # rhythm — those checks run whenever their own target moved, and counting them as excluded
-    # inflated the figure this very script publishes.
-    excluded = set()
-    for line in runner.splitlines():
-        if "continue;;" in line and "verify-" in line and "touched" not in line:
-            excluded |= set(re.findall(r"(verify-[a-z-]+)\.sh", line))
-    # verify-travel is kept out of the parallel lot for its own reason (it generates projects) and
-    # is called back further down, so it is excluded WITHOUT being a hook. Only a hook that the
-    # runner would START is a defect, and a non-hook the runner never runs at all.
-    started_hooks = table_hooks - excluded
-    if started_hooks:
-        bad.append(f"{', '.join(sorted(started_hooks))}: the table calls them hooks (n/a), "
-                   f"but {RUNNER} starts them — they read STDIN and would fight for it")
-    never_run = excluded - table_hooks - {"verify-travel"}
-    for n in sorted(never_run):
-        if declared.get(n, "").startswith("✅"):
-            bad.append(f"{n}.sh is declared as running at the gate but {RUNNER} skips it entirely")
-    read.append(f"the runner's hook exclusions ({len(excluded)})")
-elif not RUNNER.exists():
-    unread.append(f"the runner's hook exclusions (no {RUNNER} here)")
+    if self_declared and "^# hook: " not in runner:
+        bad.append(f"{len(self_declared)} check(s) declare themselves hooks, but {RUNNER} no longer "
+                   f"detects that header — they would be started and hang on STDIN")
+    read.append(f"{len(self_declared)} self-declared hook(s)")
+else:
+    unread.append(f"the runner's hook detection (no {RUNNER} here)")
+# The table says the same thing in words, for a reader. Two statements of one fact, so they are
+# compared — this is the wiring this script used to be blind to.
+if declared:
+    table_hooks = {n for n, gate in declared.items() if gate.startswith("n/a")}
+    for n in sorted(table_hooks - self_declared):
+        bad.append(f"{TABLE} calls {n}.sh a hook, but its header does not declare one — "
+                   f"the runner would start it")
+    for n in sorted(self_declared - table_hooks):
+        bad.append(f"{n}.sh declares itself a hook, but {TABLE} does not say so")
 
 # ── 3. THE DOOR — every workflow that gates a project calls it ────────────────────────────────
 # This is the part that says something everywhere. A generated project holds no table and no

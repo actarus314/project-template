@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# hook: PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # A PreToolUse hook on Bash: the commands this repo forbids, refused BEFORE they run.
 #
 # Each rule below is refused only because its verdict is MECHANICAL — a literal string, present or

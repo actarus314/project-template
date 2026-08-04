@@ -162,9 +162,15 @@ fi
 # travelling file moved; `verify-delegation.sh` too — it is a hook, and check.sh never calls it.
 rm -rf "$PAR"; mkdir -p "$PAR"
 for s in checks/verify-*.sh; do
-  # The two hooks stay out: they read the event payload from STDIN, and inside this loop that means
-  # competing for the terminal's stdin with every sibling started alongside them.
-  case "$s" in *verify-travel.sh|*verify-delegation.sh|*verify-turn-claims.sh|*verify-forbidden-command.sh) continue;; esac
+  # A hook DECLARES ITSELF, in its own header (`# hook: <event>`). It reads its payload from STDIN,
+  # and inside this loop that means competing for stdin with every sibling started alongside it —
+  # a hang with no output at all. The names used to be written out here: four of them, in the one
+  # file whose whole point is that nothing keeps a list. A fifth hook dropped into checks/ would
+  # have joined the lot and hung, and in a generated project nothing would have said so.
+  grep -qE '^# hook: ' "$s" && continue
+  # verify-travel is NOT a hook — it generates a whole project, so it runs alone, further down.
+  # Named here because it is recalled by name there too: the two lines fall together or not at all.
+  case "$s" in *verify-travel.sh) continue;; esac
   # Second rhythm: each runs when ITS OWN target moved, and the two targets differ. verify-echo
   # reads prose only. verify-growth reads prose AND scripts — its second half compares a script's
   # comment growth against its code, so gating it on prose alone would blind it precisely on a
