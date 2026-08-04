@@ -19,7 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > memory would have produced a plausible but false history. For this period: the PRs and the
 > archives are authoritative.
 
-## [Unreleased]
+## [1.2.0] - 2026-08-04
 
 ### Added
 
