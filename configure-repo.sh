@@ -337,7 +337,7 @@ mutate gh api -X PUT "repos/$SLUG/actions/permissions/workflow" \
 #   entire Pages block (homepage included) would be skipped SILENTLY. So the 3 cases are told apart:
 #   workflow present / absent / unreadable. (On a public repo, the contents API is open.)
 PAGES_WF=$(gh api "repos/$SLUG/contents/.github/workflows/pages.yml" --jq '.name' 2>/dev/null || true)
-if [ -z "$PAGES_WF" ] && [ "$(gh api "repos/$SLUG" --jq '.private')" = "true" ]; then
+if [ -z "$PAGES_WF" ] && [ "$IS_PRIVATE" = "true" ]; then
   echo "  ↳ pages.yml not readable — if this repo has one, the admin PAT is missing \"Contents: read\"."
 fi
 if [ "$PAGES_WF" = "pages.yml" ]; then
@@ -370,9 +370,15 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
   # It's derived from the Pages site just created: the loop closes on its own.
   if [ -z "$HOMEPAGE" ]; then
     PAGES_URL=$(gh api "repos/$SLUG/pages" --jq '.html_url' 2>/dev/null || true)
+    # Both outcomes speak. A read that fails — permission, or a freshly created site still
+    # propagating — leaves PAGES_URL empty, and a case with no default would end silently: no ✓,
+    # no ⚠, and an unset homepage costs a community-profile point nothing else here reports.
     case "$PAGES_URL" in
       https://*) mutate gh repo edit "$SLUG" --homepage "$PAGES_URL" >/dev/null 2>&1 \
-                   && echo "  ✓ homepage = $PAGES_URL  (→ \"documentation\" item of the community profile)" ;;
+                   && echo "  ✓ homepage = $PAGES_URL  (→ \"documentation\" item of the community profile)" \
+                   || echo "  ⚠ homepage could NOT be set to $PAGES_URL — set it by hand: Settings → General → Website." ;;
+      *)         echo "  ⚠ Pages URL unreadable (site may still be propagating) — homepage left UNSET."
+                 echo "    Re-run this script later, or set it by hand: Settings → General → Website." ;;
     esac
   fi
 fi
@@ -395,7 +401,11 @@ RULESET_NAME="main"
 # scans the image (Trivy, CRITICAL/HIGH). If it isn't REQUIRED, the scan is DECORATIVE: a PR
 # carrying a critical CVE would still pass. Detected from the workflow's presence — nothing to remember.
 CHECKS_JSON='[ { "context": "checks" } ]'
+# Probed ONCE: the file cannot appear or vanish while this script runs, and the ghcr block below
+# asks the same question 400 lines further down.
+HAS_DOCKER_WF=0
 if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null 2>&1; then
+  HAS_DOCKER_WF=1
   CHECKS_JSON='[ { "context": "checks" }, { "context": "build-check" } ]'
   echo "  ↳ ARTEFACT capability detected (docker-publish.yml) → 'build-check' (Dockerfile + Trivy scan) becomes a REQUIRED check."
 fi
@@ -747,7 +757,7 @@ fi
 upsert_ruleset "$RULESET_NAME" "$RULESET_JSON"
 
 # 6b. Ruleset 'develop' — ONLY if the branch exists (STAGING capability, docs/repo-controls.md).
-if [ -n "$RULESETS" ] && gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1; then
+if [ -n "$RULESETS" ] && [ "$HAS_DEVELOP" -eq 1 ]; then
   DEV_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '.name = "develop"
      | .conditions.ref_name.include = ["refs/heads/develop"]
@@ -781,9 +791,9 @@ upsert_ruleset "tags" "$TAGS_JSON"
 # ⚠ This DETECTS and REPORTS — it does not delete: the classic rule may carry settings the
 #   ruleset doesn't replicate, and destroying a protection is a decision for the maintainer (like visibility).
 for BR in main develop; do
-  gh api "repos/$SLUG/branches/$BR/protection" >/dev/null 2>&1 || continue
-  CTX=$(gh api "repos/$SLUG/branches/$BR/protection" \
-          --jq '[.required_status_checks.contexts[]?] | join(", ")' 2>/dev/null || true)
+  PROT=$(gh api "repos/$SLUG/branches/$BR/protection" 2>/dev/null || true)
+  [ -n "$PROT" ] || continue
+  CTX=$(printf '%s' "$PROT" | jq -r '[.required_status_checks.contexts[]?] | join(", ")' 2>/dev/null || true)
   echo "  ⚠ CLASSIC branch protection still active on '$BR'${CTX:+ — required checks: $CTX}."
   echo "    It STACKS with the ruleset just set. If it requires a check that's GONE"
   echo "    (jobs renamed while adopting the template's workflows), NO PR will EVER pass."
@@ -820,6 +830,11 @@ if printf '%s' "$PROFILE" | jq -e '.health_percentage' >/dev/null 2>&1; then
       echo "     created PRIVATE then flipped public — exactly our case.)"
     fi
   fi
+else
+  # The check that exists so a gap cannot stay invisible must not go missing invisibly itself.
+  # Unread, it says nothing — and the line below would then announce a completeness it never verified.
+  echo "  ⚠ community profile UNREADABLE — the final check did NOT run."
+  echo "    Nothing below attests the score: read it by hand at https://github.com/$SLUG/community"
 fi
 
 echo "✓ $SLUG: server settings applied."
@@ -827,7 +842,7 @@ echo
 echo "  ⚠️  REVOKE THE ADMIN PAT NOW — it no longer has any reason to exist:"
 echo "     https://github.com/settings/personal-access-tokens"
 echo
-if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null 2>&1; then
+if [ "$HAS_DOCKER_WF" -eq 1 ]; then
 # VERIFY instead of REMINDING. A GREEN "Publish image" job does NOT prove the image is
 # pullable. This test queries the registry EXACTLY like the prod host does:
 # anonymously, with no token at all. It's the only proof that counts.

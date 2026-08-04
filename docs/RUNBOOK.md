@@ -224,9 +224,19 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 | # | Who | Action |
 |---|---|---|
-| 1 | Claude | `CHANGELOG.md`: turn `Unreleased` into `X.Y.Z` *(what the release tells the user; the GitHub notes list the PRs — the two are complementary)*. |
-| 2 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — `repo-controls.md`)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
-| 3 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → the **Release** is created, and the **ghcr image** pushed *(if `--artefact`)*. ⚠️ **With `--artefact`, the Release is the `release` job of `docker-publish.yml`** *(`needs: build-push` — no Release if the image was not published)*; **without** this capability, it is `release.yml`. **Only one of the two exists**, never both. |
+| 1 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — `repo-controls.md`)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
+| 2 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → the **Release** is created, and the **ghcr image** pushed *(if `--artefact`)*. ⚠️ **With `--artefact`, the Release is the `release` job of `docker-publish.yml`** *(`needs: build-push` — no Release if the image was not published)*; **without** this capability, it is `release.yml`. **Only one of the two exists**, never both. |
+| 3 | Claude | **THEN** seal `CHANGELOG.md`: `Unreleased` becomes `## [X.Y.Z] - <date>`, and `.claude-plugin/plugin.json` gets the same number. Through a pull request — **and only now can it be green.** |
+
+> 🔴 **THE TAG COMES FIRST, THE SEALING SECOND. Doing it the other way round cannot be merged.**
+> `verify-version.sh` compares the CHANGELOG's newest **versioned** heading to the newest **tag**
+> *(`Unreleased` is skipped — it is the open section)*. Sealing first creates a heading `X.Y.Z` while
+> the newest tag is still the previous one: the check fails, so the sealing pull request is red and
+> **cannot be merged**. Tagging first inverts it — the tag exists, the sealing PR makes the two agree,
+> and it goes green. *(Verified on `v1.1.0`: the tagged commit still carried `## [1.0.0]` as its newest
+> heading. At `v1.0.0` the mistake was invisible — no tag existed yet, so the guard was a silent no-op.)*
+> ⚠️ **Between the tag and the merge of the sealing PR, `main` is red on that one check.** That window
+> is structural, it is expected, and it closes with the sealing.
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 

@@ -84,20 +84,24 @@ chmod +x "$DEST/repo/check.sh"
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
+# Under checks/, exactly where they live here — check.sh looks for them THERE, and dropping them at
+# the root left all three shipped but never run: the path died where the file landed.
+#
 # Same model again: the second-person rule (standard §1) is stated in the project's AGENTS.md, so
 # the check that enforces it has to travel with it — otherwise check.sh finds nothing there and
 # goes silently green on a rule the project is still held to.
-cp "$TPL/checks/verify-tone.sh" "$DEST/repo/verify-tone.sh"
-chmod +x "$DEST/repo/verify-tone.sh"
+mkdir -p "$DEST/repo/checks"
+cp "$TPL/checks/verify-tone.sh" "$DEST/repo/checks/verify-tone.sh"
+chmod +x "$DEST/repo/checks/verify-tone.sh"
 # And the same again for the dated narrative: METHODE applies to every write, in this project AND
 # in each one it generates, so a generated project needs the check too — its code carries comments.
-cp "$TPL/checks/verify-narrative.sh" "$DEST/repo/verify-narrative.sh"
-chmod +x "$DEST/repo/verify-narrative.sh"
+cp "$TPL/checks/verify-narrative.sh" "$DEST/repo/checks/verify-narrative.sh"
+chmod +x "$DEST/repo/checks/verify-narrative.sh"
 # And the memories, for the same reason plus one: EVERY project has them, under a path derived
 # from its own location — and they are the only place with no Git structure, so nothing else
 # would ever report an unindexed memory or a dangling link there.
-cp "$TPL/checks/verify-memories.sh" "$DEST/repo/verify-memories.sh"
-chmod +x "$DEST/repo/verify-memories.sh"
+cp "$TPL/checks/verify-memories.sh" "$DEST/repo/checks/verify-memories.sh"
+chmod +x "$DEST/repo/checks/verify-memories.sh"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -344,7 +348,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # but that's not something to bet on). ⚠ Corollary: every file ADDED to the template must be added
 # HERE — otherwise it's created on disk and NEVER committed. The net below makes that loud.
 git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh \
-        verify-tone.sh verify-narrative.sh verify-memories.sh \
+        checks \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 # requirements-ci.txt is gitignored ON PURPOSE (excluded from the osv scan, see .gitignore): a plain `git add`
 # would skip it SILENTLY → broken CI (`pip install -r`). `-f` versions it anyway (same pattern as .envrc).
