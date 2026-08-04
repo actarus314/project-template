@@ -63,6 +63,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   releases it has a median of 0 and a 95th percentile of +6, with a single real outlier at +149.
 
 ### Changed
+- 🔴 **`verify-narrative.sh` was blind in every generated project that is not shell.** It TRAVELS
+  into all of them, and scanned `*.sh *.yml *.yaml` only — so in a Python, TypeScript or Go project
+  it read nothing and reported "no dated narrative" over a repository it had never opened. It now
+  reads every tracked text file and knows the comment marker per language (`#`, `//`, `--`, `;`),
+  and no longer anchors to the start of a line, so a trailing comment carrying a date is caught too.
+- **The comment-drift half of `verify-growth.sh` became its own check** *(`verify-comment-drift.sh`)*.
+  Two targets, two rhythms, two conditions: pairing them under one gate blinded the script half on
+  a commit touching only scripts, within an hour of being written. It is language-aware for the same
+  reason as above, and NAMES the extensions it found no marker for rather than skipping them quietly.
 - **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
   place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
   gitleaks reads it neither on staged files nor over the full history — a

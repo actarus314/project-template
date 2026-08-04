@@ -153,6 +153,7 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
 | `checks/verify-checks-wiring.sh` | this table and the two hand-written lists that must obey it *(the CI steps, and what `init-project.sh` copies)* | after | ✅ |
 | `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
+| `checks/verify-comment-drift.sh` | `repo/` — the scripts, not the prose | after | ❌ **deliberate** — advisory |
 | `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
 | `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
 
@@ -163,9 +164,16 @@ than yesterday**. There are only two answers, and they give the rhythms `check.s
 
 | Rhythm | What makes the verdict new | What runs there |
 |---|---|---|
-| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above except `verify-travel.sh`, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
-| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* |
+| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above **except the four below and the three hooks**, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
+| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels, **a `.md`** | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* · **`verify-echo.sh`** and **`verify-growth.sh`** on a `.md`, **`verify-comment-drift.sh`** on a `.sh` — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts |
 | **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
+
+> **The three hooks are outside all of this.** `verify-delegation.sh`, `verify-turn-claims.sh` and
+> `verify-forbidden-command.sh` are fired by the assistant's own events, not by `check.sh` — which
+> must never start them: each reads its payload from STDIN, and inside the parallel lot they would
+> compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing
+> capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real
+> breakage stops being noticed.
 
 🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind
 by construction: deleting a file breaks a link in another one, and no diff mentions that. What the

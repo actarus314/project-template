@@ -140,7 +140,16 @@ rm -rf "$PAR"; mkdir -p "$PAR"
 for s in checks/verify-*.sh; do
   # The two hooks stay out: they read the event payload from STDIN, and inside this loop that means
   # competing for the terminal's stdin with every sibling started alongside them.
-  case "$s" in *verify-travel.sh|*verify-delegation.sh|*verify-turn-claims.sh) continue;; esac
+  case "$s" in *verify-travel.sh|*verify-delegation.sh|*verify-turn-claims.sh|*verify-forbidden-command.sh) continue;; esac
+  # Second rhythm: each runs when ITS OWN target moved, and the two targets differ. verify-echo
+  # reads prose only. verify-growth reads prose AND scripts — its second half compares a script's
+  # comment growth against its code, so gating it on prose alone would blind it precisely on a
+  # commit that touches nothing but scripts, which is when it has something to say.
+  case "$s" in
+    *verify-echo.sh)          touched '\.md$' || continue;;
+    *verify-growth.sh)        touched '\.md$' || continue;;
+    *verify-comment-drift.sh) touched '\.sh$' || continue;;
+  esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
   ( "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
@@ -212,9 +221,26 @@ fi
 
 # verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
 # the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
+# Both of these follow the second rhythm, so a commit touching no prose skips them. That skip is
+# announced as a SKIP: `reap` reports a missing capture as "it never ran", which is right when a
+# check should have run and wrong here — and a skip that reads like a breakage is how a real
+# breakage stops being noticed.
+if [ -x checks/verify-echo.sh ]; then
+  note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
+  if touched '\.md$'; then reap verify-echo || true
+  else echo "  (skipped — no .md changed in this commit)"; fi
+fi
+
 if [ -x checks/verify-growth.sh ]; then
   note "verify-growth.sh — curated documents that only grow (advisory)"
-  reap verify-growth || true
+  if touched '\.md$'; then reap verify-growth || true
+  else echo "  (skipped — no .md changed in this commit)"; fi
+fi
+
+if [ -x checks/verify-comment-drift.sh ]; then
+  note "verify-comment-drift.sh — a comment outgrowing its code (advisory)"
+  if touched '\.sh$'; then reap verify-comment-drift || true
+  else echo "  (skipped — no .sh changed in this commit)"; fi
 fi
 
 # verify-changelog.sh — two thirds of the CHANGELOG rule are PATHS, so two thirds are mechanical.
