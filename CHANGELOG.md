@@ -110,8 +110,69 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   list had already fallen behind by one script, while `check.sh` had always found them with a
   `find` — so a new script was linted locally and not in the CI, breaking `local == github`
   silently. A forgotten target is a hole nothing reports.
+- **The `pre-commit` hook now runs the checks at EVERY commit, and blocks.** It used to replay
+  `check.sh` once per 24 h and only speak — so a day of active development was a day with no net
+  but the pull request, and drift that is merely printed is drift that gets scrolled past.
+  What reads the TREE now runs at every commit, since that is the only moment the tree moves
+  *(about a second)*; what reads an external base — the OSV database, the semgrep packs, the pushed
+  history — cannot answer differently between two commits at constant tool versions, so it runs
+  every 6 h *(`CHECK_MAX_AGE_HOURS`)*. `git commit --no-verify` remains the deliberate way through.
+- **`./check.sh --commit`** runs that first lot alone. The checks that read the tree still read
+  **all** of it — a check narrowed to the diff is blind by construction, since deleting a file
+  breaks a link in another one that no diff mentions. What the changed files decide is whether a
+  check *runs*: `shellcheck` when a `.sh` moves, `actionlint` and `zizmor` when a workflow moves,
+  the Renovate validator when a config moves, `verify-travel.sh` when a file that travels moves.
+  `gitleaks` narrows to what is not pushed yet — a scope whose cost stays flat as the repo grows.
+- **`check.sh` runs in about half the time** *(6,25 s → 3,43 s here; 2,08 s for `--commit`)*, which
+  is what makes it affordable to run often rather than once a day. Most of it was never a check:
+  asking each Python tool for its version booted an interpreter to print a string, 1.5 s of every
+  run, where pip already named the directory it installed. `verify-growth.sh` now reads the
+  release's line counts in one `git` call instead of one per document, and the Renovate configs are
+  validated in a single `npx` call instead of one per file.
+- **`configure-repo.sh` asks GitHub four fewer times.** The repository's visibility, the presence of
+  `develop`, the presence of `docker-publish.yml` and each branch's classic protection were each
+  queried twice — none of them can change while the script runs, and the answer was already held in
+  a variable. Fewer round-trips is fewer chances for a transient failure mid-configuration.
+- **The checks under `checks/` all run at once** *(0,90 s → 0,22 s)*, and under the external tools
+  rather than after them. They read the tree and write nothing, so their sum becomes their slowest.
+  **The report is unchanged**: each output is captured and replayed by the block that owns it, in
+  the same order as before — verified by diffing the whole output against the sequential run.
+  A check whose output is missing is an error, never a pass.
+- **A venv left behind by a moved project directory now rebuilds itself.** Moving the directory
+  leaves every absolute shebang under `.ci-tools/venv/` pointing nowhere, `pip` included — so
+  nothing could repair it in place, and the cure was knowing to run `rm -rf .ci-tools/venv` by hand.
 
 ### Fixed
+
+- **🔴 The three checks shipped into every generated project were never run there.**
+  `init-project.sh` copied `verify-tone.sh`, `verify-narrative.sh` and `verify-memories.sh` to the
+  project's **root**, while the `check.sh` travelling beside them — the same file, unmodified —
+  looks for them under `checks/`. All three were present, executable, committed, and dead: the
+  second-person rule, the dated-narrative rule and the memories guard reported nothing, in every
+  project this repo has generated. They now land in `checks/`, where they live here.
+  *(A leftover: those copies were written when this repo still kept its checks at the root. Moving
+  them into `checks/` was never carried over into what the repo generates.)*
+  ⚠️ **`verify-travel.sh` structurally cannot catch this one**: it honours a path guarded by an
+  existence test — `[ -x checks/verify-tone.sh ]` reads as "deliberately absent here". Found by
+  generating a project and running its `check.sh`, which is the only thing that shows it.
+
+- **The RUNBOOK taught a release order that cannot be merged.** §3 said to seal the `CHANGELOG`
+  first, then tag. `verify-version.sh` compares the newest **versioned** heading to the newest
+  **tag**, so sealing first makes the sealing pull request itself red — and a red PR does not merge.
+  The tag comes first, the sealing second. *(Verified against `v1.1.0`: its tagged commit still
+  carried `## [1.0.0]` as newest heading. At `v1.0.0` the error could not show — no tag existed yet,
+  so the guard was a silent no-op.)*
+
+- **Two checks in `configure-repo.sh` could fail without saying so.** The community-profile check —
+  the one that exists so *"a missing item cannot stay invisible"* — had no branch for its own read
+  failing: the script went straight to `✓ server settings applied`, attesting a completeness it had
+  never verified. And the Pages homepage step ended on a `case` with no default, so an unreadable
+  Pages URL left the homepage unset without a ✓ or a ⚠. Both now speak.
+
+- **`check.sh` did not validate the Renovate configs at the pinned version.** The version was read
+  up to the first dot, which turns `renovate@43.288.0` into `renovate@43` — a RANGE. `npx` then
+  resolved whatever `43.x` npm serves that day, so the local run stopped executing what the CI
+  executes, which is the single guarantee this script exists to give.
 
 - **The CI-verification command existed in two forms, one degraded.** `AGENTS.md` carried
   `gh run list --commit "$sha" --json workflowName,status,conclusion`; the RUNBOOK, `repo-controls.md`

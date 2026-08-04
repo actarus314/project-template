@@ -23,18 +23,19 @@ tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
 [ -n "$tag" ] || { echo "  (no release yet — nothing to compare against)"; exit 0; }
 
 grown=0
-for f in docs/*.md README.md AGENTS.md CONTRIBUTING.md; do
-  [ -f "$f" ] || continue
-  before=$( { git show "$tag:$f" 2>/dev/null || true; } | wc -l | tr -d ' ')   # absent at that tag -> 0
-  [ "${before:-0}" -gt 0 ] || continue          # did not exist at that tag: nothing to compare
-  now=$(wc -l < "$f" | tr -d ' ')
-  delta=$(( now - before ))
-  pct=$(( delta * 100 / before ))
+# Line counts at the tag in ONE git call instead of one `git show` per file, and its output IS the
+# filter: a document absent at that tag never comes up. Looped over rather than indexed — /bin/bash
+# 3.2, which ships with macOS, has no associative arrays. `grep -c ''` on both sides so both count
+# the same thing: `wc -l` counts newlines, and misses a last line with no final newline.
+while IFS=: read -r _ f before; do
+  [ -f "$f" ] || continue                       # deleted since that tag: nothing to compare
+  now=$(grep -c '' "$f" 2>/dev/null || echo 0)
+  pct=$(( (now - before) * 100 / before ))
   if [ "$pct" -ge 25 ]; then
     printf '  ↑ %-46s %4d → %4d lines (+%d%%) since %s\n' "$f" "$before" "$now" "$pct" "$tag"
     grown=1
   fi
-done
+done < <(git grep -c '' "$tag" -- 'docs/*.md' README.md AGENTS.md CONTRIBUTING.md 2>/dev/null || true)
 
 [ "$grown" = 0 ] && echo "✓ no curated document grew by 25% since $tag"
 exit 0        # advisory, never blocking

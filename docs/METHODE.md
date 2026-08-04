@@ -20,6 +20,11 @@ When the same fact is written in the script, the runbook, the conventions *and* 
 
 The roles below are **stable**; the files that carry them are not *(see "The tracking tool is a default")*.
 
+> **This table states the NATURE of a document. Which SUBJECT belongs to which file, and who owns it,
+> is [`claude-code-project-standard.md`](claude-code-project-standard.md)** — *"one subject, one owner"*,
+> and it is the index. A fact's owner must be **identifiable without searching**: that is the whole
+> reason `docs/` holds several files rather than one.
+
 | Role | Contains | **NEVER contains** |
 |---|---|---|
 | **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | Where things stand · decisions · pitfalls · **what remains** *(brief — POINTS to a plan if it's heavy)*. **Enough for a human OR an AI to pick back up cold.** | the detail of the evidence · the story of the bugs · the long why · **what has shipped** *(purged)* · full plans |
@@ -68,31 +73,15 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 ## The tracking doc — a PRINCIPLE, not mandated files
 
 > 🔴 **The template initializes EVERY project — including ones later run by a third-party management system** *(GSD, superpowers, or other)*.
-> **Forcing our tracking files on them would COLLIDE with theirs** *(`.planning/` & co.)*.
-> **Two competing tracking systems in one project means zero system actually kept up.**
+> **Forcing our tracking files on them would COLLIDE with theirs** *(`.planning/` & co.)*, and **two competing tracking systems in one project means zero system actually kept up**. **ONE gets chosen.**
 
-### The PRINCIPLE — true regardless of which tool carries it
-
-| Role | The rule |
-|---|---|
-| **A RESUME doc** | **CONCISE.** Read and edited **very often** → it must stay short. It **POINTS** to the detail *(ADRs, plans, notes)*, **it does not absorb it**. It also carries **what's left to do** *(brief — **POINTS** to a plan if it's heavy)*. |
-| **What's shipped gets PURGED** | A resume doc that accumulates the shipped is no longer a tracking doc: **it's a journal**. The shipped moves into its history. |
+**What the tracking doc must be is stated in the table above.** What matters here is that it is a **ROLE, not a file**: GSD's `.planning/`, a Linear, a Notion satisfy it just as well, as long as a fact keeps living in a single place. A resume doc that accumulates the shipped stops being one — **it becomes a journal**.
 
 **Goal**: for a human **or** an AI reopening the project 6 months later to find their footing **without reading a wall of text**.
 
-> **Same rule as `repo/docs/` vs `workspace/` in the template itself**: *the doc read often stays short and points elsewhere; the detail lives elsewhere.* A tracking doc no longer re-read is no longer tracking anything.
+`SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
-### The IMPLEMENTATION — replaceable
-
-`SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*.
-
-It is the **roles** that matter, not the files: GSD's `.planning/`, a Linear, a Notion **satisfy the same rule** as long as a fact keeps living in **a single place**.
-
-- Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
-- 🔴 **Two tracking systems in parallel = two competing sources** — precisely what this rule forbids. **ONE gets chosen.**
-
-> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`, `gsd-review-backlog`, `gsd-capture`…)*, plugins, marketplace, native features.
-> **If no system is explicitly in use on this project, look for one BEFORE building one.** *(`find-skills` exists exactly for this.)*
+> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`…)*, plugins, marketplace, native features. *(`find-skills` exists exactly for this.)*
 > **Only build custom as a last resort** — and say so.
 
 ---
@@ -161,6 +150,21 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-memories.sh` | outside both — memories belong to neither | after | ❌ **structural**: the target lives outside the repository, so the CI has nothing to look at |
 | `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
 | `checks/verify-growth.sh` | `repo/` only | after | ❌ **deliberate** — advisory, it blocks nowhere |
+
+### At which RHYTHM
+
+The split is not how long a check takes, it is **what has to change for it to say something other
+than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
+
+| Rhythm | What makes the verdict new | What runs there |
+|---|---|---|
+| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above except `verify-travel.sh`, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
+| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* |
+| **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
+
+🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind
+by construction: deleting a file breaks a link in another one, and no diff mentions that. What the
+changed files decide is whether a check **runs**, never what it looks at.
 
 > 🔴 **Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of **published style**, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter that is explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
 >

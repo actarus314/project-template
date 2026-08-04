@@ -8,6 +8,9 @@
 # The ONLY deliberate addition: it also validates any `renovate.json` present — to catch the failure
 # mode "broken Renovate config → silent freeze of updates", which a project's CI does not cover.
 #
+# Usage:  ./check.sh            everything
+#         ./check.sh --commit   only what a commit can make say something new (see MODE below)
+#
 # Versions are NEVER hardcoded: read from `ci.yml` (+ `requirements-ci.txt`). Binaries are cached
 # under `.ci-tools/` (gitignored). CI itself verifies the SHA256 of the Linux asset; here we pin the
 # VERSION (same rules → same findings) and verify it via `--version`. The strong checksum stays CI's
@@ -20,6 +23,20 @@ CACHE=.ci-tools
 mkdir -p "$CACHE"
 [ -f "$CI" ] || { echo "No $CI here — nothing to replay."; exit 0; }
 
+# --commit: the lot a COMMIT can make say something new. Left out is everything whose verdict is
+# fixed by an external base rather than by the tree — the OSV database and the semgrep packs are
+# fetched, and gitleaks' rules are baked into a pinned binary, so at constant versions the pushed
+# history returns the same answer it did an hour ago. Those stay with the full lot and the CI.
+#
+# The checks that DO read the tree read ALL of it, in both modes: a check narrowed to the diff is
+# blind by construction — deleting a file breaks a link in another one, which no diff mentions.
+# What `touched` decides is whether a check RUNS, never what it looks at.
+MODE=full
+[ "${1:-}" = "--commit" ] && MODE=commit
+changed=""
+[ "$MODE" = commit ] && changed=$(git diff --name-only HEAD 2>/dev/null || true)
+touched() { [ "$MODE" = full ] || printf '%s\n' "$changed" | grep -qE "$1"; }
+
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
 uarch=$(uname -m)
 gl_arch=arm64; al_arch=arm64; osv_arch=arm64
@@ -29,6 +46,14 @@ fail=0
 note() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 ok()   { printf '  \033[32m✓ %s\033[0m\n' "$1"; }
 ko()   { printf '  \033[31m✗ %s\033[0m\n' "$1"; fail=1; }
+
+# Replays one house check's captured output and returns its exit code. A missing capture is an
+# ERROR, never a pass: a check that did not run must not read like a check that found nothing.
+PAR="$CACHE/par"
+reap() {
+  [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
+  cat "$PAR/$1.out"; return "$(cat "$PAR/$1.rc")"
+}
 
 pin()   { grep -m1 "^[[:space:]]*$1:" "$CI" | awk '{print $2}' || true; }   # a `NAME: value` env from ci.yml (empty if absent)
 in_ci() { grep -v '^[[:space:]]*#' "$CI" | grep -q -- "$1"; }        # does CI run this tool? (excluding comments)
@@ -61,12 +86,24 @@ ensure_osv() {
   chmod +x "$bin"
 }
 # Shared Python venv for zizmor and semgrep; only reinstalls if a version is missing.
+#
+# The installed version is read from disk: asking each tool booted a Python interpreter, 1.5 s per run.
+# That no longer proves the tool STARTS, and one way to break it is known — moving the project
+# directory leaves the venv's absolute shebangs pointing nowhere, `pip` included, so it cannot be
+# repaired in place. The interpreter pip's shebang names is checked instead, and the venv rebuilt.
 ensure_venv() {
-  local need=0 spec tool ver
+  local need=0 spec tool ver interp
+  if [ -f "$CACHE/venv/bin/pip" ]; then
+    interp=$(head -1 "$CACHE/venv/bin/pip"); interp="${interp#\#!}"; interp="${interp%% *}"
+    [ -x "$interp" ] || { echo "  venv points at a path that no longer exists — rebuilding"; rm -rf "$CACHE/venv"; }
+  fi
   [ -d "$CACHE/venv" ] || { python3 -m venv "$CACHE/venv"; need=1; }
   for spec in "$@"; do
     tool="${spec%%==*}"; ver="${spec#*==}"
-    "$CACHE/venv/bin/$tool" --version 2>/dev/null | grep -q "$ver" || need=1
+    if [ ! -x "$CACHE/venv/bin/$tool" ] ||
+       ! compgen -G "$CACHE/venv/lib/python*/site-packages/${tool}-${ver}.dist-info" >/dev/null; then
+      need=1
+    fi
   done
   [ "$need" = 0 ] && return
   "$CACHE/venv/bin/pip" install --quiet --upgrade pip >/dev/null
@@ -78,7 +115,10 @@ ACTIONLINT_VERSION=$(pin ACTIONLINT_VERSION)
 OSV_VERSION=$(pin OSV_VERSION)
 ZIZMOR_SPEC=$(grep -m1 '^zizmor==' "$reqfile" 2>/dev/null || true)
 SEMGREP_SPEC=$(grep -m1 '^semgrep==' "$reqfile" 2>/dev/null || true)
-RENOVATE_PKG=$(grep -m1 -o 'renovate@[0-9]*' "$CI" | head -1 || true)
+# The WHOLE version, not up to the first dot: `renovate@43` is a RANGE, and npx would then resolve
+# whatever 43.x npm serves today instead of the version the CI pins — the one thing this file exists
+# to guarantee.
+RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 || true)
 [ -n "$RENOVATE_PKG" ] || RENOVATE_PKG=renovate@43.288.0
 
 note "Pinned tools (auto-detected from $CI)"
@@ -91,7 +131,20 @@ if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); 
 [ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
 ok "ready under $CACHE/"
 
-if in_ci shellcheck; then
+# The house checks read the tree and write nothing, so they all start here, at once: their sum
+# becomes their slowest, and it runs under the external tools instead of after them. Each output is
+# captured and replayed further down by the block that owns it, so the report reads in the order it
+# always did. `verify-travel.sh` stays out — it generates a whole project, and only runs when a
+# travelling file moved; `verify-delegation.sh` too — it is a hook, and check.sh never calls it.
+rm -rf "$PAR"; mkdir -p "$PAR"
+for s in checks/verify-*.sh; do
+  case "$s" in *verify-travel.sh|*verify-delegation.sh) continue;; esac
+  [ -x "$s" ] || continue
+  n=$(basename "$s" .sh)
+  ( "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
+done
+
+if in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
   note "shellcheck — shell scripts"
   targets=()
   while IFS= read -r f; do targets+=("$f"); done < <(
@@ -102,91 +155,103 @@ if in_ci shellcheck; then
   elif shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
 fi
 
-if in_ci actionlint && [ -d .github/workflows ]; then
+if in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "actionlint — workflows"
   if "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
 fi
 
-if in_ci zizmor && [ -d .github/workflows ]; then
+if in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "zizmor — workflows (config $zconfig)"
   if "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
 
-if in_ci semgrep; then
+if in_ci semgrep && [ "$MODE" = full ]; then
   note "semgrep — the code (curated packs)"
   if "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \
        --config p/security-audit --config p/owasp-top-ten .; then ok "semgrep"; else ko "semgrep"; fi
 fi
 
-if in_ci osv-scanner; then
+if in_ci osv-scanner && [ "$MODE" = full ]; then
   note "osv-scanner — dependencies (all manifests)"
   if "$CACHE/osv-scanner" scan source -r . --allow-no-lockfiles; then ok "osv"; else ko "osv"; fi
 fi
 
+# Scanning the whole history again at a constant binary version re-reads commits that already
+# answered. What has NOT been pushed is the part that can still hold something new, and that scope
+# costs the same on a repository of any size. It also sees a secret from a local commit whose file
+# has since been deleted, which scanning the last commit alone misses.
 if [ -n "$GITLEAKS_VERSION" ]; then
-  note "gitleaks — full history"
-  if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
+  upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+  if [ "$MODE" = commit ] && [ -n "$upstream" ]; then
+    note "gitleaks — what is not on $upstream yet"
+    if "$CACHE/gitleaks" git --no-banner --redact --log-opts="$upstream..HEAD"; then ok "gitleaks"; else ko "gitleaks"; fi
+  else
+    note "gitleaks — full history"
+    if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
+  fi
 fi
 
 # checks/verify-checksums.sh — whenever it exists (this repo only: no generated project ships doc
 # pairs like docs/X.md + hand-authored docs/X.html). Guards against the .html drifting from its
 # source .md; silent no-op elsewhere.
+wait || true      # the house checks started above; from here their results are read back
+
 if [ -x checks/verify-checksums.sh ]; then
   note "checks/verify-checksums.sh — .md/.html checksum guard"
-  if checks/verify-checksums.sh; then ok "doc checksums"; else ko "doc checksums"; fi
+  if reap verify-checksums; then ok "doc checksums"; else ko "doc checksums"; fi
 fi
 
 # verify-no-secret-tracked.sh — gitleaks looks for secret-SHAPED strings, never for a file CALLED
 # .env. An empty one passes it, gets committed, and is filled in at the next commit.
 if [ -x checks/verify-no-secret-tracked.sh ]; then
   note "verify-no-secret-tracked.sh — a file NAMED like a secret, tracked"
-  if ./checks/verify-no-secret-tracked.sh; then ok "no secret-named file tracked"; else ko "secret-named file tracked"; fi
+  if reap verify-no-secret-tracked; then ok "no secret-named file tracked"; else ko "secret-named file tracked"; fi
 fi
 
 # verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
 # the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
 if [ -x checks/verify-growth.sh ]; then
   note "verify-growth.sh — curated documents that only grow (advisory)"
-  ./checks/verify-growth.sh || true
+  reap verify-growth || true
 fi
 
 # verify-changelog.sh — two thirds of the CHANGELOG rule are PATHS, so two thirds are mechanical.
 if [ -x checks/verify-changelog.sh ]; then
   note "verify-changelog.sh — a user-visible change with no CHANGELOG line"
-  if ./checks/verify-changelog.sh; then ok "changelog"; else ko "changelog"; fi
+  if reap verify-changelog; then ok "changelog"; else ko "changelog"; fi
 fi
 
 # verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
 # lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
 if [ -x checks/verify-links.sh ]; then
   note "verify-links.sh — dead relative links (both repos)"
-  if ./checks/verify-links.sh; then ok "links"; else ko "links"; fi
+  if reap verify-links; then ok "links"; else ko "links"; fi
 fi
 
 # verify-workspace.sh — the neighbouring workspace/ has NO remote on purpose, which is exactly what
 # makes it invisible: no diff-vs-origin, no CI, and this script runs in repo/ without looking beside it.
 if [ -x checks/verify-workspace.sh ]; then
   note "verify-workspace.sh — the neighbouring workspace (no remote, no secret tracked)"
-  if ./checks/verify-workspace.sh; then ok "workspace"; else ko "workspace"; fi
+  if reap verify-workspace; then ok "workspace"; else ko "workspace"; fi
 fi
 
 # verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
 # this repo generates, and a generated project's code carries comments too.
 if [ -x checks/verify-narrative.sh ]; then
   note "verify-narrative.sh — dated narrative in code comments"
-  if ./checks/verify-narrative.sh; then ok "no dated narrative"; else ko "dated narrative"; fi
+  if reap verify-narrative; then ok "no dated narrative"; else ko "dated narrative"; fi
 fi
 
 # verify-memories.sh — the only check whose subject lives OUTSIDE the repo, so the CI structurally
 # cannot run it: no diff, no workflow, nothing else watches that place. Silent where there are none.
 if [ -x checks/verify-memories.sh ]; then
   note "verify-memories.sh — index and links of the memories"
-  if ./checks/verify-memories.sh; then ok "memories"; else ko "memories"; fi
+  if reap verify-memories; then ok "memories"; else ko "memories"; fi
 fi
 
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
-if [ -x checks/verify-travel.sh ]; then
+if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
@@ -194,27 +259,26 @@ fi
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
 if [ -x checks/verify-version.sh ]; then
   note "verify-version.sh — version coherence"
-  if ./checks/verify-version.sh; then ok "version"; else ko "version"; fi
+  if reap verify-version; then ok "version"; else ko "version"; fi
 fi
 
 # renovate-config-validator — whenever a renovate.json exists (beyond a project's CI: anti silent-freeze).
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-if [ "${#renovate_files[@]}" -gt 0 ]; then
+if [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$'; then
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
-  rv=1
-  for f in "${renovate_files[@]}"; do
-    npx --yes --package "$RENOVATE_PKG" renovate-config-validator "$f" >/dev/null 2>&1 || rv=0
-  done
-  [ "$rv" = 1 ] && ok "renovate configs valid" || ko "renovate config invalid"
+  # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
+  # validator takes a file list and still names each file it rejects.
+  if npx --yes --package "$RENOVATE_PKG" renovate-config-validator "${renovate_files[@]}" >/dev/null 2>&1
+  then ok "renovate configs valid"; else ko "renovate config invalid"; fi
 fi
 
 # verify-tone.sh — same shared-script model: the rule lives THERE, the CI calls the same file.
 # Copied into generated projects, where the rule applies just as much.
 if [ -x checks/verify-tone.sh ]; then
   note "verify-tone.sh — second person (standard §1)"
-  if ./checks/verify-tone.sh; then ok "no second person"; else ko "second person in versioned content"; fi
+  if reap verify-tone; then ok "no second person"; else ko "second person in versioned content"; fi
 fi
 
 echo
