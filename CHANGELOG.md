@@ -110,6 +110,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   list had already fallen behind by one script, while `check.sh` had always found them with a
   `find` — so a new script was linted locally and not in the CI, breaking `local == github`
   silently. A forgotten target is a hole nothing reports.
+- **The `pre-commit` hook now runs the checks at EVERY commit, and blocks.** It used to replay
+  `check.sh` once per 24 h and only speak — so a day of active development was a day with no net
+  but the pull request, and drift that is merely printed is drift that gets scrolled past.
+  What reads the TREE now runs at every commit, since that is the only moment the tree moves
+  *(about a second)*; what reads an external base — the OSV database, the semgrep packs, the pushed
+  history — cannot answer differently between two commits at constant tool versions, so it runs
+  every 6 h *(`CHECK_MAX_AGE_HOURS`)*. `git commit --no-verify` remains the deliberate way through.
+- **`./check.sh --commit`** runs that first lot alone. The checks that read the tree still read
+  **all** of it — a check narrowed to the diff is blind by construction, since deleting a file
+  breaks a link in another one that no diff mentions. What the changed files decide is whether a
+  check *runs*: `shellcheck` when a `.sh` moves, `actionlint` and `zizmor` when a workflow moves,
+  the Renovate validator when a config moves, `verify-travel.sh` when a file that travels moves.
+  `gitleaks` narrows to what is not pushed yet — a scope whose cost stays flat as the repo grows.
 - **`check.sh` runs in about half the time** *(6,25 s → 3,87 s here)*, which is what makes it
   affordable to run often rather than once a day. Most of it was never a check: asking each Python
   tool for its version booted an interpreter to print a string, 1.5 s of every run, where pip

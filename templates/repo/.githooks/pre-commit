@@ -30,26 +30,34 @@ if ! output=$(gitleaks git --staged --no-banner --redact 2>&1); then
   exit 1
 fi
 
-# --- "local == github" pre-flight, throttled and CONSULTATIVE -----------------------------------
-# So nobody has to remember to run ./check.sh: if its last run is older than N hours (24 by
-# default, tune with CHECK_MAX_AGE_HOURS), replay it here. This is CONSULTATIVE — never a block:
-# the one HARD gate in this hook stays gitleaks, above. Drift found by check.sh is REPORTED (the
-# CI will block it at push time) but the commit goes through — otherwise an unrelated lint, or
-# simply being offline, would wedge a commit and breed the --no-verify reflex, which erodes the
-# real safety net. The timestamp is written even on drift: remind once per window, not per commit.
+# --- "local == github" pre-flight ---------------------------------------------------------------
+# Two rhythms, because two different things make a check answer differently. What reads the TREE
+# runs at EVERY commit — the only moment the tree moves — and costs about a second. What reads an
+# external base (the OSV database, the semgrep packs) or the already-pushed history cannot answer
+# differently between two commits at constant tool versions, so it runs every N hours instead
+# (6 by default, tune with CHECK_MAX_AGE_HOURS).
+#
+# BLOCKING: drift that is merely printed is drift that gets scrolled past, and the next gate is the
+# pull request. `git commit --no-verify` remains the way through — a decision, not an accident.
 if [ -x ./check.sh ]; then
   stamp=.ci-tools/.last-check
-  max_h="${CHECK_MAX_AGE_HOURS:-24}"
+  max_h="${CHECK_MAX_AGE_HOURS:-6}"
   now=$(date +%s)
   last=0
+  drift=0
   [ -f "$stamp" ] && last=$(stat -f %m "$stamp" 2>/dev/null || stat -c %Y "$stamp" 2>/dev/null || echo 0)
   if [ $(( (now - last) / 3600 )) -ge "$max_h" ]; then
-    echo "▸ local == github pre-flight (last run > ${max_h} h ago) — consultative…"
-    ./check.sh || {
-      echo "⚠ check.sh reported drift (see above) — commit NOT blocked (consultative)."
-      echo "  Fix it before pushing: the CI will block."
-    }
-    mkdir -p .ci-tools && touch "$stamp"
+    echo "▸ local == github — full lot (the last one is over ${max_h} h old)…"
+    if ./check.sh; then mkdir -p .ci-tools && touch "$stamp"; else drift=1; fi
+  else
+    ./check.sh --commit || drift=1
+  fi
+  if [ "$drift" = 1 ]; then
+    echo
+    echo "✗ check.sh reported drift (above) — commit blocked."
+    echo "  The same checks run in the CI, where they block the pull request."
+    echo "  Emergency: git commit --no-verify (a decision, not an accident)."
+    exit 1
   fi
 fi
 

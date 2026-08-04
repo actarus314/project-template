@@ -8,6 +8,9 @@
 # The ONLY deliberate addition: it also validates any `renovate.json` present — to catch the failure
 # mode "broken Renovate config → silent freeze of updates", which a project's CI does not cover.
 #
+# Usage:  ./check.sh            everything
+#         ./check.sh --commit   only what a commit can make say something new (see MODE below)
+#
 # Versions are NEVER hardcoded: read from `ci.yml` (+ `requirements-ci.txt`). Binaries are cached
 # under `.ci-tools/` (gitignored). CI itself verifies the SHA256 of the Linux asset; here we pin the
 # VERSION (same rules → same findings) and verify it via `--version`. The strong checksum stays CI's
@@ -19,6 +22,20 @@ CI=.github/workflows/ci.yml
 CACHE=.ci-tools
 mkdir -p "$CACHE"
 [ -f "$CI" ] || { echo "No $CI here — nothing to replay."; exit 0; }
+
+# --commit: the lot a COMMIT can make say something new. Left out is everything whose verdict is
+# fixed by an external base rather than by the tree — the OSV database and the semgrep packs are
+# fetched, and gitleaks' rules are baked into a pinned binary, so at constant versions the pushed
+# history returns the same answer it did an hour ago. Those stay with the full lot and the CI.
+#
+# The checks that DO read the tree read ALL of it, in both modes: a check narrowed to the diff is
+# blind by construction — deleting a file breaks a link in another one, which no diff mentions.
+# What `touched` decides is whether a check RUNS, never what it looks at.
+MODE=full
+[ "${1:-}" = "--commit" ] && MODE=commit
+changed=""
+[ "$MODE" = commit ] && changed=$(git diff --name-only HEAD 2>/dev/null || true)
+touched() { [ "$MODE" = full ] || printf '%s\n' "$changed" | grep -qE "$1"; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
 uarch=$(uname -m)
@@ -106,7 +123,7 @@ if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); 
 [ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
 ok "ready under $CACHE/"
 
-if in_ci shellcheck; then
+if in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
   note "shellcheck — shell scripts"
   targets=()
   while IFS= read -r f; do targets+=("$f"); done < <(
@@ -117,30 +134,40 @@ if in_ci shellcheck; then
   elif shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
 fi
 
-if in_ci actionlint && [ -d .github/workflows ]; then
+if in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "actionlint — workflows"
   if "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
 fi
 
-if in_ci zizmor && [ -d .github/workflows ]; then
+if in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "zizmor — workflows (config $zconfig)"
   if "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
 
-if in_ci semgrep; then
+if in_ci semgrep && [ "$MODE" = full ]; then
   note "semgrep — the code (curated packs)"
   if "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \
        --config p/security-audit --config p/owasp-top-ten .; then ok "semgrep"; else ko "semgrep"; fi
 fi
 
-if in_ci osv-scanner; then
+if in_ci osv-scanner && [ "$MODE" = full ]; then
   note "osv-scanner — dependencies (all manifests)"
   if "$CACHE/osv-scanner" scan source -r . --allow-no-lockfiles; then ok "osv"; else ko "osv"; fi
 fi
 
+# Scanning the whole history again at a constant binary version re-reads commits that already
+# answered. What has NOT been pushed is the part that can still hold something new, and that scope
+# costs the same on a repository of any size. It also sees a secret from a local commit whose file
+# has since been deleted, which scanning the last commit alone misses.
 if [ -n "$GITLEAKS_VERSION" ]; then
-  note "gitleaks — full history"
-  if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
+  upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+  if [ "$MODE" = commit ] && [ -n "$upstream" ]; then
+    note "gitleaks — what is not on $upstream yet"
+    if "$CACHE/gitleaks" git --no-banner --redact --log-opts="$upstream..HEAD"; then ok "gitleaks"; else ko "gitleaks"; fi
+  else
+    note "gitleaks — full history"
+    if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
+  fi
 fi
 
 # checks/verify-checksums.sh — whenever it exists (this repo only: no generated project ships doc
@@ -201,7 +228,7 @@ fi
 
 # verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
-if [ -x checks/verify-travel.sh ]; then
+if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
@@ -216,7 +243,7 @@ fi
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-if [ "${#renovate_files[@]}" -gt 0 ]; then
+if [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$'; then
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
   # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
   # validator takes a file list and still names each file it rejects.
