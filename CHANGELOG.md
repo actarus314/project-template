@@ -45,6 +45,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
   turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
   unreadable; these fire on under 1 %.
+- **`verify-turn-claims.sh` watches a third failure: a measurement taken and never recorded.** The
+  maintainer pointed it out after it happened — every check was timed, the numbers were shown, and
+  they landed in no document, dying with the conversation. Measuring is cheap; forgetting to write
+  it down is invisible. Sized the same way as the other two, against the same 4500 real turns:
+  measurement vocabulary alone fired on 6 % of turns and a table alone on 3.75 %, so the signal
+  requires BOTH plus at least three numeric rows — 0.77 %.
 - **A guard on the commands this repo forbids** *(`checks/verify-forbidden-command.sh`, a
   `PreToolUse` hook on Bash)*. Three are refused outright because their verdict is a literal string,
   present or absent: `git rm --cached` on a force-added template file, `gh pr merge --admin`, and

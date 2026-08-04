@@ -4,7 +4,10 @@
 # The maintainer was doing this pass by hand, every time, because the thirteen other checks watch
 # FILES and none watches what gets ASSERTED. Two failures kept coming back:
 #   · a defect is named, and the turn ends without touching anything;
-#   · a counted total is stated that appears in no tool output — typically relayed from a subagent.
+#   · a counted total is stated that appears in no tool output — typically relayed from a subagent;
+#   · a table of MEASUREMENTS is rendered and nothing is written down, so the measurement dies with
+#     the conversation. That third one was pointed out by the maintainer after it happened: timings
+#     for every check were measured, shown, and never landed in any document.
 #
 # Both are COUNTED, never judged. That is deliberate: a model asked to review a turn gives a false
 # green often enough to matter, and stacking several does not help — nine judges from seven families
@@ -110,6 +113,32 @@ if out is not None:
     if unbacked and (TOTAL.search(msg) or used_agent):
         first = " ".join(unbacked[0].group(0).split())
         found.append(f'"{first}" is stated as a total but appears in no output of this turn')
+
+# Signal 3 — a table of measurements rendered while nothing was written. Measuring is cheap and
+# forgetting to record it is invisible: the numbers simply vanish with the turn. Vocabulary of
+# measurement alone fired on 6% of turns and a table alone on 3.75%; requiring BOTH, with at least
+# three numeric rows, brings it to 0.77%. A turn that wrote nothing at all is left alone — that is
+# a conversation, not a lost measurement.
+if tools:
+    MEASURE = re.compile(r"\b(mesur|compt|médiane|mediane|centile|percentile|moyenne|taux|sur \d{2,})", re.I)  # fr-pattern
+    if MEASURE.search(msg) and not edited:
+        rows, run = [], []
+        for line in msg.splitlines():
+            s = line.strip()
+            if s.startswith("|") and s.endswith("|"):
+                run.append(s)
+            else:
+                if len(run) >= 2:
+                    rows.append(run)
+                run = []
+        if len(run) >= 2:
+            rows.append(run)
+        for tbl in rows:
+            body = tbl[2:] if re.match(r"^\|[\s:|-]+\|$", tbl[1]) else tbl[1:]
+            if len(body) >= 3 and sum(1 for r in body if re.search(r"\d", r)) >= 3:
+                found.append("a table of measurements was rendered and nothing was written — "
+                             "the numbers die with this turn")
+                break
 
 if not found:
     sys.exit(0)
