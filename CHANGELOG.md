@@ -123,12 +123,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   check *runs*: `shellcheck` when a `.sh` moves, `actionlint` and `zizmor` when a workflow moves,
   the Renovate validator when a config moves, `verify-travel.sh` when a file that travels moves.
   `gitleaks` narrows to what is not pushed yet — a scope whose cost stays flat as the repo grows.
-- **`check.sh` runs in about half the time** *(6,25 s → 3,87 s here)*, which is what makes it
-  affordable to run often rather than once a day. Most of it was never a check: asking each Python
-  tool for its version booted an interpreter to print a string, 1.5 s of every run, where pip
-  already named the directory it installed. `verify-growth.sh` now reads the release's line counts
-  in one `git` call instead of one per document, and the Renovate configs are validated in a single
-  `npx` call instead of one per file.
+- **`check.sh` runs in about half the time** *(6,25 s → 3,43 s here; 2,08 s for `--commit`)*, which
+  is what makes it affordable to run often rather than once a day. Most of it was never a check:
+  asking each Python tool for its version booted an interpreter to print a string, 1.5 s of every
+  run, where pip already named the directory it installed. `verify-growth.sh` now reads the
+  release's line counts in one `git` call instead of one per document, and the Renovate configs are
+  validated in a single `npx` call instead of one per file.
+- **The checks under `checks/` all run at once** *(0,90 s → 0,22 s)*, and under the external tools
+  rather than after them. They read the tree and write nothing, so their sum becomes their slowest.
+  **The report is unchanged**: each output is captured and replayed by the block that owns it, in
+  the same order as before — verified by diffing the whole output against the sequential run.
+  A check whose output is missing is an error, never a pass.
 - **A venv left behind by a moved project directory now rebuilds itself.** Moving the directory
   leaves every absolute shebang under `.ci-tools/venv/` pointing nowhere, `pip` included — so
   nothing could repair it in place, and the cure was knowing to run `rm -rf .ci-tools/venv` by hand.

@@ -74,7 +74,7 @@ cp -R "$TPL/templates/repo/.githooks"        "$DEST/repo/.githooks"
 chmod +x "$DEST/repo/.githooks/"*
 
 # Local runner == github: the SAME check.sh as the template, auto-detecting (it reads the project's
-# ci.yml and only replays what its CI runs). The pre-commit hook reruns it throttled (advisory).
+# ci.yml and only replays what its CI runs). The pre-commit hook reruns it on every commit and blocks.
 cp "$TPL/check.sh" "$DEST/repo/check.sh"
 chmod +x "$DEST/repo/check.sh"
 

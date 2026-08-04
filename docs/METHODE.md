@@ -162,6 +162,21 @@ checks, not the gate. Measured by generating one, not by reading the tree.
 | `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ❌ **structural**, same reason |
 | `checks/verify-growth.sh` | `repo/` only | after | ❌ **deliberate** — advisory, it blocks nowhere |
 
+### At which RHYTHM
+
+The split is not how long a check takes, it is **what has to change for it to say something other
+than yesterday**. There are only two answers, and they give the rhythms `check.sh` implements.
+
+| Rhythm | What makes the verdict new | What runs there |
+|---|---|---|
+| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above except `verify-travel.sh`, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
+| **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* |
+| **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
+
+🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind
+by construction: deleting a file breaks a link in another one, and no diff mentions that. What the
+changed files decide is whether a check **runs**, never what it looks at.
+
 > 🔴 **Why `verify-tone.sh` stops at `repo/`, and it is not an oversight.** The second person is a rule of **published style**, paired with the one imposing English on versioned content. `workspace/` is deliberately in **French** and never leaves the machine: extending the check there would import a rule from a perimeter that is explicitly exempt from its twin. *(Measured: 23 hits, mostly quotations — an npm error message, the text of a stub.)*
 >
 > **The discriminator is the NATURE of the rule.** A rule of **method** *(one fact one place, no dated narrative, the memories)* follows the method everywhere. A rule of **published style** *(English, no second person)* stops where publication stops.
