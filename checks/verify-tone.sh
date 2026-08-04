@@ -18,9 +18,14 @@ cd "$(dirname "$0")/.."   # repo root: this script lives in checks/   # repo roo
 #   · the RULE     — the lines that STATE the rule have to spell the forbidden words out;
 #   · contributing — the "By contributing…" clause, addressed to the contributor by design;
 #   · a quotation  — foreign documentation quoted verbatim loses its value reworded;
-#   · tone-self    — the line below, which has to carry the very words it hunts for.
+#   · tone-self    — the line below, which has to carry the very words it hunts for;
+#   · fr-pattern   — a regex that must MATCH French prose. `grep -w` treats an accent as a word
+#                    boundary, so `obsolètes` splits into `obsol` and `tes`, and `tes` is a pronoun   # tone-self
+#                    on this very list. The hit is an artefact of the splitting, not a second
+#                    person — the same accent blindness that elsewhere makes a French sweep
+#                    under-count. Marked line by line, never file-wide.
 PRONOUNS='(you|your|yours|vous|votre|vos|tu|toi|ton|ta|tes)'   # tone-self
-ALLOW='(2nd|second) person|2e personne|By contributing|wish to opt-out of having Renovate|# tone-self'
+ALLOW='(2nd|second) person|2e personne|By contributing|wish to opt-out of having Renovate|# tone-self|# fr-pattern'
 
 hits=$(git grep -nIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICENSE*' 2>/dev/null \
        | grep -vE "$ALLOW" || true)

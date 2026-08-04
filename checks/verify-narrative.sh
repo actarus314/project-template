@@ -17,8 +17,16 @@
 # A date is allowed IFF the same line points into `archives/`. One line, one pointer, the story
 # lives where stories live. Anything else with a date in a comment is the narrative itself.
 #
-# Scope: shell scripts, workflows and hooks — what is COMMENTED. Not markdown: a CHANGELOG, a
-# runbook and an archive carry dates by design.
+# Scope: every COMMENTED line of every tracked text file. Not prose — a CHANGELOG, a runbook and
+# an archive carry dates by design.
+#
+# 🔴 The comment marker is per LANGUAGE, and that is not a refinement. This check TRAVELS into
+# every generated project, and it used to scan `*.sh *.yml *.yaml` only: in a Python, TypeScript
+# or Go project it read nothing at all and reported "no dated narrative" over a repository it had
+# never opened. A guard that travels must not assume the language of the place it lands in.
+#
+# The marker is not anchored to the start of the line either: a trailing comment carrying a date is the
+# same violation, and an anchored pattern walks straight past it.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -29,8 +37,40 @@ fi
 
 # `git grep` on purpose, like verify-tone.sh: the rule is about what is COMMITTED. An untracked
 # scratch file breaking it is nobody's business.
-scan() { git -C "$1" grep -nE '^[[:space:]]*#.*20[0-9]{2}-[0-9]{2}' -- '*.sh' '*.yml' '*.yaml' '.githooks/*' 2>/dev/null \
-         | sed "s|^|$2|" || true; }
+scan() { git -C "$1" ls-files -z 2>/dev/null \
+         | MARK_PREFIX="$2" python3 -c '
+import os, re, sys, pathlib
+
+# extension (or bare name) -> the marker that opens a line comment there.
+BY_NAME = {".gitignore":"#", ".gitattributes":"#", ".envrc":"#", ".dockerignore":"#",
+           ".editorconfig":"#", "Makefile":"#"}
+BY_EXT = {**dict.fromkeys("sh bash zsh py rb pl r yml yaml toml tf nix jl ps1 cmake mk".split(), "#"),
+          **dict.fromkeys("js mjs cjs jsx ts tsx go rs java kt swift c h cc cpp hpp cs scala dart php proto gradle".split(), "//"),
+          **dict.fromkeys("sql hs lua elm ada".split(), "--"),
+          **dict.fromkeys("el lisp clj ini".split(), ";")}
+DATE = re.compile(r"20[0-9]{2}-[0-9]{2}")
+prefix = os.environ.get("MARK_PREFIX", "")
+
+for f in sys.stdin.buffer.read().split(b"\0"):
+    if not f:
+        continue
+    name = f.decode("utf-8", "replace")
+    base = pathlib.PurePath(name).name
+    mark = BY_NAME.get(base) or (BY_EXT.get(name.rsplit(".", 1)[-1]) if "." in base else
+                                 ("#" if base.startswith("Dockerfile") else None))
+    if not mark:
+        continue
+    try:
+        text = pathlib.Path(name).read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        continue
+    for n, line in enumerate(text.splitlines(), 1):
+        i = line.find(mark)
+        if i < 0:
+            continue
+        if DATE.search(line[i:]):
+            print(f"{prefix}{name}:{n}:{line.strip()[:150]}")
+' || true; }
 
 # METHODE holds for BOTH repos: repo/ and the neighbouring workspace/, which has its own git.
 # The tone rule stays repo-only (workspace/ is deliberately French, and that rule imposes English),

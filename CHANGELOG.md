@@ -21,6 +21,73 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A check for the invariants whose breakage is silent** *(`checks/verify-do-not-break.sh`)*: the
+  skill reached through a symlink rather than a drifting copy, the three files kept tracked against
+  the neighbouring template `.gitignore`, and the absolute paths the assistant's own instructions
+  read at every session start. Nothing reported any of the three, in either direction — and none of
+  them raises an error when it breaks: the skill just vanishes from the list, a session quietly
+  loses the documents it reasons from, a generated project quietly ships without three files.
+
+- **A check that the checks are wired as declared** *(`checks/verify-checks-wiring.sh`)*. Three
+  hand-written lists name them one by one — the CI steps, what `init-project.sh` copies into a
+  generated project, and the table in `METHODE.md` — and a check added, renamed or moved has to
+  reach all three by hand. Every way of missing one is silent: absent from the CI it passes no
+  gate, absent from `init-project.sh` it ships nowhere, absent from the table it is armed and
+  undocumented. Auto-detecting the CI list would be wrong, since four checks have no business
+  there; that exception was already written down in the table, so the table is now the source and
+  the lists are compared against it.
+
+- **A check on what the assistant ASSERTS as a turn ends** *(`checks/verify-turn-claims.sh`, a `Stop`
+  hook, advisory)*. Every other check watches files; none watched the claims. Two failures kept
+  recurring: a defect named while the turn ends untouched, and a counted total appearing in no tool
+  output. Both are counted, never judged — a model reviewing a turn gives a false green often
+  enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
+  turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
+  unreadable; these fire on under 1 %.
+- **A guard on the commands this repo forbids** *(`checks/verify-forbidden-command.sh`, a
+  `PreToolUse` hook on Bash)*. Three are refused outright because their verdict is a literal string,
+  present or absent: `git rm --cached` on a force-added template file, `gh pr merge --admin`, and
+  `gh pr checks`. A fourth — opening a pull request — is only WARNED about, since a second one is
+  sometimes right and a guard wrong one time in three teaches its own bypass. Heredoc bodies are
+  stripped before matching: the very measurements that sized these rules were commands containing
+  those strings, and a naive match would have blocked the work that justified it.
+- **A check for the same fact stated twice in different words** *(`checks/verify-echo.sh`, advisory)*.
+  Verbatim copying was already covered; restatement was not. Sentence embeddings were tried first
+  and **rejected on measurement** — a static model flagged 1840 pairs against this check's 45, and
+  the ones it alone reported were noise, the shared domain vocabulary drowning the signal. Weighing
+  words by rarity is both cheaper and sharper here. It draws a list and blocks nothing.
+- **`verify-growth.sh` also watches the comment outgrowing its code.** An absolute ratio would say
+  nothing — these scripts sit at 28–56 % comment, deliberately, since a comment carries the WHY.
+  What is observable is the DIFFERENCE between the two growth rates: measured across this repo's
+  releases it has a median of 0 and a 95th percentile of +6, with a single real outlier at +149.
+
+### Changed
+- 🔴 **`verify-narrative.sh` was blind in every generated project that is not shell.** It TRAVELS
+  into all of them, and scanned `*.sh *.yml *.yaml` only — so in a Python, TypeScript or Go project
+  it read nothing and reported "no dated narrative" over a repository it had never opened. It now
+  reads every tracked text file and knows the comment marker per language (`#`, `//`, `--`, `;`),
+  and no longer anchors to the start of a line, so a trailing comment carrying a date is caught too.
+- **The comment-drift half of `verify-growth.sh` became its own check** *(`verify-comment-drift.sh`)*.
+  Two targets, two rhythms, two conditions: pairing them under one gate blinded the script half on
+  a commit touching only scripts, within an hour of being written. It is language-aware for the same
+  reason as above, and NAMES the extensions it found no marker for rather than skipping them quietly.
+- **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
+  place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
+  gitleaks reads it neither on staged files nor over the full history — a
+  `https://<token>@github.com/…` remote therefore sits in plain text where nothing in the
+  repository looks, and survives every clone of the working copy. The credential helper is checked
+  with it: it must name a variable, never carry a literal. The offending value is never printed —
+  reporting a leak by repeating it moves it into a terminal, a log and a CI transcript.
+
+### Fixed
+- **The concision check was blind where it mattered most** *(`checks/verify-growth.sh`)*. Concision
+  is a rule of method, so it follows the method into the neighbouring workspace — where the very
+  document the method names as the one that must shrink lives. It now reads both repositories,
+  against the release timestamp rather than a tag the workspace does not carry, and compares
+  **bytes as well as lines**: the curated documents run from 57 to 175 bytes per line, so one
+  written a sentence per line can swell by a quarter in bytes while its line count goes *down*.
+
 ## [1.2.0] - 2026-08-04
 
 ### Added
