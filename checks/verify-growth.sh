@@ -86,5 +86,47 @@ if [ -d ../workspace/.git ]; then
   fi
 fi
 
-[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag, in either repository"
+# The same question asked of the SCRIPTS: is the comment swelling faster than the code it explains?
+#
+# An absolute ratio would be meaningless here. These scripts sit at 28-56% comment, far above what
+# general-purpose tools recommend, and deliberately so: the rule is that a comment carries the WHY.
+# What is observable is the DIFFERENCE between the two growth rates — measured across this repo's
+# releases, it sits at a median of 0 and a 95th percentile of +6, with exactly one real outlier at
+# +149 (check.sh gaining 196% comment for 47% code). Hence a threshold well above the noise and
+# well below the one case that matters.
+COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
+
+count_pair() {           # <revision|--worktree> <path>  ->  "<comments> <code>", empty if absent
+  # The current side is read from DISK, not from HEAD: comparing two commits would only ever see a
+  # comment that has already been committed, so the check could not speak while the file is being
+  # written — which is the only moment it is useful.
+  #
+  # The `|| true` is load-bearing under `pipefail`: a file that did not exist at that revision
+  # makes `git show` fail, which would otherwise take the whole script down mid-loop.
+  { if [ "$1" = "--worktree" ]; then cat "$2" 2>/dev/null || true
+    else git show "$1:$2" 2>/dev/null || true; fi; } | awk '
+    { line=$0; sub(/^[ \t]+/,"",line)
+      if (line == "") next
+      if (line ~ /^#/) c++; else k++ }
+    END { if (c+k > 0) print c, k }'
+}
+
+while IFS= read -r f; do
+  [ -f "$f" ] || continue
+  before=$(count_pair "$tag" "$f"); [ -n "$before" ] || continue
+  com0=${before% *}; code0=${before#* }
+  # Below this size a single added line moves the percentage by tens of points, which is noise.
+  [ "$code0" -ge 15 ] && [ "$com0" -ge 5 ] || continue
+  now=$(count_pair --worktree "$f"); [ -n "$now" ] || continue
+  com1=${now% *}; code1=${now#* }
+  d_code=$(( (code1 - code0) * 100 / code0 ))
+  d_com=$(( (com1 - com0) * 100 / com0 ))
+  if [ $(( d_com - d_code )) -ge "$COMMENT_DRIFT" ]; then
+    printf '  ↑ %-32s comment %+d%%, code %+d%% since %s — the WHY is outgrowing the what\n' \
+      "$f" "$d_com" "$d_code" "$tag"
+    grown=1
+  fi
+done < <(git ls-tree -r --name-only HEAD | grep -E '\.sh$' || true)
+
+[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}%, no script comment outgrew its code, since $tag"
 exit 0        # advisory, never blocking

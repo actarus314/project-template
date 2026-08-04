@@ -138,7 +138,9 @@ ok "ready under $CACHE/"
 # travelling file moved; `verify-delegation.sh` too — it is a hook, and check.sh never calls it.
 rm -rf "$PAR"; mkdir -p "$PAR"
 for s in checks/verify-*.sh; do
-  case "$s" in *verify-travel.sh|*verify-delegation.sh) continue;; esac
+  # The two hooks stay out: they read the event payload from STDIN, and inside this loop that means
+  # competing for the terminal's stdin with every sibling started alongside them.
+  case "$s" in *verify-travel.sh|*verify-delegation.sh|*verify-turn-claims.sh) continue;; esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
   ( "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &

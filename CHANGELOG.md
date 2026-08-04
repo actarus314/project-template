@@ -38,6 +38,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   there; that exception was already written down in the table, so the table is now the source and
   the lists are compared against it.
 
+- **A check on what the assistant ASSERTS as a turn ends** *(`checks/verify-turn-claims.sh`, a `Stop`
+  hook, advisory)*. Every other check watches files; none watched the claims. Two failures kept
+  recurring: a defect named while the turn ends untouched, and a counted total appearing in no tool
+  output. Both are counted, never judged — a model reviewing a turn gives a false green often
+  enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
+  turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
+  unreadable; these fire on under 1 %.
+- **A check for the same fact stated twice in different words** *(`checks/verify-echo.sh`, advisory)*.
+  Verbatim copying was already covered; restatement was not. Sentence embeddings were tried first
+  and **rejected on measurement** — a static model flagged 1840 pairs against this check's 45, and
+  the ones it alone reported were noise, the shared domain vocabulary drowning the signal. Weighing
+  words by rarity is both cheaper and sharper here. It draws a list and blocks nothing.
+- **`verify-growth.sh` also watches the comment outgrowing its code.** An absolute ratio would say
+  nothing — these scripts sit at 28–56 % comment, deliberately, since a comment carries the WHY.
+  What is observable is the DIFFERENCE between the two growth rates: measured across this repo's
+  releases it has a median of 0 and a 95th percentile of +6, with a single real outlier at +149.
+
 ### Changed
 - **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
   place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
