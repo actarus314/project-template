@@ -37,8 +37,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `housekeeping` **skill**, which holds the checklist and does the writing. The split is the point:
   **code for what counts, a model only for what is judged** — no counter can tell whether a tracking
   doc still reflects the work, or whether a stage actually closed. The threshold comes from 21 days
-  of history *(157 commits, 166 writes)*, counted per CROSSING rather than per turn: at 4 commits the
-  guard speaks once every 2,1 days, against a pass asked for by hand every 2,3. Work left
+  of history *(157 commits, 166 writes)*, counted per CROSSING rather than per turn: **6 commits**,
+  about once a week. **4 was tried first and withdrawn** — it looked ideal on the 21-day average
+  *(every 2,1 days, against a pass asked for by hand every 2,3)*, but an average flattens the dense
+  sessions, and on the day the guard shipped it would have spoken **five times**. 6 is the lowest
+  value at minimum noise: the count bottoms out there, so 8 or 10 buy no quiet and only arrive
+  later. Counting **pull requests** instead was measured and dropped: a threshold of 2 would speak
+  21 times over the same period, and a PR counter is blind to work not yet merged — the exact case
+  that motivated the guard. Work left
   uncommitted and a branch never pushed are **reported** when it speaks, and never trigger it —
   an uncommitted tree mid-session is the normal state, and a guard firing on the normal state gets
   bypassed within a day. **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it. There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**. An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches. **It ships inactive**, like its two siblings: a hook only acts once declared.

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:a2ae47f2b6748e3945529229f744b7c2f48b2637438f1753ed132aa1b5657a10
+  checksum-source-md: sha256:e1f28ebec97fc10f15f77b308cf08907e7a0eea37cc55902b077d2405633a55b
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1806,7 +1806,7 @@
           <td class="h">local</td>
           <td>end of turn <strong>and before compaction</strong></td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — the threshold is MEASURED (4 commits: speaks once every 2,1 days, against a hand-asked pass every 2,3), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself</td>
+          <td><strong>needs watching</strong> — the threshold is MEASURED, and re-measured (4 commits looked ideal on a 21-day average and would have spoken <strong>5 times on a single dense day</strong> — <strong>6</strong> is the lowest value at minimum noise, the count bottoming out from there), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself</td>
           <td class="t">instant</td>
           <td>n/a — asks for the pass before the turn ends</td>
         </tr>

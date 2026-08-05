@@ -24,14 +24,20 @@
 # to the `housekeeping` skill, which carries the checklist and the writing. Code for what counts,
 # a model only for what is judged.
 #
-# ⚠ THE THRESHOLD IS MEASURED, not chosen. Across 21 days, 157 commits and 166 writes to the
-# tracking doc, counting how often a guard would actually SPEAK — once per crossing, not once per
-# turn, since between two commits the count does not move and a per-turn guard would repeat itself
-# for hours:
-#     S=2 → 33 times   S=3 → 20   S=4 → 10   S=5 → 4   S=6 → 3   S=10 → 2
-# Over the same period the maintainer asked for the pass by hand 9 times. **S=4 speaks once every
-# 2,1 days against their 2,3** — it arrives just ahead of the request instead of replacing it with
-# noise. Raising or lowering this has to be re-measured the same way.
+# ⚠ THE THRESHOLD IS MEASURED, not chosen — and it was measured TWICE, because the first reading
+# used the wrong denominator. Counting how often a guard would actually SPEAK (once per crossing,
+# not once per turn: between two commits the count does not move) across 21 days, 157 commits and
+# 166 writes to the tracking doc:
+#     S=4 → 11 times   S=5 → 4   S=6 → 3   S=7 → 3   S=8 → 3   S=10 → 2   S=12 → never
+# On that average, S=4 spoke every 2,1 days against a pass asked for by hand every 2,3 — apparently
+# ideal. It was not: a 21-day average flattens the sessions where the work is dense, and on the one
+# day this guard shipped, S=4 would have spoken FIVE times. Unusable, and the maintainer said so
+# before any measurement did.
+#
+# S=6 is the LOWEST threshold at minimum noise: the count bottoms out at 3 from S=6 onward, so 8 or
+# 10 buy no quiet and only arrive later. The 90th percentile of observed backlogs is 4, which puts 6
+# past ordinary drift and inside the real episodes. Moving it has to be re-measured the same way —
+# on a dense day as well as on the average, since that is the difference the first reading missed.
 #
 # Other things worth saying — work left uncommitted, a branch never pushed — are REPORTED when the
 # guard speaks, and never trigger it. Uncommitted work mid-session is the normal state of a working
@@ -46,7 +52,7 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-THRESHOLD=${HOUSEKEEPING_THRESHOLD:-4}
+THRESHOLD=${HOUSEKEEPING_THRESHOLD:-6}
 JOURNAL_NAME="housekeeping (end of turn)"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PROJECT="$(basename "$(dirname "$REPO")")/$(basename "$REPO")"
