@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:25d5e1d194929389826df3bd419ecac74c5a30a9449678841b76b8d687d0ca65
+  checksum-source-md: sha256:07773d52717699db85bccb4b9a2e34a1bc6dfbca088a7e75f9fc099ab7ed4747
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1799,6 +1799,16 @@
           <td><strong>needs watching</strong> — the trigger is measured (a merged PR loses to a random instant by 11 points; a release wins), but the invariant has never yet been violated: 3 closed stages, 3 archives</td>
           <td class="t">0,05 s</td>
           <td>⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-housekeeping.sh</code></td>
+          <td>the development admin behind the work: commits piling up with nothing written down</td>
+          <td class="h">local</td>
+          <td>end of turn</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the threshold is MEASURED (4 commits: speaks once every 2,1 days, against a hand-asked pass every 2,3), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself</td>
+          <td class="t">instant</td>
+          <td>n/a — asks for the pass before the turn ends</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>
