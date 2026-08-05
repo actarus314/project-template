@@ -162,15 +162,40 @@ def overlap():
     base = "main" if run("git", "rev-parse", "--verify", "main") else "master"
     mine = run("git", "diff", "--name-only", f"{base}...HEAD")
     prev = run("git", "show", "--name-only", "--format=", base)
+
+    # 🔴 THE THIRD OPTION ONLY EXISTS IF A PULL REQUEST IS OPEN TO RECEIVE IT. "Commit onto its
+    # branch and push" was printed unconditionally, including when the previous one was merged and
+    # its branch deleted — advice for an action nobody can take.
+    # ⚠ And the local proxy for it is WRONG here: this repo squashes, so a merged branch's commits
+    #   do not exist in main and `git branch --no-merged` still lists it. Tried, and it offered three
+    #   long-dead branches as targets — rebasing onto one would send the work into a dead end.
+    #   Only the forge knows, so the forge is asked. The trigger is one rare command, so a round trip
+    #   is affordable; if it fails for any reason, nothing is claimed.
+    here = " ".join(run("git", "rev-parse", "--abbrev-ref", "HEAD"))
+    try:
+        raw = subprocess.run(["gh", "pr", "list", "--state", "open", "--json", "headRefName"],
+                             capture_output=True, text=True, timeout=8)
+        alive = [x["headRefName"] for x in json.loads(raw.stdout or "[]")] if raw.returncode == 0 else []
+    except Exception:
+        alive = []
+    alive = [b for b in alive if b != here]
+
     if not mine or not prev:
         return ""
     shared = mine & prev
-    if not shared:
-        return (f" Measured: this branch shares NO file with the previous pull request "
-                f"({len(mine)} touched) — a different subject, so a new one is likely right.")
-    return (f" Measured: {len(shared)} of this branch's {len(mine)} file(s) were ALSO touched by the "
-            f"previous pull request ({', '.join(sorted(shared)[:4])}{'…' if len(shared) > 4 else ''})"
-            f" — that is the signal the question above is about.")
+    overlap_txt = (
+        f" Measured: this branch shares NO file with the previous pull request "
+        f"({len(mine)} touched) — a different subject." if not shared else
+        f" Measured: {len(shared)} of this branch's {len(mine)} file(s) were ALSO touched by the "
+        f"previous pull request ({', '.join(sorted(shared)[:4])}{'…' if len(shared) > 4 else ''}).")
+
+    if alive:
+        return (overlap_txt + f" A THIRD option exists: pull request(s) on "
+                f"{', '.join('`' + b + '`' for b in alive[:3])} are OPEN — these commits can go there "
+                f"instead of into a new one. Refuse this, then rebase or cherry-pick onto that branch "
+                f"and push.")
+    return (overlap_txt + " No pull request is open, so there is nowhere to add these commits: the "
+            "choice really is open one or hold it back.")
 
 for tag, pattern, reason in ASK:
     if re.search(pattern, cmd, re.I):
