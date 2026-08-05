@@ -153,7 +153,7 @@ rm -f "$FRAG"
 TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unreleased)
 sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
 
-# ⚠ The key is INJECTED HERE, not carried by the template: a template that hardcoded it
+# ⚠ The key is INJECTED HERE, never carried by the template.
 #   (detail: docs/code/init-project.md)
 if [ "$STAGING" = 1 ]; then
   RJ="$DEST/repo/.github/renovate.json"

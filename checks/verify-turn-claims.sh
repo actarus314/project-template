@@ -9,7 +9,7 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# The journal, if it is on. A hook is the most fragile gate there is: it lives in a LOCAL settings
+# The journal, if it is on — a hook lives in a LOCAL settings file, so nothing versioned proves it ran.
 #   (detail: docs/code/verify-turn-claims.md)
 JOURNAL_NAME="turn-claims (end of turn)"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -69,7 +69,7 @@ if not msg.strip():
     record("skip", "empty message")
     sys.exit(0)
 
-# What THIS turn ran, read back from the transcript: the tools invoked, and their outputs. Both
+# What THIS turn ran, read back from the transcript: the tools invoked, and their outputs.
 #   (detail: docs/code/verify-turn-claims.md)
 tools, outputs = [], []
 partial = False          # at least one line of this turn could not be read
@@ -138,7 +138,7 @@ if out is not None:
         found.append(f'"{first}" is stated as a total but appears in no output of this turn')
         tags.append("unbacked-total")
 
-# Signal 3 — a table of measurements rendered while nothing was written. Measuring is cheap and
+# Signal 3 — measurements rendered while nothing was written: the numbers die with the turn.
 #   (detail: docs/code/verify-turn-claims.md)
 if tools:
     MEASURE = re.compile(r"\b(mesur|compt|médiane|mediane|centile|percentile|moyenne|taux|sur \d{2,})", re.I)  # fr-pattern

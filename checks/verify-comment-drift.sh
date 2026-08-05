@@ -12,8 +12,12 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
-[ -n "$tag" ] || { echo "  (no release yet — nothing to compare against)"; exit 0; }
+# The reference is the last MERGED pull request, not the last release: a release is rare, and a
+# file can be born verbose and stay so for weeks between two. origin/main IS that state here,
+# since this repo is pull-request-only. Falls back to the tag where there is no remote yet.
+tag=$(git rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/main \
+      || git describe --tags --abbrev=0 2>/dev/null || true)
+[ -n "$tag" ] || { echo "  (no reference point yet — nothing to compare against)"; exit 0; }
 released_at=$(git log -1 --format=%cI "$tag")
 grown=0
 
@@ -59,8 +63,11 @@ marker_for() {
     js|mjs|cjs|jsx|ts|tsx|go|rs|java|kt|swift|c|h|cc|cpp|hpp|cs|scala|dart|php|proto|gradle) echo '//';;
     sql|hs|lua|elm|ada) echo '--';;
     el|lisp|clj|ini) echo ';';;
-    *) echo '';;
   esac
+  # ASK THE FILE. A name carries no extension exactly where it matters most: the git hooks are
+  # shell, and both were invisible here while verify-narrative.sh already read them by shebang.
+  case "$(basename "$1")" in *.*) echo ''; return;; esac
+  [ -f "$1" ] && head -c 200 "$1" 2>/dev/null | head -1 | grep -q '^#!' && echo '#' || echo ''
 }
 
 read_out=""
@@ -81,7 +88,9 @@ scan_tree() {            # <repository> <revision> <label>
     fi
     examined=$(( examined + 1 ))
     printf '%s\t%s\n' "$marker" "$f" >> "$T/markers"
-  done < <(git -C "$dir" ls-tree -r --name-only HEAD | grep -E '\.[A-Za-z0-9]+$' || true)
+  # No extension filter: it excluded every extensionless file BEFORE marker_for could ask the
+  # file itself, which is precisely where the git hooks were hiding.
+  done < <(git -C "$dir" ls-tree -r --name-only HEAD || true)
 
   if [ "$examined" -gt 0 ]; then
     while IFS= read -r marker; do
