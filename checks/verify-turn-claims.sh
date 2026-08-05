@@ -61,11 +61,20 @@ if not msg.strip():
 #
 # Reading stops at the previous USER message, which is where this turn began.
 tools, outputs = [], []
+partial = False          # at least one line of this turn could not be read
 tp = ev.get("transcript_path")
 if tp:
     try:
         for ln in reversed(pathlib.Path(tp).read_text(encoding="utf-8", errors="replace").splitlines()):
-            rec = json.loads(ln)
+            # 🔴 PER LINE. One malformed line used to throw out of the whole loop and set both lists
+            # to None, which disarms all three signals at once, in silence — a single unparseable
+            # line anywhere in the turn. Measured: the signal fired on a healthy transcript and
+            # vanished entirely when one junk line was appended.
+            try:
+                rec = json.loads(ln)
+            except Exception:
+                partial = True
+                continue
             m = rec.get("message") or {}
             content = m.get("content")
             if m.get("role") == "user" and isinstance(content, str):
@@ -93,8 +102,12 @@ HANDLED = re.compile(r"\b(corrigé|corrigée|fixé|réparé|✅|je corrige|j'ai 
 FILEREF = re.compile(r"[\w./-]+\.(?:sh|md|ya?ml|json|py|txt)\b")
 
 # No transcript means no way to tell what the turn ran: say nothing rather than accuse.
+# A PARTIAL read is a different case, and it splits the signals in two. What was seen can be
+# asserted; what was NOT seen cannot. Signal 1 accuses on an ABSENCE (nothing edited), so an
+# unread line could hold the very edit that clears it — it stands down. Signals 2 and 3 accuse on
+# what is PRESENT in what was read, and a missing line can only make them quieter, never wrong.
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
-edited = tools is None or bool(set(tools) & EDIT_TOOLS)
+edited = tools is None or partial or bool(set(tools) & EDIT_TOOLS)
 
 m = DEFECT.search(msg)
 if m and not HANDLED.search(msg) and FILEREF.search(msg) and not edited:

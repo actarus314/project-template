@@ -55,6 +55,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
 
 ### Fixed
+- **One malformed JSONL line disarmed all three signals of `verify-turn-claims.sh`, in silence.**
+  The `try` wrapped the whole read loop, so a single unparseable line anywhere in the turn threw
+  out of it and left both lists `None`. Parsing is per line now, and a PARTIAL read splits the
+  signals: the one accusing on an **absence** (nothing edited) stands down, since an unread line
+  could hold the very edit; the two accusing on what is **present** keep biting. *(Planted: the
+  signal fired on a healthy transcript and vanished entirely when one junk line was appended.)*
+- **`verify-workspace.sh` counted tracking FILES, not tracking SYSTEMS.** A `.planning/` sitting
+  beside a `SUIVI.md` — the exact collision METHODE forbids — returned the same *"1 tracking doc"*
+  as a workspace holding nothing else. It now counts systems, and **names what it looked for**, so
+  a reader sees which tools remain invisible to it. A project using GSD alone stays green.
 - **Two checks would have FAILED in every generated project, not merely gone quiet.**
   `verify-travel.sh` demanded an `init-project.sh` no project has, and `verify-do-not-break.sh`
   demanded three `templates/repo/` files and a skill symlink that belong to the generator alone.
