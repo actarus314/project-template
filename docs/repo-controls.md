@@ -319,15 +319,27 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 ⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s**. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
-> journal. `check.sh` writes every verdict it reaches to `.ci-tools/controls-log.tsv` *(gitignored:
-> local telemetry, never repository content)*, and `--report` renders the record into
-> `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes through, so
-> no list of controls has to be kept anywhere.
+> journal. `check.sh` writes every verdict it reaches to
+> `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`, and `--report` renders the
+> record into `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes
+> through, so no list of controls has to be kept anywhere.
+>
+> 🔴 **It lives OUTSIDE every repository, and that is the point.** Telemetry is not repository
+> content, and a journal kept under `.ci-tools/` was per-project as well as per-machine: the one
+> question worth asking of it — *is this gate firing everywhere, or only here* — had nowhere to be
+> answered. Every project running these checks appends to the **same** file, each line carrying the
+> project it came from, and `--report` filters on the current one so a project's page still speaks
+> for that project alone. The path is deliberately not named after this repository: the journal
+> outlives the project that first wrote it.
 >
 > **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot
 > show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding
 > verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own
-> firing**, which `check.sh` cannot do: it never runs them.
+> VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the
+> earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and
+> a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
+> when it looked and found nothing, and `skip` for a turn it never evaluated: a rate reads off
+> `bit / fired` without counting the turns nobody looked at.
 >
 > 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the
 > recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
@@ -371,7 +383,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,76 s | ✅ |
 | `checks/verify-delegation.sh` | a subagent launched without its three instructions | local | before the launch | ✅ | **needs watching** — a hook, and a hook nothing declares simply never fires | instant | n/a — refuses the launch |
 | `checks/verify-forbidden-command.sh` | a command forbidden here, before it runs | local | before the command | ✅ | **needs watching** — same reason | instant | n/a — refuses the command |
-| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that | instant | n/a — reports only |
+| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by `stop_hook_active` | instant | n/a — refuses the end of the turn |
 
 > **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and
 > a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.

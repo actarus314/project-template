@@ -25,6 +25,26 @@ CACHE=.ci-tools
 mkdir -p "$CACHE"
 [ -f "$CI" ] || { echo "No $CI here — nothing to replay."; exit 0; }
 
+# ── The control journal lives OUTSIDE every repository ────────────────────────────────────────
+# It used to sit under .ci-tools/, which made it per-project and per-machine: a project's telemetry
+# could never be compared with its neighbour's, and the one question worth asking of it — is a gate
+# firing everywhere, or only here — had no place to be answered. It is telemetry, never repository
+# content, so nothing about it belongs in a tree.
+#
+# 🔴 The location is deliberately NOT named after this repository. The journal outlives the project
+# that first wrote it: every generated project appends to this same file, which is the whole point,
+# and the tools that read it will one day live somewhere else entirely.
+#
+# XDG_STATE_HOME is the convention for exactly this — data that persists between runs, that a user
+# would not miss if it were deleted, and that has no business being backed up.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
+JOURNAL="$STATE_DIR/controls-log.tsv"
+JOURNAL_ON="$STATE_DIR/journal-on"
+# Which project a line came from. `basename` alone is useless here: every repository of this shape
+# is called `repo`, so the parent carries the name — `template/repo`, `decantfi/repo`.
+root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+PROJECT="$(basename "$(dirname "$root")")/$(basename "$root")"
+
 # --commit: the lot a COMMIT can make say something new. Left out is everything whose verdict is
 # fixed by an external base rather than by the tree — the OSV database and the semgrep packs are
 # fetched, and gitleaks' rules are baked into a pinned binary, so at constant versions the pushed
@@ -52,24 +72,38 @@ case "${1:-}" in
 esac
 
 if [ "$MODE" = report ]; then
-  J="$CACHE/controls-log.tsv"
+  J="$JOURNAL"
+  mkdir -p "$STATE_DIR"
   case "${2:-}" in
-    --on)  : > "$CACHE/journal-on"; echo "Control journal ON — recording to $J. Turn it off with: ./check.sh --report --off"; exit 0;;
-    --off) rm -f "$CACHE/journal-on"; echo "Control journal OFF. The recording so far is kept in $J."; exit 0;;
-    --reset) rm -f "$J"; echo "Control journal cleared."; exit 0;;
+    --on)  : > "$JOURNAL_ON"; echo "Control journal ON — recording to $J. Turn it off with: ./check.sh --report --off"; exit 0;;
+    --off) rm -f "$JOURNAL_ON"; echo "Control journal OFF. The recording so far is kept in $J."; exit 0;;
+    # The switch and the record are global, so a reset is too — and it says which projects it drops,
+    # since a file shared by every project is not one to clear without looking.
+    --reset)
+      if [ -f "$J" ]; then
+        echo "Clearing $(wc -l < "$J" | tr -d ' ') record(s), from: $(cut -f7 "$J" | sort -u | tr '\n' ' ')"
+      fi
+      rm -f "$J"; echo "Control journal cleared."; exit 0;;
   esac
-  [ -f "$CACHE/journal-on" ] || echo "  (journal is OFF — showing what was recorded before. Switch on: ./check.sh --report --on)" >&2
+  [ -f "$JOURNAL_ON" ] || echo "  (journal is OFF — showing what was recorded before. Switch on: ./check.sh --report --on)" >&2
   [ -f "$J" ] || { echo "No control has run while the journal was on. Switch it on: ./check.sh --report --on"; exit 0; }
   OUT=${3:-../workspace/docs/CONTROLES.md}
   # The state travels INTO the page, and not to the terminal alone. The timestamps below are those
   # of the RECORDS, never of the reading: a page whose newest record is a day old cannot, on its
   # own, tell "recording stopped yesterday" from "nothing has run since yesterday" — two different
   # facts reading as one line. Whoever opens the file later does not see this terminal.
-  STATE=off; [ -f "$CACHE/journal-on" ] && STATE=on
-  python3 - "$J" "$OUT" "$STATE" <<'PY'
+  STATE=off; [ -f "$JOURNAL_ON" ] && STATE=on
+  python3 - "$J" "$OUT" "$STATE" "$PROJECT" <<'PY'
 import sys, collections, pathlib, statistics
 rows = [l.rstrip("\n").split("\t") for l in open(sys.argv[1], encoding="utf-8") if l.strip()]
 rows = [r for r in rows if len(r) >= 4]
+# The journal is shared by every project; this page speaks for ONE. Filtering here rather than at
+# write time is what lets the same record answer both questions — this project's rates, and the
+# cross-project view a dashboard will want. Lines written before the column existed have no owner:
+# they are kept, because dropping records to tidy a page is how a measurement quietly loses its base.
+me = sys.argv[4] if len(sys.argv) > 4 else ""
+others = sorted({r[6] for r in rows if len(r) > 6 and r[6] and r[6] != me})
+rows = [r for r in rows if len(r) <= 6 or not r[6] or r[6] == me]
 agg = collections.OrderedDict()
 for r in rows:
     ts, mode, name, rc = r[0], r[1], r[2], r[3]
@@ -92,17 +126,28 @@ status = ("🟢 **Recording is ON** — this page grows at every verdict."
           "🔴 **Recording is OFF — this page is FROZEN.** Nothing has been added since the newest "
           "record below, and nothing will be. Switch it back on: `./check.sh --report --on`.")
 
+scope = (f"> 📓 **This page speaks for `{me}` alone.** The journal itself lives outside every "
+         f"repository and is shared: it also holds {', '.join(f'`{o}`' for o in others)}, filtered "
+         f"out here." if others else
+         f"> 📓 **This page speaks for `{me}`.** The journal lives outside every repository and is "
+         f"shared with any other project running these checks — none has written to it yet.")
+
+if not rows:
+    print(f"Nothing recorded for {me} yet — the journal holds only other projects. "
+          f"Run ./check.sh with the journal on.")
+    raise SystemExit(0)
+
 out = ["# Controls — performance, and whether their gates actually fire", "",
        "> Written by `./check.sh` itself at every verdict.",
        "> A **development instrument**: `./check.sh --report --on | --off | --reset`.", "",
-       status, "",
+       status, "", scope, "",
        "> ⚠️ **The timestamps are those of the RECORDS, never of the reading.** Read alone, an old "
        "newest-record cannot tell *recording stopped* from *nothing has run* — which is why the "
        "line above states which one it is.", "",
        f"**{len(rows)} records**, **{len(agg)} controls**, "
        f"`{rows[0][0]}` → `{rows[-1][0]}`. Median time of the whole set, run one by one: "
        f"**{total_ms/1000:.2f} s** *(they run together, so the lot costs its slowest, not this sum)*.", "",
-       "| Control | Fired | Skipped | Blocked | Median | Slowest | Modes | Last | Why it blocked |",
+       "| Control | Fired | Skipped | Bit | Median | Slowest | Modes | Last | What it caught |",
        "|---|---:|---:|---:|---:|---:|---|---|---|"]
 for name, a in sorted(agg.items(), key=lambda kv: -(statistics.median(kv[1]["ms"]) if kv[1]["ms"] else 0)):
     ko = f"**{a['ko']}**" if a["ko"] else "0"
@@ -146,21 +191,22 @@ gl_arch=arm64; al_arch=arm64; osv_arch=arm64
 [ "$uarch" = x86_64 ] && { gl_arch=x64; al_arch=amd64; osv_arch=amd64; }
 
 fail=0
-# Every verdict passes through ok() or ko(), so the journal is written THERE and nowhere else: a
-# per-check call would be a list to keep, and the one thing this file no longer keeps is a list.
-# It lands under .ci-tools/ (gitignored) — local telemetry, not repository content, and it travels
-# with this script into every generated project.
+# Every verdict of THIS script passes through ok() or ko(), so the journal is written THERE and
+# nowhere else: a per-check call would be a list to keep, and the one thing this file no longer
+# keeps is a list. The three hooks are the exception, and they have to be: check.sh never runs them,
+# so each writes its own verdict — same file, same six columns, same rule that the line is written
+# where the verdict exists.
+# It lands outside every repository (see STATE_DIR above) — telemetry, not repository content, and
+# it travels with this script into every generated project, which all append to the same file.
 # 🔴 OFF unless switched ON. This is a DEVELOPMENT instrument — useful while tuning the controls,
 # pointless once they are settled, and a file that grows at every commit forever is a cost paid for
-# nothing. The switch is a witness file under .ci-tools/ (gitignored): present, the journal records;
-# absent, `journal()` returns immediately and costs one test. `./check.sh --report --on` / `--off`.
-JOURNAL="$CACHE/controls-log.tsv"
-JOURNAL_ON="$CACHE/journal-on"
+# nothing. The switch is a witness file beside the journal: present, the journal records; absent,
+# `journal()` returns immediately and costs one test. `./check.sh --report --on` / `--off`.
 journal() {   # <control> <rc|skip> <reason> [milliseconds]
   [ -f "$JOURNAL_ON" ] || return 0
   # The tools-ready line is not a control, it is this script reporting on itself.
   case "$1" in "ready under "*) return 0;; esac
-  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MODE" "$1" "$2" "${4:-}" "$3" >> "$JOURNAL"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MODE" "$1" "$2" "${4:-}" "$3" "$PROJECT" >> "$JOURNAL"
 }
 # A check whose rhythm held it back: recorded as a SKIP, with the gate that decided. Its absence
 # from the journal and its being deliberately skipped are two different facts, and only one is fine.

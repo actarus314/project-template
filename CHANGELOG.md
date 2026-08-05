@@ -22,6 +22,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **The end-of-turn check now BLOCKS.** `checks/verify-turn-claims.sh` ends a turn with
+  `decision: block` instead of a remark: the reason reaches the model, which settles it or states why
+  the signal does not apply. `stop_hook_active` caps that at **one relaunch per turn**, so a false
+  positive costs one exchange and never a loop. The three signals are untouched — they were tuned on
+  4463 real turns to fire on under 1 % each, and a rewording has to be re-measured the same way.
+- **The control journal records the VERDICT, not merely the firing.** The three hooks used to write
+  a `0` before analysing anything, which answered *did the gate fire* and never *did it bite* — and
+  the second question is the one a threshold is set on. Each now writes `1` with the **tag of the
+  signal that caught**, `0` when it looked and found nothing, and `skip` for an event it never
+  evaluated, so a rate reads off `bit / fired`. The journal is also **anchored to the script** rather
+  than to the working directory: a hook fires wherever the session sits, and a relative path silently
+  dropped every firing from elsewhere — the denominator of that rate, lost without a trace.
+  `--report` gains nothing to configure: the columns already existed, and one of them stopped being
+  called `Blocked` since a warning is not a block.
+- **The control journal moved OUT of the repository**, to
+  `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`. Under `.ci-tools/` it was
+  per-project as well as per-machine, so the one question worth asking of it — *is this gate firing
+  everywhere, or only here* — had nowhere to be answered. Every project generated from this template
+  now appends to the **same** file, each line carrying a seventh column naming the project it came
+  from; `--report` filters on the current one, so a project's page still speaks for that project
+  alone. The switch and `--reset` are global too, and `--reset` names the projects it is about to
+  drop. **Nothing about this reaches a repository**: telemetry is not repository content.
 - **The CHANGELOG line for a bot's bump goes onto ITS OWN branch, before the merge.** Written into
   the convention that owns it, here and in the template, so it survives the session that decided
   it. Verified first: Renovate states on every pull request it opens that it rebases only when a
