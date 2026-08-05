@@ -38,7 +38,7 @@ fi
 command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 0; }
 
 ECHO_THRESHOLD=${ECHO_THRESHOLD:-0.40} python3 - <<'PY'
-import re, os, glob, math, collections, pathlib
+import re, subprocess, os, glob, math, collections, pathlib
 
 THRESHOLD = float(os.environ.get("ECHO_THRESHOLD", "0.40"))
 
@@ -57,13 +57,34 @@ def paragraphs(path):
 # A method rule follows the method, so the neighbouring workspace is read too — but each repository
 # on its own: one is English, the other deliberately French, and cross-language pairs share no
 # vocabulary, so comparing them would only ever produce silence dressed up as a verdict.
-GROUPS = [("repo/", sorted(glob.glob("docs/*.md")) + ["README.md", "AGENTS.md", "CONTRIBUTING.md"])]
+# 🔴 The documents are DETECTED, never listed. This used to read `docs/*.md` plus three names at
+# the root, which presumes a project keeps its prose exactly where this one does — a project
+# writing into `documentation/`, `guide/` or `wiki/` was invisible to it, entirely and quietly.
+# What is read now is every tracked `.md`, minus what restating is the NATURE of:
+#   · a CHANGELOG accumulates entries that legitimately echo each other;
+#   · an archive is cold and immutable — its whole point is to keep the account of a closed stage;
+#   · an issue or pull-request template is a form, and its fields repeat by design.
+def tracked_md(root="."):
+    out = subprocess.run(["git", "-C", root, "ls-files", "*.md"],
+                         capture_output=True, text=True)
+    if out.returncode != 0:
+        return []
+    skip = re.compile(r"(^|/)(CHANGELOG\.md$|archives?/|\.github/)")
+    return sorted(f"{root}/{f}" if root != "." else f
+                  for f in out.stdout.splitlines() if f and not skip.search(f))
+
+# Grouped by the PROJECT a document belongs to, and compared inside a group only. `templates/`
+# holds the documents of a project this one GENERATES: its AGENTS.md restating this repo's is the
+# template working, not a defect. And the two repositories are written in different languages, so
+# a cross-group pair would share no vocabulary and could only ever score silence.
+here = tracked_md()
+GROUPS = [("repo/", [f for f in here if not f.startswith("templates/")]),
+          ("templates/", [f for f in here if f.startswith("templates/")])]
 if pathlib.Path("../workspace").is_dir():
-    # Root AND docs/: `workspace/docs/SUIVI.md` is where the generator puts the tracking doc, so a
-    # project following the documented default sat entirely outside this check's reach. Here the
-    # SUIVI happens to live at the root, which is exactly why the gap stayed quiet.
-    GROUPS.append(("workspace/", sorted(glob.glob("../workspace/*.md"))
-                                 + sorted(glob.glob("../workspace/docs/*.md"))))
+    # Every tracked `.md` there too: `workspace/docs/SUIVI.md` is where the generator puts the
+    # tracking doc, so a project following the documented default sat outside this check's reach.
+    GROUPS.append(("workspace/", tracked_md("../workspace")))
+GROUPS = [(label, files) for label, files in GROUPS if files]
 
 FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus)\b", re.I)
 def language(text):

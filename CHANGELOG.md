@@ -55,6 +55,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
 
 ### Fixed
+- **Three checks still presumed the shape of the project they landed in.** Each carried a
+  hand-written perimeter, which is the defect already paid for once, when a travelling check read
+  ZERO files in every Python, TypeScript and Go project:
+  · `verify-version.sh` looked for `--version` in `./*.sh` and `checks/*.sh` — it reads **every
+  tracked EXECUTABLE** now, whatever the language, and recognises the handler in shell, Python and
+  Node *(proven: a Python CLI printing a wrong version is caught, and the old perimeter never saw
+  it)*;
+  · `verify-echo.sh` and `verify-growth.sh` read `docs/*.md` plus three names at the root, so a
+  project writing into `documentation/`, `guide/` or `wiki/` was invisible to them. They read
+  **every tracked `.md`** now, minus what restating is the nature of — a CHANGELOG, an archive, a
+  form template — and `verify-echo.sh` groups by the project a document belongs to, so a template's
+  `AGENTS.md` echoing this repo's reads as the template working rather than as a defect.
 - **One malformed JSONL line disarmed all three signals of `verify-turn-claims.sh`, in silence.**
   The `try` wrapped the whole read loop, so a single unparseable line anywhere in the turn threw
   out of it and left both lists `None`. Parsing is per line now, and a PARTIAL read splits the

@@ -71,10 +71,16 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
         "$label$f" "$before_l" "$now_l" "$pct_l" "$before_b" "$now_b" "$pct_b"
       grown=1
     fi
-  done < <(printf '%s\n' "$listing" | grep -E "$select" || true)
+  done < <(printf '%s\n' "$listing" | grep -E "$select" | grep -vE "$EXCLUDE" || true)
 }
 
-compare_tree . "$tag" "" '^(docs/[^/]+\.md|README\.md|AGENTS\.md|CONTRIBUTING\.md)$'
+# 🔴 DETECTED, never listed. It used to name `docs/*.md` plus three files at the root, which
+# presumes a project keeps its prose where this one does: a project writing into `documentation/`
+# or `guide/` was invisible to it. Every tracked `.md` is compared now, minus what accumulates by
+# nature — a CHANGELOG, an archive, a form template. Same exclusions as verify-echo.sh: concision
+# is one rule, and two checks reading two different sets of documents would be two answers to it.
+EXCLUDE='(^|/)(CHANGELOG\.md$|archives?/|\.github/)'
+compare_tree . "$tag" "" '\.md$'
 
 # The workspace is a separate repository with no remote and no tag, and it is optional: a generated
 # project can be created without it.
@@ -84,7 +90,7 @@ if [ -d ../workspace/.git ]; then
     # Root and docs/ only — which is where the tracking doc lands, whether this workspace or a
     # generated one. It leaves out archives/ by construction: they are the cold side, and METHODE
     # states that too many archive files is not a problem.
-    compare_tree ../workspace "$ws_rev" "workspace/" '^([^/]+|docs/[^/]+)\.md$'
+    compare_tree ../workspace "$ws_rev" "workspace/" '\.md$'
   else
     echo "  ⚠ workspace: no commit predates $tag — nothing to compare against"
     grown=1
