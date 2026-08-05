@@ -1898,6 +1898,11 @@
     </table>
   </div>
 
+  <div class="note">
+    <h3>⏳ One stage is neither run nor set — it comes back round: the PAT rotation</h3>
+    <p>Every write PAT is bounded to <strong>90 days</strong>, so the last stage of the matrix is a <strong>recurring gesture</strong>, not a control that holds by itself. <code>repo/.envrc</code> carries the <strong>J-14 alert</strong>: it reads the expiry once a day and warns ahead, so the date is never discovered mid-session with a <code>git push</code> in hand. The assistant raises it; the maintainer regenerates.</p>
+    <p>The mechanism, the PAT matrix and the reason a read-only token deliberately has <em>no</em> expiry all live in <code>secrets-and-auth.md</code> — this page only names the stage so the matrix is not read as ending at the scheduled scans.</p>
+  </div>
 
   <h3>The gate — one line, and it is the same one everywhere</h3>
   <p><code>./check.sh --house</code> runs the house checks <strong>and nothing else</strong>: <code>gitleaks</code>, <code>semgrep</code>, <code>osv-scanner</code>, <code>actionlint</code> and <code>zizmor</code> are the CI's own steps, at versions it pins and checksums itself, and replaying them inside the same job would download and rerun the whole lot for the same verdict.</p>
