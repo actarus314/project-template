@@ -33,7 +33,7 @@ The other structuring rule: **what SERVES to create a project** and **what TELLS
 | `--artefact` | Does the repo **publish an image that someone ELSE deploys**? | ghcr image · Trivy · tags ruleset · immutable releases |
 | `--staging` | Is there a **host to VALIDATE** before prod? | `develop` branch · 3-stage flow |
 
-> **`develop` follows from `staging`** — never from Docker, never from the language. A `node` project with no host to validate does not have one; a Pages site packaged as an image doesn't either.
+> **`develop` follows from `staging` alone** — never from Docker, never from the language: full rule in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
 **Shortcuts**: `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **no capability** *(any other toolchain — Android, C/C++, Rust… : security checks only, build/test to fill in)*.
 
@@ -151,7 +151,7 @@ L'autre règle structurante : **ce qui SERT à créer un projet** et **ce qui RA
 | `--artefact` | Le repo publie-t-il **une image que quelqu'un d'AUTRE déploie** ? | image ghcr · Trivy · ruleset des tags · releases immuables |
 | `--staging` | Existe-t-il un **host à VALIDER** avant la prod ? | branche `develop` · flux à 3 étapes |
 
-> **`develop` découle de `staging`** — jamais de Docker, jamais du langage. Un projet `node` sans host à valider n'en a pas ; un site Pages packagé en image non plus.
+> **`develop` découle de `staging` seul** — jamais de Docker, jamais du langage : règle complète dans [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
 **Raccourcis** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(toute autre toolchain — Android, C/C++, Rust… : uniquement les checks de sécurité, build/test à compléter)*.
 

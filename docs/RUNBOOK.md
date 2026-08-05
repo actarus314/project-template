@@ -28,7 +28,7 @@
 | **b** | Will the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUC…)* | `--artefact` |
 | **c** | Is there a **host to VALIDATE** before prod? | `--staging` |
 
-> **`develop` follows from (c), never from Docker or the language.** A `node` project without a host to validate does not have one; a Pages site packaged as an image does not either.
+> **`develop` follows from (c) alone** — never Docker, never the language. Full rule: `repo-controls.md`, "The 3 CAPABILITIES".
 
 ### 🔴 Step 1 — the maintainer: create the repo (UI)
 
@@ -240,17 +240,12 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 
-> 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING — as long as the repo is PRIVATE.**
-> ✅ **Fixed at the root**: on a **private** repo that publishes a 3-tier flow, `configure-repo.sh` **REMOVES** `delete-branch-on-merge`. The automatic cleanup of `feat/*` is lost *(one click)*; the staging branch is kept. The flip to public **restores it** *(re-run the script — the ruleset takes over)*.
-> ⚠️ **A repo configured BEFORE this fix still carries the setting**: re-run `configure-repo.sh` before its next promotion, otherwise what follows still applies.
-> `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop` itself**, when the `develop → main` PR merges.
-> **In PUBLIC**, the `develop` ruleset (the `deletion` rule) **prevents this**. **In PRIVATE, no ruleset exists: the branch is deleted, without a word.**
-> **The damage cascades**: at the next run, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **does not set its ruleset** and **switches `main` back to squash-only** → **the next promotion becomes IMPOSSIBLE** *(squashing `develop` into `main` makes the two branches diverge on every cycle — `repo-controls.md`)*.
+> 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING, as long as the repo is PRIVATE** — fixed at the root, but a repo configured before the fix still carries the old setting. Full mechanism: `repo-controls.md`, "Full flow".
 > **→ After a promotion on a PRIVATE repo, RECREATE `develop` immediately:**
 > ```bash
 > git switch -c develop main && git push -u origin develop
 > ```
-> *(The script detects and flags this: it compares the `## Branching` block of `CONTRIBUTING.md` to what **actually exists**.)*
+> *(The script now detects and flags this on its own.)*
 
 > ⚠️ **Immutable releases are NOT retroactive.** They must be set up **before v1** — after that, it is too late for releases already published.
 > `configure-repo.sh` handles this **from the private state onward** *(the setting is available there)*: nothing to wait for, and a repo that never flips to public is covered too.
@@ -259,7 +254,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 ## 4 · Flip PRIVATE → PUBLIC
 
-> 🔴 **The most dangerous moment of the lifecycle.** **The entire history becomes public at once** — including a secret buried in a six-month-old commit, pushed during the phase when **no server-side secret scanning existed**. Hence step 1, non-negotiable.
+> 🔴 **The most dangerous moment of the lifecycle** *(why: `repo-controls.md`, "The private → public switch")*. Hence step 1, non-negotiable.
 
 | # | Who | Action |
 |---|---|---|

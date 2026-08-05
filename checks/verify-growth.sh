@@ -103,4 +103,4 @@ else
 fi
 
 [ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope"
-exit 0        # advisory, never blocking
+exit "$grown"   # blocking: same reason

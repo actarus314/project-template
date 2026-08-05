@@ -31,18 +31,11 @@ fi
 
 # 2. Each shipped script must PRINT that version. This is what catches a constant hardcoded back
 #    in: reading the tag cannot drift, a copied literal can.
-# The list is DERIVED, never written: every executable that HANDLES `--version` is checked, so one
-# added is covered the day it lands. A hand-kept list held 3 of the 16 that handle it.
-#
-# 🔴 NO EXTENSION FILTER, and that is the point. It used to look at `./*.sh checks/*.sh`, which
-# presumes the project is written in shell — the same assumption that once made a travelling check
-# read ZERO files in every Python, TypeScript and Go project. What is looked at now is what git
-# tracks AS EXECUTABLE, whatever the language: a Python entry point, a Node CLI, a Go wrapper.
-#
-# The pattern still matches a HANDLER, never a mention — check.sh names `--version` in a comment
-# and answers it by running the whole lot, which a looser grep would then execute. The forms below
-# are the handler in shell, in Python and in Node; any other language is not recognised, and the
-# verdict says so rather than implying the file was cleared.
+# DERIVED, never written, and with NO extension filter: what git tracks as EXECUTABLE, whatever the
+# language. Filtering on `*.sh` presumes the project is written in shell.
+# The pattern matches a HANDLER, never a mention: check.sh names `--version` in a comment and answers
+# it by running the whole lot, which a looser grep would then execute. Shell, Python and Node forms
+# are recognised; another language is not, and the verdict says so.
 HANDLER='"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)|add_argument\([^)]*--version|argv[^=]*==?=?[^=]*--version|includes\(.--version'
 execs=$(git ls-files -s 2>/dev/null | awk '$1=="100755"{ $1=$2=$3=""; sub(/^ +/,""); print }')
 scripts=$(printf '%s\n' "$execs" | grep -v '^$' | tr '\n' '\0' | xargs -0 grep -lE "$HANDLER" 2>/dev/null || true)

@@ -38,7 +38,7 @@ fi
 command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 0; }
 
 ECHO_THRESHOLD=${ECHO_THRESHOLD:-0.40} python3 - <<'PY'
-import re, subprocess, os, glob, math, collections, pathlib
+import re, subprocess, sys, os, glob, math, collections, pathlib
 
 THRESHOLD = float(os.environ.get("ECHO_THRESHOLD", "0.40"))
 
@@ -69,7 +69,11 @@ def tracked_md(root="."):
                          capture_output=True, text=True)
     if out.returncode != 0:
         return []
-    skip = re.compile(r"(^|/)(CHANGELOG\.md$|archives?/|\.github/)")
+    # What restating is the NATURE of. A CHANGELOG accumulates entries; an archive is cold;
+    # an issue template is a form. CODE_OF_CONDUCT is the Contributor Covenant, third-party
+    # text taken verbatim — its graduated sanctions restate each other by design, and it is
+    # not ours to reword. Same reasoning as the licence exception in verify-tone.sh.
+    skip = re.compile(r"(^|/)(CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|archives?/|\.github/)")
     return sorted(f"{root}/{f}" if root != "." else f
                   for f in out.stdout.splitlines() if f and not skip.search(f))
 
@@ -133,5 +137,5 @@ for label, files in GROUPS:
 
 if total == 0:
     print("✓ no paragraph restates another, in either repository")
+sys.exit(1 if total else 0)
 PY
-exit 0        # advisory: it draws a list, the reader decides
