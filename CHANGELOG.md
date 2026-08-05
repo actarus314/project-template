@@ -22,19 +22,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **The "second pull request on the same undertaking" rule now ASKS THE MAINTAINER**, instead of
-  printing a notice the assistant reads past. It fired when `#109` was opened and changed nothing —
-  not even a mention. The rule itself says only the maintainer can tell whether two pull requests
-  carry one undertaking, and it was putting that question to the assistant; `permissionDecision:
-  "ask"` puts it where it belongs, and one keystroke settles what a paragraph could not. It also
-  states the OVERLAP.** It counts,
-  locally and instantly, how many of the branch's files the previous pull request also touched — the
-  question was already asked, it is now answered on a fact rather than from memory.
-  **The mechanical version of this rule was measured and ruled out**, which is the finding here:
-  *"a second one opened while the first is still open"* — the case with no defence — happened **zero
-  times in 16 human pull requests**, and this repo does not add a rule for what never happened;
-  *"consecutive pull requests touching the same files"* is real but cannot separate a fault from a
-  legitimate stage, since the three highest-scoring pairs are the assumed steps of one undertaking.
+- **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
+  forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a
+  fault from a legitimate stage — the three highest-scoring pairs are steps of one undertaking)*,
+  **a message** by observation *(it fired when `#109` opened and changed nothing, not even a
+  mention)*, and **asking the maintainer** by the maintainer *(escalation is a last resort, not a
+  routine — it adds a decision to the person who wanted fewer)*. The rule stays a convention in
+  `AGENTS.md` and stops pretending to be a guard. The real cost is the full **open+merge cycle**
+  *(48 % of pull requests carry a single commit)* — a grouping discipline upstream, not a gate at
+  opening time.
 - **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
   whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
   document written the same day, which is how four closed items sat in the open-work section for a

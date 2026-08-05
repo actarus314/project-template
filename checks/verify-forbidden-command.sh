@@ -110,36 +110,18 @@ BLOCK = [
      "`gh run list --commit \"$sha\" --json workflowName,status,conclusion` — and treat a MISSING "
      "workflow as not green. AGENTS.md."),
 ]
-# 🔴 ASKED, not warned — and the difference is the whole point. This rule spent its life as a
-# message printed before the command ran, and the assistant read straight past it: it fired when
-# pull request #109 was opened and did not change a thing, not even a mention. A notice nobody acts
-# on is worse than no notice, since it looks like a guard while guaranteeing nothing.
-#
-# The rule itself states that only the MAINTAINER can tell whether two pull requests carry the same
-# undertaking — and it was putting that question to the assistant. `permissionDecision: "ask"` puts
-# it where it belongs: the command stops, the human approves or refuses, and one keystroke settles
-# what a paragraph of prose could not. Not `deny`, because the measurement below rules that out;
-# not a message, because a message was already there and did nothing.
-#
-# 🔴 MEASURED, and the mechanical version of this rule was ruled OUT. Two candidates, on the 20 most
-# recent pull requests:
-#   · "a second one opened while the first is still OPEN" — the case with no defence, since the work
-#     could have gone onto the existing branch. It happened ZERO times in 16 human pull requests: the
-#     workflow is strictly open-merge-open. A guard for it would never bite, and the rule above says
-#     what never happened gets no rule.
-#   · "consecutive pull requests touching the same files" — real, but it does not separate a fault
-#     from a legitimate stage: #94, #95 and #96 score highest and are the assumed steps of ONE
-#     undertaking. It would refuse correct work. The ratio also misleads on small diffs (one shared
-#     file out of two reads as 0,50) and bot batches open six in minutes.
-# What survives decides nothing: state the OVERLAP, so the question below is answered on a fact.
-ASK = [
-    ("second-pr-same-undertaking",
-     r"open-pr\.sh\b",
-     "Before opening: does the PREVIOUS pull request carry the SAME undertaking? If it does, commit "
-     "onto its branch and push — pushing is free, a pull request costs a full CI run. Each batch "
-     "looks coherent in isolation, which is why the question is asked out loud. AGENTS.md."),
-]
-
+# ⚠ THE "second pull request on the same undertaking" RULE WAS REMOVED FROM HERE, after three forms
+# were tried and each ruled out. It stays a convention in AGENTS.md; it stops pretending to guard.
+#   · BLOCK — ruled out by measurement: the signal cannot separate a fault from a legitimate stage.
+#     #94, #95 and #96 score highest and are the assumed steps of ONE undertaking, so it would refuse
+#     correct work. The overlap ratio also misleads on small diffs, and bot batches open six at once.
+#   · A MESSAGE — ruled out by observation: it fired when #109 was opened and changed nothing, not
+#     even a mention. A notice nobody acts on is worse than none — it looks like a guard.
+#   · ASK the maintainer — ruled out by the maintainer: escalation is a LAST RESORT, never routine.
+#     Asking at every opening adds a decision to the person who wanted fewer of them.
+# Nothing viable was left, and this file's own rule is that a verdict which is neither mechanical nor
+# affordable does not belong in it. The cost named afterwards is the full open+merge CYCLE (48% of
+# pull requests carry a single commit) — a grouping discipline upstream, not a gate at opening time.
 for tag, pattern, reason in BLOCK:
     if re.search(pattern, cmd, re.I):
         record(1, "denied: " + tag)
@@ -148,67 +130,6 @@ for tag, pattern, reason in BLOCK:
             "systemMessage": "Forbidden by this repo: " + reason,
         }), file=sys.stderr)
         sys.exit(2)
-
-def overlap():
-    """Files this branch touches, against those the last merged pull request touched.
-
-    Local and instantaneous — a PreToolUse hook cannot afford a network round trip. This repo
-    squashes, so the tip of the default branch IS the previous pull request and its file list is one
-    `git show` away. Silent on any failure: an unmeasurable overlap must never stop a command."""
-    import subprocess
-    def run(*a):
-        p = subprocess.run(a, capture_output=True, text=True, timeout=5)
-        return set(x for x in p.stdout.split("\n") if x.strip()) if p.returncode == 0 else set()
-    base = "main" if run("git", "rev-parse", "--verify", "main") else "master"
-    mine = run("git", "diff", "--name-only", f"{base}...HEAD")
-    prev = run("git", "show", "--name-only", "--format=", base)
-
-    # 🔴 THE THIRD OPTION ONLY EXISTS IF A PULL REQUEST IS OPEN TO RECEIVE IT. "Commit onto its
-    # branch and push" was printed unconditionally, including when the previous one was merged and
-    # its branch deleted — advice for an action nobody can take.
-    # ⚠ And the local proxy for it is WRONG here: this repo squashes, so a merged branch's commits
-    #   do not exist in main and `git branch --no-merged` still lists it. Tried, and it offered three
-    #   long-dead branches as targets — rebasing onto one would send the work into a dead end.
-    #   Only the forge knows, so the forge is asked. The trigger is one rare command, so a round trip
-    #   is affordable; if it fails for any reason, nothing is claimed.
-    here = " ".join(run("git", "rev-parse", "--abbrev-ref", "HEAD"))
-    try:
-        raw = subprocess.run(["gh", "pr", "list", "--state", "open", "--json", "headRefName"],
-                             capture_output=True, text=True, timeout=8)
-        alive = [x["headRefName"] for x in json.loads(raw.stdout or "[]")] if raw.returncode == 0 else []
-    except Exception:
-        alive = []
-    alive = [b for b in alive if b != here]
-
-    if not mine or not prev:
-        return ""
-    shared = mine & prev
-    overlap_txt = (
-        f" Measured: this branch shares NO file with the previous pull request "
-        f"({len(mine)} touched) — a different subject." if not shared else
-        f" Measured: {len(shared)} of this branch's {len(mine)} file(s) were ALSO touched by the "
-        f"previous pull request ({', '.join(sorted(shared)[:4])}{'…' if len(shared) > 4 else ''}).")
-
-    if alive:
-        return (overlap_txt + f" A THIRD option exists: pull request(s) on "
-                f"{', '.join('`' + b + '`' for b in alive[:3])} are OPEN — these commits can go there "
-                f"instead of into a new one. Refuse this, then rebase or cherry-pick onto that branch "
-                f"and push.")
-    return (overlap_txt + " No pull request is open, so there is nowhere to add these commits: the "
-            "choice really is open one or hold it back.")
-
-for tag, pattern, reason in ASK:
-    if re.search(pattern, cmd, re.I):
-        try:
-            extra = overlap()
-        except Exception:
-            extra = ""               # a measurement never stops the command it comments on
-        record(1, "asked: " + tag)
-        print(json.dumps({
-            "hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask",
-                                   "permissionDecisionReason": reason + extra},
-        }))
-        sys.exit(0)                  # the human decides; nothing here refuses anything
 
 record(0)
 sys.exit(0)
