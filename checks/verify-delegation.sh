@@ -29,6 +29,14 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
+# The journal, if it is on. A hook is the most fragile gate there is: it lives in a LOCAL settings
+# file outside every repository, and one that stops being declared simply never fires — no error,
+# no output, no trace. Recording the firing is the only way an indicator can tell "this gate works"
+# from "this gate is gone", and check.sh cannot do it: it never runs the hooks.
+if [ -f .ci-tools/journal-on ]; then
+  printf '%s\thook\t%s\t0\t\t\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "delegation (before launch)" >> .ci-tools/controls-log.tsv
+fi
+
 command -v python3 >/dev/null 2>&1 || exit 0   # no interpreter: stay out of the way, never block
 
 # The payload is read FIRST, then the interpreter is fed from a file. `python3 - <<'PY'` would
