@@ -22,6 +22,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
+  tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
+  list was short. Three candidates were measured over **1683 real messages** before one was picked:
+  `(pour|avant) [un|le|de] clear` → **2 new matches, zero false positives** *(kept)*; a
+  *clean/propre* variant → the same two but narrower; and the **bare word `clear` → 41 new matches**,
+  nearly all noise *(skill loads, session summaries)* — the original 82 all over again.
+  🔴 **It stops there**: *"Affiche l'état du suivi"* does not match, and must not — asking to SEE the
+  state is not asking for the pass.
 - **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
   `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
   writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a

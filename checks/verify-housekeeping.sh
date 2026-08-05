@@ -22,6 +22,14 @@
 # 1756 real human messages — 16 matches, 0,9 %, the same order as the end-of-turn signals. Loose
 # wordings ("en ordre", a bare "clear") matched 82 times, most of them nothing to do with the pass.
 #
+# ⚠ WIDENED once, on a SECOND lived miss: "est-ce que tout est clean pour un clear ?" matched none of
+# them — the mechanism worked, its list was short. Three candidates were measured over 1683 messages
+# before picking one: "(pour|avant) [un|le|de] clear" → 2 new matches, ZERO false positives (kept);
+# a clean/propre variant → the same 2 but narrower; and the bare word "clear" → 41 new matches,
+# nearly all noise (skill loads, session summaries), which is the original 82 all over again.
+# 🔴 It stops there. "Affiche l'état du suivi" does NOT match, and must not: asking to SEE the state
+# is not asking for the pass, and widening far enough to catch it rebuilds the false positives.
+#
 # ⚠ On PreCompact it blocks ONLY when compaction was asked for by hand. An `auto` compaction means
 #   the context window is full and Claude Code has to reclaim it; refusing that leaves the session
 #   with nowhere to go. A guard that can wedge the tool it protects is worse than the drift it
@@ -99,7 +107,7 @@ except Exception: sys.exit(0)
 txt = str(ev.get("user_input") or "")
 PAT = [
     r"passe[s]? de fin de chantier|fais (?:la|une) fin de chantier",   # fr-pattern
-    r"je vais /?clear|que je puisse /?clear|avant de /?clear|/?clear pour repartir",   # fr-pattern
+    r"je vais /?clear|que je puisse /?clear|(?:pour|avant)\s+(?:un\s+|le\s+|de\s+)?/?clear\b|/?clear pour repartir",   # fr-pattern
     r"(?:suivis?|repos locaux|docs et archives|tout)\s*(?:sont|est)?\s*(?:bien )?à jour\s*\?",   # fr-pattern
 ]
 if not any(re.search(p, txt, re.I) for p in PAT):
