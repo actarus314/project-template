@@ -89,9 +89,11 @@ if RUNNER.exists():
     # case it was written for: `if [ -x checks/foo.sh ]` is the EXISTENCE TEST that opens the block,
     # while `./checks/foo.sh` is the invocation whose status is read. Matching the former accepted a
     # check whose verdict was thrown away, which is a guard failing by passing.
+    # Matched on CODE lines only: the literal appears in prose too, and a check merely NAMED in a
+    # comment would clear this test with its verdict still on the floor.
+    code = [l for l in runner.splitlines() if not l.lstrip().startswith("#")]
     def read_back(n):
-        return (f"reap {n}" in runner
-                or re.search(rf"\./checks/{re.escape(n)}\.sh", runner) is not None)
+        return any(f"reap {n}" in l or re.search(rf"\./checks/{re.escape(n)}\.sh", l) for l in code)
     for n in sorted(n for n in non_hooks if not read_back(n)):
         bad.append(f"{n}.sh is started but {RUNNER} never reads its verdict back — "
                    f"it is computed and thrown away")

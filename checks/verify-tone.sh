@@ -12,6 +12,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/   # repo root, regardless of the caller's cwd
 
+# The version, so the sweep that compares them all can see this one too.
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 # Exceptions are LISTED and NARROW — never a disabled rule, so a real slip inside an exempted file
 # is still caught (the principle the standard states for gitleaks fingerprints, §18):
 #   · licenses     — third-party verbatim text, not ours to reword;
@@ -40,7 +46,10 @@ hits=$(git grep -inIwE "$PRONOUNS" -- . ':(exclude)LICENSE*' ':(exclude)**/LICEN
        | grep -vE "$ALLOW" || true)
 
 if [ -z "$hits" ]; then
-  echo "✓ no second person in versioned content"
+  # Counted and published: a bare tick and a grep that matched nothing because it was pointed at an
+  # empty tree read exactly alike.
+  n=$(git grep -lI '' -- . 2>/dev/null | wc -l | tr -d ' ')
+  echo "✓ no second person in versioned content — read: $n text file(s), repo/ only (workspace/ is deliberately French)"
   exit 0
 fi
 

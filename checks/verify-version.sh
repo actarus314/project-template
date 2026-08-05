@@ -13,6 +13,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
+# The version, so the sweep that compares them all can see this one too.
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
 if [ -z "$TAG" ]; then
   echo "no tag yet — nothing to compare (the guard arms itself at the first release)"
@@ -82,5 +88,6 @@ if [ -f .claude-plugin/plugin.json ]; then
 fi
 
 [ -n "$binaries" ] && echo "  (compiled executables, no source to read, not examined:$binaries)"
-[ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG"
+n_scripts=$(printf '%s\n' "$scripts" | grep -c . || true)
+[ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG — read: CHANGELOG, $n_scripts executable(s)$([ -f .claude-plugin/plugin.json ] && echo ', the plugin manifest')"
 exit "$fail"

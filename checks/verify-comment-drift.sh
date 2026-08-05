@@ -48,24 +48,39 @@ COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
 # Added comment lines below which a percentage gap is an artefact of a small base.
 COMMENT_MIN_LINES=${COMMENT_MIN_LINES:-20}
 
-count_pair() {           # <repository> <revision|--worktree> <path> <marker> -> "<comments> <code>"
-  # The current side is read from DISK, not from HEAD: comparing two commits would only ever see a
-  # comment that has already been committed, so the check could not speak while the file is being
-  # written — which is the only moment it is useful.
-  #
-  # The `|| true` is load-bearing under `pipefail`: a file that did not exist at that revision
-  # makes `git show` fail, which would otherwise take the whole script down mid-loop.
-  { if [ "$2" = "--worktree" ]; then cat "$1/$3" 2>/dev/null || true
-    else git -C "$1" show "$2:$3" 2>/dev/null || true; fi; } | awk -v m="$4" 'BEGIN { c=0; k=0 }
-
-    { line=$0; sub(/^[ \t]+/,"",line)
-      if (line == "") next
-      # A trailing comment counts as ONE of each: the line carries code AND comment. Counting
-      # it as pure code was blind to the very shape that grows a comment invisibly.
-      if (index(line, m) == 1) c++
-      else if (index(line, m) > 1) { c++; k++ }
-      else k++ }
-    END { if (c+k > 0) print c, k }'
+# 🔴 THREE calls per marker family per side, whatever the file count — not four forks per file.
+# `git show | awk` and `cat | awk` cost 152 processes for 38 files. The three counts below are what
+# the awk produced, expressed as patterns git can count in bulk:
+#   A = non-empty lines            `[^[:space:]]`          (the awk skips lines empty after trim)
+#   B = leading-comment lines      `^[[:space:]]*<marker>` (index(trimmed, marker) == 1)
+#   C = lines holding the marker   fixed string            (leading OR trailing)
+# and the awk's two totals follow: comments = C, code = A - B. A trailing comment counts once in
+# each, which is exactly what C and A-B give it.
+# `-e` on every pattern: a `--` marker is otherwise read as the end of the options.
+# Every count is TAGGED as it is produced, and they all land in one file. Relying on argument
+# ORDER instead breaks twice over: several marker families produce several files per kind, and a
+# family with no match produces an EMPTY one that awk never opens — both shift every later count
+# onto the wrong slot, silently.
+emit() {                 # <tag> <strip-leading-rev> — normalises "rev:path:n" / "path:n" on stdin
+  awk -v tag="$1" -v strip="$2" '{
+    line = $0
+    if (strip == "1") { j = index(line, ":"); line = substr(line, j + 1) }
+    j = length(line); while (j > 0 && substr(line, j, 1) != ":") j--
+    if (j > 0) printf "%s\t%s\t%s\n", tag, substr(line, 1, j - 1), substr(line, j + 1)
+  }'
+}
+count_bulk() {           # <repository> <revision|--worktree> <marker> <list-file> <data-file>
+  local dir="$1" rev="$2" m="$3" list="$4" data="$5"
+  if [ "$rev" = "--worktree" ]; then
+    # `-H` forces the name: with a single file grep prints the bare count and the join loses it.
+    ( cd "$dir" && tr '\n' '\0' < "$list" | xargs -0 grep -cH  -e '[^[:space:]]' )    2>/dev/null | emit nA 0 >> "$data" || true
+    ( cd "$dir" && tr '\n' '\0' < "$list" | xargs -0 grep -cH  -e "^[[:space:]]*$m" ) 2>/dev/null | emit nB 0 >> "$data" || true
+    ( cd "$dir" && tr '\n' '\0' < "$list" | xargs -0 grep -cHF -e "$m" )              2>/dev/null | emit nC 0 >> "$data" || true
+  else
+    tr '\n' '\0' < "$list" | xargs -0 git -C "$dir" grep -c  -e '[^[:space:]]'    "$rev" -- 2>/dev/null | emit rA 1 >> "$data" || true
+    tr '\n' '\0' < "$list" | xargs -0 git -C "$dir" grep -c  -e "^[[:space:]]*$m" "$rev" -- 2>/dev/null | emit rB 1 >> "$data" || true
+    tr '\n' '\0' < "$list" | xargs -0 git -C "$dir" grep -cF -e "$m"              "$rev" -- 2>/dev/null | emit rC 1 >> "$data" || true
+  fi
 }
 
 # extension -> line-comment marker. Whole families, not this project's two languages.
@@ -84,19 +99,16 @@ marker_for() {
   esac
 }
 
+read_out=""
 scan_tree() {            # <repository> <revision> <label>
   local dir="$1" rev="$2" label="$3"
-  local unknown="" f marker before now com0 code0 com1 code1 d_code d_com added_com
-  # Counted and published. "workspace/ and repo/" in a verdict says which trees the script INTENDED
-  # to read; only a count says whether anything of its kind was actually there. Zero files with a
-  # known marker is a legitimate answer — it is indistinguishable from "never read" unless said.
-  local examined=0
+  local T; T=$(mktemp -d)
+  local unknown="" f marker examined=0 i=0
+  : > "$T/markers"; : > "$T/data"
   while IFS= read -r f; do
     [ -f "$dir/$f" ] || continue
     marker=$(marker_for "$f")
     if [ -z "$marker" ]; then
-      # Prose and data carry no line comments — their absence is not a gap. Only an unrecognised
-      # CODE extension is worth naming, since that one really is a language going unexamined.
       case "${f##*.}" in
         md|markdown|rst|txt|adoc|mdx|org|json|lock|csv|svg|png|jpg|ico|pdf|html|htm|css|scss) ;;
         *) case " $unknown " in *" ${f##*.} "*) ;; *) unknown="$unknown ${f##*.}";; esac;;
@@ -104,30 +116,42 @@ scan_tree() {            # <repository> <revision> <label>
       continue
     fi
     examined=$(( examined + 1 ))
-    before=$(count_pair "$dir" "$rev" "$f" "$marker"); [ -n "$before" ] || continue
-    com0=${before% *}; code0=${before#* }
-    # Below this size a single added line moves the percentage by tens of points, which is noise.
-    [ "$code0" -ge 15 ] && [ "$com0" -ge 5 ] || continue
-    now=$(count_pair "$dir" --worktree "$f" "$marker"); [ -n "$now" ] || continue
-    com1=${now% *}; code1=${now#* }
-    d_code=$(( (code1 - code0) * 100 / code0 ))
-    d_com=$(( (com1 - com0) * 100 / com0 ))
-    # 🔴 A FLOOR IN LINES, alongside the percentage gap. Percentages alone over-report a small file:
-    # measured, +134% of comment against +94% of code was 34 added lines against 36 — the comment had
-    # grown LESS than the code and the check still spoke. The floor is what a reader would call a
-    # drift worth reading about, and it is what makes this one blocking rather than ignorable.
-    added_com=$(( com1 - com0 ))
-    if [ $(( d_com - d_code )) -ge "$COMMENT_DRIFT" ] && [ "$added_com" -ge "$COMMENT_MIN_LINES" ]; then
-      printf '  ↑ %-32s comment %+d%%, code %+d%% since %s — the WHY is outgrowing the what\n' \
-        "$label$f" "$d_com" "$d_code" "$rev"
-      grown=1
-    fi
+    printf '%s\t%s\n' "$marker" "$f" >> "$T/markers"
   done < <(git -C "$dir" ls-tree -r --name-only HEAD | grep -E '\.[A-Za-z0-9]+$' || true)
+
+  if [ "$examined" -gt 0 ]; then
+    while IFS= read -r marker; do
+      i=$(( i + 1 ))
+      awk -F'\t' -v m="$marker" '$1==m {print $2}' "$T/markers" > "$T/list.$i"
+      count_bulk "$dir" "$rev"     "$marker" "$T/list.$i" "$T/data"
+      count_bulk "$dir" --worktree "$marker" "$T/list.$i" "$T/data"
+    done < <(cut -f1 "$T/markers" | sort -u)
+
+    awk -F'\t' -v label="$label" -v rev="$rev" -v drift="$COMMENT_DRIFT" -v minl="$COMMENT_MIN_LINES" '
+      { v[$1 "\t" $2] = $3 + 0; if ($1 == "rA") seen[$2] = 1 }
+      END {
+        n = 0
+        for (p in seen) {
+          com0 = v["rC\t" p]; code0 = v["rA\t" p] - v["rB\t" p]
+          com1 = v["nC\t" p]; code1 = v["nA\t" p] - v["nB\t" p]
+          if (code0 < 15 || com0 < 5) continue
+          dcode = int((code1 - code0) * 100 / code0)
+          dcom  = int((com1  - com0)  * 100 / com0)
+          if (dcom - dcode >= drift + 0 && com1 - com0 >= minl + 0) {
+            printf "  ↑ %-32s comment %+d%%, code %+d%% since %s — the WHY is outgrowing the what\n",
+                   label p, dcom, dcode, rev
+            n++
+          }
+        }
+        exit (n > 0)
+      }' "$T/data" || grown=1
+  fi
+
   [ -n "$unknown" ] && echo "  ($label: extensions with no known comment marker, not examined:$unknown)"
   read_out="$read_out $label $examined file(s);"
+  rm -rf "$T"
   return 0
 }
-read_out=""
 
 scan_tree . "$tag" "repo/"
 

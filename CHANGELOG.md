@@ -21,6 +21,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
+  across sixteen threshold combinations** *(up to 13 documents reported; a green-equals-green
+  comparison at the shipped settings would have proved nothing)*. Four forks per file became three
+  bulk `git grep` calls per marker family per side, expressed as the three counts the awk produced:
+  non-empty lines, leading-comment lines, and lines holding the marker — comments are the third,
+  code is the first minus the second.
+  ⚠️ **Written once wrong**: the first join keyed off argument ORDER, which breaks twice over —
+  several marker families produce several files per kind, and a family with no match produces an
+  empty one awk never opens. Every count lands tagged now.
+- **The control table's durations were re-measured, all sixteen** *(medians of three, standalone)*.
+  Their sum falls from **5,24 s to 3,89 s** while gaining a check, and the ordering changed:
+  `verify-echo` and `verify-growth` are no longer where the prose said they were.
+- **The git hooks stop being duplicated under `templates/`.** `init-project.sh` copies `.githooks/`
+  **from the root**, like `check.sh`, `open-pr.sh` and `checks/`. The second copy had already
+  drifted: `pre-push` was byte-identical to its twin while `pre-commit` carried the same code under
+  two different wordings.
+
+### Added
+- **Every tracked executable answers `--version` — 18, then 25.** Seven did not, so
+  `verify-version.sh` never compared them: `verify-tone.sh`, **`verify-version.sh` itself**,
+  `open-pr.sh`, the git hooks, and `check.sh` — the last resting on a grep carefully kept from
+  matching a mention. `check.sh` answers in its mode switch, before anything runs.
+- **Three more checks publish what they read.** `verify-tone.sh` gave a bare tick with no count and
+  no perimeter; `verify-version.sh` said nothing about the executables it compared, having gone
+  from 3 to 25; `verify-narrative.sh` claimed *"repo/ and workspace/"* with no count per side — the
+  gap just closed in its twin.
+- **`verify-checks-wiring.sh` was satisfiable by a COMMENT.** Its new read-back test matched the
+  literal anywhere in `check.sh`, so a check merely NAMED in prose cleared it with its verdict
+  still on the floor — the same false negative as the `[ -x … ]` form, one layer down. Code lines
+  only now.
+
 ### Added
 - **A check for FRENCH left in published content** *(`checks/verify-language.sh`)*. Nothing looked
   for it: `verify-tone.sh` hunts the second person, never the language, so a paragraph written

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:5f1e1f2ca9454bd649e13acfa4bad2892dac185aafddf4444a41e2fbf31d7736
+  checksum-source-md: sha256:42c3fbdaed5494ac630901684affb4aa49c3d2f79fc216978af06c3345559619
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1656,7 +1656,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0,09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1666,7 +1666,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for</td>
-          <td class="t">0,12 s</td>
+          <td class="t">0,11 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1676,7 +1676,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,11 s</td>
+          <td class="t">0,09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1686,7 +1686,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,06 s</td>
+          <td class="t">0,04 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1696,7 +1696,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,06 s</td>
+          <td class="t">0,04 s</td>
           <td>✅ <em>(nothing to read under CI, and it says so)</em></td>
         </tr>
         <tr>
@@ -1706,7 +1706,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0,06 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1716,7 +1716,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — a matching checksum proves the file was touched, never that it says the same thing</td>
-          <td class="t">0,10 s</td>
+          <td class="t">0,08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1726,7 +1726,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,12 s</td>
+          <td class="t">0,09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1736,7 +1736,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em></td>
-          <td class="t">0,10 s</td>
+          <td class="t">0,08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1746,7 +1746,7 @@
           <td>a <code>.md</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the 25 % threshold is a judgement call</td>
-          <td class="t">0,91 s</td>
+          <td class="t">0,18 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1756,7 +1756,7 @@
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was <strong>34 lines against 36</strong></td>
-          <td class="t">0,85 s</td>
+          <td class="t">0,53 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1766,7 +1766,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(needs <code>fetch-tags</code>, or it passes by finding nothing)</em></td>
-          <td class="t">0,55 s</td>
+          <td class="t">0,34 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1776,7 +1776,7 @@
           <td>a <code>.md</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold</td>
-          <td class="t">0,25 s</td>
+          <td class="t">0,26 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1786,7 +1786,7 @@
           <td><code>templates/</code>, <code>checks/</code> moved</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">1,77 s</td>
+          <td class="t">1,76 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1936,7 +1936,7 @@
     </table>
   </div>
 
-  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the fifteen timed house checks add up to <strong>5,24 s</strong> of their own time, and the gate that runs them takes <strong>3,05 s</strong>. The slowest by far is <code>verify-travel</code> (1,77 s), which generates four projects in series, then <code>verify-growth</code> (0,91 s), <code>verify-comment-drift</code> (0,85 s) and <code>verify-version</code> (0,55 s); every other one sits at or under 0,25 s.</p>
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the sixteen timed house checks add up to <strong>3,89 s</strong> of their own time, and the gate that runs them takes <strong>2,85 s</strong>. The slowest by far is <code>verify-travel</code> (1,76 s), which generates four projects in series, then <code>verify-comment-drift</code> (0,53 s), <code>verify-version</code> (0,34 s) and <code>verify-echo</code> (0,26 s); every other one sits at or under 0,18 s.</p>
 
   <div class="note">
     <h3>⚠️ Why <code>verify-travel</code> costs a second and a half</h3>

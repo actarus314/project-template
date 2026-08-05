@@ -46,6 +46,9 @@ case "${1:-}" in
   --commit) MODE=commit;;
   --house)  MODE=house;;
   --report) MODE=report;;
+  # Answered here, before anything runs: this was the ONE tracked executable outside the sweep that
+  # compares them, and its absence rested on a grep that had to be kept from matching a mention.
+  --version) echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"; exit 0;;
 esac
 
 if [ "$MODE" = report ]; then
