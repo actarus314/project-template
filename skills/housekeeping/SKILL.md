@@ -48,6 +48,16 @@ part is not delegated and not scripted:
    Not "does the doc still reflect the work" in the round — that question gets answered *yes* by
    glancing at a document that was written today, which is exactly how four closed items sat in the
    backlog for a full day.
+   🔴 **This enumeration and the reading below are WRITTEN DOWN, and the turn does not end without
+   them.** The artefact is `~/.local/state/claude-controls/housekeeping-<project>.pass` — one line
+   per entry, `<key>: <open|closed|unchanged>`, plus the next concrete gesture where the verdict is
+   `open`. Keys are the backlog item numbers and the `##` section titles, read from the tracking doc
+   itself, so the total is never a number anyone picked. **Naming an entry without a verdict does not
+   count it.** The end-of-turn hook sends the turn back until every entry is covered, at most three
+   times, then releases it and publishes what is still missing.
+   ⚠️ **The artefact is scratch, not a document.** It lives outside both repositories, it is deleted
+   when the tracking doc is written, and nothing ever reads it for state — the tracking doc stays
+   the single source.
    🔴 **This enumeration is the only thing that catches a closed item nobody marked.** The check
    that guards this section matches a MARKER, so it sees the ones that were labelled and is blind to
    the rest; measuring staleness instead was tried and failed — the document is rewritten often

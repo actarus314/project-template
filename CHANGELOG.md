@@ -22,6 +22,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
+  hook holds the turn until the pass artefact **covers** the tracking doc — every backlog item number
+  and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
+  A skill is text, so a step skips itself and nothing sees it *(lived: the line-by-line enumeration
+  skipped, 5 facts re-measured out of 40, a result that would have passed any "the file is not empty"
+  check)*. **Coverage, never presence** — and the total is read from the tracking doc itself, so it is
+  not a figure anyone picked. Naming an entry without a verdict does not count it.
+  🔴 **Ceiling of three send-backs, then the turn is released with the gap published**: `Stop` has no
+  native loop protection, so a guard that can wedge the session is worse than the gap it watches.
+  The artefact is scratch, outside both repositories, deleted the moment the doc is written.
 - **Two absolute limits on comments, beside the drift that was already there**: a **level** (25 %)
   and a **longest block** (6 lines), on the files a branch **touches**. Drift alone cannot see a
   file *born* verbose — it never grows, so it never speaks, and every one of the 25 scripts here
@@ -37,6 +47,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only: the generator's own notes describe files a generated project does not have)*.
 
 ### Fixed
+- **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
+  committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
+  adding the entry in the right commit was refused anyway, and the only ways through were an empty
+  commit or `--no-verify`. It now reads the same **three sources** its neighbour already did: what is
+  committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
+- **`verify-comment-drift` justified its reference point with a reason that is false in this very
+  repository.** It said releases are rare; there were four tags in five days. The reason that holds
+  at any release cadence — and therefore in every generated project — is that a release-anchored
+  reference puts **already-merged, already-green work back on trial**: measured here, the touched-file
+  input goes from 1 file to 41 the moment the anchor moves back to the tag. The symmetric half is why
+  `verify-growth` keeps the far anchor: `origin/main` advances at every merge, so accumulation resets
+  to zero by construction and that guard would go permanently silent *(same document, same instant:
+  **+24 %** against the tag, **−0,2 %** against `origin/main`)*. Both halves are now tabulated in
+  `docs/code/verify-comment-drift.md`, which also carried two claims the move had left stale.
+  ⚠️ Its two variables said the opposite of what they held — `tag` contained the string `origin/main`,
+  `released_at` a merge timestamp — in the one place a reader goes to ask which anchor is in force.
 - **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
   its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
   ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries

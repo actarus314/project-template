@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:b2545bcdd871250a8ce95615c0a81794b3da096d45f098bbbe2a0724ce3e3df0
+  checksum-source-md: sha256:ad25d345b7715f3d1edc77d6a7efe93810a7bd3d7ec45dfd9e9ee5ef0415abb3
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1802,13 +1802,13 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-housekeeping.sh</code></td>
-          <td>the development admin behind the work: commits piling up with nothing written down</td>
+          <td>the development admin behind the work: commits piling up with nothing written down — <strong>and, once a pass is under way, a step of it skipping itself unseen</strong></td>
           <td class="h">local</td>
           <td>end of turn, before compaction, <strong>and when the pass is asked for in words</strong></td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — the threshold is MEASURED, and re-measured (4 commits looked ideal on a 21-day average and would have spoken <strong>5 times on a single dense day</strong> — <strong>6</strong> is the lowest value at minimum noise, the count bottoming out from there), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself</td>
+          <td><strong>needs watching</strong> — the threshold is MEASURED, and re-measured (4 commits looked ideal on a 21-day average and would have spoken <strong>5 times on a single dense day</strong> — <strong>6</strong> is the lowest value at minimum noise, the count bottoming out from there), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself. Once routed, it <strong>sequences</strong>: the turn does not end until the pass artefact names every backlog item and every section with a verdict — at most three send-backs, then released with the gap published</td>
           <td class="t">instant</td>
-          <td>n/a — asks for the pass before the turn ends</td>
+          <td>n/a — asks for the pass, then holds the turn until its artefact covers the doc</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>

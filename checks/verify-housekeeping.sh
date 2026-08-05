@@ -19,12 +19,20 @@ PROJECT="$(basename "$(dirname "$REPO")")/$(basename "$REPO")"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
 JOURNAL="$STATE_DIR/controls-log.tsv"
 [ -f "$STATE_DIR/journal-on" ] || JOURNAL=""
+SLUG=$(printf '%s' "$PROJECT" | tr '/' '-')
+ARMED="$STATE_DIR/housekeeping-$SLUG.armed"        # a pass is under way: how many times it has been sent back
+PASS="$STATE_DIR/housekeeping-$SLUG.pass"          # its artefact — EPHEMERAL, and never a second resume doc
+CYCLES=${HOUSEKEEPING_CYCLES:-3}
 
 record() {   # <rc|skip> <reason>
   [ -n "$JOURNAL" ] || return 0
   printf '%s\thook\t%s\t%s\t\t%s\t%s\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$JOURNAL_NAME" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
+
+# Armed by all THREE routes, since the pass is reached by all three — arming on the asked-in-words
+# one alone would leave the drift route, the most frequent, sequenced by nothing.
+arm() { mkdir -p "$STATE_DIR"; [ -f "$ARMED" ] || printf '%s 0\n' "$(date +%s)" > "$ARMED"; }
 
 # The payload is read for two fields only: which event this is, and — on PreCompact — whether the
 # compaction was asked for or forced by a full context.
@@ -58,7 +66,10 @@ print("[housekeeping] The maintainer just asked for the closing pass. Invoke the
       "9 times out of 9, against 55% for an ordinary moment.")
 sys.exit(7)                      # 7: matched, so the shell below records it
 ' && rc=0 || rc=$?
-  [ "${rc:-0}" = 7 ] && record 1 "routed to the housekeeping skill"
+  if [ "${rc:-0}" = 7 ]; then
+    record 1 "routed to the housekeeping skill"
+    arm
+  fi
   exit 0
 fi
 
@@ -81,8 +92,68 @@ fi
 behind=$(git -C "$REPO" log --all --format=%H --since "$last" 2>/dev/null | grep -c . || true)
 # One flag per project: a guard that repeats itself every turn between two commits is a guard
 # nobody reads by the afternoon. It speaks on the CROSSING, then stays quiet until a write clears it.
-flag="$STATE_DIR/housekeeping-$(printf '%s' "$PROJECT" | tr '/' '-').flag"
+flag="$STATE_DIR/housekeeping-$SLUG.flag"
 mkdir -p "$STATE_DIR"
+
+# ── The sequencer: a pass under way does not end the turn until its artefact COVERS the doc ──────
+# A skill is text, so a step skips itself and nothing sees it. What is counted is coverage, never
+# presence — every backlog item and every `##` section named, each with a verdict from a closed set.
+# The 3-cycle ceiling, what is deliberately NOT implemented, and the artefact's shape:
+# docs/code/verify-housekeeping.md.
+if [ "$EVENT" = Stop ] && [ -f "$ARMED" ]; then
+  JOURNAL_NAME="housekeeping (pass under way)"
+  read -r armed_at used < "$ARMED"
+  # Disarmed by a WRITE to the tracking doc, never by the turn ending: the pass is over when the
+  # doc moved. Falling back on the threshold would disarm a pass asked for with no drift at all.
+  if [ "$(git -C "$WS" log -1 --format=%at -- SUIVI.md 2>/dev/null || echo 0)" -gt "$armed_at" ]; then
+    rm -f "$ARMED" "$PASS"
+    record 0 "pass closed — the tracking doc was written"
+    exit 0
+  fi
+  # Inline, like this file's other two: `check.sh`'s generator copies `verify-*.sh` and nothing
+  # else, so a sibling .py would be missing in every generated project — a path dying on landing.
+  gap=$(TRACK="$TRACK" PASS="$PASS" python3 -c '
+import os, re
+doc = open(os.environ["TRACK"], encoding="utf-8").read().splitlines()
+items = [m.group(1) for l in doc if (m := re.match(r"\| \*\*(\d+)\*\* \|", l))]
+sections = [l[3:].strip() for l in doc if l.startswith("## ")]
+try: art = open(os.environ["PASS"], encoding="utf-8").read()
+except OSError: art = ""
+V = r"\s*:\s*(open|closed|unchanged)\b"
+missing  = [f"item {n}"      for n in items    if not re.search(rf"item\s+{n}{V}", art, re.I)]
+missing += [f"section {s!r}" for s in sections if not re.search(re.escape(s) + V, art, re.I)]
+# The denominator is published even when nothing is missing: a coverage figure with no total is
+# the shape of claim this whole check exists to refuse.
+if missing:
+    print(f"{len(missing)} of {len(items) + len(sections)} entries uncovered:")
+    for m in missing: print(f"  - {m}")
+') || gap="the artefact could not be read"
+  if [ -z "$gap" ]; then
+    record 0 "artefact covers the tracking doc"
+    exit 0
+  fi
+  used=$((used + 1))
+  printf '%s %s\n' "$armed_at" "$used" > "$ARMED"
+  if [ "$used" -ge "$CYCLES" ]; then
+    rm -f "$ARMED"
+    record 1 "ceiling of $CYCLES reached — released, gap published"
+    printf '{"systemMessage":"⚠ housekeeping: %s cycles reached, the turn is released. STILL UNCOVERED: %s"}\n' \
+      "$CYCLES" "$(printf '%s' "$gap" | tr '\n' ' ' | sed 's/"/\\"/g')"
+    exit 0
+  fi
+  record 1 "sent back — cycle $used/$CYCLES"
+  python3 - "$used/$CYCLES" "$PASS" "$gap" <<'PY'
+import json, sys
+cycle, artefact, gap = sys.argv[1], sys.argv[2], sys.argv[3]
+print(json.dumps({"decision": "block",
+  "systemMessage": f"⚠ housekeeping: artefact incomplete (cycle {cycle})",
+  "reason": (f"The closing pass is under way and its artefact does not yet cover the tracking doc. "
+             f"Write {artefact} — one line per entry, `<key>: <open|closed|unchanged>`, and the "
+             f"next concrete gesture where the verdict is `open`. Naming an entry without a "
+             f"verdict does not count it.\n\nSTILL MISSING:\n{gap}")}))
+PY
+  exit 0
+fi
 
 if [ "$behind" -lt "$THRESHOLD" ]; then
   rm -f "$flag"
@@ -96,6 +167,7 @@ if [ -f "$flag" ] && [ "$EVENT" != PreCompact ]; then
   exit 0
 fi
 : > "$flag"
+arm                      # the drift route reaches the same pass, so it arms the same sequencer
 
 # What else is worth mentioning once the guard is speaking anyway. Reported, never a trigger.
 extra=""
