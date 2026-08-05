@@ -22,6 +22,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **The CHANGELOG line for a bot's bump goes onto ITS OWN branch, before the merge.** Written into
+  the convention that owns it, here and in the template, so it survives the session that decided
+  it. Verified first: Renovate states on every pull request it opens that it rebases only when a
+  pull request becomes conflicted or when the rebase checkbox is ticked, and this repository sets neither
+  `rebaseWhen` nor `rebaseStalePrs` — so a hand-added commit is not overwritten on its own. Where a
+  rebase does drop it, the check goes red again: the failure is **loud, not silent**, which is the
+  property the reverted exemption did not have.
 - **More pinned tooling moved.** `trivy` **v0.72.0 → v0.73.0** in
   `templates/workflows/docker-publish.yml` — it **travels**, so every project generated with
   `--artefact` scans its image with the newer one; `renovate` **44.7.0 → 44.13.1**.
