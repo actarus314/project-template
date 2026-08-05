@@ -317,7 +317,7 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are wall clock, one control at a time, measured 2026-08-05 (Darwin arm64).** They do
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s**.
 not add up: `check.sh` starts them together, so the lot costs its slowest, not their sum — the whole
 gate runs in about 3,7 s. Anything under 0,4 s does not show at all.
 
@@ -338,19 +338,19 @@ gate runs in about 3,7 s. Anything under 0,4 s does not show at all.
 | `dependency-review` | a vulnerable or badly-licensed dependency getting **in** — public only | GitHub | every PR | ✅ | settled | ~5 s | ✅ |
 | `checks/verify-tone.sh` | the second person (`you`/`your`, `tu`/`vous`) in published content | both | every commit | ✅ | settled | 0,08 s | ✅ |
 | `checks/verify-narrative.sh` | a dated story told in a code comment — it belongs in the archive | both | every commit | ✅ | settled | 0,08 s | ✅ |
-| `checks/verify-workspace.sh` | two tracking systems competing, or a secret tracked by git | both | every commit | ✅ | **needs watching** — the list of rival tools cannot be complete, and it names what it looked for | 0,11 s | ✅ |
-| `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,12 s | ✅ |
-| `checks/verify-checks-wiring.sh` | a control declared nowhere, or **the gate missing from a workflow** | both | every commit | ✅ | settled | 0,20 s | ✅ |
-| `checks/verify-memories.sh` | a memory absent from its index, a `[[link]]` leading nowhere | local | every commit | ✅ | settled | 0,21 s | ✅ *(nothing to read under CI, and it says so)* |
-| `checks/verify-do-not-break.sh` | the four wirings whose breakage makes no sound | both | every commit | ✅ | settled | 0,24 s | ✅ |
-| `checks/verify-checksums.sh` | an `.html` that stopped saying what its `.md` says | both | every commit | ✅ | **needs watching** — a matching checksum proves the file was touched, never that it says the same thing | 0,25 s | ✅ |
-| `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL | both | every commit | ✅ | settled | 0,27 s | ✅ |
-| `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,38 s | ✅ |
-| `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,50 s | ❌ advisory |
-| `checks/verify-comment-drift.sh` | a comment growing faster than the code it explains | both | a `.sh` moved | ✅ | **needs watching** — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was **34 lines against 36** | 0,85 s | ❌ advisory |
-| `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,92 s | ✅ |
-| `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 1,66 s | ❌ advisory |
-| `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 2,07 s | ✅ |
+| `checks/verify-workspace.sh` | two tracking systems competing, or a secret tracked by git | both | every commit | ✅ | **needs watching** — the list of rival tools cannot be complete, and it names what it looked for | 0,12 s | ✅ |
+| `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,11 s | ✅ |
+| `checks/verify-checks-wiring.sh` | a control declared nowhere, or **the gate missing from a workflow** | both | every commit | ✅ | settled | 0,06 s | ✅ |
+| `checks/verify-memories.sh` | a memory absent from its index, a `[[link]]` leading nowhere | local | every commit | ✅ | settled | 0,06 s | ✅ *(nothing to read under CI, and it says so)* |
+| `checks/verify-do-not-break.sh` | the four wirings whose breakage makes no sound | both | every commit | ✅ | settled | 0,08 s | ✅ |
+| `checks/verify-checksums.sh` | an `.html` that stopped saying what its `.md` says | both | every commit | ✅ | **needs watching** — a matching checksum proves the file was touched, never that it says the same thing | 0,10 s | ✅ |
+| `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL | both | every commit | ✅ | settled | 0,12 s | ✅ |
+| `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,10 s | ✅ |
+| `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,91 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-comment-drift.sh` | a comment growing faster than the code it explains | both | a `.sh` moved | ✅ | **needs watching** — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was **34 lines against 36** | 0,85 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,55 s | ✅ |
+| `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 0,25 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,77 s | ✅ |
 | `checks/verify-delegation.sh` | a subagent launched without its three instructions | local | before the launch | ✅ | **needs watching** — a hook, and a hook nothing declares simply never fires | instant | n/a — refuses the launch |
 | `checks/verify-forbidden-command.sh` | a command forbidden here, before it runs | local | before the command | ✅ | **needs watching** — same reason | instant | n/a — refuses the command |
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that | instant | n/a — reports only |

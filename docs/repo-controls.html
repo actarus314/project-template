@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:a20b912a744b06041464ede5bac0edf60021a2320e2c7555c593114cb2c23536
+  checksum-source-md: sha256:493864bb2a87b567a8ca4e9f8272ab7eea1cf195534729e794be86ad4b124fad
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1481,7 +1481,7 @@
   <p><strong>Reading the columns.</strong> <em>Looks for</em> is the defect, not the mechanism. <em>Where</em> is the machine that runs it. <em>Travels</em> says whether a generated project gets it. <em>Blocks</em> separates what stops a merge from what only draws a list. <em>Maturity</em> is the one thing no measurement gives: <strong>settled</strong> = its verdict rests on a fact (a path, a tag, a tracked file) and has held; <strong>needs watching</strong> = its verdict rests on a threshold or a wording chosen by hand, so it can be wrong in both directions.</p>
 
   <div class="note">
-    <h3>⏱ Durations are wall clock, one control at a time <span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
+    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1,7x to 4,1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
     <p>They do not add up: <code>check.sh</code> starts them together, so the lot costs its slowest, not their sum — the whole gate runs in about 3,7 s. Anything under 0,4 s does not show at all.</p>
   </div>
 
@@ -1648,7 +1648,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for</td>
-          <td class="t">0,11 s</td>
+          <td class="t">0,12 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1658,7 +1658,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,12 s</td>
+          <td class="t">0,11 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1668,7 +1668,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,20 s</td>
+          <td class="t">0,06 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1678,7 +1678,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,21 s</td>
+          <td class="t">0,06 s</td>
           <td>✅ <em>(nothing to read under CI, and it says so)</em></td>
         </tr>
         <tr>
@@ -1688,7 +1688,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,24 s</td>
+          <td class="t">0,08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1698,7 +1698,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — a matching checksum proves the file was touched, never that it says the same thing</td>
-          <td class="t">0,25 s</td>
+          <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1708,7 +1708,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,27 s</td>
+          <td class="t">0,12 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1718,7 +1718,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em></td>
-          <td class="t">0,38 s</td>
+          <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1728,8 +1728,8 @@
           <td>a <code>.md</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the 25 % threshold is a judgement call</td>
-          <td class="t">0,50 s</td>
-          <td>❌ advisory</td>
+          <td class="t">0,91 s</td>
+          <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-comment-drift.sh</code></td>
@@ -1739,7 +1739,7 @@
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was <strong>34 lines against 36</strong></td>
           <td class="t">0,85 s</td>
-          <td>❌ advisory</td>
+          <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-version.sh</code></td>
@@ -1748,7 +1748,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(needs <code>fetch-tags</code>, or it passes by finding nothing)</em></td>
-          <td class="t">0,92 s</td>
+          <td class="t">0,55 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1758,8 +1758,8 @@
           <td>a <code>.md</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold</td>
-          <td class="t">1,66 s</td>
-          <td>❌ advisory</td>
+          <td class="t">0,25 s</td>
+          <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-travel.sh</code></td>
@@ -1768,7 +1768,7 @@
           <td><code>templates/</code>, <code>checks/</code> moved</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">2,07 s</td>
+          <td class="t">1,77 s</td>
           <td>✅</td>
         </tr>
         <tr>
