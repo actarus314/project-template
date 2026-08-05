@@ -19,7 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > memory would have produced a plausible but false history. For this period: the PRs and the
 > archives are authoritative.
 
-## [Unreleased]
+## [1.3.0] - 2026-08-05
 
 ### Changed
 - **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
