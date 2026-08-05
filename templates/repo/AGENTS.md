@@ -35,7 +35,9 @@ agents. Claude Code reads it through the import in `CLAUDE.md` (local, untracked
 - **Never use the second person** (`you`/`your`) in committed content or in the app's UI.
   Write "the user", or use impersonal phrasing.
 - **i18n**: translations live in a separate dictionary — never inline ternaries in the markup.
-- **`CHANGELOG.md`**: update the `Unreleased` section for any user-facing change. The GitHub
+- **`CHANGELOG.md`**: update the `Unreleased` section for any user-facing change. **A bot's pull
+  request gets that line committed onto ITS OWN branch before the merge** — a line written in a
+  later one is a discipline, not a guard. The GitHub
   Release carries the auto-generated list of merged pull requests; the changelog says what
   actually changed for a user.
 - **Architecture decisions**: a non-trivial decision (stack, schema, boundary) gets a short
