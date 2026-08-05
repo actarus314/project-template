@@ -19,6 +19,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > memory would have produced a plausible but false history. For this period: the PRs and the
 > archives are authoritative.
 
+## [Unreleased]
+
+### Fixed
+- 🔴 **No Renovate or Dependabot pull request could ever go green.** `verify-changelog.sh` demands a
+  `CHANGELOG` line for a user-visible change, a dependency bump touches exactly the paths it counts
+  as visible, and **no bot writes prose** — so every automated pull request was red on a check
+  nothing could satisfy. Observed on two at once: `#101` (zizmor) and `#102` (renovate).
+  A bot's branch is exempt now, and the reason is the convention's own: the GitHub Release carries
+  the auto-generated list of merged pull requests, the `CHANGELOG` says what changed for a user.
+  ⚠️ **`GITHUB_HEAD_REF` before the branch name**: a `pull_request` run checks out a **detached**
+  merge commit, so reading `HEAD` alone would have exempted nothing exactly where it mattered.
+
 ## [1.3.0] - 2026-08-05
 
 ### Changed
