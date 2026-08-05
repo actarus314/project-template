@@ -54,13 +54,36 @@ part is not delegated and not scripted:
    enough that every line looks fresh. There is no counter for this, which is why it is a step here.
    For each line: does its *next concrete gesture* still need doing? If it is done, the item **leaves
    the section** — nothing is marked and left in place.
-2. **Did a stage close?** A release usually marks one; a fix's pull request does not. Only the
+
+2. 🔴 **Then READ THE WHOLE TRACKING DOC, top to bottom — every section, not just the open work.**
+   A pass that stops at the open-work list leaves the rest to rot, and the rot is not hypothetical:
+   on 2026-08-05 a pass did exactly that, and the maintainer then found by hand, in one reading —
+   an entry point that stated the finished stage instead of the next gesture · **two sections
+   restating the same completed work** · a table broken by two block quotes cutting its header from
+   its rows, four rows short of a column · and **three false facts** *(a count of 2 where there were
+   9, a cleanup announced as owed and long since done, a stage's control count off by one)*.
+   Four questions, on **every** section:
+   - **Does the entry point say where to RESUME?** It carries the state and the next concrete
+     gesture — never the story of what just shipped.
+   - **Is this fact stated anywhere else in the document?** Completed work belongs in **ONE**
+     section, everywhere else a link. Two sections listing what was done is the same fact twice, and
+     the stale copy is the one that gets read.
+   - **Does it still hold?** Re-measure what a command can settle — a count, a version, a branch, a
+     path. A fact written once true rots silently, and this document has no diff against reality.
+     🔴 **Read the SERVER, not the local cache**, for anything that lives on the forge: a stale
+     remote ref made a pass report 19 branches where the forge held 2.
+   - **Do the tables still render?** A block quote between a header and its rows breaks the whole
+     table; rows must all carry the same number of cells.
+   ⚠️ **State what was checked and what could NOT be** — a third-party dashboard, a token's expiry,
+   an alert count. Unverifiable is a fine answer; silence reads as verified.
+
+3. **Did a stage close?** A release usually marks one; a fix's pull request does not. Only the
    conversation knows.
-3. **If one closed** — the three gestures the METHOD prescribes, in
+4. **If one closed** — the three gestures the METHOD prescribes, in
    [`docs/METHODE.md`, "Closing out a stage"](../../docs/METHODE.md): prune the hot side so the doc
    **shrinks**, write the archive as a **synthesis** (never a dump), file the stage's research
    inside it, then put the memories through the same sieve.
-4. **What is still owed** — decisions taken and never written, a pending action that belongs to the
+5. **What is still owed** — decisions taken and never written, a pending action that belongs to the
    maintainer, a measurement shown in the conversation and recorded nowhere.
 
 ## Step 3 — write, then say what was left

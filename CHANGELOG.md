@@ -30,6 +30,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and the archives among what accumulates by nature.
 
 ### Changed
+- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping at
+  that list leaves every other section to rot, and the rot was measured: a pass did exactly that,
+  and the maintainer then found by hand, in one reading, an entry point stating the finished stage
+  instead of the next gesture, **two sections restating the same completed work**, a table broken by
+  block quotes cutting its header from its rows, and **three false facts**. The skill now asks four
+  questions of every section — does the entry point say where to RESUME · is this fact stated twice
+  · does it still hold *(re-measured, and **from the server** rather than a local cache — a stale
+  remote ref made one pass report 19 branches where the forge held 2)* · do the tables still render.
+  It also has to state what could **not** be verified: silence reads as verified.
 - **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
   *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
   directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
