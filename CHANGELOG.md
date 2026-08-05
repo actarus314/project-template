@@ -21,6 +21,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **The pinned tooling moved, and a human records it because the bot cannot.** `zizmor`
+  **1.28.0 → 1.29.0** in `templates/repo/requirements-ci.txt`, so **every project generated from
+  now on pins the newer one**; `renovate` **43.288.0 → 44.7.0**, the version `check.sh` and the CI
+  both validate a `renovate.json` against. *(Renovate `#101` and `#102`, merged once `#103` stopped
+  the gate from blocking them.)*
+  ⚠️ **This line is the counterpart of that exemption, not a contradiction of it.** A bot's branch
+  skips the CHANGELOG check because no bot writes prose — which leaves the writing to whoever
+  merges, for the bumps that actually reach a user. `zizmor` does: it travels in a template.
+
 ### Fixed
 - 🔴 **No Renovate or Dependabot pull request could ever go green.** `verify-changelog.sh` demands a
   `CHANGELOG` line for a user-visible change, a dependency bump touches exactly the paths it counts
