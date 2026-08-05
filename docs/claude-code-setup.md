@@ -81,6 +81,6 @@ Left unwritten in the prompt, **the default does the opposite of all three, sile
     "hooks": [ { "type": "command", "command": "bash <abs-path>/verify-delegation.sh" } ] } ] }
   ```
   ⚠️ The path is **absolute**: moving the folder breaks the hook, exactly like the pointer in `~/.claude/CLAUDE.md`.
-- **For a plugin distribution** — a `hooks/hooks.json` beside the manifest, where `${CLAUDE_PLUGIN_ROOT}` **does** resolve *(the runtime substitutes it in hooks, MCP servers and monitors — never in a skill's text)*.
+- **For a plugin distribution** — a `hooks/hooks.json` beside the manifest, where `${CLAUDE_PLUGIN_ROOT}` **does** resolve: the runtime substitutes it in **configuration it reads itself** (hooks, MCP servers, monitors), **never** in a skill's own text. A skill's Markdown is read by the assistant like any other file, not templated by the runtime — a path written as `${CLAUDE_PLUGIN_ROOT}/…` inside a `SKILL.md` stays a literal, unresolved string, so the skill has to compute its own absolute path instead *(a measured failure of exactly this: [`skills/new-project/SKILL.md`](../skills/new-project/SKILL.md#step-0-resolve-the-template-root-before-reading-anything), "Step 0")*.
 
 ⚠️ **Keep the trigger narrow.** Anything that is not a subagent launch must exit at once: a guard that fires everywhere earns overrides until nobody reads it any more.

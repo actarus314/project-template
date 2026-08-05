@@ -42,6 +42,8 @@ Three things to distinguish clearly:
 > **Remaining exceptions**: the local file templates stay in French — `templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`.
 > They are gitignored in the generated project and never reach GitHub.
 >
+> **The bilingual `README.md` is a different kind of exception — deliberate, not a leftover**: it is the one **versioned** file allowed to carry French, in every project *(`README.md` here, `templates/repo/README.md` in each one generated)* — detail in §15.
+>
 > **Tone**: never **2nd person** (`you/your`, `vous/tu/ton`) in versioned content **or in the app UI** — write "the user" / "l'utilisateur" or impersonal phrasing.
 
 ---

@@ -65,7 +65,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
   export GH_TOKEN="$GITHUB_PAT"
   ```
 - `direnv allow` once. Entering the folder → `GH_TOKEN` loaded → `git push`/`gh` use the repo's PAT. Leaving it → back to public-RO.
-- **Claude's Bash tool (non-interactive)**: direnv does not load on its own → **prefix with `direnv exec . git …`** (from `repo/`; `direnv exec` does not change the CWD, requires `direnv allow`).
+- **Claude's Bash tool**: hits a pitfall of its own with this setup, documented once and in full at [`repo/CLAUDE.md`](../repo/CLAUDE.md#github-auth-the-non-interactive-shell-trap) — read it there rather than assuming a plain `git push` authenticates.
 
 **Usage:** no more need for `source .env` — direnv loads everything automatically in the folder.
 ```bash

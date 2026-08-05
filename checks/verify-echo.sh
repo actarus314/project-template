@@ -24,9 +24,12 @@
 # is full coverage: the reworded restatement is seen only if the dial is lowered, and the rest is
 # judgement, which METHODE says outright.
 #
-# 🔴 ADVISORY, and it must stay so. It draws a LIST; the reader decides. Some pairs are legitimate:
-# a template's copy, a command quoted where it is executed. A guard that blocked on this would be
-# wrong often enough to be turned off.
+# 🔴 BLOCKING, and the noise was measured before flipping it. Of the 21 pairs it
+# reported then, 10 were real restatements, 2 were shared vocabulary and 9 were legitimate. The
+# lowest real one scored 0.40 — exactly the default — so raising the dial trades 3 real findings for
+# 2 false ones and the dial stays put. What was removed instead is STRUCTURAL: a skill is walked
+# step by step while acting, so it restates the runbook by design and cites it each time.
+# The maintainer's call, and the reason: a warning nobody must act on is a warning nobody reads.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -73,7 +76,7 @@ def tracked_md(root="."):
     # an issue template is a form. CODE_OF_CONDUCT is the Contributor Covenant, third-party
     # text taken verbatim — its graduated sanctions restate each other by design, and it is
     # not ours to reword. Same reasoning as the licence exception in verify-tone.sh.
-    skip = re.compile(r"(^|/)(CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|archives?/|\.github/)")
+    skip = re.compile(r"(^|/)(CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|archives?/|\.github/|skills/)")
     return sorted(f"{root}/{f}" if root != "." else f
                   for f in out.stdout.splitlines() if f and not skip.search(f))
 
@@ -92,7 +95,9 @@ GROUPS = [(label, files) for label, files in GROUPS if files]
 
 FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus)\b", re.I)
 def language(text):
-    return "fr" if len(FRENCH.findall(text)) >= 4 else "en"
+    # >= 2, not 4: a short technical paragraph carries few function words, so the bilingual
+    # README's French half read as English and was compared against its own English half.
+    return "fr" if len(FRENCH.findall(text)) >= 2 else "en"
 
 def words(s):
     return [w for w in re.findall(r"[a-zà-ÿ]{4,}", re.sub(r"[`*_#>\[\]()]", " ", s.lower()))]

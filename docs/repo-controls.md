@@ -32,7 +32,7 @@ Everything else follows from that.
 > ### What decides the flow: *a single question*
 > **"Is there a host to VALIDATE before production?"** — that's the **`staging`** capability, and only that one.
 > **Not the language, not Docker.**
-> A `node` project with no host to validate does **not** need `develop`. A Pages site packaged as an image **doesn't either** — the image *is* the page.
+> A `node` project with no host to validate does **not** need `develop`. A Pages site packaged as an image **doesn't either** — the image *is* the page, served by nginx directly.
 > Publishing an **artefact** (tag → ghcr image) is an **independent** capability: it attaches to **both** flows below.
 
 > Branching policy depends on **three independent capabilities**, not on a fixed archetype: reducing the choice to `static`/`node` collapses three distinct questions into one and breaks as soon as the standard case is left behind *(cf. DORA · Fowler · ThoughtWorks Radar)*.
@@ -47,8 +47,7 @@ Everything else follows from that.
 | **`--artefact`** | Does the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUCs…)* | `docker-publish.yml` (**`build-check` + Trivy**) · **tag ruleset** · **immutable releases** · **PUBLIC ghcr package** *(the base image is bumped by Renovate, auto-detected — nothing to declare)* |
 | **`--staging`** | Is there a **host to VALIDATE** before prod? | **`develop`** branch · `develop` ruleset · merge commit onto `main` · **3-stage flow** |
 
-> 🔴 **`develop` does NOT follow from Docker — it follows from STAGING.**
-> A **node** project **with no host to validate** does **not** need `develop`. Neither does **a static site also packaged as an image**: there is no intermediate stage, the image *is* the page served by nginx.
+> 🔴 **`develop` does NOT follow from Docker — it follows from STAGING** — the single question and both examples: [above](#the-flow-where-the-code-goes).
 
 **The need for a staging stage comes from DEPLOYMENT, not from the language or taste.**
 
@@ -67,7 +66,7 @@ Everything else follows from that.
 
 > **`--type generic`** *(universality)*: the toolchain the template doesn't pre-wire. It ships the **security controls** *(language-agnostic: gitleaks, actionlint, zizmor, semgrep, osv `-r .`, + CodeQL when public, + Trivy if `--artefact`)* and a **commented build/test stub** to fill in. An Android or C++ project is thus **secured from day 1**; only the language's `./gradlew`/`cmake`/`cargo` needs adding. ⚠️ osv reminder: it's **lockfile**-oriented — for Gradle, enable dependency-locking *(`gradle.lockfile`)*, otherwise deps aren't scanned.
 
-⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact**: Pages *is* prod, there is **nothing to validate** — the branch would be an empty ritual that drifts until the merge stops happening at all.
+⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact** — why: [Without `staging`](#without-staging-github-flow-two-branches-are-enough) below.
 
 **The triple filter catches this kind of regression before it reaches prod** (cf. "Why 3 stages" below) — but only where a host to validate exists. Elsewhere, it would have filtered nothing.
 
@@ -75,7 +74,7 @@ Everything else follows from that.
 
 ### Without `staging` — GitHub Flow, two branches are enough
 
-This is the case of a Pages site, **and also** that of a static site packaged as an image so third parties can self-host it.
+This is the case of a Pages site *(Pages **is** already prod, so there is nothing to validate upstream)*, **and also** that of a static site packaged as an image so third parties can self-host it.
 Nothing to validate upstream → a `develop` would be an **empty ritual**, and a long-lived branch nobody uses drifts until the merge stops happening.
 
 ```
@@ -552,8 +551,7 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 > gh run list --commit "$sha" --json workflowName,status,conclusion
 > ```
 >
-> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists — *the same set as the ruleset's required checks, derived the same way (presence of the workflow)*, so the human barrier and the server that will replace it at the flip say exactly the same thing.
-> ⚠️ **A MISSING workflow is NOT a green.** GitHub registers workflows **one by one**: for a few seconds after a push, `CI` can be `success` while `Publish image` hasn't been created yet. Settling for "nothing red" then declares the PR mergeable **while missing a check**. **"Nothing red" ≠ "everything green".**
+> **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
 
 The `pre-push` hook **lets branch creation through** (otherwise a fresh repo's first push would be impossible) and **stays active in public** — the server then refuses the same push, but the local message is far clearer. *Defense in depth.*
 

@@ -126,7 +126,7 @@ cd <project-folder>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT loaded ✓" || ech
 | **Issues** | **Read** | 🔴 **proof of life for Renovate** — `GET /repos/{o}/{r}/issues`, to date its *Dependency Dashboard* before removing the Dependabot safety net from a 3-tier flow. Without it, the script **keeps** the safety net *(its security PRs will keep targeting `main`)* — it says so and names this permission. *(The official table lists this endpoint under `Issues: read` **and** under `Pull requests: read` — one **or** the other suffices; `Issues` is the one used here, it is what gets read.)* |
 | *Metadata* | *Read* | *automatic* |
 
-> ⚠️ **`Administration` IS NOT ENOUGH**, and **each missing permission fails SILENTLY**: everything else passes, and the missing check does not show. **The recipe is DERIVED from the endpoints called — never by trial and error.**
+> ⚠️ **`Administration` IS NOT ENOUGH** — every missing permission in the table above fails **silently**: why, and how the recipe is derived, in [`secrets-and-auth.md`](secrets-and-auth.md#pat-permissions-two-tiers).
 > **This token is stored NOWHERE**: no keychain, no `.envrc`, no shell history. The script requests it as **masked input**.
 
 ### Step 7b — the maintainer: run the script
@@ -210,10 +210,9 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 > 🔴 **In PRIVATE, nothing requires CI.** No ruleset → GitHub **would accept** the merge of a red PR. Verifying CI before any merge is the **only point that has remained human** in the entire chain: no hook can intercept it, the merge happens server-side.
 >
-> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists *(the same set as the ruleset's required checks — `configure-repo.sh` derives it from the workflow's presence)*.
-> ⚠️ **A workflow ABSENT from the list is NOT a green**: it simply has not reported yet. GitHub registers workflows **one by one** after a push — for a few seconds, `CI` can be `success` while `Publish image` does not exist yet. *"Nothing red" and "everything is green" are not the same claim*, and the gap between the two is exactly where a broken change slips through.
+> **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
 
-> 🔴 **Do NOT use `gh pr checks <n>`** *(nor `gh pr view <n>` alone)*: both read `statusCheckRollup`, which requires the **`Checks`** permission — **absent from the fine-grained PAT UI**, impossible to grant *(github/community#129512, cli/cli#12597)*. With the standard's PAT, the command returns **`Resource not accessible by personal access token`**.
+> 🔴 **Do NOT use `gh pr checks <n>`** *(nor `gh pr view <n>` alone)* — the `Checks` permission both need cannot be granted on this standard's PAT: full explanation in [`secrets-and-auth.md`](secrets-and-auth.md#writing-push-pr-issues-1-repo-fine-grained-pat-exposed-by-direnv).
 > **Nothing to add to the PAT**: the command above only needs `Actions: read`, already in the matrix. *(`gh pr view --json headRefOid` works: by targeting one field, it no longer requests the rollup.)*
 
 **With `--staging`**: `feat/` branches accumulate in `develop`. `develop → main` happens **only when publishing a version** — **a single PR for N changes**, not two PRs per change.

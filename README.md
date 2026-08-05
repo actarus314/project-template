@@ -2,7 +2,7 @@
 
 Scaffolds a GitHub project that is **hardened from its first commit**, and sets the server-side configuration no generator usually reaches — rulesets, secret scanning, dependency alerts, CodeQL, immutable releases.
 
-It is **not** a project itself, and not a scaffolder in the usual sense: its product is a **standard** — the manual version of project deployment — and the scripts are only its automation. Anything they cannot do is handed back explicitly, with the exact URL and values.
+It is **not** a project itself, and not a scaffolder in the usual sense: its product is a **standard** — the manual version of project deployment — and the scripts are only its automation. Anything they cannot do is handed back explicitly, with the exact URL and values. *(`AGENTS.md` opens on this same framing, for whoever reads that file first.)*
 
 ## Why this exists
 
@@ -35,7 +35,7 @@ The other structuring rule: **what SERVES to create a project** and **what TELLS
 
 > **`develop` follows from `staging` alone** — never from Docker, never from the language: full rule in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
-**Shortcuts**: `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **no capability** *(any other toolchain — Android, C/C++, Rust… : security checks only, build/test to fill in)*.
+**Shortcuts** cover the common cases (`--type static`, `--type node`, `--type generic`) — full mapping and composition rules in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
 ## Configure the repo server-side
 
@@ -118,7 +118,7 @@ The exception is not a detail: `init-project.sh` copies those files **verbatim**
 Génère un projet GitHub **durci dès le premier commit**, et pose la configuration côté serveur qu'aucun générateur n'atteint d'habitude — rulesets, secret scanning, alertes de dépendances, CodeQL, releases immuables.
 
 Ce n'est **pas** un projet en soi, ni un scaffolder au sens habituel : son produit est un **standard** — la version manuelle du déploiement de projet — et les scripts n'en sont que l'automatisation.
-Ce qu'ils ne peuvent pas faire est rendu explicitement, avec l'URL exacte et les valeurs.
+Ce qu'ils ne peuvent pas faire est rendu explicitement, avec l'URL exacte et les valeurs. *(`AGENTS.md` ouvre sur ce même cadrage, pour qui lit d'abord ce fichier-là.)*
 
 ## Pourquoi cet outil existe
 
@@ -153,7 +153,7 @@ L'autre règle structurante : **ce qui SERT à créer un projet** et **ce qui RA
 
 > **`develop` découle de `staging` seul** — jamais de Docker, jamais du langage : règle complète dans [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
-**Raccourcis** : `--type static` ≡ `--pages` · `--type node` ≡ `--artefact --staging` · `--type generic` ≡ **aucune capacité** *(toute autre toolchain — Android, C/C++, Rust… : uniquement les checks de sécurité, build/test à compléter)*.
+**Des raccourcis** couvrent les cas courants (`--type static`, `--type node`, `--type generic`) — mapping complet et règles de composition dans [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
 ## Configurer le repo côté serveur
 

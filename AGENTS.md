@@ -3,13 +3,11 @@
 To be read before touching anything in this repo.
 This file follows the [AGENTS.md](https://agents.md) convention; Claude Code reads it via the `@AGENTS.md` import in `CLAUDE.md` (local, untracked).
 
-> **Language**: everything versioned in this repo is in English, just like everything it generates — only local file templates (`templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`) stay in French, since they are gitignored in the generated project.
-> **One versioned exception, and it is deliberate**: the READMEs are bilingual — `README.md` here, `templates/repo/README.md` in every generated project — and their French half *is* part of the product, not a leftover.
+> **Language & tone**: this repo follows the standard's rule in full — see [`docs/claude-code-project-standard.md` §1](docs/claude-code-project-standard.md#1-basic-concepts) for what stays in French and why, and §15 for the bilingual `README.md` exception.
 
 ## What this is
 
-This repo **builds and configures** projects. **It is not a project.**
-Its product is the **standard** *(the manual version of project deployment)*; the scripts are only its **automation**.
+This repo **builds and configures** projects, never one itself — what it is (and is not), and why: [`README.md`](README.md).
 
 ## Structure — TWO git repos, side by side, only one goes to GitHub
 
@@ -58,7 +56,7 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
   sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
   gh run list --commit "$sha" --json workflowName,status,conclusion
   ```
-  Green = **every** expected workflow is `completed/success`. A workflow **missing** from the list is **not** a green.
+  **Green ⇔ every expected workflow is `completed/success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists *(the same set as the ruleset's required checks, derived the same way — so the human barrier used while private and the server that replaces it at the public flip say exactly the same thing)*. A workflow **missing** from the list is **not** a green: GitHub registers workflows **one by one** after a push, so for a few seconds `CI` can be `success` while `Publish image` does not exist yet. *"Nothing red" and "everything green" are not the same claim.*
 - **After the merge, also verify the `push` run on `main`** — a different event, so a different run: the PR's green says nothing about that one, and `main` is what counts.
   🔴 **`--commit` does NOT find this run — filter by BRANCH.** On a SHA born from a merge, `gh run list --commit <sha>` returns **0 runs**, while `--branch main` returns the `CI [push]` run carrying **exactly this `headSha`**, green. The `--commit` filter works on `pull_request` runs — hence the command above, which stays correct. Run as-is after a merge, it returns "0 runs": **the exact pattern this file teaches to read as a dispatch failure.**
   ```bash
