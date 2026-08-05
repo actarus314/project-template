@@ -31,17 +31,29 @@ fi
 
 # 2. Each shipped script must PRINT that version. This is what catches a constant hardcoded back
 #    in: reading the tag cannot drift, a copied literal can.
-# The list is DERIVED, never written: every script that HANDLES `--version` is checked, so one
-# added is covered the day it lands. A hand-kept list held 3 of the 16 that handle it.
-# The pattern is the one that handles the flag, not one that mentions it — check.sh names it in
-# a comment and answers it by running the whole lot, which a looser grep would then execute.
-scripts=$(grep -lE '"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)' ./*.sh checks/*.sh 2>/dev/null || true)
+# DERIVED, never written, and with NO extension filter: what git tracks as EXECUTABLE, whatever the
+# language. Filtering on `*.sh` presumes the project is written in shell.
+# The pattern matches a HANDLER, never a mention: check.sh names `--version` in a comment and answers
+# it by running the whole lot, which a looser grep would then execute. Shell, Python, Node, Go and
+# Java forms are recognised.
+# 🔴 A COMPILED executable cannot be grepped at all — there is no source to match. Those are counted
+# and NAMED as unexamined instead of being silently cleared, which is what the verdict used to do
+# while its own comment claimed the opposite.
+HANDLER='"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)|add_argument\([^)]*--version|argv[^=]*==?=?[^=]*--version|includes\(.--version|Args\[[^]]*\][^=]*==[^=]*--version|equals\("--version"'
+execs=$(git ls-files -s 2>/dev/null | awk '$1=="100755"{ $1=$2=$3=""; sub(/^ +/,""); print }')
+scripts=$(printf '%s\n' "$execs" | grep -v '^$' | tr '\n' '\0' | xargs -0 grep -lE "$HANDLER" 2>/dev/null || true)
+binaries=$(printf '%s\n' "$execs" | grep -v '^$' | while IFS= read -r f; do
+             # `|| true` per iteration: the loop's status is the LAST test's, and under `set -e`
+             # a final non-binary file killed the script with no output at all.
+             { [ -f "$f" ] && ! grep -qI . "$f" 2>/dev/null && printf '%s ' "$f"; } || true; done)
 [ -n "$scripts" ] || { echo "✗ no script handles --version — this check would pass by looking at nothing"; exit 1; }
 for s in $scripts; do
   # STDIN closed: three of these are hooks that read their payload from it, and asking a
   # script its version must never leave one waiting on the terminal — inside check.sh's
   # parallel lot that is a hang with no output at all.
-  got=$("$s" --version </dev/null 2>/dev/null | tail -1 | awk '{print $NF}')
+  # `./` is not decoration: git returns `configure-repo.sh`, and a bare relative name is
+  # looked up in PATH, not in the tree — the whole lot then answered "command not found".
+  got=$("./$s" --version </dev/null 2>/dev/null | tail -1 | awk '{print $NF}')
   if [ "$got" != "$TAG" ]; then
     echo "✗ $s --version prints '${got:-nothing}', expected '$TAG'"
     fail=1
@@ -59,5 +71,6 @@ if [ -f .claude-plugin/plugin.json ]; then
   fi
 fi
 
+[ -n "$binaries" ] && echo "  (compiled executables, no source to read, not examined:$binaries)"
 [ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG"
 exit "$fail"

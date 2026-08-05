@@ -34,6 +34,8 @@ tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
 grown=0
 
 COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
+# Added comment lines below which a percentage gap is an artefact of a small base.
+COMMENT_MIN_LINES=${COMMENT_MIN_LINES:-20}
 
 count_pair() {           # <revision|--worktree> <path> <marker> -> "<comments> <code>", or empty
   # The current side is read from DISK, not from HEAD: comparing two commits would only ever see a
@@ -92,7 +94,12 @@ while IFS= read -r f; do
   com1=${now% *}; code1=${now#* }
   d_code=$(( (code1 - code0) * 100 / code0 ))
   d_com=$(( (com1 - com0) * 100 / com0 ))
-  if [ $(( d_com - d_code )) -ge "$COMMENT_DRIFT" ]; then
+  # 🔴 A FLOOR IN LINES, alongside the percentage gap. Percentages alone over-report a small file:
+  # measured, +134% of comment against +94% of code was 34 added lines against 36 — the comment had
+  # grown LESS than the code and the check still spoke. The floor is what a reader would call a
+  # drift worth reading about, and it is what makes this one blocking rather than ignorable.
+  added_com=$(( com1 - com0 ))
+  if [ $(( d_com - d_code )) -ge "$COMMENT_DRIFT" ] && [ "$added_com" -ge "$COMMENT_MIN_LINES" ]; then
     printf '  ↑ %-32s comment %+d%%, code %+d%% since %s — the WHY is outgrowing the what\n' \
       "$f" "$d_com" "$d_code" "$tag"
     grown=1
@@ -101,4 +108,4 @@ done < <(git ls-tree -r --name-only HEAD | grep -E '\.[A-Za-z0-9]+$' || true)
 
 [ -n "$unknown" ] && echo "  (extensions with no known comment marker, not examined:$unknown)"
 [ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $tag"
-exit 0        # advisory, never blocking
+exit "$grown"   # blocking: same reason

@@ -51,7 +51,7 @@ The rest lives in the files beside it: **`docs/secrets-and-auth.md`** *(GitHub a
 The runbook marks **who does what**. Some actions are **impossible** for the assistant (it **never** has `Administration: write` — `read` alone is allowed):
 create the repo · create/revoke a PAT · `direnv allow` · run `configure-repo.sh` · flip the visibility · make a ghcr package public *(if the script's test fails)* · install Renovate.
 
-> 🔴 **Renovate trap — the "Configure Renovate" PR** *(existing repo, app installed before `renovate.json`)*: **NEVER** merge it *(it would activate the default config, not the template's)*, and 🔴 **NEVER** close it either — closing is the bot's **documented opt-out** (`disabled` on Mend's side; committing `renovate.json` afterward relights nothing). **Leave it open and ask the maintainer.** Detail and repair: RUNBOOK §1 step 8.
+> 🔴 **Renovate trap — the "Configure Renovate" PR** *(existing repo, app installed before `renovate.json`)*: **NEVER** merge it, and 🔴 **NEVER** close it either — it is the bot's documented, **sticky** opt-out. **Leave it open and ask the maintainer.** Mechanism and repair: RUNBOOK §1 step 8.
 
 For each one:
 - **Give the direct URL** and **the exact values** (token name, expiration, permissions one by one).
@@ -64,7 +64,7 @@ They decide the whole architecture (`AskUserQuestion`): **(a)** site served by *
 **Ask them with their EXACT wording** *(table and nuances: RUNBOOK §1)* — reworded from memory, (b) and (c) get confused, and an unnecessary `develop` gets built.
 Plus the **toolchain**: `--type static` (no npm) · `--type node` (npm, tests, types) · `--type generic` (no pre-wired capability — Rust, Go, C/C++, Android… ; security controls only).
 
-> 🔴 **`develop` follows from (c), NEVER from Docker nor from the language.** A `node` project with no host to validate doesn't have one. A Pages site packaged as an image doesn't either.
+> 🔴 **`develop` follows from (c) alone — never Docker, never the language** *(full rule: `repo-controls.md`, "The 3 CAPABILITIES")*.
 
 **Do not guess these answers.** If the maintainer just says "initialise un projet", **ask**.
 
@@ -76,8 +76,7 @@ Plus the **toolchain**: `--type static` (no npm) · `--type node` (npm, tests, t
 
 ### 4. NEVER forget to revoke the admin PAT
 
-> 🔴🔴 **This is the step that gets forgotten, and the most dangerous one to forget.**
-> The admin PAT can **delete the repo** and **change its visibility**. As soon as `configure-repo.sh` is finished:
+> 🔴🔴 **This is the step that gets forgotten, and the most dangerous one to forget** *(why: RUNBOOK §1 step 7c)*. As soon as `configure-repo.sh` is finished:
 > **→ https://github.com/settings/personal-access-tokens — REVOKE NOW.**
 > State the reminder **explicitly**, and **wait for confirmation**. *A reminder is not a revocation.*
 
@@ -96,9 +95,7 @@ The same skill covers:
 The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND "what's left")*.
 **This is a DEFAULT, not a dogma** — `init-project.sh --no-lifecycle-docs` omits it.
 
-> 🔴 **Every project is initialized by this template, including those that will be driven by a third-party system.**
-> Imposing our tracking files would put them in **COLLISION** with its own (`.planning/` from GSD & co.).
-> **Two competing tracking systems = zero system maintained.**
+> 🔴 **Every project is initialized by this template, even ones later run by a third-party system** — imposing our tracking files would collide with theirs. Why: `docs/METHODE.md`, "The tracking doc — a PRINCIPLE, not mandated files".
 
 **To do, at project-creation time:**
 
@@ -106,9 +103,8 @@ The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND
    - **Yes** → `--no-lifecycle-docs`. **This system carries the principle**, our files would be a duplicate.
    - **No / doesn't know** → apply the default *(`SUIVI.md`)*.
 
-2. 🔴 **If NO tool is explicitly named — SEARCH FOR WHAT EXISTS BEFORE BUILDING ONE.**
-   **~100 skills are installed**, including **all of GSD**: `gsd-progress` · `gsd-resume-work` · `gsd-pause-work` · `gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`…
-   **Use `find-skills`** — that's exactly what it's for. Also look at the **agents**, the **plugins**, the **marketplace**, the **native features**.
+2. 🔴 **If NO tool is explicitly named — SEARCH FOR WHAT EXISTS BEFORE BUILDING ONE** *(why: `docs/METHODE.md`)*.
+   **~100 skills are installed**, including all of GSD *(`gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`… among others)* — **use `find-skills`**, and also check the **agents**, the **plugins**, the **marketplace**, the **native features**.
    **Only build custom as a last resort, and SAY SO.**
 
 > **The principle itself holds regardless of which tool carries it** *(`docs/METHODE.md`)*:
@@ -122,4 +118,4 @@ The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND
 
 ## The `direnv allow` trap
 
-> 🔴 `init-project.sh` placed a `direnv allow` on an EMPTY `.envrc`; pasting the PAT into it modifies the file → direnv **revokes** that authorization. **Without a SECOND `direnv allow`, the `git push` fails with a 403** even though the token is indeed in the file. **State this explicitly**, then verify that the PAT is loaded. Detail: RUNBOOK §1 step 4.
+> 🔴 `init-project.sh` placed a `direnv allow` on an EMPTY `.envrc`; pasting the PAT into it **revokes** that authorization silently. **State this explicitly**, then verify that the PAT is loaded. Symptom, command and full detail: RUNBOOK §1 step 4.

@@ -37,6 +37,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   used to state about itself.
 
 ### Changed
+- **`verify-echo.sh` stopped reporting the very shape the rule prescribes.** A paragraph that LINKS
+  to another document is the pointer METHODE asks for, not a copy — and a good pointer names what it
+  points at, so it shares that document's vocabulary by construction. Three of the four last pairs
+  were exactly that. Pointers are now excluded, and the French detector recognises short technical
+  prose *(a bilingual README's French half was reading as English and being compared with its own
+  English half)*. **34 pairs → 0**, and a planted copy still scores 1.00.
+- **The three advisory checks now BLOCK** — a warning nobody must act on is a warning nobody reads.
+  Two tunings came with it, each measured: `verify-comment-drift` gained a **floor in lines** beside
+  its percentage gap *(percentages alone over-report a small file: +134 % of comment against +94 %
+  of code was 34 added lines against 36)*, and `verify-echo` excludes `CODE_OF_CONDUCT.md`,
+  third-party text whose graduated sanctions restate each other by design.
+- **`verify-echo.sh` is 7× faster** — 1,78 s → 0,25 s, verdict strictly identical. It computed the
+  language of a paragraph once per PAIR inside a quadratic loop; it is computed once per paragraph.
+  That check was the floor of the CI gate, which now runs in **3,05 s**.
+- **The control table's durations were wrong by 1,7× to 4,1×.** They were single cold runs on a busy
+  machine. They are medians of three now, and the note says so.
 - **A hook declares itself** — `# hook: <event>` in its own header — and `check.sh` detects that
   line instead of naming the three. That was the **last hand-written list left in the runner**, and
   the one that travelled into every project with nothing to guard it: a fifth hook dropped into
@@ -55,6 +71,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
 
 ### Fixed
+- **`shellcheck` reached no generated project — neither locally nor in CI.** It was the only control
+  this template ran on itself and shipped to nobody: a shell bug was blocked here and went through
+  in silence over there, on both sides. One step in the three workflow templates covers both, since
+  `check.sh` reads a project's `ci.yml` to decide what to replay.
+- **`verify-version.sh` recognised neither Go nor Java, and its own comment claimed otherwise.** Both
+  are matched now — and a **compiled** executable, which has no source to grep, is named as
+  unexamined rather than silently cleared.
+- **`verify-narrative.sh` swallowed unknown languages in silence**, where its twin publishes the
+  list: a `.zig` holding a dated comment came back clean. It publishes what it did not read, and
+  asks a file for its **shebang** when the name carries no extension — which revealed that
+  `pre-commit` and `pre-push`, the hooks, were **never scanned at all**.
+- **A broken interpreter printed a clean tick.** `verify-narrative.sh` swallowed its own python
+  errors behind `|| true`, twice, while reading nothing.
+- **Three checks still presumed the shape of the project they landed in.** Each carried a
+  hand-written perimeter, which is the defect already paid for once, when a travelling check read
+  ZERO files in every Python, TypeScript and Go project:
+  · `verify-version.sh` looked for `--version` in `./*.sh` and `checks/*.sh` — it reads **every
+  tracked EXECUTABLE** now, whatever the language, and recognises the handler in shell, Python and
+  Node *(proven: a Python CLI printing a wrong version is caught, and the old perimeter never saw
+  it)*;
+  · `verify-echo.sh` and `verify-growth.sh` read `docs/*.md` plus three names at the root, so a
+  project writing into `documentation/`, `guide/` or `wiki/` was invisible to them. They read
+  **every tracked `.md`** now, minus what restating is the nature of — a CHANGELOG, an archive, a
+  form template — and `verify-echo.sh` groups by the project a document belongs to, so a template's
+  `AGENTS.md` echoing this repo's reads as the template working rather than as a defect.
 - **One malformed JSONL line disarmed all three signals of `verify-turn-claims.sh`, in silence.**
   The `try` wrapped the whole read loop, so a single unparseable line anywhere in the turn threw
   out of it and left both lists `None`. Parsing is per line now, and a PARTIAL read splits the

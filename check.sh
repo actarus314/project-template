@@ -257,7 +257,7 @@ if [ -x checks/verify-secret-blindspots.sh ]; then
   if reap verify-secret-blindspots; then ok "no secret in a blind spot"; else ko "secret in a blind spot"; fi
 fi
 
-# verify-growth.sh — advisory: the curated docs must breathe, not only inflate. Compared against
+# verify-growth.sh — the curated docs must breathe, not only inflate. Compared against
 # the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
 # Both of these follow the second rhythm, so a commit touching no prose skips them. That skip is
 # announced as a SKIP: `reap` reports a missing capture as "it never ran", which is right when a
@@ -265,19 +265,22 @@ fi
 # breakage stops being noticed.
 if [ -x checks/verify-echo.sh ]; then
   note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
-  if touched '\.md$'; then reap verify-echo || true
+  if touched '\.md$'; then
+    if reap verify-echo; then ok "no paragraph restates another"; else ko "a paragraph restates another"; fi
   else echo "  (skipped — no .md changed in this commit)"; fi
 fi
 
 if [ -x checks/verify-growth.sh ]; then
   note "verify-growth.sh — curated documents that only grow (advisory)"
-  if touched '\.md$'; then reap verify-growth || true
+  if touched '\.md$'; then
+    if reap verify-growth; then ok "no curated document only grows"; else ko "a curated document only grows"; fi
   else echo "  (skipped — no .md changed in this commit)"; fi
 fi
 
 if [ -x checks/verify-comment-drift.sh ]; then
   note "verify-comment-drift.sh — a comment outgrowing its code (advisory)"
-  if touched '\.sh$'; then reap verify-comment-drift || true
+  if touched '\.sh$'; then
+    if reap verify-comment-drift; then ok "no comment outgrowing its code"; else ko "a comment outgrows its code"; fi
   else echo "  (skipped — no .sh changed in this commit)"; fi
 fi
 

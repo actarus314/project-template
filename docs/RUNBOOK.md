@@ -28,7 +28,7 @@
 | **b** | Will the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUC…)* | `--artefact` |
 | **c** | Is there a **host to VALIDATE** before prod? | `--staging` |
 
-> **`develop` follows from (c), never from Docker or the language.** A `node` project without a host to validate does not have one; a Pages site packaged as an image does not either.
+> **`develop` follows from (c) alone** — never Docker, never the language. Full rule: `repo-controls.md`, "The 3 CAPABILITIES".
 
 ### 🔴 Step 1 — the maintainer: create the repo (UI)
 
@@ -126,7 +126,7 @@ cd <project-folder>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT loaded ✓" || ech
 | **Issues** | **Read** | 🔴 **proof of life for Renovate** — `GET /repos/{o}/{r}/issues`, to date its *Dependency Dashboard* before removing the Dependabot safety net from a 3-tier flow. Without it, the script **keeps** the safety net *(its security PRs will keep targeting `main`)* — it says so and names this permission. *(The official table lists this endpoint under `Issues: read` **and** under `Pull requests: read` — one **or** the other suffices; `Issues` is the one used here, it is what gets read.)* |
 | *Metadata* | *Read* | *automatic* |
 
-> ⚠️ **`Administration` IS NOT ENOUGH**, and **each missing permission fails SILENTLY**: everything else passes, and the missing check does not show. **The recipe is DERIVED from the endpoints called — never by trial and error.**
+> ⚠️ **`Administration` IS NOT ENOUGH** — every missing permission in the table above fails **silently**: why, and how the recipe is derived, in [`secrets-and-auth.md`](secrets-and-auth.md#pat-permissions-two-tiers).
 > **This token is stored NOWHERE**: no keychain, no `.envrc`, no shell history. The script requests it as **masked input**.
 
 ### Step 7b — the maintainer: run the script
@@ -210,10 +210,9 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 > 🔴 **In PRIVATE, nothing requires CI.** No ruleset → GitHub **would accept** the merge of a red PR. Verifying CI before any merge is the **only point that has remained human** in the entire chain: no hook can intercept it, the merge happens server-side.
 >
-> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists *(the same set as the ruleset's required checks — `configure-repo.sh` derives it from the workflow's presence)*.
-> ⚠️ **A workflow ABSENT from the list is NOT a green**: it simply has not reported yet. GitHub registers workflows **one by one** after a push — for a few seconds, `CI` can be `success` while `Publish image` does not exist yet. *"Nothing red" and "everything is green" are not the same claim*, and the gap between the two is exactly where a broken change slips through.
+> **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
 
-> 🔴 **Do NOT use `gh pr checks <n>`** *(nor `gh pr view <n>` alone)*: both read `statusCheckRollup`, which requires the **`Checks`** permission — **absent from the fine-grained PAT UI**, impossible to grant *(github/community#129512, cli/cli#12597)*. With the standard's PAT, the command returns **`Resource not accessible by personal access token`**.
+> 🔴 **Do NOT use `gh pr checks <n>`** *(nor `gh pr view <n>` alone)* — the `Checks` permission both need cannot be granted on this standard's PAT: full explanation in [`secrets-and-auth.md`](secrets-and-auth.md#writing-push-pr-issues-1-repo-fine-grained-pat-exposed-by-direnv).
 > **Nothing to add to the PAT**: the command above only needs `Actions: read`, already in the matrix. *(`gh pr view --json headRefOid` works: by targeting one field, it no longer requests the rollup.)*
 
 **With `--staging`**: `feat/` branches accumulate in `develop`. `develop → main` happens **only when publishing a version** — **a single PR for N changes**, not two PRs per change.
@@ -240,17 +239,12 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 
-> 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING — as long as the repo is PRIVATE.**
-> ✅ **Fixed at the root**: on a **private** repo that publishes a 3-tier flow, `configure-repo.sh` **REMOVES** `delete-branch-on-merge`. The automatic cleanup of `feat/*` is lost *(one click)*; the staging branch is kept. The flip to public **restores it** *(re-run the script — the ruleset takes over)*.
-> ⚠️ **A repo configured BEFORE this fix still carries the setting**: re-run `configure-repo.sh` before its next promotion, otherwise what follows still applies.
-> `delete-branch-on-merge` deletes the **source** branch of **any** merged PR — so **`develop` itself**, when the `develop → main` PR merges.
-> **In PUBLIC**, the `develop` ruleset (the `deletion` rule) **prevents this**. **In PRIVATE, no ruleset exists: the branch is deleted, without a word.**
-> **The damage cascades**: at the next run, `configure-repo.sh` no longer sees `develop`, concludes "no staging", **does not set its ruleset** and **switches `main` back to squash-only** → **the next promotion becomes IMPOSSIBLE** *(squashing `develop` into `main` makes the two branches diverge on every cycle — `repo-controls.md`)*.
+> 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING, as long as the repo is PRIVATE** — fixed at the root, but a repo configured before the fix still carries the old setting. Full mechanism: `repo-controls.md`, "Full flow".
 > **→ After a promotion on a PRIVATE repo, RECREATE `develop` immediately:**
 > ```bash
 > git switch -c develop main && git push -u origin develop
 > ```
-> *(The script detects and flags this: it compares the `## Branching` block of `CONTRIBUTING.md` to what **actually exists**.)*
+> *(The script now detects and flags this on its own.)*
 
 > ⚠️ **Immutable releases are NOT retroactive.** They must be set up **before v1** — after that, it is too late for releases already published.
 > `configure-repo.sh` handles this **from the private state onward** *(the setting is available there)*: nothing to wait for, and a repo that never flips to public is covered too.
@@ -259,7 +253,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 ## 4 · Flip PRIVATE → PUBLIC
 
-> 🔴 **The most dangerous moment of the lifecycle.** **The entire history becomes public at once** — including a secret buried in a six-month-old commit, pushed during the phase when **no server-side secret scanning existed**. Hence step 1, non-negotiable.
+> 🔴 **The most dangerous moment of the lifecycle** *(why: `repo-controls.md`, "The private → public switch")*. Hence step 1, non-negotiable.
 
 | # | Who | Action |
 |---|---|---|

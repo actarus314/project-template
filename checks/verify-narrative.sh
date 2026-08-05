@@ -50,6 +50,7 @@ BY_EXT = {**dict.fromkeys("sh bash zsh py rb pl r yml yaml toml tf nix jl ps1 cm
           **dict.fromkeys("el lisp clj ini".split(), ";")}
 DATE = re.compile(r"20[0-9]{2}-[0-9]{2}")
 prefix = os.environ.get("MARK_PREFIX", "")
+unknown = set()   # languages this run could not read, published below rather than swallowed
 
 for f in sys.stdin.buffer.read().split(b"\0"):
     if not f:
@@ -59,6 +60,20 @@ for f in sys.stdin.buffer.read().split(b"\0"):
     mark = BY_NAME.get(base) or (BY_EXT.get(name.rsplit(".", 1)[-1]) if "." in base else
                                  ("#" if base.startswith("Dockerfile") else None))
     if not mark:
+        # ASK THE FILE. A name carries no extension precisely where it matters most — `pre-commit`
+        # and `pre-push` are shell, and neither was being read at all. A shebang is the file
+        # declaring its own language, which no list here can keep up with.
+        try:
+            head = pathlib.Path(name).open("rb").readline(200).decode("utf-8", "replace")
+        except Exception:
+            head = ""
+        if head.startswith("#!"):
+            mark = "#"   # every #!-interpreted language this repo can hold comments with #
+    if not mark:
+        # PUBLISHED, never swallowed. A language with no known marker is a file this check did NOT
+        # read, and a silent skip there reads exactly like a clean file — proven on a `.zig` holding
+        # a dated comment, which came back clean.
+        unknown.add(name.rsplit(".", 1)[-1] if "." in base else base)
         continue
     try:
         text = pathlib.Path(name).read_text(encoding="utf-8", errors="replace")
@@ -70,7 +85,13 @@ for f in sys.stdin.buffer.read().split(b"\0"):
             continue
         if DATE.search(line[i:]):
             print(f"{prefix}{name}:{n}:{line.strip()[:150]}")
-' || true; }
+# STDERR, not stdout: stdout is captured as the list of violations, and an extra line there would
+# read as one.
+if unknown:
+    label = prefix or "repo/"
+    print("  (" + label + ": extensions with no known comment marker, not examined: "
+          + " ".join(sorted(unknown)) + ")", file=sys.stderr)
+'; }
 
 # METHODE holds for BOTH repos: repo/ and the neighbouring workspace/, which has its own git.
 # The tone rule stays repo-only (workspace/ is deliberately French, and that rule imposes English),

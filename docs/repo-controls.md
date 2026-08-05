@@ -12,8 +12,8 @@
 - [The flow — where the code goes](#the-flow-where-the-code-goes)
 - [Version pin in production](#version-pin-in-production)
 - [What to enable, and where](#what-to-enable-and-where)
-- [The controls — what verifies the code](#the-controls-what-verifies-the-code)
-- [The house checks — the rules this repo arms itself](#the-house-checks-the-rules-this-repo-arms-itself)
+- [Every control, in one table](#every-control-in-one-table)
+  - [What is merely SET on the server](#what-is-merely-set-on-the-server)
   - [The GATE — one line, and it is the same one everywhere](#the-gate-one-line-and-it-is-the-same-one-everywhere)
   - [The THREE RHYTHMS — what triggers each, and what each costs](#the-three-rhythms-what-triggers-each-and-what-each-costs)
 - [GitHub repo configuration](#github-repo-configuration)
@@ -32,7 +32,7 @@ Everything else follows from that.
 > ### What decides the flow: *a single question*
 > **"Is there a host to VALIDATE before production?"** — that's the **`staging`** capability, and only that one.
 > **Not the language, not Docker.**
-> A `node` project with no host to validate does **not** need `develop`. A Pages site packaged as an image **doesn't either** — the image *is* the page.
+> A `node` project with no host to validate does **not** need `develop`. A Pages site packaged as an image **doesn't either** — the image *is* the page, served by nginx directly.
 > Publishing an **artefact** (tag → ghcr image) is an **independent** capability: it attaches to **both** flows below.
 
 > Branching policy depends on **three independent capabilities**, not on a fixed archetype: reducing the choice to `static`/`node` collapses three distinct questions into one and breaks as soon as the standard case is left behind *(cf. DORA · Fowler · ThoughtWorks Radar)*.
@@ -47,8 +47,7 @@ Everything else follows from that.
 | **`--artefact`** | Does the repo **publish an image that someone ELSE deploys**? *(self-hosters, NUCs…)* | `docker-publish.yml` (**`build-check` + Trivy**) · **tag ruleset** · **immutable releases** · **PUBLIC ghcr package** *(the base image is bumped by Renovate, auto-detected — nothing to declare)* |
 | **`--staging`** | Is there a **host to VALIDATE** before prod? | **`develop`** branch · `develop` ruleset · merge commit onto `main` · **3-stage flow** |
 
-> 🔴 **`develop` does NOT follow from Docker — it follows from STAGING.**
-> A **node** project **with no host to validate** does **not** need `develop`. Neither does **a static site also packaged as an image**: there is no intermediate stage, the image *is* the page served by nginx.
+> 🔴 **`develop` does NOT follow from Docker — it follows from STAGING** — the single question and both examples: [above](#the-flow-where-the-code-goes).
 
 **The need for a staging stage comes from DEPLOYMENT, not from the language or taste.**
 
@@ -67,7 +66,7 @@ Everything else follows from that.
 
 > **`--type generic`** *(universality)*: the toolchain the template doesn't pre-wire. It ships the **security controls** *(language-agnostic: gitleaks, actionlint, zizmor, semgrep, osv `-r .`, + CodeQL when public, + Trivy if `--artefact`)* and a **commented build/test stub** to fill in. An Android or C++ project is thus **secured from day 1**; only the language's `./gradlew`/`cmake`/`cargo` needs adding. ⚠️ osv reminder: it's **lockfile**-oriented — for Gradle, enable dependency-locking *(`gradle.lockfile`)*, otherwise deps aren't scanned.
 
-⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact**: Pages *is* prod, there is **nothing to validate** — the branch would be an empty ritual that drifts until the merge stops happening at all.
+⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact** — why: [Without `staging`](#without-staging-github-flow-two-branches-are-enough) below.
 
 **The triple filter catches this kind of regression before it reaches prod** (cf. "Why 3 stages" below) — but only where a host to validate exists. Elsewhere, it would have filtered nothing.
 
@@ -75,7 +74,7 @@ Everything else follows from that.
 
 ### Without `staging` — GitHub Flow, two branches are enough
 
-This is the case of a Pages site, **and also** that of a static site packaged as an image so third parties can self-host it.
+This is the case of a Pages site *(Pages **is** already prod, so there is nothing to validate upstream)*, **and also** that of a static site packaged as an image so third parties can self-host it.
 Nothing to validate upstream → a `develop` would be an **empty ritual**, and a long-lived branch nobody uses drifts until the merge stops happening.
 
 ```
@@ -304,90 +303,80 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 ---
 
-## The controls — what verifies the code
+## Every control, in one table
 
-### Development machine
+**One table, so a dissonance shows.** These used to be five — the development machine, two CI
+sections, the server, and the house checks — and the same control appeared in two of them with
+different wording. Anything that RUNS is below; what is merely *set* on the server, and so has
+neither a duration nor a trigger, is in the short table after it.
 
-| Where / when | What | With what | How | Private |
-|---|---|---|---|---|
-| Commit | No secret in the staged files | `gitleaks` | hook `.githooks/pre-commit` | ✅ |
-| Push | No direct push to `main`/`develop` | hook `pre-push` | hook `.githooks/pre-push` — *the substitute for the missing ruleset* | ✅ |
+**Reading the columns.** *Looks for* is the defect, not the mechanism. *Where* is the machine that
+runs it. *Travels* says whether a generated project gets it. *Blocks* separates what stops a merge
+from what only draws a list. *Maturity* is the one thing no measurement gives: **settled** = its verdict
+rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
+a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-### Continuous integration — job `checks` (`ci.yml`)
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s**.
+not add up: `check.sh` starts them together, so the lot costs its slowest, not their sum — the whole
+gate runs in about 3,7 s. Anything under 0,4 s does not show at all.
 
-| Where / when | What | With what | How | Private |
-|---|---|---|---|---|
-| Pull request | Secrets across the **full** history | `gitleaks` | pinned binary + checksum | ✅ |
-| Pull request | **Application code** flaws | `semgrep` | `p/security-audit`, `p/owasp-top-ten`, `--exclude=.github` | ✅ |
-| Pull request | Vulnerable dependencies (all manifests, `-r .`) | `osv-scanner` | pinned binary + checksum | ✅ |
-| Pull request | Workflows: syntax + shell | `actionlint` | pinned binary + checksum | ✅ |
-| Pull request | Workflows: `${{ }}` injection, pinning | `zizmor` | config `.github/zizmor.yml` | ✅ |
-| Pull request | Tests · types · npm audit | `npm test` · `npm run typecheck` · `npm audit` | `node` toolchain | ✅ |
-| Pull request | Syntax of all JS | `node --check` | `static` toolchain | ✅ |
-| Pull request | Incoming dependency + **licenses** | `dependency-review` | gated on public (requires GHAS) | ❌ |
+| Control | Looks for | Where | When | Travels | Maturity | Time | Blocks? |
+|---|---|---|---|---|---|---|---|
+| `gitleaks` *(hook)* | a secret in the staged files | local | every commit | ✅ | settled | 0,3 s | ✅ **the only local blocker** |
+| `pre-push` *(hook)* | a push straight to `main`/`develop` | local | every push | ✅ | settled | instant | ✅ |
+| `gitleaks` *(CI)* | a secret anywhere in the **whole history** | GitHub | every PR | ✅ | settled | ~2 s | ✅ |
+| `semgrep` | flaws in the application code | GitHub | every PR | ✅ | settled | ~15 s | ✅ |
+| `osv-scanner` | dependencies with a known vulnerability | GitHub | every PR | ✅ | settled | ~3 s | ✅ |
+| `actionlint` | broken syntax or shell in the workflows | GitHub | every PR | ✅ | settled | ~1 s | ✅ |
+| `zizmor` | a `${{ }}` injected into a `run:`, an unpinned action | GitHub | every PR | ✅ | settled | ~4 s | ✅ |
+| `shellcheck` | bugs in the shell scripts | both | a `.sh` moved | ✅ | settled | ~1 s | ✅ |
+| `renovate-config-validator` | a Renovate config so broken updates freeze | local | that file moved | ✅ | settled | ~4 s | ✅ |
+| `trivy` *(`build-check`)* | a CRITICAL/HIGH CVE in the image — capability `artefact` | GitHub | every PR | ✅ | settled | ~30 s | ✅ |
+| `trivy` *(weekly)* | the **published** image going vulnerable with nothing saying so | GitHub | weekly | ✅ | settled | ~30 s | ❌ it alerts |
+| `CodeQL` | flaws spanning several files — **public repositories only** | GitHub | PR + weekly | ✅ | settled | ~2 min | ✅ |
+| `dependency-review` | a vulnerable or badly-licensed dependency getting **in** — public only | GitHub | every PR | ✅ | settled | ~5 s | ✅ |
+| `checks/verify-tone.sh` | the second person (`you`/`your`, `tu`/`vous`) in published content | both | every commit | ✅ | settled | 0,08 s | ✅ |
+| `checks/verify-narrative.sh` | a dated story told in a code comment — it belongs in the archive | both | every commit | ✅ | settled | 0,08 s | ✅ |
+| `checks/verify-workspace.sh` | two tracking systems competing, or a secret tracked by git | both | every commit | ✅ | **needs watching** — the list of rival tools cannot be complete, and it names what it looked for | 0,12 s | ✅ |
+| `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,11 s | ✅ |
+| `checks/verify-checks-wiring.sh` | a control declared nowhere, or **the gate missing from a workflow** | both | every commit | ✅ | settled | 0,06 s | ✅ |
+| `checks/verify-memories.sh` | a memory absent from its index, a `[[link]]` leading nowhere | local | every commit | ✅ | settled | 0,06 s | ✅ *(nothing to read under CI, and it says so)* |
+| `checks/verify-do-not-break.sh` | the four wirings whose breakage makes no sound | both | every commit | ✅ | settled | 0,08 s | ✅ |
+| `checks/verify-checksums.sh` | an `.html` that stopped saying what its `.md` says | both | every commit | ✅ | **needs watching** — a matching checksum proves the file was touched, never that it says the same thing | 0,10 s | ✅ |
+| `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL | both | every commit | ✅ | settled | 0,12 s | ✅ |
+| `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,10 s | ✅ |
+| `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,91 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-comment-drift.sh` | a comment growing faster than the code it explains | both | a `.sh` moved | ✅ | **needs watching** — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was **34 lines against 36** | 0,85 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,55 s | ✅ |
+| `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 0,25 s | ✅ *(made blocking 2026-08-05)* |
+| `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,77 s | ✅ |
+| `checks/verify-delegation.sh` | a subagent launched without its three instructions | local | before the launch | ✅ | **needs watching** — a hook, and a hook nothing declares simply never fires | instant | n/a — refuses the launch |
+| `checks/verify-forbidden-command.sh` | a command forbidden here, before it runs | local | before the command | ✅ | **needs watching** — same reason | instant | n/a — refuses the command |
+| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that | instant | n/a — reports only |
 
-### Continuous integration — other jobs
-
-| Where / when | What | With what | How | Private |
-|---|---|---|---|---|
-| Pull request | Docker image CVEs (CRITICAL/HIGH) | `trivy` | job `build-check` — **required check** | ✅ |
-| PR + push | **Cross-file** static analysis | `CodeQL` | **default setup** (enabled by `configure-repo.sh`) — public only | ❌ |
-| Repo **without CI** | Secrets (full history) | `gitleaks` | standalone `gitleaks.yml` — PR + weekly | ✅ |
-
-### Server — set up by `configure-repo.sh`
-
-| Where / when | What | With what | How | Private |
-|---|---|---|---|---|
-| Merge | PR mandatory · **required** checks · no force-push | `main` / `develop` rulesets | unavailable in private (Free) | ❌ |
-| Tag | `v*` tag can't be moved or deleted | `tags` ruleset | without it, the prod pin means nothing | ❌ |
-| Release | Assets can't be replaced | immutable releases | `PUT /immutable-releases` — **not retroactive** | ❌ |
-| Server push | Secret in the push | secret scanning + push protection | native GitHub | ❌ |
-| After release | **Is the image pullable?** | `curl ghcr.io/v2/…/manifests` | **anonymous** test, like the prod host | ❌ |
-
-### Publication & monitoring
-
-| Where / when | What | With what | How | Private |
-|---|---|---|---|---|
-| Push tag `v*` | Image published to ghcr | `docker-publish.yml` › `build-push` | triggered by the tag | ✅ |
-| Weekly | Updates for all dependencies (npm · docker · actions · pip…) | Renovate | `renovate.json` — auto-detected, minor/patch grouped | ✅ |
-| Weekly | CVEs of the **PUBLISHED** image (CRITICAL/HIGH) | `trivy` | `docker-publish.yml` › `scheduled-scan` — same flags as `build-check` | ✅ |
-| Continuous | Dependency CVEs (**detection**) | Dependabot alerts | native — free even in private; Renovate **reads** these alerts and opens the fix PR (**remediation**) | ✅ |
-
----
-
-## The house checks — the rules this repo arms itself
-
-**A rule held by discipline alone is a rule re-established by periodic manual passes — never a rule that holds.** Everything below is armed: `check.sh` runs it, and so does the CI.
-
-**This table is the single place that list lives.** Anything else needing it — a tracking doc, a note — links here rather than repeating it: three partial copies once coexisted, and the three disagreed on how many there were.
-
-🔴 **ALL of them travel, and none of them is told where it is.** `init-project.sh` copies `checks/` whole, and every check **DETECTS whether its subject exists where it lands**: present, it bites; absent, it says so and returns 0. Three used to be named one by one, and the other fifteen stayed behind for no reason beyond the order they were written in — the question *"does this one deserve to travel?"* has no addressee, because only the check, at the place, can answer it.
-
-🔴 **And a generated project has the GATE, not just the checks.** Its `ci.yml` carries the same single line this repository's does — `./check.sh --house` — behind which everything under `checks/` runs. A check added is a file dropped in, with no workflow to edit, in any project. *(Before that line existed, no generated workflow called a `verify-*` at all: the checks shipped, ran locally at best, and gated nothing.)* `verify-checks-wiring.sh` fails the build if that line leaves any gating workflow, here or in the templates.
-
-> **Why a check stops where it stops** is a question of writing, not of tooling. The *Perimeter* column below **applies** a discriminator it does not restate: → [`METHODE.md`](METHODE.md), *"What is ARMED — and how far a rule travels"*.
+> **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and
+> a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.
+> The three hooks travel too; a project that wants them has to declare them in its own settings.
+> The external tools travel through the workflow templates, at the versions those files pin.
 >
-> ⚠️ **The perimeter is what a check READS, never where it is allowed to run.** A check whose subject lives outside the repository still runs at the gate — it reports there that it had nothing to read, which is a verdict, where a silence was not.
+> ⚠️ **`local`, `GitHub` or `both`** describes where the control RUNS, never what it may look at.
+> `verify-memories.sh` runs at the gate like the others — it reports there that it found no memories
+> to read, which is a verdict where silence was not one.
 
-| Check | Perimeter | Moment | Blocks at the gate? |
-|---|---|---|---|
-| `checks/verify-delegation.sh` | **any delegation**, wherever it happens | **before** — refuses the launch | n/a — a `PreToolUse` hook, declared **by absolute path** in the assistant's settings, so it covers the sessions that declare it and no generated project |
-| `checks/verify-tone.sh` | **`repo/` only** | after | ✅ |
-| `checks/verify-narrative.sh` | **`repo/` AND `workspace/`** — a method rule follows the method | after | ✅ |
-| `checks/verify-links.sh` | `repo/` AND `workspace/` | after | ✅ |
-| `checks/verify-secret-blindspots.sh` | `repo/` AND `workspace/` — a tracked file NAMED like a secret, and a credential pasted into a remote URL *(`.git/config` is never tracked, so gitleaks never reads it)* | after | ✅ |
-| `checks/verify-changelog.sh` | the **branch**, against a perimeter of published paths **detected, never listed** — needs `fetch-depth: 0` | after | ✅ |
-| `checks/verify-checksums.sh` · `verify-version.sh` | the `.md`/`.html` pairs, and the tag — each absent from a fresh project, each said out loud | after | ✅ *(`verify-version.sh` needs `fetch-tags: true`: without the tags it passes by finding nothing)* |
-| `checks/verify-travel.sh` | wherever a **generator** is — it reads a project it generates | after | ✅ — silent-no-more where no `init-project.sh` exists, which is every generated project |
-| `checks/verify-memories.sh` | outside both — memories belong to neither | after | ✅ — it runs there and **names the folder it found none in**. A CI has no memories, and saying so is the verdict |
-| `checks/verify-workspace.sh` | `workspace/` only — no remote, nothing secret tracked | after | ✅ — same shape: at the gate it reports that no `workspace/` sits beside the checkout |
-| `checks/verify-forbidden-command.sh` | any shell command, wherever it is run | **before** — refuses the three whose verdict is literal, states the question on the fourth | n/a — a `PreToolUse` hook on `Bash`, declared **by absolute path** in the assistant's settings |
-| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what that turn ran — the thirteen others watch files, none watched this | **as the turn ends** — reports, never blocks | n/a — a `Stop` hook, declared **by absolute path** in the assistant's settings. Its two patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 % |
-| `checks/verify-checks-wiring.sh` | this table, the runner's hook exclusions, **and the gate line in every gating workflow** — the part that says something in a generated project too | after | ✅ |
-| `checks/verify-echo.sh` | `repo/` **AND** `workspace/`, each on its own — a method rule follows the method, but the two repositories are in different languages | after | ❌ **deliberate** — it draws a list, some pairs being legitimate |
-| `checks/verify-comment-drift.sh` | `repo/` — the scripts, not the prose | after | ❌ **deliberate** — advisory |
-| `checks/verify-growth.sh` | `repo/` **AND** `workspace/` — concision is a rule of method, and the document named as the one that must shrink lives there | after | ❌ **deliberate** — advisory, it blocks nowhere |
-| `checks/verify-do-not-break.sh` | the skill symlink and the assistant's absolute pointers, outside both — **plus** the force-added files, inside | after | ✅ for the third target: `git rm --cached` happens in a **pull request**, and it ships silently into every generated project. The other two skip cleanly there, their subject being outside the repository |
+### What is merely SET on the server
+
+These are not run, they are **in force**. All of them require a **public** repository *(rulesets, secret
+scanning and CodeQL are unavailable on private/Free — the visibility gate)*.
+
+| Control | What it prevents | Set by |
+|---|---|---|
+| `main` ruleset | a merge with no PR, a red merge, a force-push | `configure-repo.sh` |
+| `develop` ruleset *(capability `staging`)* | same, minus CodeQL, which never analyses that branch | `configure-repo.sh` |
+| `tags` ruleset + immutable releases | a released tag being moved, its assets replaced — **without both, pinning a version in production guarantees nothing** | `configure-repo.sh` |
+| secret scanning + push protection | a known secret reaching the server at all | `configure-repo.sh` |
+| private vulnerability reporting | a researcher having no way to report privately, so publishing instead | `configure-repo.sh` |
+| Dependabot alerts | a dependency going vulnerable with nothing saying so | `configure-repo.sh` |
+| Renovate | dependencies and pinned tools falling behind | `renovate.json` |
 
 ### The GATE — one line, and it is the same one everywhere
 
@@ -562,8 +551,7 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 > gh run list --commit "$sha" --json workflowName,status,conclusion
 > ```
 >
-> **GREEN ⇔ ALL EXPECTED workflows are `completed / success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists — *the same set as the ruleset's required checks, derived the same way (presence of the workflow)*, so the human barrier and the server that will replace it at the flip say exactly the same thing.
-> ⚠️ **A MISSING workflow is NOT a green.** GitHub registers workflows **one by one**: for a few seconds after a push, `CI` can be `success` while `Publish image` hasn't been created yet. Settling for "nothing red" then declares the PR mergeable **while missing a check**. **"Nothing red" ≠ "everything green".**
+> **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
 
 The `pre-push` hook **lets branch creation through** (otherwise a fresh repo's first push would be impossible) and **stays active in public** — the server then refuses the same push, but the local message is far clearer. *Defense in depth.*
 

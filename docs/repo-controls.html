@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:42d74c3a836c0792a0af186b1b39a91bb22cb782cdedfe9efbe8a29433758013
+  checksum-source-md: sha256:b0577cff3f151130b962c6293f0bfd514a7ceb416b7c35024861ef0eec9e8ae1
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -325,7 +325,7 @@
 
   <div class="note" style="margin-top:18px">
     <h3>🔴 <code>develop</code> does NOT follow from Docker — it follows from STAGING</h3>
-    <p>A <strong>node</strong> project with no host to validate does not need <code>develop</code>. Neither does a static site also packaged as an image: there is no intermediate stage — the image <em>is</em> the page served by nginx.</p>
+    <p>The single question, and both examples, live in <a href="#the-flow-where-the-code-goes">The flow — where the code goes</a>.</p>
     <p>The need for a staging stage comes from DEPLOYMENT, not from the language or taste.</p>
   </div>
 
@@ -417,7 +417,7 @@
   </div>
 
   <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:0 0 4px">Without <code>staging</code> — GitHub Flow, two branches are enough</h3>
-  <p class="sub" style="margin-bottom:18px">This is the case of a Pages site, <strong>and also</strong> that of a static site packaged as an image so third parties can self-host it. Nothing to validate upstream → a <code>develop</code> would be an <strong>empty ritual</strong>, and a long-lived branch nobody uses drifts until the merge stops happening.</p>
+  <p class="sub" style="margin-bottom:18px">This is the case of a Pages site <em>(Pages <strong>is</strong> already prod, so there is nothing to validate upstream)</em>, <strong>and also</strong> that of a static site packaged as an image so third parties can self-host it. Nothing to validate upstream → a <code>develop</code> would be an <strong>empty ritual</strong>, and a long-lived branch nobody uses drifts until the merge stops happening.</p>
 
   <div class="graph">
     <svg viewBox="0 0 760 150" role="img" aria-label="Static flow: feat to main, one pull request">
@@ -1327,7 +1327,7 @@
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
     <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>: it reads <code>statusCheckRollup</code>, which requires the <code>Checks</code> permission — <strong>documented by GitHub but absent from the UI</strong> of fine-grained PATs, so impossible to grant. The result is <code>Resource not accessible by personal access token</code>, and <code>gh pr view &lt;n&gt;</code> alone fails for the same reason. The rule was written everywhere, and <strong>unenforceable everywhere</strong>.</p>
     <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha" --json workflowName,status,conclusion</code>. The <code>--json</code> form targets a field, so no rollup is requested — and it is what makes each workflow's <code>completed / success</code> readable one by one.</p>
-    <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong>: <code>CI</code>, plus <code>Publish image</code> if <code>docker-publish.yml</code> exists — the same set as the ruleset's required checks, derived the same way. ⚠️ <strong>A MISSING workflow is not a green.</strong> GitHub registers workflows one by one: for a few seconds after a push, <code>CI</code> can be <code>success</code> while <code>Publish image</code> has not been created yet. <strong>"Nothing red" ≠ "everything green".</strong></p>
+    <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong> — the exact set, and why a missing workflow is not a green, live in <code>AGENTS.md</code>, “Discipline — PR-only”.</p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
   </div>
 </section>
@@ -1475,125 +1475,389 @@
 </section>
 
 <section>
-  <h2>The house checks</h2>
-  <p class="sub">Eighteen scripts under <code>checks/</code>, each arming one rule that discipline alone kept losing. This table is the single place that list lives — three partial copies once coexisted, and the three disagreed on how many there were.</p>
+  <h2>Every control, in one table</h2>
+  <p class="sub"><strong>One table, so a dissonance shows.</strong> These used to be five — the development machine, two CI sections, the server, and the house checks — and the same control appeared in two of them with different wording. Anything that RUNS is below; what is merely <em>set</em> on the server, and so has neither a duration nor a trigger, is in the short table after it.</p>
 
-  <p>A rule held by discipline alone is a rule re-established by periodic manual passes — never a rule that holds. Everything below is armed: <code>check.sh</code> runs it, and so does the CI.</p>
+  <p><strong>Reading the columns.</strong> <em>Looks for</em> is the defect, not the mechanism. <em>Where</em> is the machine that runs it. <em>Travels</em> says whether a generated project gets it. <em>Blocks</em> separates what stops a merge from what only draws a list. <em>Maturity</em> is the one thing no measurement gives: <strong>settled</strong> = its verdict rests on a fact (a path, a tag, a tracked file) and has held; <strong>needs watching</strong> = its verdict rests on a threshold or a wording chosen by hand, so it can be wrong in both directions.</p>
 
   <div class="note">
-    <h3>All checks travel, and the gate travels with them</h3>
-    <p>🔴 <strong>ALL of them travel, and none of them is told where it is.</strong> <code>init-project.sh</code> copies <code>checks/</code> whole, and every check <strong>DETECTS whether its subject exists where it lands</strong>: present, it bites; absent, it says so and returns 0. Three used to be named one by one, and the other fifteen stayed behind for no reason beyond the order they were written in — the question <em>"does this one deserve to travel?"</em> has no addressee, because only the check, at the place, can answer it.</p>
-    <p>🔴 <strong>And a generated project has the GATE, not just the checks.</strong> Its <code>ci.yml</code> carries the same single line this repository's does — <code>./check.sh --house</code> — behind which everything under <code>checks/</code> runs. A check added is a file dropped in, with no workflow to edit, in any project. <em>(Before that line existed, no generated workflow called a <code>verify-*</code> at all: the checks shipped, ran locally at best, and gated nothing.)</em> <code>verify-checks-wiring.sh</code> fails the build if that line leaves any gating workflow, here or in the templates.</p>
-    <p>→ <strong>Why a check stops where it stops</strong> is a question of writing, not of tooling. The <em>Perimeter</em> column applies a discriminator it does not restate: see <code>METHODE.md</code>, <em>"What is ARMED — and how far a rule travels"</em>.</p>
-    <p>⚠️ <strong>The perimeter is what a check READS, never where it is allowed to run.</strong> A check whose subject lives outside the repository still runs at the gate — it reports there that it had nothing to read, which is a verdict, where a silence was not.</p>
+    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1,7x to 4,1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
+    <p>They do not add up: <code>check.sh</code> starts them together, so the lot costs its slowest, not their sum — the whole gate runs in about 3,7 s. Anything under 0,4 s does not show at all.</p>
   </div>
 
   <div class="tablewrap">
     <table>
       <thead>
-        <tr><th>Check</th><th>Perimeter</th><th>Moment</th><th>Blocks at the gate?</th></tr>
+        <tr><th>Control</th><th>Looks for</th><th>Where</th><th>When</th><th>Travels</th><th>Maturity</th><th>Time</th><th>Blocks?</th></tr>
       </thead>
       <tbody>
-        <tr class="grp" role="row"><td colspan="4">Fired by the assistant's own events — <code>check.sh</code> never starts them</td></tr>
         <tr>
-          <td class="w"><code>checks/verify-delegation.sh</code></td>
-          <td>any delegation, wherever it happens</td>
-          <td class="t"><strong>before</strong> — refuses the launch</td>
-          <td class="h">n/a — a <code>PreToolUse</code> hook, declared by absolute path in the assistant's settings, so it covers the sessions that declare it and no generated project</td>
+          <td class="w"><code>gitleaks</code> <em>(hook)</em></td>
+          <td>a secret in the staged files</td>
+          <td class="h">local</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,3 s</td>
+          <td>✅ <strong>the only local blocker</strong></td>
         </tr>
         <tr>
-          <td class="w"><code>checks/verify-forbidden-command.sh</code></td>
-          <td>any shell command, wherever it is run</td>
-          <td class="t"><strong>before</strong> — refuses the three whose verdict is literal, states the question on the fourth</td>
-          <td class="h">n/a — a <code>PreToolUse</code> hook on <code>Bash</code>, same wiring</td>
+          <td class="w"><code>pre-push</code> <em>(hook)</em></td>
+          <td>a push straight to <code>main</code>/<code>develop</code></td>
+          <td class="h">local</td>
+          <td>every push</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">instant</td>
+          <td>✅</td>
         </tr>
         <tr>
-          <td class="w"><code>checks/verify-turn-claims.sh</code></td>
-          <td>what the assistant ASSERTS as a turn ends, against what that turn ran — the others watch files, none watched this</td>
-          <td class="t"><strong>as the turn ends</strong> — reports, never blocks</td>
-          <td class="h">n/a — a <code>Stop</code> hook. Its patterns were tuned on 4463 real turns: the obvious wordings fired on 15 % of them, these on under 1 %</td>
+          <td class="w"><code>gitleaks</code> <em>(CI)</em></td>
+          <td>a secret anywhere in the <strong>whole history</strong></td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~2 s</td>
+          <td>✅</td>
         </tr>
-
-        <tr class="grp" role="row"><td colspan="4">Run by <code>check.sh</code> and required by the CI</td></tr>
         <tr>
-          <td class="w"><code>checks/verify-tone.sh</code></td><td><code>repo/</code> only</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+          <td class="w"><code>semgrep</code></td>
+          <td>flaws in the application code</td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~15 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>osv-scanner</code></td>
+          <td>dependencies with a known vulnerability</td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~3 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>actionlint</code></td>
+          <td>broken syntax or shell in the workflows</td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~1 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>zizmor</code></td>
+          <td>a <code>${{ }}</code> injected into a <code>run:</code>, an unpinned action</td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~4 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>shellcheck</code></td>
+          <td>bugs in the shell scripts</td>
+          <td class="h">both</td>
+          <td>a <code>.sh</code> moved</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~1 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>renovate-config-validator</code></td>
+          <td>a Renovate config so broken updates freeze</td>
+          <td class="h">local</td>
+          <td>that file moved</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~4 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>trivy</code> <em>(<code>build-check</code>)</em></td>
+          <td>a CRITICAL/HIGH CVE in the image — capability <code>artefact</code></td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~30 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>trivy</code> <em>(weekly)</em></td>
+          <td>the <strong>published</strong> image going vulnerable with nothing saying so</td>
+          <td class="h">GitHub</td>
+          <td>weekly</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~30 s</td>
+          <td>❌ it alerts</td>
+        </tr>
+        <tr>
+          <td class="w"><code>CodeQL</code></td>
+          <td>flaws spanning several files — <strong>public repositories only</strong></td>
+          <td class="h">GitHub</td>
+          <td>PR + weekly</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~2 min</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>dependency-review</code></td>
+          <td>a vulnerable or badly-licensed dependency getting <strong>in</strong> — public only</td>
+          <td class="h">GitHub</td>
+          <td>every PR</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">~5 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-tone.sh</code></td>
+          <td>the second person (<code>you</code>/<code>your</code>, <code>tu</code>/<code>vous</code>) in published content</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,08 s</td>
+          <td>✅</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-narrative.sh</code></td>
-          <td><code>repo/</code> AND <code>workspace/</code> — a method rule follows the method</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-links.sh</code></td><td><code>repo/</code> AND <code>workspace/</code></td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-secret-blindspots.sh</code></td>
-          <td><code>repo/</code> AND <code>workspace/</code> — a tracked file NAMED like a secret, and a credential pasted into a remote URL (<code>.git/config</code> is never tracked, so gitleaks never reads it)</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-changelog.sh</code></td>
-          <td>the <strong>branch</strong>, against a perimeter of published paths <strong>detected, never listed</strong> — needs <code>fetch-depth: 0</code></td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-checksums.sh</code> · <code>verify-version.sh</code></td>
-          <td>the <code>.md</code>/<code>.html</code> pairs, and the tag — each absent from a fresh project, each said out loud</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span> (<code>verify-version.sh</code> needs <code>fetch-tags: true</code>: without the tags it passes by finding nothing)</td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-travel.sh</code></td>
-          <td>wherever a <strong>generator</strong> is — it reads a project it generates</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span> — silent-no-more where no <code>init-project.sh</code> exists, which is every generated project</td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-checks-wiring.sh</code></td>
-          <td>this table, the runner's hook exclusions, <strong>and the gate line in every gating workflow</strong> — the part that says something in a generated project too</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-memories.sh</code></td>
-          <td>outside both — memories belong to neither</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill on">gate</span> — it runs there and <strong>names the folder it found none in</strong>. A CI has no memories, and saying so is the verdict</td>
+          <td>a dated story told in a code comment — it belongs in the archive</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,08 s</td>
+          <td>✅</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-workspace.sh</code></td>
-          <td><code>workspace/</code> only — no remote, nothing secret tracked</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill on">gate</span> — same shape: at the gate it reports that no <code>workspace/</code> sits beside the checkout</td>
+          <td>two tracking systems competing, or a secret tracked by git</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for</td>
+          <td class="t">0,12 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-links.sh</code></td>
+          <td>a relative link or an anchor leading nowhere</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,11 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-checks-wiring.sh</code></td>
+          <td>a control declared nowhere, or <strong>the gate missing from a workflow</strong></td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,06 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-memories.sh</code></td>
+          <td>a memory absent from its index, a <code>[[link]]</code> leading nowhere</td>
+          <td class="h">local</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,06 s</td>
+          <td>✅ <em>(nothing to read under CI, and it says so)</em></td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-do-not-break.sh</code></td>
-          <td>the skill symlink and the assistant's absolute pointers, outside both — <strong>plus</strong> the force-added files, inside</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill on">gate</span> for the third target: <code>git rm --cached</code> happens in a pull request, and it ships silently into every generated project</td>
-        </tr>
-
-        <tr class="grp" role="row"><td colspan="4">Run by <code>check.sh</code>, outside the gate — and it is deliberate</td></tr>
-        <tr>
-          <td class="w"><code>checks/verify-echo.sh</code></td>
-          <td><code>repo/</code> AND <code>workspace/</code>, each on its own — a method rule follows the method, but the two repositories are in different languages</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill off">advisory</span> it draws a list, some pairs being legitimate</td>
+          <td>the four wirings whose breakage makes no sound</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,08 s</td>
+          <td>✅</td>
         </tr>
         <tr>
-          <td class="w"><code>checks/verify-comment-drift.sh</code></td>
-          <td><code>repo/</code> — the scripts, not the prose</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill off">advisory</span></td>
+          <td class="w"><code>checks/verify-checksums.sh</code></td>
+          <td>an <code>.html</code> that stopped saying what its <code>.md</code> says</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — a matching checksum proves the file was touched, never that it says the same thing</td>
+          <td class="t">0,10 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-secret-blindspots.sh</code></td>
+          <td>a file NAMED like a secret, a password inside a remote URL</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">0,12 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-changelog.sh</code></td>
+          <td>a user-visible change with no <code>CHANGELOG</code> line</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em></td>
+          <td class="t">0,10 s</td>
+          <td>✅</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-growth.sh</code></td>
-          <td><code>repo/</code> AND <code>workspace/</code> — concision is a rule of method, and the document named as the one that must shrink lives there</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill off">advisory</span> it blocks nowhere</td>
+          <td>a curated document that only ever grows</td>
+          <td class="h">both</td>
+          <td>a <code>.md</code> moved</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the 25 % threshold is a judgement call</td>
+          <td class="t">0,91 s</td>
+          <td>✅ (made blocking 2026-08-05)</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-comment-drift.sh</code></td>
+          <td>a comment growing faster than the code it explains</td>
+          <td class="h">both</td>
+          <td>a <code>.sh</code> moved</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was <strong>34 lines against 36</strong></td>
+          <td class="t">0,85 s</td>
+          <td>✅ (made blocking 2026-08-05)</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-version.sh</code></td>
+          <td>the tag, the <code>CHANGELOG</code> and every script disagreeing on the version</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>settled <em>(needs <code>fetch-tags</code>, or it passes by finding nothing)</em></td>
+          <td class="t">0,55 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-echo.sh</code></td>
+          <td>two paragraphs stating the same thing in different words</td>
+          <td class="h">both</td>
+          <td>a <code>.md</code> moved</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold</td>
+          <td class="t">0,25 s</td>
+          <td>✅ (made blocking 2026-08-05)</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-travel.sh</code></td>
+          <td>a path written here that leads nowhere once the file has shipped</td>
+          <td class="h">both</td>
+          <td><code>templates/</code>, <code>checks/</code> moved</td>
+          <td class="p">✅</td>
+          <td>settled</td>
+          <td class="t">1,77 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-delegation.sh</code></td>
+          <td>a subagent launched without its three instructions</td>
+          <td class="h">local</td>
+          <td>before the launch</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires</td>
+          <td class="t">instant</td>
+          <td>n/a — refuses the launch</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-forbidden-command.sh</code></td>
+          <td>a command forbidden here, before it runs</td>
+          <td class="h">local</td>
+          <td>before the command</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — same reason</td>
+          <td class="t">instant</td>
+          <td>n/a — refuses the command</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-turn-claims.sh</code></td>
+          <td>what the assistant ASSERTS as a turn ends, against what the turn ran</td>
+          <td class="h">local</td>
+          <td>end of turn</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that</td>
+          <td class="t">instant</td>
+          <td>n/a — reports only</td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <div class="note">
+    <p><strong>Travels: yes, all of them, and that is the rule</strong> — <code>init-project.sh</code> copies <code>checks/</code> whole, and a control DETECTS whether its subject exists where it lands: present it bites, absent it says so. The three hooks travel too; a project that wants them has to declare them in its own settings. The external tools travel through the workflow templates, at the versions those files pin.</p>
+    <p>⚠️ <strong><code>local</code>, <code>GitHub</code> or <code>both</code></strong> describes where the control RUNS, never what it may look at. <code>verify-memories.sh</code> runs at the gate like the others — it reports there that it found no memories to read, which is a verdict where silence was not one.</p>
+  </div>
+
+  <h3>What is merely SET on the server</h3>
+  <p>These are not run, they are <strong>in force</strong>. All of them require a <strong>public</strong> repository <em>(rulesets, secret scanning and CodeQL are unavailable on private/Free — the visibility gate)</em>.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Control</th><th>What it prevents</th><th>Set by</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="w"><code>main</code> ruleset</td>
+          <td>a merge with no PR, a red merge, a force-push</td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w"><code>develop</code> ruleset <em>(capability <code>staging</code>)</em></td>
+          <td>same, minus CodeQL, which never analyses that branch</td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w"><code>tags</code> ruleset + immutable releases</td>
+          <td>a released tag being moved, its assets replaced — <strong>without both, pinning a version in production guarantees nothing</strong></td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w">secret scanning + push protection</td>
+          <td>a known secret reaching the server at all</td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w">private vulnerability reporting</td>
+          <td>a researcher having no way to report privately, so publishing instead</td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w">Dependabot alerts</td>
+          <td>a dependency going vulnerable with nothing saying so</td>
+          <td class="t"><code>configure-repo.sh</code></td>
+        </tr>
+        <tr>
+          <td class="w">Renovate</td>
+          <td>dependencies and pinned tools falling behind</td>
+          <td class="t"><code>renovate.json</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
 
   <h3>The gate — one line, and it is the same one everywhere</h3>
   <p><code>./check.sh --house</code> runs the house checks <strong>and nothing else</strong>: <code>gitleaks</code>, <code>semgrep</code>, <code>osv-scanner</code>, <code>actionlint</code> and <code>zizmor</code> are the CI's own steps, at versions it pins and checksums itself, and replaying them inside the same job would download and rerun the whole lot for the same verdict.</p>
@@ -1670,145 +1934,6 @@
   <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
   </div>
 </section>
-
-<section>
-  <h2>Reference table</h2>
-  <p class="sub">The <em>Private</em> column is the only one that matters for knowing what protects the repo today.</p>
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr><th>Where / when</th><th>What</th><th>With what</th><th>How</th><th>Private</th></tr>
-      </thead>
-      <tbody>
-        <tr class="grp"><td colspan="5">Development machine</td></tr>
-        <tr>
-          <td class="w">Commit</td><td>No secret in the staged files</td>
-          <td class="t">gitleaks</td><td class="h">hook <code>.githooks/pre-commit</code></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Push</td><td>No direct push to <code>main</code>/<code>develop</code></td>
-          <td class="t">pre-push hook</td><td class="h">hook <code>.githooks/pre-push</code></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-
-        <tr class="grp"><td colspan="5">Continuous integration — job <code>checks</code> (ci.yml)</td></tr>
-        <tr>
-          <td class="w">Pull request</td><td>Secrets across the full history</td>
-          <td class="t">gitleaks</td><td class="h">pinned binary + checksum</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Application code flaws</td>
-          <td class="t">semgrep</td><td class="h"><code>p/security-audit</code>, <code>p/owasp-top-ten</code></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Vulnerable dependencies (all manifests, <code>-r .</code>)</td>
-          <td class="t">osv-scanner</td><td class="h">pinned binary + checksum</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Workflows: syntax + shell</td>
-          <td class="t">actionlint</td><td class="h">pinned binary + checksum</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Workflows: injection, pinning</td>
-          <td class="t">zizmor</td><td class="h">config <code>.github/zizmor.yml</code></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Tests · types · npm audit</td>
-          <td class="t">npm test · npm run typecheck · npm audit</td><td class="h"><code>node</code> toolchain</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Syntax of all JS files</td>
-          <td class="t">node --check</td><td class="h"><code>static</code> toolchain</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Pull request</td><td>Incoming dependency + licenses</td>
-          <td class="t">dependency-review</td><td class="h">gated on public (requires GHAS)</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-
-        <tr class="grp"><td colspan="5">Continuous integration — other jobs</td></tr>
-        <tr>
-          <td class="w">Pull request</td><td>Docker image CVEs (CRITICAL/HIGH)</td>
-          <td class="t">trivy</td><td class="h">job <code>build-check</code> — <strong>required check</strong></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">PR + push</td><td>Cross-file static analysis</td>
-          <td class="t">CodeQL</td><td class="h"><strong>default setup</strong> — enabled by <code>configure-repo.sh</code>, public only</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-        <tr>
-          <td class="w">Repo without CI</td><td>Secrets (full history)</td>
-          <td class="t">gitleaks</td><td class="h"><code>gitleaks.yml</code> standalone — PR + weekly</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-
-        <tr class="grp"><td colspan="5">Server — set up by <code>configure-repo.sh</code></td></tr>
-        <tr>
-          <td class="w">Merge</td><td>PR mandatory · required checks · no force-push</td>
-          <td class="t">main / develop rulesets</td><td class="h">unavailable in private (Free)</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-        <tr>
-          <td class="w">Tag</td><td><code>v*</code> tag can't be moved or deleted</td>
-          <td class="t">tags ruleset</td><td class="h">without it, the prod pin means nothing</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-        <tr>
-          <td class="w">Release</td><td>Assets can't be replaced</td>
-          <td class="t">immutable releases</td><td class="h"><code>PUT /immutable-releases</code> — not retroactive</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-        <tr>
-          <td class="w">Server push</td><td>Secret in the push</td>
-          <td class="t">secret scanning + push protection</td><td class="h">native GitHub</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-        <tr>
-          <td class="w">After release</td><td>Is the image pullable?</td>
-          <td class="t">curl ghcr.io/v2/…/manifests</td><td class="h">test <strong>anonymous</strong>, like the prod host</td>
-          <td class="p"><span class="pill off">dormant</span></td>
-        </tr>
-
-        <tr class="grp"><td colspan="5">Publication &amp; monitoring</td></tr>
-        <tr>
-          <td class="w">Push tag <code>v*</code></td><td>Image published to ghcr</td>
-          <td class="t">docker-publish.yml › build-push</td><td class="h">triggered by the tag</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Weekly</td><td>Updates for all dependencies (npm · docker · actions · pip…)</td>
-          <td class="t">Renovate</td><td class="h"><code>renovate.json</code> — auto-detected, minor/patch grouped</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Weekly</td><td>CVEs of the <strong>PUBLISHED</strong> image (CRITICAL/HIGH)</td>
-          <td class="t">trivy</td><td class="h"><code>docker-publish.yml</code> › <code>scheduled-scan</code> — same flags as <code>build-check</code>. A <strong>watch</strong> scan, not a gate: it alerts.</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Rotation</td><td>Write PAT — <strong>J-14 alert</strong> in <code>.envrc</code></td>
-          <td class="t">every 90 days</td><td class="h">Claude alerts · the maintainer regenerates <em>(the PAT model: <code>secrets-and-auth.md</code>)</em></td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-        <tr>
-          <td class="w">Continuous</td><td>Dependency CVEs (<strong>detection</strong>)</td>
-          <td class="t">Dependabot alerts</td><td class="h">native — free even in private; Renovate <strong>reads</strong> these alerts and opens the fix PR</td>
-          <td class="p"><span class="pill on">active</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
 <footer>Source of truth for this page: docs/repo-controls.md · neighbouring subjects: secrets-and-auth.md (auth, the PAT matrix) · security-and-updates.md (who updates what) · docker-hardening.md (deployment) · RUNBOOK.md (the gestures, in order)</footer>
 </div>
 
