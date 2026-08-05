@@ -22,6 +22,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **The "second pull request on the same undertaking" warning now states the OVERLAP.** It counts,
+  locally and instantly, how many of the branch's files the previous pull request also touched — the
+  question was already asked, it is now answered on a fact rather than from memory.
+  **The mechanical version of this rule was measured and ruled out**, which is the finding here:
+  *"a second one opened while the first is still open"* — the case with no defence — happened **zero
+  times in 16 human pull requests**, and this repo does not add a rule for what never happened;
+  *"consecutive pull requests touching the same files"* is real but cannot separate a fault from a
+  legitimate stage, since the three highest-scoring pairs are the assumed steps of one undertaking.
 - **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
   whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
   document written the same day, which is how four closed items sat in the open-work section for a

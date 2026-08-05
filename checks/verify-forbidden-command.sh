@@ -112,6 +112,18 @@ BLOCK = [
 ]
 # Warned, not blocked: opening a second pull request is sometimes right — a change of SUBJECT
 # justifies one. Only the maintainer can tell, so this states the question rather than deciding it.
+#
+# 🔴 MEASURED, and the mechanical version of this rule was ruled OUT. Two candidates, on the 20 most
+# recent pull requests:
+#   · "a second one opened while the first is still OPEN" — the case with no defence, since the work
+#     could have gone onto the existing branch. It happened ZERO times in 16 human pull requests: the
+#     workflow is strictly open-merge-open. A guard for it would never bite, and the rule above says
+#     what never happened gets no rule.
+#   · "consecutive pull requests touching the same files" — real, but it does not separate a fault
+#     from a legitimate stage: #94, #95 and #96 score highest and are the assumed steps of ONE
+#     undertaking. It would refuse correct work. The ratio also misleads on small diffs (one shared
+#     file out of two reads as 0,50) and bot batches open six in minutes.
+# What survives decides nothing: state the OVERLAP, so the question below is answered on a fact.
 WARN = [
     ("second-pr-same-undertaking",
      r"open-pr\.sh\b",
@@ -129,10 +141,37 @@ for tag, pattern, reason in BLOCK:
         }), file=sys.stderr)
         sys.exit(2)
 
+def overlap():
+    """Files this branch touches, against those the last merged pull request touched.
+
+    Local and instantaneous — a PreToolUse hook cannot afford a network round trip. This repo
+    squashes, so the tip of the default branch IS the previous pull request and its file list is one
+    `git show` away. Silent on any failure: an unmeasurable overlap must never stop a command."""
+    import subprocess
+    def run(*a):
+        p = subprocess.run(a, capture_output=True, text=True, timeout=5)
+        return set(x for x in p.stdout.split("\n") if x.strip()) if p.returncode == 0 else set()
+    base = "main" if run("git", "rev-parse", "--verify", "main") else "master"
+    mine = run("git", "diff", "--name-only", f"{base}...HEAD")
+    prev = run("git", "show", "--name-only", "--format=", base)
+    if not mine or not prev:
+        return ""
+    shared = mine & prev
+    if not shared:
+        return (f" Measured: this branch shares NO file with the previous pull request "
+                f"({len(mine)} touched) — a different subject, so a new one is likely right.")
+    return (f" Measured: {len(shared)} of this branch's {len(mine)} file(s) were ALSO touched by the "
+            f"previous pull request ({', '.join(sorted(shared)[:4])}{'…' if len(shared) > 4 else ''})"
+            f" — that is the signal the question above is about.")
+
 for tag, pattern, reason in WARN:
     if re.search(pattern, cmd, re.I):
+        try:
+            extra = overlap()
+        except Exception:
+            extra = ""               # a measurement never stops the command it comments on
         record(1, "warned: " + tag)
-        print(json.dumps({"systemMessage": "⚠ " + reason}))
+        print(json.dumps({"systemMessage": "⚠ " + reason + extra}))
         sys.exit(0)                  # advisory: states the question, lets the command through
 
 record(0)
