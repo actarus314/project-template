@@ -316,7 +316,7 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s**. Anything under 0,4 s does not show at all.
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s**. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
 > journal. `check.sh` writes every verdict it reaches to `.ci-tools/controls-log.tsv` *(gitignored:
@@ -415,19 +415,19 @@ The split is not how long a check takes, it is **what has to change for it to sa
 | **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels, **a `.md`** | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* · **`verify-echo.sh`** and **`verify-growth.sh`** on a `.md`, **`verify-comment-drift.sh`** on a `.sh` — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts |
 | **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
 
-**What a commit costs, by what it touches** *(wall clock, measured 2026-08-04 — Darwin arm64)*. 🔴 **A duration only means something alongside WHAT MOVED**: the same `--commit` spans 0,8 s to 2,6 s, and a figure quoted without its case was once read as wrong by a factor of 2,7 when it was simply measuring another one.
+**What a commit costs, by what it touches** *(wall clock, medians of three, measured 2026-08-05 — Darwin arm64)*. 🔴 **A duration only means something alongside WHAT MOVED**: the same `--commit` spans 1,09 s to 5,43 s, and a figure quoted without its case was once read as wrong by a factor of 2,7 when it was simply measuring another one.
 
 | The commit touches… | What that wakes on top | Wall clock |
 |---|---|---|
-| nothing *(clean tree)* | — | **0,8 s** |
-| a workflow | `actionlint` · `zizmor` | **1,5 s** |
-| a `.md` | `verify-echo` · `verify-growth` | **1,9 s** |
-| a `.sh` | `verify-comment-drift` · `shellcheck` *(whole tree)* | **2,2 s** |
-| `templates/` | `verify-travel` *(it generates **four** projects)* + both `.md` ones | **3,7 s** |
-| `.md` + `.sh` + a workflow | everything above | **2,6 s** |
-| `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,0 – 5,6 s** |
+| nothing *(clean tree)* | — | **1,13 s** |
+| a workflow | `actionlint` · `zizmor` | **2,80 s** |
+| a `.md` | `verify-echo` · `verify-growth` | **1,09 s** |
+| a `.sh` | `verify-comment-drift` · `shellcheck` *(whole tree)* | **4,09 s** |
+| `templates/` | `verify-travel` *(it generates **four** projects)* + both `.md` ones | **2,88 s** |
+| `.md` + `.sh` + a workflow | everything above | **5,43 s** |
+| `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,63 s** |
 
-**Parallelism absorbs, and the numbers say so**: the sixteen timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **2,85 s**. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
+**Parallelism absorbs, and the numbers say so**: the sixteen timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **2,82 s**. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
 
 > ⚠️ **`verify-travel` costs what it costs because it covers four toolchain/capability combinations instead of one** — `static`, `node`, `generic`, `static+all`, which is what the check itself names as it passes *(0,46 s → 1,77 s)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
 

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:42c3fbdaed5494ac630901684affb4aa49c3d2f79fc216978af06c3345559619
+  checksum-source-md: sha256:98afe60f1f03dd57d329eb13c32f3973d74d786f7def55b6bcd83eff932ba32c
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1481,7 +1481,7 @@
   <p><strong>Reading the columns.</strong> <em>Looks for</em> is the defect, not the mechanism. <em>Where</em> is the machine that runs it. <em>Travels</em> says whether a generated project gets it. <em>Blocks</em> separates what stops a merge from what only draws a list. <em>Maturity</em> is the one thing no measurement gives: <strong>settled</strong> = its verdict rests on a fact (a path, a tag, a tracked file) and has held; <strong>needs watching</strong> = its verdict rests on a threshold or a wording chosen by hand, so it can be wrong in both directions.</p>
 
   <div class="note">
-    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1,7x to 4,1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
+    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1,7x to 4,1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
     <p>Anything under 0,4 s does not show at all.</p>
   </div>
 
@@ -1915,8 +1915,8 @@
   </div>
 
   <div class="note">
-    <h3>⏱ What a commit costs, by what it touches <span class="tool">measured 2026-08-04, Darwin arm64</span></h3>
-    <p>🔴 <strong>A duration only means something alongside WHAT MOVED.</strong> The same <code>--commit</code> spans 0,8 s to 2,6 s, and a figure once quoted without its case was read as wrong by a factor of 2,7 when it was simply measuring another one.</p>
+    <h3>⏱ What a commit costs, by what it touches <span class="tool">medians of three, measured 2026-08-05, Darwin arm64</span></h3>
+    <p>🔴 <strong>A duration only means something alongside WHAT MOVED.</strong> The same <code>--commit</code> spans 1,09 s to 5,43 s, and a figure once quoted without its case was read as wrong by a factor of 2,7 when it was simply measuring another one.</p>
   </div>
 
   <div class="tablewrap">
@@ -1925,18 +1925,18 @@
         <tr><th>The commit touches…</th><th>What that wakes on top</th><th>Wall clock</th></tr>
       </thead>
       <tbody>
-        <tr><td class="w">nothing (clean tree)</td><td>—</td><td class="t"><strong>0,8 s</strong></td></tr>
-        <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>1,5 s</strong></td></tr>
-        <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,9 s</strong></td></tr>
-        <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>2,2 s</strong></td></tr>
-        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>3,7 s</strong></td></tr>
-        <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>2,6 s</strong></td></tr>
-        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5,0 – 5,6 s</strong></td></tr>
+        <tr><td class="w">nothing (clean tree)</td><td>—</td><td class="t"><strong>1,13 s</strong></td></tr>
+        <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>2,80 s</strong></td></tr>
+        <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,09 s</strong></td></tr>
+        <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>4,09 s</strong></td></tr>
+        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>2,88 s</strong></td></tr>
+        <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>5,43 s</strong></td></tr>
+        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5,63 s</strong></td></tr>
       </tbody>
     </table>
   </div>
 
-  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the sixteen timed house checks add up to <strong>3,89 s</strong> of their own time, and the gate that runs them takes <strong>2,85 s</strong>. The slowest by far is <code>verify-travel</code> (1,76 s), which generates four projects in series, then <code>verify-comment-drift</code> (0,53 s), <code>verify-version</code> (0,34 s) and <code>verify-echo</code> (0,26 s); every other one sits at or under 0,18 s.</p>
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the sixteen timed house checks add up to <strong>3,89 s</strong> of their own time, and the gate that runs them takes <strong>2,82 s</strong>. The slowest by far is <code>verify-travel</code> (1,76 s), which generates four projects in series, then <code>verify-comment-drift</code> (0,53 s), <code>verify-version</code> (0,34 s) and <code>verify-echo</code> (0,26 s); every other one sits at or under 0,18 s.</p>
 
   <div class="note">
     <h3>⚠️ Why <code>verify-travel</code> costs a second and a half</h3>
