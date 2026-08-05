@@ -11,6 +11,7 @@
 # Usage:  ./check.sh            everything
 #         ./check.sh --commit   only what a commit can make say something new (see MODE below)
 #         ./check.sh --house    ONLY the house checks — the gate a CI calls (see MODE below)
+#         ./check.sh --report   the control journal, a DEV instrument: --on | --off | --reset
 #
 # Versions are NEVER hardcoded: read from `ci.yml` (+ `requirements-ci.txt`). Binaries are cached
 # under `.ci-tools/` (gitignored). CI itself verifies the SHA256 of the Linux asset; here we pin the
@@ -44,7 +45,71 @@ MODE=full
 case "${1:-}" in
   --commit) MODE=commit;;
   --house)  MODE=house;;
+  --report) MODE=report;;
 esac
+
+if [ "$MODE" = report ]; then
+  J="$CACHE/controls-log.tsv"
+  case "${2:-}" in
+    --on)  : > "$CACHE/journal-on"; echo "Control journal ON — recording to $J. Turn it off with: ./check.sh --report --off"; exit 0;;
+    --off) rm -f "$CACHE/journal-on"; echo "Control journal OFF. The recording so far is kept in $J."; exit 0;;
+    --reset) rm -f "$J"; echo "Control journal cleared."; exit 0;;
+  esac
+  [ -f "$CACHE/journal-on" ] || echo "  (journal is OFF — showing what was recorded before. Switch on: ./check.sh --report --on)" >&2
+  [ -f "$J" ] || { echo "No control has run while the journal was on. Switch it on: ./check.sh --report --on"; exit 0; }
+  OUT=${3:-../workspace/docs/CONTROLES.md}
+  python3 - "$J" "$OUT" <<'PY'
+import sys, collections, pathlib, statistics
+rows = [l.rstrip("\n").split("\t") for l in open(sys.argv[1], encoding="utf-8") if l.strip()]
+rows = [r for r in rows if len(r) >= 4]
+agg = collections.OrderedDict()
+for r in rows:
+    ts, mode, name, rc = r[0], r[1], r[2], r[3]
+    ms, why = (r[4] if len(r) > 4 else ""), (r[5] if len(r) > 5 else "")
+    a = agg.setdefault(name, {"runs": 0, "ko": 0, "skip": 0, "last": ts, "why": "", "ms": [], "modes": set()})
+    a["last"] = ts; a["modes"].add(mode)
+    if rc == "skip":
+        a["skip"] += 1; a["gate"] = why
+    else:
+        a["runs"] += 1
+        if ms.isdigit(): a["ms"].append(int(ms))
+        if rc != "0": a["ko"] += 1; a["why"] = why or name
+
+def med(v): return f"{statistics.median(v)/1000:.2f} s" if v else "—"
+total_ms = sum(statistics.median(a["ms"]) for a in agg.values() if a["ms"])
+
+out = ["# Controls — performance, and whether their gates actually fire", "",
+       "> Written by `./check.sh` itself at every verdict, while the journal is ON.",
+       "> A **development instrument**: `./check.sh --report --on | --off | --reset`.", "",
+       f"**{len(rows)} records**, **{len(agg)} controls**, "
+       f"`{rows[0][0]}` → `{rows[-1][0]}`. Median time of the whole set, run one by one: "
+       f"**{total_ms/1000:.2f} s** *(they run together, so the lot costs its slowest, not this sum)*.", "",
+       "| Control | Fired | Skipped | Blocked | Median | Slowest | Modes | Last | Why it blocked |",
+       "|---|---:|---:|---:|---:|---:|---|---|---|"]
+for name, a in sorted(agg.items(), key=lambda kv: -(statistics.median(kv[1]["ms"]) if kv[1]["ms"] else 0)):
+    ko = f"**{a['ko']}**" if a["ko"] else "0"
+    sk = f"{a['skip']}" if a["skip"] else "—"
+    slow = f"{max(a['ms'])/1000:.2f} s" if a["ms"] else "—"
+    out.append(f"| `{name}` | {a['runs']} | {sk} | {ko} | {med(a['ms'])} | {slow} | "
+               f"{' '.join(sorted(a['modes']))} | {a['last'][11:19]} | {a['why'] or '—'} |")
+
+# The reading that matters: a control that never fired. Its gate may simply never have opened.
+never = [n for n, a in agg.items() if a["runs"] == 0]
+out += ["", "## Gates"]
+if never:
+    out.append("🔴 **Never fired, only skipped** — the gate may never open: "
+               + ", ".join(f"`{n}`" for n in never) + ".")
+else:
+    out.append("✅ Every control recorded here has fired at least once.")
+out.append("*A control absent from this table has never run while the journal was on — "
+           "a fact about this machine, not about the control.*")
+p = pathlib.Path(sys.argv[2]); p.parent.mkdir(parents=True, exist_ok=True)
+p.write_text("\n".join(out) + "\n", encoding="utf-8")
+print("\n".join(out))
+print(f"\n(written to {p})", file=sys.stderr)
+PY
+  exit 0
+fi
 changed=""
 # The neighbouring workspace/ is a SEPARATE git repository, so a diff run here is blind to it —
 # and two checks (verify-echo, verify-growth) read its prose. Without this, a SUIVI.md that
@@ -63,15 +128,36 @@ gl_arch=arm64; al_arch=arm64; osv_arch=arm64
 [ "$uarch" = x86_64 ] && { gl_arch=x64; al_arch=amd64; osv_arch=amd64; }
 
 fail=0
+# Every verdict passes through ok() or ko(), so the journal is written THERE and nowhere else: a
+# per-check call would be a list to keep, and the one thing this file no longer keeps is a list.
+# It lands under .ci-tools/ (gitignored) — local telemetry, not repository content, and it travels
+# with this script into every generated project.
+# 🔴 OFF unless switched ON. This is a DEVELOPMENT instrument — useful while tuning the controls,
+# pointless once they are settled, and a file that grows at every commit forever is a cost paid for
+# nothing. The switch is a witness file under .ci-tools/ (gitignored): present, the journal records;
+# absent, `journal()` returns immediately and costs one test. `./check.sh --report --on` / `--off`.
+JOURNAL="$CACHE/controls-log.tsv"
+JOURNAL_ON="$CACHE/journal-on"
+journal() {   # <control> <rc|skip> <reason> [milliseconds]
+  [ -f "$JOURNAL_ON" ] || return 0
+  # The tools-ready line is not a control, it is this script reporting on itself.
+  case "$1" in "ready under "*) return 0;; esac
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MODE" "$1" "$2" "${4:-}" "$3" >> "$JOURNAL"
+}
+# A check whose rhythm held it back: recorded as a SKIP, with the gate that decided. Its absence
+# from the journal and its being deliberately skipped are two different facts, and only one is fine.
+skipped() { journal "$1" skip "$2"; }
 note() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
-ok()   { printf '  \033[32m✓ %s\033[0m\n' "$1"; }
-ko()   { printf '  \033[31m✗ %s\033[0m\n' "$1"; fail=1; }
+LAST_MS=""
+ok()   { printf '  \033[32m✓ %s\033[0m\n' "$1"; journal "$1" 0 "" "$LAST_MS"; LAST_MS=""; }
+ko()   { printf '  \033[31m✗ %s\033[0m\n' "$1"; fail=1; journal "$1" 1 "$1" "$LAST_MS"; LAST_MS=""; }
 
 # Replays one house check's captured output and returns its exit code. A missing capture is an
 # ERROR, never a pass: a check that did not run must not read like a check that found nothing.
 PAR="$CACHE/par"
 reap() {
   [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
+  LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
   cat "$PAR/$1.out"; return "$(cat "$PAR/$1.rc")"
 }
 
@@ -187,7 +273,15 @@ for s in checks/verify-*.sh; do
   # .rc was written. A missing .rc then reads as "it never ran" — announced instead of the check's
   # own error message, which stayed in the .out and was never printed. Every failure looked alike,
   # and a real never-ran became indistinguishable from an ordinary red.
-  ( set +e; "./$s" >"$PAR/$n.out" 2>&1; echo $? >"$PAR/$n.rc" ) &
+  # `EPOCHREALTIME` (bash 5) rather than `date +%s%3N`: that format is GNU, and BSD `date` returns
+  # the literal `%3N` WITHOUT failing, so a `||` fallback never fires and every duration read zero.
+  # No subprocess either — an instrument that costs a fork per measurement measures itself.
+  ( set +e
+    _t0=${EPOCHREALTIME/./}
+    "./$s" >"$PAR/$n.out" 2>&1; _rc=$?
+    _t1=${EPOCHREALTIME/./}
+    echo $_rc >"$PAR/$n.rc"
+    if [ -n "$_t0" ] && [ -n "$_t1" ]; then echo $(( (_t1 - _t0) / 1000 )) >"$PAR/$n.ms"; fi ) &
 done
 
 if external && in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
@@ -267,21 +361,21 @@ if [ -x checks/verify-echo.sh ]; then
   note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
   if touched '\.md$'; then
     if reap verify-echo; then ok "no paragraph restates another"; else ko "a paragraph restates another"; fi
-  else echo "  (skipped — no .md changed in this commit)"; fi
+  else echo "  (skipped — no .md changed in this commit)"; skipped "verify-echo" "no .md changed"; fi
 fi
 
 if [ -x checks/verify-growth.sh ]; then
   note "verify-growth.sh — curated documents that only grow (advisory)"
   if touched '\.md$'; then
     if reap verify-growth; then ok "no curated document only grows"; else ko "a curated document only grows"; fi
-  else echo "  (skipped — no .md changed in this commit)"; fi
+  else echo "  (skipped — no .md changed in this commit)"; skipped "verify-growth" "no .md changed"; fi
 fi
 
 if [ -x checks/verify-comment-drift.sh ]; then
   note "verify-comment-drift.sh — a comment outgrowing its code (advisory)"
   if touched '\.sh$'; then
     if reap verify-comment-drift; then ok "no comment outgrowing its code"; else ko "a comment outgrows its code"; fi
-  else echo "  (skipped — no .sh changed in this commit)"; fi
+  else echo "  (skipped — no .sh changed in this commit)"; skipped "verify-comment-drift" "no .sh changed"; fi
 fi
 
 # verify-changelog.sh — two thirds of the CHANGELOG rule are PATHS, so two thirds are mechanical.

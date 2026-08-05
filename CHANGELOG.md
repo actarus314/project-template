@@ -22,6 +22,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **`./check.sh --report` — a control journal, and a DEVELOPMENT instrument.** It answers two
+  questions a green tick never does: **how long each control costs**, and **whether its gate ever
+  fires**. A control that is only ever skipped is the failure this repository knows best — shipped,
+  executable, never run — and a journal recording only verdicts cannot show it, because the line
+  simply is not there. Skips are therefore recorded too, with the gate that decided.
+  🔴 **OFF by default**: nothing is written until `--report --on`, and the cost when off is one file
+  test per verdict. `--off` stops it, `--reset` clears it. The record lands under `.ci-tools/`
+  (gitignored) — local telemetry, never repository content — and the view is written to
+  `workspace/docs/CONTROLES.md`. Written by `check.sh` at the single point every verdict passes
+  through, so no list of controls has to be kept anywhere.
 - **Every check now travels into a generated project, and every check has a gate there.** A project
   received three of the eighteen, and **no generated workflow called any of them**: the checks
   shipped, ran locally at best, and gated nothing. `init-project.sh` copies `checks/` whole, and
