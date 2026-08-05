@@ -38,7 +38,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   merges, for the bumps that actually reach a user. `zizmor` does: it travels in a template.
 
 ### Fixed
-- 🔴 **No Renovate or Dependabot pull request could ever go green.** `verify-changelog.sh` demands a
+- 🔴 **The bot exemption is REVERTED, one day old.** It made the control silent on exactly the
+  changes that need it most: `zizmor` and `trivy` are pinned **inside `templates/`**, so a bump
+  **travels into every generated project** — user-visible by the convention's own definition. What
+  replaced the trace was a human writing the line in a **later** pull request: a discipline, not a
+  guard, and this repository holds that a rule kept by discipline is a rule that lapses.
+  ⚠️ **The friction it was meant to remove comes back, knowingly**: an automated pull request is red
+  until someone adds the line to **its own branch**. That is the cost of the trace being where the
+  change is, and it is the maintainer's call.
+- 🔴 **~~No Renovate or Dependabot pull request could ever go green.~~** *(Superseded by the line
+  above — kept because the diagnosis stands: the gate did block every automated pull request.)* `verify-changelog.sh` demands a
   `CHANGELOG` line for a user-visible change, a dependency bump touches exactly the paths it counts
   as visible, and **no bot writes prose** — so every automated pull request was red on a check
   nothing could satisfy. Observed on two at once: `#101` (zizmor) and `#102` (renovate).
