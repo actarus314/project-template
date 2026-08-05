@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # French left in versioned content — which is English by rule (standard §1, §15).
 #
 # NOTHING looked for this. verify-tone.sh is the neighbouring check and it searches for the SECOND

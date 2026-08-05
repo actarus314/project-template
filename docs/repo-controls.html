@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:98afe60f1f03dd57d329eb13c32f3973d74d786f7def55b6bcd83eff932ba32c
+  checksum-source-md: sha256:7905a5f445fa2a3b73d69eeb5ed3e399078b67bf3598c75bbccd98fbbbb52c2a
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1487,8 +1487,9 @@
 
   <div class="note">
     <h3>Where those numbers come from, and how to take them again — <code>./check.sh --report</code>, the control journal.</h3>
-    <p><code>check.sh</code> writes every verdict it reaches to <code>.ci-tools/controls-log.tsv</code> (gitignored: local telemetry, never repository content), and <code>--report</code> renders the record into <code>workspace/docs/CONTROLES.md</code>. It is written at the single point every verdict passes through, so no list of controls has to be kept anywhere.</p>
-    <p><strong>Skips are recorded too, with the gate that decided them</strong> — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. <strong>The three hooks record their own firing</strong>, which <code>check.sh</code> cannot do: it never runs them.</p>
+    <p><code>check.sh</code> writes every verdict it reaches to <code>${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv</code>, and <code>--report</code> renders the record into <code>workspace/docs/CONTROLES.md</code>. It is written at the single point every verdict passes through, so no list of controls has to be kept anywhere.</p>
+    <p>🔴 <strong>It lives OUTSIDE every repository, and that is the point.</strong> Telemetry is not repository content, and a journal kept under <code>.ci-tools/</code> was per-project as well as per-machine: the one question worth asking of it — <em>is this gate firing everywhere, or only here</em> — had nowhere to be answered. Every project running these checks appends to the <strong>same</strong> file, each line carrying the project it came from, and <code>--report</code> filters on the current one so a project's page still speaks for that project alone. The path is deliberately not named after this repository: the journal outlives the project that first wrote it.</p>
+    <p><strong>Skips are recorded too, with the gate that decided them</strong> — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. <strong>The three hooks record their own VERDICT</strong>, which <code>check.sh</code> cannot do: it never runs them. Recording the firing alone was the earlier design, and it answered the wrong question — <em>did the gate fire</em>, never <em>did it bite</em>, and a threshold is set on the second. A hook now writes <code>1</code> with the tag of the signal that caught, <code>0</code> when it looked and found nothing, and <code>skip</code> for a turn it never evaluated: a rate reads off <code>bit / fired</code> without counting the turns nobody looked at.</p>
     <p>🔴 <strong>OFF by default</strong> — a development instrument, not a permanent one. <code>--report --on</code> starts the recording, <code>--off</code> stops it, <code>--reset</code> clears it; while off it costs one file test per verdict.</p>
     <p>⚠️ <strong>Its medians run about a fifth above the column above, and neither is wrong.</strong> The column times a check <strong>alone</strong>; the journal times it <strong>inside the parallel lot</strong>, where the checks contend for the machine. (Measured 2026-08-05: <code>verify-growth</code> 0,88 s alone against 1,10 s in the lot, <code>verify-comment-drift</code> 0,83 s against 1,03 s.) A duration quoted without its case is how a figure once got read as wrong by a factor of 2,7 when it was simply measuring something else.<span class="tool">measured 2026-08-05, Darwin arm64</span></p>
   </div>
@@ -1790,6 +1791,26 @@
           <td>✅</td>
         </tr>
         <tr>
+          <td class="w"><code>checks/verify-stage-closure.sh</code></td>
+          <td>a stage that closed without leaving its archive, or a finished <code>RECHERCHE-*</code> left on the hot side</td>
+          <td class="h">local</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the trigger is measured (a merged PR loses to a random instant by 11 points; a release wins), but the invariant has never yet been violated: 3 closed stages, 3 archives</td>
+          <td class="t">0,05 s</td>
+          <td>⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-housekeeping.sh</code></td>
+          <td>the development admin behind the work: commits piling up with nothing written down</td>
+          <td class="h">local</td>
+          <td>end of turn, before compaction, <strong>and when the pass is asked for in words</strong></td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the threshold is MEASURED, and re-measured (4 commits looked ideal on a 21-day average and would have spoken <strong>5 times on a single dense day</strong> — <strong>6</strong> is the lowest value at minimum noise, the count bottoming out from there), and it routes to the <code>housekeeping</code> skill rather than deciding anything itself</td>
+          <td class="t">instant</td>
+          <td>n/a — asks for the pass before the turn ends</td>
+        </tr>
+        <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>
           <td>a subagent launched without its three instructions</td>
           <td class="h">local</td>
@@ -1815,15 +1836,16 @@
           <td class="h">local</td>
           <td>end of turn</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that</td>
+          <td><strong>needs watching</strong> — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by <code>stop_hook_active</code></td>
           <td class="t">instant</td>
-          <td>n/a — reports only</td>
+          <td>n/a — refuses the end of the turn</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="note">
+        <p>🔴 <strong>What a check does with a verdict is DECLARED, and the declaration is confronted twice.</strong> Every check carries <code># blocking: yes|no</code> in its header, next to <code># hook:</code> — and <em>advisory</em> is a claim about the <strong>exit code</strong>, never about the wording: <code>check.sh</code> turns any non-zero into a <code>ko</code>, which fails the gate and stops the commit. <strong>Three checks contradicted themselves before anything looked</strong>, in both directions: one called itself advisory in its header and in this table while exiting 1, and two announced <code>ADVISORY</code> for a day after being made blocking. A human found it by reading this table. The two readings do not replace each other: <strong><code>verify-checks-wiring</code> compares the declaration to this table</strong> (it catches a pair that disagree, at no cost, at every commit), and <strong><code>check.sh</code> compares it to the REAL exit code</strong> the moment that code exists (it catches the case where the code contradicts both). The price of the second is that it speaks only when the check actually bites; fabricating a biting case for all 21 was weighed and left out.</p>
     <p><strong>Travels: yes, all of them, and that is the rule</strong> — <code>init-project.sh</code> copies <code>checks/</code> whole, and a control DETECTS whether its subject exists where it lands: present it bites, absent it says so. The three hooks travel too; a project that wants them has to declare them in its own settings. The external tools travel through the workflow templates, at the versions those files pin.</p>
     <p>⚠️ <strong><code>local</code>, <code>GitHub</code> or <code>both</code></strong> describes where the control RUNS, never what it may look at. <code>verify-memories.sh</code> runs at the gate like the others — it reports there that it found no memories to read, which is a verdict where silence was not one.</p>
   </div>

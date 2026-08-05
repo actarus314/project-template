@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Dated narrative in a code comment — forbidden by METHODE.md.
 #
 # The code says what it DOES. A comment says only what the code cannot say: a constraint that

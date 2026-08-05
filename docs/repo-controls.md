@@ -319,15 +319,27 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 ⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s**. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
-> journal. `check.sh` writes every verdict it reaches to `.ci-tools/controls-log.tsv` *(gitignored:
-> local telemetry, never repository content)*, and `--report` renders the record into
-> `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes through, so
-> no list of controls has to be kept anywhere.
+> journal. `check.sh` writes every verdict it reaches to
+> `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`, and `--report` renders the
+> record into `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes
+> through, so no list of controls has to be kept anywhere.
+>
+> 🔴 **It lives OUTSIDE every repository, and that is the point.** Telemetry is not repository
+> content, and a journal kept under `.ci-tools/` was per-project as well as per-machine: the one
+> question worth asking of it — *is this gate firing everywhere, or only here* — had nowhere to be
+> answered. Every project running these checks appends to the **same** file, each line carrying the
+> project it came from, and `--report` filters on the current one so a project's page still speaks
+> for that project alone. The path is deliberately not named after this repository: the journal
+> outlives the project that first wrote it.
 >
 > **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot
 > show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding
 > verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own
-> firing**, which `check.sh` cannot do: it never runs them.
+> VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the
+> earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and
+> a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
+> when it looked and found nothing, and `skip` for a turn it never evaluated: a rate reads off
+> `bit / fired` without counting the turns nobody looked at.
 >
 > 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the
 > recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
@@ -369,9 +381,25 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,34 s | ✅ |
 | `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 0,26 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,76 s | ✅ |
+| `checks/verify-stage-closure.sh` | a stage that closed without leaving its archive, or a finished `RECHERCHE-*` left on the hot side | local | every commit | ✅ | **needs watching** — the trigger is measured *(a merged PR loses to a random instant by 11 points; a release wins)*, but the invariant has never yet been violated: 3 closed stages, 3 archives | 0,05 s | ⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart |
+| `checks/verify-housekeeping.sh` | the development admin behind the work: commits piling up with nothing written down | local | end of turn, before compaction, **and when the pass is asked for in words** | ✅ | **needs watching** — the threshold is MEASURED, and re-measured *(4 commits looked ideal on a 21-day average and would have spoken **5 times on a single dense day** — **6** is the lowest value at minimum noise, the count bottoming out from there)*, and it routes to the `housekeeping` skill rather than deciding anything itself | instant | n/a — asks for the pass before the turn ends |
 | `checks/verify-delegation.sh` | a subagent launched without its three instructions | local | before the launch | ✅ | **needs watching** — a hook, and a hook nothing declares simply never fires | instant | n/a — refuses the launch |
 | `checks/verify-forbidden-command.sh` | a command forbidden here, before it runs | local | before the command | ✅ | **needs watching** — same reason | instant | n/a — refuses the command |
-| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its two patterns were tuned on 4463 real turns; they fire on under 1 %, and a rewording moves that | instant | n/a — reports only |
+| `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by `stop_hook_active` | instant | n/a — refuses the end of the turn |
+
+> 🔴 **What a check does with a verdict is DECLARED, and the declaration is confronted twice.**
+> Every check carries `# blocking: yes|no` in its header, next to `# hook:` — and *advisory* is a
+> claim about the **exit code**, never about the wording: `check.sh` turns any non-zero into a `ko`,
+> which fails the gate and stops the commit. **Three checks contradicted themselves before anything
+> looked**, in both directions: one called itself advisory in its header *and* in this table while
+> exiting 1, and two announced `ADVISORY` for a day after being made blocking. A human found it by
+> reading this table.
+> The two readings do not replace each other: **`verify-checks-wiring` compares the declaration to
+> this table** *(it catches a pair that disagree, at no cost, at every commit)*, and **`check.sh`
+> compares it to the REAL exit code** the moment that code exists *(it catches the case where the
+> code contradicts both — the only one a comparison of declarations cannot see)*. The price of the
+> second is that it speaks only when the check actually bites; fabricating a biting case for all 21
+> was weighed and left out.
 
 > **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and
 > a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.

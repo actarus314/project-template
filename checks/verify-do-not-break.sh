@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The invariants of AGENTS.md, "Do not break".
 #
 # What those entries have in common is the reason they are written down at all: breaking one of
@@ -33,23 +34,35 @@ skipped=""        # what it did not, and why it could not
 #     The link belongs to whichever repository HOLDS the skill. Every other one shares the machine
 #     with it and must not be asked to account for it: without this condition, the link pointing at
 #     the template — which is correct — failed every generated project on the same disk.
-skill_link="$HOME/.claude/skills/new-project"
-if [ ! -d skills/new-project ]; then
-  skipped="$skipped skill-link(this repository does not hold the skill)"
-elif [ -e "$skill_link" ] || [ -L "$skill_link" ]; then
-  if [ ! -L "$skill_link" ]; then
-    echo "✗ $skill_link is NOT a symlink — a copy drifts, silently"
-    fail=1
-  else
-    target=$(cd "$(dirname "$skill_link")" && cd "$(readlink "$skill_link")" 2>/dev/null && pwd -P || echo "")
-    if [ "$target" != "$repo_root/skills/new-project" ]; then
-      echo "✗ $skill_link points to '${target:-a dead path}', not $repo_root/skills/new-project"
-      fail=1
-    fi
-  fi
-  read_targets="$read_targets skill-link"
+#     EVERY skill under skills/, detected rather than named. This was hard-coded to `new-project`
+#     for as long as there was only one, and the second skill shipped with its link watched by
+#     nothing — which is the failure mode that skill carries anyway: an unlinked skill does not
+#     error, it simply never appears.
+if [ ! -d skills ]; then
+  skipped="$skipped skill-link(this repository holds no skill)"
 else
-  skipped="$skipped skill-link(not installed here)"
+  seen_link=0
+  for s in skills/*/; do
+    [ -d "$s" ] || continue
+    name=$(basename "$s")
+    link="$HOME/.claude/skills/$name"
+    if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+      skipped="$skipped skill-link:$name(not installed here)"
+      continue
+    fi
+    seen_link=1
+    if [ ! -L "$link" ]; then
+      echo "✗ $link is NOT a symlink — a copy drifts, silently"
+      fail=1
+    else
+      target=$(cd "$(dirname "$link")" && cd "$(readlink "$link")" 2>/dev/null && pwd -P || echo "")
+      if [ "$target" != "$repo_root/skills/$name" ]; then
+        echo "✗ $link points to '${target:-a dead path}', not $repo_root/skills/$name"
+        fail=1
+      fi
+    fi
+  done
+  [ "$seen_link" = 1 ] && read_targets="$read_targets skill-link($(ls -d skills/*/ 2>/dev/null | wc -l | tr -d ' ') skill(s))"
 fi
 
 # 2 — the three files the neighbouring template .gitignore would otherwise swallow. They are

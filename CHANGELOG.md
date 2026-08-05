@@ -21,7 +21,93 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
+  whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
+  document written the same day, which is how four closed items sat in the open-work section for a
+  full day. It now states open or closed for **each** line, and a closed one leaves the section
+  rather than being marked and left in place. This enumeration is the only thing that catches a
+  closed item nobody marked: the check guarding that section matches a **marker**, so it is blind to
+  the rest. Two mechanical substitutes were ruled out — **staleness by measurement** *(all 11 items
+  read as under 0,2 days old, the document being rewritten too often for `git blame` to tell a
+  reviewed line from a displaced one)*, and **cross-referencing the CHANGELOG by structure** *(its
+  entries carry no item identifier, so no measurement can create that link)*.
+- **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
+  `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
+  few an assistant actually *sees*, so a request for the pass reaches the model as an instruction
+  instead of relying on a skill firing by judgement. It exists because of a measured failure — the
+  skill lists *"je vais clear"* among its own triggers, the maintainer wrote exactly that, and
+  **the skill did not fire**. The patterns are the strict ones measured across 1756 real messages
+  *(16 matches, 0,9 %)*; loose wordings matched 82 times, mostly unrelated. It does not block.
+- **`verify-do-not-break` watches EVERY skill's symlink**, detected rather than named. It was
+  hard-coded to one skill for as long as there was only one, and the second shipped with its link
+  guarded by nothing — the exact failure that skill is otherwise prone to: an unlinked skill does
+  not error, it simply never appears.
+- **`verify-workspace` refuses closed items sitting in the open-work section** of the tracking doc.
+  The rule was already written *in that document*, and had been rewritten the same morning because
+  closure markers had piled up there; it was broken again the same day, four markers deep, and
+  growth measured **+24 % against a 25 % threshold — one point short**. The rule itself is binary,
+  so it needs no threshold. ⚠️ **It matches a FORM, never a state**: an item finished, left in place
+  and never marked is invisible to it, and its header says so — a check resting on a habit inherits
+  that habit's reliability.
+- **What a check does with a verdict is now DECLARED, and confronted twice.** Every check carries
+  `# blocking: yes|no` in its header, beside `# hook:` — and *advisory* is a claim about the **exit
+  code**, never about the wording, since `check.sh` turns any non-zero into a failed gate.
+  `verify-checks-wiring` compares that declaration to the control table, at every commit and at no
+  cost; **`check.sh` compares it to the REAL exit code** the moment that code exists, which is the
+  only reading that catches a script contradicting both its header and the table. Neither replaces
+  the other, and the second speaks only when a check actually bites — fabricating a biting case for
+  all 21 was weighed and left out. Three checks had been contradicting themselves, in both
+  directions, and a human found it by reading the table.
+- **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook
+  *(`checks/verify-housekeeping.sh`)* counts the commits landed since the tracking doc was last
+  written to; past a **measured** threshold it blocks the end of the turn and routes to the new
+  `housekeeping` **skill**, which holds the checklist and does the writing. The split is the point:
+  **code for what counts, a model only for what is judged** — no counter can tell whether a tracking
+  doc still reflects the work, or whether a stage actually closed. The threshold comes from 21 days
+  of history *(157 commits, 166 writes)*, counted per CROSSING rather than per turn: **6 commits**,
+  about once a week. **4 was tried first and withdrawn** — it looked ideal on the 21-day average
+  *(every 2,1 days, against a pass asked for by hand every 2,3)*, but an average flattens the dense
+  sessions, and on the day the guard shipped it would have spoken **five times**. 6 is the lowest
+  value at minimum noise: the count bottoms out there, so 8 or 10 buy no quiet and only arrive
+  later. Counting **pull requests** instead was measured and dropped: a threshold of 2 would speak
+  21 times over the same period, and a PR counter is blind to work not yet merged — the exact case
+  that motivated the guard. Work left
+  uncommitted and a branch never pushed are **reported** when it speaks, and never trigger it —
+  an uncommitted tree mid-session is the normal state, and a guard firing on the normal state gets
+  bypassed within a day. **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it. There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**. An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches. **It ships inactive**, like its two siblings: a hook only acts once declared.
+- **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
+  recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
+  hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
+  two controls answering one question end up disagreeing. **The trigger was measured, and the
+  obvious one lost**: a merged pull request is followed by a write to the tracking doc 99 % of the
+  time — against 88 % for an instant drawn at random, an 11 point edge that would bite on 1 pull
+  request out of 107. A release is a closure; a fix's pull request is not. What the release decides
+  is the reference point, never the rhythm — the check runs at every commit like its siblings.
+
 ### Changed
+- **The end-of-turn check now BLOCKS.** `checks/verify-turn-claims.sh` ends a turn with
+  `decision: block` instead of a remark: the reason reaches the model, which settles it or states why
+  the signal does not apply. `stop_hook_active` caps that at **one relaunch per turn**, so a false
+  positive costs one exchange and never a loop. The three signals are untouched — they were tuned on
+  4463 real turns to fire on under 1 % each, and a rewording has to be re-measured the same way.
+- **The control journal records the VERDICT, not merely the firing.** The three hooks used to write
+  a `0` before analysing anything, which answered *did the gate fire* and never *did it bite* — and
+  the second question is the one a threshold is set on. Each now writes `1` with the **tag of the
+  signal that caught**, `0` when it looked and found nothing, and `skip` for an event it never
+  evaluated, so a rate reads off `bit / fired`. The journal is also **anchored to the script** rather
+  than to the working directory: a hook fires wherever the session sits, and a relative path silently
+  dropped every firing from elsewhere — the denominator of that rate, lost without a trace.
+  `--report` gains nothing to configure: the columns already existed, and one of them stopped being
+  called `Blocked` since a warning is not a block.
+- **The control journal moved OUT of the repository**, to
+  `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`. Under `.ci-tools/` it was
+  per-project as well as per-machine, so the one question worth asking of it — *is this gate firing
+  everywhere, or only here* — had nowhere to be answered. Every project generated from this template
+  now appends to the **same** file, each line carrying a seventh column naming the project it came
+  from; `--report` filters on the current one, so a project's page still speaks for that project
+  alone. The switch and `--reset` are global too, and `--reset` names the projects it is about to
+  drop. **Nothing about this reaches a repository**: telemetry is not repository content.
 - **The CHANGELOG line for a bot's bump goes onto ITS OWN branch, before the merge.** Written into
   the convention that owns it, here and in the template, so it survives the session that decided
   it. Verified first: Renovate states on every pull request it opens that it rebases only when a

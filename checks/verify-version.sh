@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Coherence guard for the version.
 #
 # THE SINGLE SOURCE IS THE GIT TAG. It is authoritative because a ruleset makes it immutable,

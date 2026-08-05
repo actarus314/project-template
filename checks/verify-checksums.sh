@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Anti-drift safeguard between docs/X.md (source of truth) and docs/X.html (hand-crafted layout).
 #
 # Every docs/X.html carrying a `checksum-source-md: sha256:<hash>` line in its header

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The same fact stated twice, in different words.
 #
 # METHODE's rule is that a fact lives in ONE place. Verbatim copying is already covered — measured

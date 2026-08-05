@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Curated documents that only ever GROW.
 #
 # Scripts are NOT here: a comment outgrowing its code is a different question, asked at a
@@ -27,8 +28,10 @@
 # Both bytes AND lines are compared: the curated documents run from 57 to 175 bytes per line, so a
 # document written one sentence per line can swell by half in bytes without moving a single line.
 #
-# ADVISORY: growth is often legitimate (a subject arrives). What this makes impossible is growing
-# without noticing — and being unable to say, at closing time, what actually breathed.
+# BLOCKING. Growth is often legitimate (a subject arrives), and this header called itself advisory
+# long after that stopped being true — the threshold was settled on measurement and the check was
+# made to block, while this line went on saying otherwise. What it makes impossible is growing
+# without noticing, and being unable to say, at closing time, what actually breathed.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 

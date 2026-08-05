@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The places a secret can sit where gitleaks does not look. Two of them, read at the same moment
 # for the same question, because gitleaks misses both for the SAME structural reason: it scans the
 # CONTENT of files git knows about.
