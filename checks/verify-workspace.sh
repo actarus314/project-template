@@ -67,5 +67,5 @@ else
     say "$systems tracking systems compete (${n} doc(s)${found_others:+, plus${found_others}}) — METHODE allows one, and the stale one gets read first"
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md,${OTHERS// /, }/ (any other tool is invisible here)"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "$OTHERS" | sed 's|\([^ ]*\)|\1/|g; s| |, |g') (any other tool is invisible here)"
 exit "$fail"
