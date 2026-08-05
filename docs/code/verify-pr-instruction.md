@@ -24,8 +24,14 @@ rate against 5 %.**
 `gh pr create` appears **84 times** in this repository's own history. A guard watching only
 `open-pr.sh` leaves the door beside it wide open, so both are matched, in all their forms.
 
-Commands that merely *mention* either (a `grep`, a `shellcheck`) are excluded: naming a thing is
-not doing it.
+🔴 **In COMMAND POSITION, never anywhere in the string** — and both mistakes happened on the very
+first live opening: a commit message quoting `open-pr.sh` was counted as an opening, and a real
+opening was skipped because the same line also ran a `grep`. **Substring presence is not execution.**
+
+Wrappers are peeled **one token at a time, testing before each peel**. A single regex could not do
+it: it either ate the target (`./open-pr.sh` looks like a path) or stopped short of it
+(`direnv exec <dir>` is three tokens). Verified on six shapes, including a heredoc that merely
+names the command and a real opening followed by a `grep` on the same line.
 
 ## Consumed, never dated
 

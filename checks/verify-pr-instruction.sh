@@ -54,8 +54,25 @@ try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
 print(str((ev.get("tool_input") or {}).get("command") or ""))
 ' || true)
-case "$cmd" in *grep*|*shellcheck*) exit 0;; esac
-printf '%s' "$cmd" | grep -qE 'open-pr\.sh[[:space:]]|gh pr create' || exit 0
+# In COMMAND POSITION, never anywhere in the string. Both mistakes happened on the first live
+# opening: a commit message quoting `open-pr.sh` counted as one, and a real opening was skipped
+# because the same line also ran a grep. Substring presence is not execution.
+opens=$(printf '%s' "$cmd" | python3 -c '
+import re, sys
+OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")
+# Wrappers are peeled ONE token at a time, testing before each peel — a single regex either ate the
+# target (./open-pr.sh looks like a path) or stopped short of it (direnv exec <dir> is three tokens).
+PEEL = re.compile(r"^(?:cd|direnv|exec|env|sudo|time|command|nohup)$|^[-./~]\S*$|^\S+=\S*$")
+def opens(seg):
+    toks = seg.strip().split()
+    while toks:
+        if OPEN.match(" ".join(toks) + " "): return True
+        if not PEEL.match(toks[0]): return False
+        toks.pop(0)
+    return False
+print("yes" if any(opens(s) for s in re.split(r"[;&|\n]+", sys.stdin.read())) else "no")
+' || echo no)
+[ "$opens" = yes ] || exit 0
 
 if [ -f "$TOKEN" ]; then
   # Consumed, never dated: an order and the opening it authorises sat up to 31 turns apart, so any
