@@ -1,33 +1,7 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# Dated narrative in a code comment — forbidden by METHODE.md.
-#
-# The code says what it DOES. A comment says only what the code cannot say: a constraint that
-# would otherwise recur. The story of how a defect was found — the date, the incident, the
-# evidence — belongs to the archive, where it is dated, sourced and immutable.
-#
-# 🔴 THE RULE HELD BY DISCIPLINE ALONE, AND DISCIPLINE DOES NOT HOLD. The inventory recorded it
-# as "already respected, nothing to build" — on a snapshot taken right after a manual review pass.
-# That measured a rule freshly tidied, not a rule kept. Three violations appeared within hours,
-# in the very scripts written to enforce other rules. The same story as verify-tone.sh.
-#
-# THE DISCRIMINATOR, and it comes from the one conforming case rather than from theory:
-#
-#   # (Full-Renovate switch, 2026-07 — see workspace/archives/2026-07-autodetection/SYNTHESE.md.)
-#
-# A date is allowed IFF the same line points into `archives/`. One line, one pointer, the story
-# lives where stories live. Anything else with a date in a comment is the narrative itself.
-#
-# Scope: every COMMENTED line of every tracked text file. Not prose — a CHANGELOG, a runbook and
-# an archive carry dates by design.
-#
-# 🔴 The comment marker is per LANGUAGE, and that is not a refinement. This check TRAVELS into
-# every generated project, and it used to scan `*.sh *.yml *.yaml` only: in a Python, TypeScript
-# or Go project it read nothing at all and reported "no dated narrative" over a repository it had
-# never opened. A guard that travels must not assume the language of the place it lands in.
-#
-# The marker is not anchored to the start of the line either: a trailing comment carrying a date is the
-# same violation, and an anchored pattern walks straight past it.
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real ex
+#   (detail: docs/code/verify-narrative.md)
+
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -50,6 +24,11 @@ BY_EXT = {**dict.fromkeys("sh bash zsh py rb pl r yml yaml toml tf nix jl ps1 cm
           **dict.fromkeys("sql hs lua elm ada".split(), "--"),
           **dict.fromkeys("el lisp clj ini".split(), ";")}
 DATE = re.compile(r"20[0-9]{2}-[0-9]{2}")
+# Narrowed on the VERB, not the noun: naming the maintainer is usually a CONSTRAINT or a decision;
+# what tells a story is the reporting verb. Recall traded for precision, because this one blocks.
+WHO = re.compile(r"\bthe maintainer (said|wrote|spotted|pointed|asked|found|was|had|did)\b"
+                 r"|\b(said|written|spotted|pointed out|reported|found) by the maintainer\b"
+                 r"|\bthe maintainer who (spotted|found|pointed|said)\b", re.I)
 prefix = os.environ.get("MARK_PREFIX", "")
 unknown = set()   # languages this run could not read, published below rather than swallowed
 
@@ -84,7 +63,7 @@ for f in sys.stdin.buffer.read().split(b"\0"):
         i = line.find(mark)
         if i < 0:
             continue
-        if DATE.search(line[i:]):
+        if DATE.search(line[i:]) or WHO.search(line[i:]):
             print(f"{prefix}{name}:{n}:{line.strip()[:150]}")
 # STDERR, not stdout: stdout is captured as the list of violations, and an extra line there would
 # read as one.
@@ -95,10 +74,7 @@ if unknown:
 '; }
 
 # METHODE holds for BOTH repos: repo/ and the neighbouring workspace/, which has its own git.
-# The tone rule stays repo-only (workspace/ is deliberately French, and that rule imposes English),
-# but a dated narrative in a comment is a METHOD rule — it applies wherever code lives.
-# Counted per side. "repo/ and workspace/" says which trees were INTENDED; only a count says
-# whether either held a file with a comment marker at all.
+#   (detail: docs/code/verify-narrative.md)
 count_src() { git -C "$1" ls-files 2>/dev/null | grep -cE '\.[A-Za-z0-9]+$' || true; }
 scope="repo/ $(count_src .) tracked file(s)"
 [ -d ../workspace ] && scope="$scope, workspace/ $(count_src ../workspace) tracked file(s)"

@@ -2,17 +2,7 @@
 set -euo pipefail
 
 # Initialize a Claude Code project per the organization standard.
-#
-# Usage: ./init-project.sh <project> [owner/repo] [parent-folder]
-#              [--type static|node|generic] [--pages] [--artefact] [--staging] [--no-…]
-#
-#   <project>          project name (folder created)
-#   [owner/repo]      if given, configures the GitHub remote as a bare URL
-#   [parent-folder]  default: ~/Documents/Claude
-#
-#   --no-lifecycle-docs  Does NOT write `SUIVI.md`.
-#
-# The script does NOT create the PAT (to be done on github.com) nor does it push.
+#   (detail: docs/code/init-project.md)
 
 PROJ=""; SLUG=""; BASE="$HOME/Documents/Claude"; TYPE="static"
 PAGES=""; ARTEFACT=""; STAGING=""      # empty = "unspecified" → the shortcut will decide
@@ -37,8 +27,7 @@ done
 case "$TYPE" in static|node|generic) ;; *) echo "✗ --type must be 'static' (default), 'node' or 'generic' — this is the TOOLCHAIN, not the hosting"; exit 1;; esac
 
 # Shortcuts: they fill in ONLY what wasn't said explicitly.
-# generic = toolchain not pre-wired (Android, C/C++, Rust, Go…): security checks only, no
-# capability imposed — the user opts in via --pages/--artefact/--staging per the 3 questions.
+# generic = toolchain not pre-wired: security checks only, capabilities opted in explicitly.
 case "$TYPE" in
   static)  [ -n "$PAGES" ] || PAGES=1; [ -n "$ARTEFACT" ] || ARTEFACT=0; [ -n "$STAGING" ] || STAGING=0;;
   node)    [ -n "$PAGES" ] || PAGES=0; [ -n "$ARTEFACT" ] || ARTEFACT=1; [ -n "$STAGING" ] || STAGING=1;;
@@ -66,40 +55,31 @@ cp "$TPL/templates/repo/CLAUDE.md"     "$DEST/repo/CLAUDE.md"
 cp "$TPL/templates/repo/README.md"     "$DEST/repo/README.md"
 cp "$TPL/templates/repo/.env.example"  "$DEST/repo/.env"        # to fill in (gitignored)
 
-# pre-commit hook (gitleaks) — versioned to be shared; enabled further below via core.hooksPath.
-# The hooks come from the ROOT, like check.sh and checks/ — never from templates/. A second
-# copy drifts, and this pair had already started: pre-push was byte-identical, pre-commit
-# carried the same code under two different wordings.
+# pre-commit hook (gitleaks) — versioned, enabled below via core.hooksPath.
+# 🔴 From the ROOT, like check.sh and checks/ — never templates/: a second copy drifts.
 cp -R "$TPL/.githooks"                       "$DEST/repo/.githooks"
-# chmod on ALL hooks, never by name on just one: git SILENTLY ignores a hook
-# that isn't executable. A hardcoded `chmod +x pre-commit` would have silenced any hook added later —
-# a missing check that doesn't show, exactly what this template spends its time tracking down.
+# chmod on ALL hooks, never one by name: git SILENTLY ignores a hook that is not executable.
 chmod +x "$DEST/repo/.githooks/"*
 
-# Local runner == github: the SAME check.sh as the template, auto-detecting (it reads the project's
-# ci.yml and only replays what its CI runs). The pre-commit hook reruns it on every commit and blocks.
+# local == github: the SAME check.sh, auto-detecting. The pre-commit hook reruns it and blocks.
 cp "$TPL/check.sh" "$DEST/repo/check.sh"
 chmod +x "$DEST/repo/check.sh"
 
-# Same shared-script model: open-pr.sh opens a PR and makes sure CI actually starts on
-# it (GitHub intermittently fails to dispatch the pull_request run — a PR with 0 runs
-# reads as a pass but was never checked). English, copied verbatim like check.sh.
+# open-pr.sh opens a PR AND verifies the CI actually started: a PR with 0 runs reads as a pass.
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
-# Under checks/, exactly where they live here — check.sh looks for them THERE, and dropping them at
-# the root left them shipped but never run: the path died where the file landed.
-#
-# 🔴 ALL of them, and that is the rule, not a convenience. Three used to be named here one by one,
-# and the other fifteen stayed behind for no stated reason beyond the order they were written in.
-# A check DETECTS whether its subject exists where it lands: present, it bites; absent, it says so
-# and returns 0. So the question "does this one deserve to travel?" has no addressee — the check
-# answers it itself, at the place, which no list written here can do.
-# The hooks travel too: they read an event, not a file, so they are universal by construction, and
-# a project that wants to wire them needs them on disk first.
+# Under checks/, exactly where they live here — check.sh looks for them THERE.
+#   (detail: docs/code/init-project.md)
 mkdir -p "$DEST/repo/checks"
 cp "$TPL/checks/"verify-*.sh "$DEST/repo/checks/"
 chmod +x "$DEST/repo/checks/"verify-*.sh
+
+# Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
+# is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
+# 🔴 `verify-*.md` ONLY: the generator's own notes would land carrying dead pointers.
+mkdir -p "$DEST/repo/docs/code"
+cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -112,8 +92,7 @@ cp "$TPL/templates/repo/CONTRIBUTING.md"     "$DEST/repo/CONTRIBUTING.md"
 cp "$TPL/templates/repo/CHANGELOG.md"        "$DEST/repo/CHANGELOG.md"
 cp "$TPL/templates/repo/AGENTS.md"           "$DEST/repo/AGENTS.md"   # versioned: read by ALL agents
 cp -R "$TPL/templates/repo/docs"             "$DEST/repo/docs"        # docs/adr/ — structuring decisions
-# <year> AND <copyright holder>: both are deterministic (the year, the slug's owner). Substituting
-# only one left a legally shaky LICENSE — "Copyright (c) 2026 <copyright holder>".
+# <year> AND <copyright holder>: substituting only one leaves a legally shaky LICENSE.
 HOLDER="${SLUG%%/*}"; HOLDER="${HOLDER:-$PROJ}"   # without a fallback, LICENSE would ship with an EMPTY holder
 for l in LICENSE LICENSE-MIT; do
   sed -e "s/<year>/$(date +%Y)/" -e "s/<copyright holder>/$HOLDER/" \
@@ -122,10 +101,7 @@ done
 
 FRAG="$DEST/repo/.branching.frag"
 
-# The block is COMPOSED, never fixed: it is VERSIONED and PUBLISHED. A hardcoded text would lie as soon as
-# capabilities go beyond the nominal case — "Pages serves it directly" on a --no-pages repo, or
-# "Production runs a pinned image tag" without an artifact. A CONTRIBUTING that describes a flow the
-# repo doesn't have is worse than no CONTRIBUTING at all: it gets believed.
+# COMPOSED, never fixed: a hardcoded flow the repo does not have is worse than none — it gets believed.
 {
   echo "## Branching"
   echo
@@ -178,10 +154,7 @@ TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unrel
 sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
 
 # ⚠ The key is INJECTED HERE, not carried by the template: a template that hardcoded it
-# would point at a NONEXISTENT `develop` on a two-stage project — and Renovate without a valid
-# base opens NO PR at all, silently. The failure mode of a botched injection is the current
-# behavior (PR on main); the failure mode of the reverse is a dead bot.
-# The WHY of the key itself: the `description` block of templates/repo/.github/renovate.json.
+#   (detail: docs/code/init-project.md)
 if [ "$STAGING" = 1 ]; then
   RJ="$DEST/repo/.github/renovate.json"
   sed -e 's|^  "schedule":|  "baseBranchPatterns": ["develop"],\
@@ -238,15 +211,7 @@ if [ -n "$LEFT" ]; then
 fi
 
 # Net 2/2 — placeholders the HUMAN must fill in, in VERSIONED files, so PUBLISHED.
-#   These, the script CANNOT guess (`<contact>`, `<one line>`…) — it must especially not
-#   invent them. But staying silent is worse: a published `SECURITY.md` saying "reach out to <contact>"
-#   leaves a researcher WITHOUT any way to report a vulnerability. This is defect #3 (dead links), the
-#   same as before. → they get LISTED, and going public requires them filled in (docs/repo-controls.md).
-#   README deliberately EXCLUDED: it's obvious to fill in, and its HTML tags (<picture>, <p …>)
-#   are false positives that would drown out the only message that matters — the one about `<contact>`.
-#   LICENSE deliberately EXCLUDED too: its year and holder are substituted right above, so nothing
-#   is left to fill — and the license text carries its own canonical URL between angle brackets,
-#   which the pattern would report as a placeholder.
+#   (detail: docs/code/init-project.md)
 HUMAN=$(grep -rl '<[a-z][^>]*>' "$DEST/repo/SECURITY.md" "$DEST/repo/CODE_OF_CONDUCT.md" \
   "$DEST/repo/AGENTS.md" \
   "$DEST/repo/.github/workflows/pages.yml" 2>/dev/null || true)
@@ -267,12 +232,7 @@ cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
 
 # Lifecycle docs — default from the 1st commit (docs/METHODE.md).
-# A SKELETON, not just a title: an empty file doesn't get filled in, it gets ignored. The sections
-# below are exactly the questions someone — human or AI — asks when reopening the
-# project 6 months later and remembers nothing.
-#
-# QUOTED heredoc ('EOF'): without the quotes, the shell interprets the backticks as a command
-# substitution and EMPTIES all the `paths` in the template. The project name is substituted afterward, by sed.
+#   (detail: docs/code/init-project.md)
 if [ "$LIFECYCLE_DOCS" = 1 ]; then
 
 cat > "$DEST/workspace/docs/SUIVI.md" <<'EOF'
@@ -355,12 +315,8 @@ git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT che
 git add -f requirements-ci.txt
 git commit -q -m "initial project structure"
 
-# gitleaks pre-commit hook — ARMED AFTER the initial commit (docs/repo-controls.md). LOCAL config: a fresh
-# clone has to set it again. ⚠ AFTER, not before: the initial commit is clean BY CONSTRUCTION
-# (EXPLICIT list of files, never .env/.envrc), so there's nothing to scan there; arming it BEFORE
-# would require gitleaks to commit this scaffolding, and the hook HARD-FAILING in its absence would block
-# generation itself — the script would sabotage itself right after warning "gitleaks missing". The hook
-# protects DEV commits, not the scaffolding.
+# gitleaks pre-commit hook — ARMED AFTER the initial commit (docs/repo-controls.md). LOCAL config:
+#   (detail: docs/code/init-project.md)
 git config --local core.hooksPath .githooks
 command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks missing — 'brew install gitleaks' (otherwise every commit will be blocked)"
 

@@ -21,7 +21,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Two absolute limits on comments, beside the drift that was already there**: a **level** (25 %)
+  and a **longest block** (6 lines), on the files a branch **touches**. Drift alone cannot see a
+  file *born* verbose — it never grows, so it never speaks, and every one of the 25 scripts here
+  sat between 31 % and 64 % comment without a single verdict. Both values were measured before
+  being set: at a 4-line block the guard fires on legitimate warnings *(33 blocks read one by one:
+  "SQUASH-ONLY and a STAGING branch are INCOMPATIBLE", "in DRY-RUN the verdict cannot come from the
+  return code")*, at 8 it starts covering section headings. Touched-files-only is what makes the
+  rule landable: applied to the whole tree it would have turned all 25 scripts red at once.
+  ⚠️ **A shebang is not a comment** — counting it made every minimal header a violation.
+- **`docs/code/`** — one note per file, owning its **implementation** constraints, so the *why* has
+  somewhere to go when it leaves a script. What a check looks for stays in `repo-controls.md`; the
+  rule it enforces stays in `METHODE.md`. The notes **travel with the checks** *(`verify-*.md`
+  only: the generator's own notes describe files a generated project does not have)*.
+
 ### Fixed
+- **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
+  its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
+  ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
+  a constraint far more often than a story), and the sixth needed narrowing from the noun to the
+  VERB: naming the maintainer is usually a constraint ("run by THE MAINTAINER, never by the
+  assistant"), what tells a story is "the maintainer said". 14 lines flagged became 4, all four
+  narrative. Recall is traded for precision, deliberately, because this one blocks.
 - **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
   tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
   list was short. Three candidates were measured over **1683 real messages** before one was picked:

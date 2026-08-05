@@ -1,38 +1,9 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# A script's comment growing faster than the code under it.
-#
-# METHODE says a comment carries only what the code cannot: the WHY, a constraint that would
-# recur. A comment that keeps growing while the code does not is the shape that rule fails in —
-# the doc's narrative migrating into the script, one paragraph at a time.
-#
-# An absolute ratio would say nothing here. These scripts sit at 28-56% comment, far above what
-# general-purpose tools recommend, and deliberately so. What IS observable is the DIFFERENCE
-# between the two growth rates, measured against the last release rather than a number someone
-# picked. Across this repo's releases that difference has a median of 0 and a 95th percentile of
-# +6, with exactly one real outlier at +149 — a script that gained 196% comment for 47% code.
-# Hence a threshold well above the noise and well below the one case that mattered.
-#
-# 🔴 BOTH repositories, like its twin verify-narrative.sh. Concision and "a comment says only what
-# the code cannot" are rules of METHOD, and METHODE's discriminator sends those into the
-# neighbouring workspace/ too — unlike a rule of published style, which stops where publication
-# stops. Reading repo/ alone was an exemption nothing justified, and one that would have gone on
-# looking exactly like a clean result the day a script landed over there.
-#
-# The workspace carries no tag, so what crosses over is the release TIMESTAMP: both repositories
-# advance on the same undertaking, and its last commit strictly before that instant is the same
-# reference point. This is verify-growth.sh's parade, for the same reason.
-#
-# 🔴 The comment marker is looked up per LANGUAGE, not assumed to be `#`. This repo happens to be
-# shell and python, but the check travels the same way the rule does, and a generated project may
-# be TypeScript, Go or Rust — where a `#`-only reading would count zero comments and report a
-# tidy "nothing to see" on a file that is 80% commentary.
-#
-# An extension nobody listed is NOT silently skipped: it is named at the end, per repository. A
-# missing language would otherwise be a hole that looks exactly like a clean result.
-#
-# BLOCKING. Growth is often legitimate, and this header called itself advisory long after that
-# stopped being true. What it makes impossible is not noticing.
+# A comment growing faster than the code under it, sitting above a level, or running too long.
+# Three limits: DRIFT since the last release, LEVEL (25 %) and longest BLOCK (6 lines); the last
+# two apply to TOUCHED files only.
+# 🔴 Thresholds, per-language marker, both repositories: docs/code/verify-comment-drift.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -50,19 +21,10 @@ COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
 # Added comment lines below which a percentage gap is an artefact of a small base.
 COMMENT_MIN_LINES=${COMMENT_MIN_LINES:-20}
 
-# 🔴 THREE calls per marker family per side, whatever the file count — not four forks per file.
-# `git show | awk` and `cat | awk` cost 152 processes for 38 files. The three counts below are what
-# the awk produced, expressed as patterns git can count in bulk:
-#   A = non-empty lines            `[^[:space:]]`          (the awk skips lines empty after trim)
-#   B = leading-comment lines      `^[[:space:]]*<marker>` (index(trimmed, marker) == 1)
-#   C = lines holding the marker   fixed string            (leading OR trailing)
-# and the awk's two totals follow: comments = C, code = A - B. A trailing comment counts once in
-# each, which is exactly what C and A-B give it.
-# `-e` on every pattern: a `--` marker is otherwise read as the end of the options.
-# Every count is TAGGED as it is produced, and they all land in one file. Relying on argument
-# ORDER instead breaks twice over: several marker families produce several files per kind, and a
-# family with no match produces an EMPTY one that awk never opens — both shift every later count
-# onto the wrong slot, silently.
+# Three bulk `git grep` calls per marker family per side: A = non-empty lines, B = leading-comment
+# lines, C = lines holding the marker. Comments are C, code is A - B.
+# 🔴 Every count is TAGGED as it is produced — keying on argument ORDER shifts every later
+#   count onto the wrong slot, silently. Why, and the cost it replaced: docs/code/verify-comment-drift.md.
 emit() {                 # <tag> <strip-leading-rev> — normalises "rev:path:n" / "path:n" on stdin
   awk -v tag="$1" -v strip="$2" '{
     line = $0
@@ -175,5 +137,65 @@ else
   scope="repo/ only"
 fi
 
-[ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $tag — $scope; read:$read_out"
+# ── Level and longest block, on the files this branch TOUCHES ──────────────────────────────
+# Drift alone cannot see a file BORN verbose: it never grows, so it never speaks. Two absolute
+# limits close that, and they apply to touched files only — the debt is paid where work happens,
+# instead of turning the whole tree red on the day the rule lands.
+COMMENT_LEVEL=${COMMENT_LEVEL_THRESHOLD:-25}
+COMMENT_BLOCK=${COMMENT_BLOCK_THRESHOLD:-6}
+level_checked=0
+
+scan_touched() {         # <repository> <label>
+  local dir="$1" label="$2" f marker list
+  list=$(mktemp)
+  { git -C "$dir" diff --name-only origin/main...HEAD 2>/dev/null
+    git -C "$dir" diff --name-only HEAD 2>/dev/null
+    git -C "$dir" diff --cached --name-only 2>/dev/null
+  } | sort -u | while IFS= read -r f; do
+        [ -n "$f" ] && [ -f "$dir/$f" ] || continue
+        marker=$(marker_for "$f")
+        [ -n "$marker" ] && printf '%s\t%s\n' "$marker" "$dir/$f"
+      done > "$list"
+
+  local n; n=$(grep -c . "$list" || true)
+  level_checked=$(( level_checked + n ))
+  if [ "$n" -gt 0 ]; then
+    LABEL="$label" LEVEL="$COMMENT_LEVEL" BLOCK="$COMMENT_BLOCK" python3 - "$list" <<'PY' || return 1
+import os, re, sys
+label = os.environ["LABEL"]; LEVEL = int(os.environ["LEVEL"]); BLOCK = int(os.environ["BLOCK"])
+bad = 0
+for line in open(sys.argv[1], encoding="utf-8"):
+    marker, path = line.rstrip("\n").split("\t", 1)
+    try: lines = open(path, encoding="utf-8", errors="replace").read().split("\n")
+    except OSError: continue
+    lead = re.compile(r"^\s*" + re.escape(marker))
+    com = code = longest = run = 0
+    for k, l in enumerate(lines):
+        if k == 0 and l.startswith("#!"):
+            continue          # a shebang opens the file, it does not comment it
+        if lead.match(l):
+            com += 1; run += 1; longest = max(longest, run)
+        else:
+            run = 0
+            if l.strip(): code += 1
+    if com + code < 20:          # too small a base for a percentage to mean anything
+        continue
+    pct = com * 100 // (com + code)
+    name = path.split("/")[-1]
+    if pct > LEVEL:
+        print(f"  ↑ {label}{name:<34} {pct}% comment (limit {LEVEL}%) — move the WHY to docs/, keep the constraint")
+        bad += 1
+    if longest > BLOCK:
+        print(f"  ↑ {label}{name:<34} a {longest}-line comment block (limit {BLOCK}) — split it or move it out")
+        bad += 1
+sys.exit(1 if bad else 0)
+PY
+  fi
+  return 0
+}
+
+scan_touched . "repo/" || grown=1
+[ -d ../workspace/.git ] && { scan_touched ../workspace "workspace/" || grown=1; }
+
+[ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $tag, and none crossed ${COMMENT_LEVEL}% or a ${COMMENT_BLOCK}-line block — $scope; read:$read_out $level_checked touched file(s) for level and block"
 exit "$grown"   # blocking: same reason

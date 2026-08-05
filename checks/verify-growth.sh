@@ -1,37 +1,10 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# Curated documents that only ever GROW.
-#
-# Scripts are NOT here: a comment outgrowing its code is a different question, asked at a
-# different moment and answered from a different target, so it lives in its own check.
-# Keeping both under one roof produced a defect within the hour — gating the pair on prose
-# blinded the script half exactly on a commit that touched only scripts.
-#
-# METHODE says the main documents stay short, and that a stage's closure makes the tracking doc
-# SHRINK: it grows while a stage runs, then gets pruned. A document no one rereads is useless, and
-# a runbook that has become unreadable goes unread — after which the action gets done from memory.
-#
-# Concision is a rule of METHOD, not one of published style, so it follows the method into the
-# neighbouring workspace — where the very document METHODE names as the one that must shrink lives.
-# Archives are left out on purpose: they are the cold side, and METHODE states that too many
-# archive files is not a problem.
-#
-# An absolute size would be arbitrary: repo-controls.md is legitimately long, it absorbed four
-# sections. What IS observable is a document that grows and never comes back down. So the
-# comparison is against the last RELEASE, not against a number someone picked.
-#
-# The workspace carries no tag, so what crosses over is the release TIMESTAMP: both repositories
-# advance on the same undertaking, and its last commit strictly before that instant is the same
-# reference point. Reaching for a tag that does not exist there would print "no release yet" and
-# pass in silence — a guard fails by passing, not by shouting.
-#
-# Both bytes AND lines are compared: the curated documents run from 57 to 175 bytes per line, so a
-# document written one sentence per line can swell by half in bytes without moving a single line.
-#
-# BLOCKING. Growth is often legitimate (a subject arrives), and this header called itself advisory
-# long after that stopped being true — the threshold was settled on measurement and the check was
-# made to block, while this line went on saying otherwise. What it makes impossible is growing
-# without noticing, and being unable to say, at closing time, what actually breathed.
+# A curated document that only ever grows — forbidden by METHODE: the hot side SHRINKS when a
+# stage closes. Compared against the last release, in both repositories.
+# 🔴 Documents are DETECTED, never listed; what accumulates by nature is excluded (a CHANGELOG,
+# an archive, a GENERATED page). Why, and the exclusion list: docs/code/verify-growth.md.
+
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -48,19 +21,9 @@ released_at=$(git log -1 --format=%cI "$tag")
 
 grown=0
 
-# `grep -c ''` on both sides so both count the same thing: `wc -l` counts newlines, and misses a
-# last line with no final newline. Awk counts RECORDS below, which is the same semantics.
-#
-# The file list is filtered in the shell rather than through a pathspec: `ls-tree` matches a
-# pathspec literally, so `docs/*.md` selects nothing, and it rejects `:(exclude)` outright. Both
-# failures are empty output, which reads exactly like a clean tree.
-#
-# 🔴 FOUR calls, whatever the file count. This used to fork `git show` AND `git cat-file -s` once
-# per document — measured at 585 ms of pure process startup for 24 files, the single dominant cost
-# of this check, against 40 ms for the four bulk calls that replace them. `git cat-file --batch`
-# was the obvious route and was rejected: its stream interleaves headers with raw bytes, and no awk
-# can skip a byte count, so a file with no trailing newline shifts every object after it.
-# The join happens in awk because /bin/bash 3.2, which macOS ships, has no associative arrays.
+# FOUR bulk calls, whatever the file count; the join is in awk (bash 3.2 has no assoc. arrays).
+# 🔴 `grep -c ''` on BOTH sides, and the list filtered in the shell — why, and the two routes
+#   rejected: docs/code/verify-growth.md.
 compare_tree() {         # <repository> <revision> <label> <ERE selecting the curated documents>
   local dir="$1" rev="$2" label="$3" select="$4"
   local T; T=$(mktemp -d)
@@ -114,17 +77,8 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
   rm -rf "$T"
 }
 
-# 🔴 DETECTED, never listed. It used to name `docs/*.md` plus three files at the root, which
-# presumes a project keeps its prose where this one does: a project writing into `documentation/`
-# or `guide/` was invisible to it. Every tracked `.md` is compared now, minus what accumulates by
-# nature — a CHANGELOG, an archive, a form template. Same exclusions as verify-echo.sh: concision
-# is one rule, and two checks reading two different sets of documents would be two answers to it.
-#
-# ⚠ `CONTROLES.md` joins them because it is not CURATED: `check.sh` rewrites it whole at every
-# verdict, one row per control recorded, so it grows by recording rather than by writing. With the
-# journal left on, it crossed the threshold on its own (+42 %) and blocked a commit that had not
-# touched it. The rule this check enforces — a curated document SHRINKS when a stage closes — has
-# no meaning for a page no human writes.
+# 🔴 DETECTED, never listed — every tracked `.md`, minus what accumulates by nature (a CHANGELOG,
+# an archive, a GENERATED page). Same exclusions as verify-echo.sh: one rule, one set of documents.
 EXCLUDE='(^|/)(CHANGELOG\.md$|archives?/|\.github/|CONTROLES\.md$)'
 compare_tree . "$tag" "" '\.md$'
 
