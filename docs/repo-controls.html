@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:7b6acb854e0dda24f6418c4b7d4c2515b0ffae87d570d4ad0f7d6cd28c7613fe
+  checksum-source-md: sha256:25d5e1d194929389826df3bd419ecac74c5a30a9449678841b76b8d687d0ca65
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1789,6 +1789,16 @@
           <td>settled</td>
           <td class="t">1,76 s</td>
           <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-stage-closure.sh</code></td>
+          <td>a stage that closed without leaving its archive, or a finished <code>RECHERCHE-*</code> left on the hot side</td>
+          <td class="h">local</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the trigger is measured (a merged PR loses to a random instant by 11 points; a release wins), but the invariant has never yet been violated: 3 closed stages, 3 archives</td>
+          <td class="t">0,05 s</td>
+          <td>⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>

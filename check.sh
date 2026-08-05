@@ -472,6 +472,11 @@ fi
 
 # verify-workspace.sh — the neighbouring workspace/ has NO remote on purpose, which is exactly what
 # makes it invisible: no diff-vs-origin, no CI, and this script runs in repo/ without looking beside it.
+if [ -x checks/verify-stage-closure.sh ]; then
+  note "verify-stage-closure.sh — a stage closed without leaving its archive (advisory)"
+  if reap verify-stage-closure; then ok "stage closure"; else ko "stage closure"; fi
+fi
+
 if [ -x checks/verify-workspace.sh ]; then
   note "verify-workspace.sh — the neighbouring workspace (no remote, no secret tracked)"
   if reap verify-workspace; then ok "workspace"; else ko "workspace"; fi

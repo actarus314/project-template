@@ -21,6 +21,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
+  recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
+  hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
+  two controls answering one question end up disagreeing. **The trigger was measured, and the
+  obvious one lost**: a merged pull request is followed by a write to the tracking doc 99 % of the
+  time — against 88 % for an instant drawn at random, an 11 point edge that would bite on 1 pull
+  request out of 107. A release is a closure; a fix's pull request is not. What the release decides
+  is the reference point, never the rhythm — the check runs at every commit like its siblings.
+
 ### Changed
 - **The end-of-turn check now BLOCKS.** `checks/verify-turn-claims.sh` ends a turn with
   `decision: block` instead of a remark: the reason reaches the model, which settles it or states why
