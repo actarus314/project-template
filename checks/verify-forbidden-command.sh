@@ -110,16 +110,18 @@ BLOCK = [
      "`gh run list --commit \"$sha\" --json workflowName,status,conclusion` — and treat a MISSING "
      "workflow as not green. AGENTS.md."),
 ]
-# Warned, not blocked: opening a second pull request is sometimes right — a change of SUBJECT
-# justifies one. Only the maintainer can tell, so this states the question rather than deciding it.
-WARN = [
-    ("second-pr-same-undertaking",
-     r"open-pr\.sh\b",
-     "Before opening: does the PREVIOUS pull request carry the SAME undertaking? If it does, commit "
-     "onto its branch and push — pushing is free, a pull request costs a full CI run. Each batch "
-     "looks coherent in isolation, which is why the question is asked out loud. AGENTS.md."),
-]
-
+# ⚠ THE "second pull request on the same undertaking" RULE WAS REMOVED FROM HERE, after three forms
+# were tried and each ruled out. It stays a convention in AGENTS.md; it stops pretending to guard.
+#   · BLOCK — ruled out by measurement: the signal cannot separate a fault from a legitimate stage.
+#     #94, #95 and #96 score highest and are the assumed steps of ONE undertaking, so it would refuse
+#     correct work. The overlap ratio also misleads on small diffs, and bot batches open six at once.
+#   · A MESSAGE — ruled out by observation: it fired when #109 was opened and changed nothing, not
+#     even a mention. A notice nobody acts on is worse than none — it looks like a guard.
+#   · ASK the maintainer — ruled out by the maintainer: escalation is a LAST RESORT, never routine.
+#     Asking at every opening adds a decision to the person who wanted fewer of them.
+# Nothing viable was left, and this file's own rule is that a verdict which is neither mechanical nor
+# affordable does not belong in it. The cost named afterwards is the full open+merge CYCLE (48% of
+# pull requests carry a single commit) — a grouping discipline upstream, not a gate at opening time.
 for tag, pattern, reason in BLOCK:
     if re.search(pattern, cmd, re.I):
         record(1, "denied: " + tag)
@@ -128,12 +130,6 @@ for tag, pattern, reason in BLOCK:
             "systemMessage": "Forbidden by this repo: " + reason,
         }), file=sys.stderr)
         sys.exit(2)
-
-for tag, pattern, reason in WARN:
-    if re.search(pattern, cmd, re.I):
-        record(1, "warned: " + tag)
-        print(json.dumps({"systemMessage": "⚠ " + reason}))
-        sys.exit(0)                  # advisory: states the question, lets the command through
 
 record(0)
 sys.exit(0)

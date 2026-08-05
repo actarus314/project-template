@@ -22,6 +22,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
+  forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a
+  fault from a legitimate stage — the three highest-scoring pairs are steps of one undertaking)*,
+  **a message** by observation *(it fired when `#109` opened and changed nothing, not even a
+  mention)*, and **asking the maintainer** by the maintainer *(escalation is a last resort, not a
+  routine — it adds a decision to the person who wanted fewer)*. The rule stays a convention in
+  `AGENTS.md` and stops pretending to be a guard. The real cost is the full **open+merge cycle**
+  *(48 % of pull requests carry a single commit)* — a grouping discipline upstream, not a gate at
+  opening time.
 - **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
   whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
   document written the same day, which is how four closed items sat in the open-work section for a
