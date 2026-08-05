@@ -325,7 +325,7 @@
 
   <div class="note" style="margin-top:18px">
     <h3>🔴 <code>develop</code> does NOT follow from Docker — it follows from STAGING</h3>
-    <p>A <strong>node</strong> project with no host to validate does not need <code>develop</code>. Neither does a static site also packaged as an image: there is no intermediate stage — the image <em>is</em> the page served by nginx.</p>
+    <p>The single question, and both examples, live in <a href="#the-flow-where-the-code-goes">The flow — where the code goes</a>.</p>
     <p>The need for a staging stage comes from DEPLOYMENT, not from the language or taste.</p>
   </div>
 
@@ -417,7 +417,7 @@
   </div>
 
   <h3 style="color:var(--ink); font-size:1rem; font-weight:620; margin:0 0 4px">Without <code>staging</code> — GitHub Flow, two branches are enough</h3>
-  <p class="sub" style="margin-bottom:18px">This is the case of a Pages site, <strong>and also</strong> that of a static site packaged as an image so third parties can self-host it. Nothing to validate upstream → a <code>develop</code> would be an <strong>empty ritual</strong>, and a long-lived branch nobody uses drifts until the merge stops happening.</p>
+  <p class="sub" style="margin-bottom:18px">This is the case of a Pages site <em>(Pages <strong>is</strong> already prod, so there is nothing to validate upstream)</em>, <strong>and also</strong> that of a static site packaged as an image so third parties can self-host it. Nothing to validate upstream → a <code>develop</code> would be an <strong>empty ritual</strong>, and a long-lived branch nobody uses drifts until the merge stops happening.</p>
 
   <div class="graph">
     <svg viewBox="0 0 760 150" role="img" aria-label="Static flow: feat to main, one pull request">
@@ -1327,7 +1327,7 @@
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
     <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>: it reads <code>statusCheckRollup</code>, which requires the <code>Checks</code> permission — <strong>documented by GitHub but absent from the UI</strong> of fine-grained PATs, so impossible to grant. The result is <code>Resource not accessible by personal access token</code>, and <code>gh pr view &lt;n&gt;</code> alone fails for the same reason. The rule was written everywhere, and <strong>unenforceable everywhere</strong>.</p>
     <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha" --json workflowName,status,conclusion</code>. The <code>--json</code> form targets a field, so no rollup is requested — and it is what makes each workflow's <code>completed / success</code> readable one by one.</p>
-    <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong>: <code>CI</code>, plus <code>Publish image</code> if <code>docker-publish.yml</code> exists — the same set as the ruleset's required checks, derived the same way. ⚠️ <strong>A MISSING workflow is not a green.</strong> GitHub registers workflows one by one: for a few seconds after a push, <code>CI</code> can be <code>success</code> while <code>Publish image</code> has not been created yet. <strong>"Nothing red" ≠ "everything green".</strong></p>
+    <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong> — the exact set, and why a missing workflow is not a green, live in <code>AGENTS.md</code>, “Discipline — PR-only”.</p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
   </div>
 </section>

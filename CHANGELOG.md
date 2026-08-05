@@ -37,6 +37,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   used to state about itself.
 
 ### Changed
+- **`verify-echo.sh` stopped reporting the very shape the rule prescribes.** A paragraph that LINKS
+  to another document is the pointer METHODE asks for, not a copy — and a good pointer names what it
+  points at, so it shares that document's vocabulary by construction. Three of the four last pairs
+  were exactly that. Pointers are now excluded, and the French detector recognises short technical
+  prose *(a bilingual README's French half was reading as English and being compared with its own
+  English half)*. **34 pairs → 0**, and a planted copy still scores 1.00.
 - **The three advisory checks now BLOCK** — a warning nobody must act on is a warning nobody reads.
   Two tunings came with it, each measured: `verify-comment-drift` gained a **floor in lines** beside
   its percentage gap *(percentages alone over-report a small file: +134 % of comment against +94 %

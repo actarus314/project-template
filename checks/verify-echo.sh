@@ -93,7 +93,7 @@ if pathlib.Path("../workspace").is_dir():
     GROUPS.append(("workspace/", tracked_md("../workspace")))
 GROUPS = [(label, files) for label, files in GROUPS if files]
 
-FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus)\b", re.I)
+FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus|du|aux|ses|leur|jamais|sans|selon|chaque|ainsi|donc|cette|cet)\b", re.I)
 def language(text):
     # >= 2, not 4: a short technical paragraph carries few function words, so the bilingual
     # README's French half read as English and was compared against its own English half.
@@ -120,6 +120,14 @@ for label, files in GROUPS:
         norm = math.sqrt(sum(x * x for x in v.values())) or 1.0
         vecs.append({w: x / norm for w, x in v.items()})
 
+    # A paragraph LINKING to the other document is the pointer METHODE prescribes, not a copy — and
+    # a good pointer names what it points at, so it shares its vocabulary by construction. Reporting
+    # it would punish exactly the shape the rule asks for.
+    import os.path
+    def points_at(text, other_path):
+        base = os.path.basename(other_path)
+        return f"]({base}" in text or f"](./{base}" in text or f"`{base}`" in text
+
     pairs = []
     # Computed ONCE per paragraph, not once per PAIR. The loop below is quadratic, so a regex over
     # the full text was being rerun n²/2 times on the same strings — the single dominant cost of
@@ -129,6 +137,8 @@ for label, files in GROUPS:
         for j in range(i + 1, n):
             # The README is bilingual by design, and its two halves restate each other on purpose.
             if langs[i] != langs[j]:
+                continue
+            if points_at(docs[i][1], docs[j][0]) or points_at(docs[j][1], docs[i][0]):
                 continue
             s = sum(vecs[i][w] * vecs[j].get(w, 0.0) for w in vecs[i])
             if s >= THRESHOLD:
