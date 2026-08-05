@@ -79,7 +79,45 @@ else
     case " $OTHERS $INNOCENT " in *" $d "*) continue;; esac
     unlisted="$unlisted $d/"
   done < <(git -C "$ws" ls-files 2>/dev/null | grep '/' | cut -d/ -f1 | grep -E '^\.[a-zA-Z]' | sort -u || true)
+
+  # 🔴 The backlog holds OPEN work only — a closed item leaves for the state section or an archive.
+  # That rule is written in the tracking doc itself, and it was written because closure markers had
+  # piled up inside the backlog until it stopped answering "where do I put the effort".
+  # It got broken again the same day, four markers deep, and no check noticed: growth was measured
+  # (+24% against a 25% threshold, one point short) but growth is the SYMPTOM. The rule itself is
+  # binary — a closed marker inside the open-work section — so it needs no threshold and no measure.
+  # This is the shape a closing pass leaves behind when only its first half was done.
+  #
+  # ⚠ WHAT THIS CANNOT DO, and it must not be read as more. It matches a FORM, never a state: an
+  #   item that is finished, left in place, and never marked at all is invisible to it. The marker
+  #   is a habit of whoever writes the document, not a guarantee — and a check resting on a habit
+  #   inherits that habit's reliability. The list below is widened for that reason and still cannot
+  #   be complete.
+  #   So this catches the closing pass whose second half was skipped, and nothing more. Whether the
+  #   backlog still describes the open work is the same question as whether the tracking doc is
+  #   TRUE, which this file states from its first lines is not verifiable and must never be promised.
+  track=$(ls "$ws"/SUIVI.md "$ws"/docs/SUIVI.md 2>/dev/null | head -1 || true)
+  if [ -z "$track" ]; then
+    :   # no tracking doc of the shape this rule describes: nothing to say, and it is not a fault
+  else
+    # The section is found by heading, and the scan stops at the next heading of the same level —
+    # a closure marker in the state section above is exactly where it BELONGS.
+    #
+    # 🔴 The marker counts only at the START OF A CELL. Anywhere else it is a MENTION, not a mark:
+    # the very row describing this rule quotes "des lignes passent à ✅", and a loose match read that
+    # sentence as a closed item. Same failure the forbidden-command hook pays for with heredocs, and
+    # the wiring check with code lines — a literal appears in prose too.
+    stale=$(awk '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }
+      inside && /^\|/ && /\|[[:space:]]*(✅|✔|☑|~~|LIVRÉ|LIVRE|DONE|FAIT|TERMINÉ|TERMINE|CLOS)/ { print NR ": " substr($0, 1, 72) }   # fr-pattern: the doc it reads is French
+    ' "$track" || true)
+    if [ -n "$stale" ]; then
+      say "closed items are sitting in the open-work section of $(basename "$track") — they belong in the state section or an archive:
+$stale"
+    fi
+    read_backlog=" backlog hygiene"
+  fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
 exit "$fail"

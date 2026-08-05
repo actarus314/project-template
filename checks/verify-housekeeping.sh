@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
-# hook: Stop, PreCompact — fired by the assistant, never by check.sh: it reads its payload from STDIN.
+# hook: Stop, PreCompact, UserPromptSubmit — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The development admin falling behind the work: commits piling up with nothing written down.
 #
-# TWO events, because there are two ways the record gets lost. `Stop` catches the drift, turn after
-# turn. `PreCompact` catches the cliff: compaction drops the conversation, and everything decided in
-# it that was never written down goes with it. The pass is worth asking for again there even when
-# the turn-by-turn guard has already asked and been answered — which is why the "asked once" latch
-# below does not apply to it.
+# THREE events, because there are three ways the pass gets missed. `Stop` catches the drift, turn
+# after turn. `PreCompact` catches the cliff: compaction drops the conversation, and everything
+# decided in it that was never written down goes with it. The pass is worth asking for again there
+# even when the turn-by-turn guard has already asked and been answered — which is why the "asked
+# once" latch below does not apply to it.
+#
+# 🔴 `UserPromptSubmit` catches the third, and it exists because of a measured failure: the skill
+# this routes to lists "je vais clear" among its own triggers, the maintainer wrote exactly that,
+# and THE SKILL DID NOT FIRE. A skill is invoked by a model's judgement, never by a mechanism, and
+# nothing arms that judgement the way `verify-do-not-break` arms a hook's wiring. Here the routing
+# becomes mechanical: the event fires before the prompt is processed, carries `user_input`, and its
+# stdout is one of the three whose stdout Claude actually SEES — so the instruction reaches the
+# model rather than hoping the model reaches for it.
+#
+# It does NOT block: injecting the reminder is enough, and refusing a maintainer's prompt over a
+# regex would be the guard earning its own bypass. The patterns are the strict ones measured across
+# 1756 real human messages — 16 matches, 0,9 %, the same order as the end-of-turn signals. Loose
+# wordings ("en ordre", a bare "clear") matched 82 times, most of them nothing to do with the pass.
 #
 # ⚠ On PreCompact it blocks ONLY when compaction was asked for by hand. An `auto` compaction means
 #   the context window is full and Claude Code has to reclaim it; refusing that leaves the session
@@ -73,6 +86,34 @@ EVENT=$(printf '%s' "$payload" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:sp
 TRIGGER=$(printf '%s' "$payload" | sed -n 's/.*"trigger"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 [ -n "$EVENT" ] || EVENT=Stop
 case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; esac
+
+# ── UserPromptSubmit: the pass was ASKED FOR, in words. Route it, and stop there. ─────────────
+# No backlog counting here — the trigger is the request itself, not the drift. Fires on every
+# prompt, so it must be quiet and quick: everything that does not match leaves without a word.
+if [ "$EVENT" = UserPromptSubmit ]; then
+  JOURNAL_NAME="housekeeping (asked in words)"
+  printf '%s' "$payload" | python3 -c '
+import json, re, sys
+try: ev = json.load(sys.stdin)
+except Exception: sys.exit(0)
+txt = str(ev.get("user_input") or "")
+PAT = [
+    r"passe[s]? de fin de chantier|fais (?:la|une) fin de chantier",   # fr-pattern
+    r"je vais /?clear|que je puisse /?clear|avant de /?clear|/?clear pour repartir",   # fr-pattern
+    r"(?:suivis?|repos locaux|docs et archives|tout)\s*(?:sont|est)?\s*(?:bien )?à jour\s*\?",   # fr-pattern
+]
+if not any(re.search(p, txt, re.I) for p in PAT):
+    sys.exit(0)
+# stdout on this event IS the context the model reads: state the instruction, not a hint.
+print("[housekeeping] The maintainer just asked for the closing pass. Invoke the `housekeeping` "
+      "skill now, before answering anything else — it carries the checklist and decides what "
+      "actually needs writing. Measured: this request is followed by a write to the tracking doc "
+      "9 times out of 9, against 55% for an ordinary moment.")
+sys.exit(7)                      # 7: matched, so the shell below records it
+' && rc=0 || rc=$?
+  [ "${rc:-0}" = 7 ] && record 1 "routed to the housekeeping skill"
+  exit 0
+fi
 
 WS="$REPO/../workspace"
 TRACK="$WS/SUIVI.md"

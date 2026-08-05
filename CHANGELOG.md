@@ -22,6 +22,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
+  `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
+  few an assistant actually *sees*, so a request for the pass reaches the model as an instruction
+  instead of relying on a skill firing by judgement. It exists because of a measured failure — the
+  skill lists *"je vais clear"* among its own triggers, the maintainer wrote exactly that, and
+  **the skill did not fire**. The patterns are the strict ones measured across 1756 real messages
+  *(16 matches, 0,9 %)*; loose wordings matched 82 times, mostly unrelated. It does not block.
+- **`verify-do-not-break` watches EVERY skill's symlink**, detected rather than named. It was
+  hard-coded to one skill for as long as there was only one, and the second shipped with its link
+  guarded by nothing — the exact failure that skill is otherwise prone to: an unlinked skill does
+  not error, it simply never appears.
+- **`verify-workspace` refuses closed items sitting in the open-work section** of the tracking doc.
+  The rule was already written *in that document*, and had been rewritten the same morning because
+  closure markers had piled up there; it was broken again the same day, four markers deep, and
+  growth measured **+24 % against a 25 % threshold — one point short**. The rule itself is binary,
+  so it needs no threshold. ⚠️ **It matches a FORM, never a state**: an item finished, left in place
+  and never marked is invisible to it, and its header says so — a check resting on a habit inherits
+  that habit's reliability.
 - **What a check does with a verdict is now DECLARED, and confronted twice.** Every check carries
   `# blocking: yes|no` in its header, beside `# hook:` — and *advisory* is a claim about the **exit
   code**, never about the wording, since `check.sh` turns any non-zero into a failed gate.
