@@ -9,7 +9,9 @@
 # absolute path with every / turned into a dash. So this check is
 # LOCAL-ONLY by nature: the CI has no memories to look at, and that is not a gap.
 #
-# Silent no-op when the folder does not exist — most projects have none.
+# No-op when the folder does not exist — most projects have none — but a SPOKEN one: the caller
+# printed "✓ memories" over a run that had read nothing at all, which is the exact shape of tick
+# this repository arms itself against.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -20,7 +22,7 @@ fi
 
 slug=${PWD//\//-}
 dir="$HOME/.claude/projects/$slug/memory"
-[ -d "$dir" ] || exit 0
+[ -d "$dir" ] || { echo "  (no memories for this project — nothing to check: $dir)"; exit 0; }
 [ -f "$dir/MEMORY.md" ] || { echo "✗ $dir has memories but no MEMORY.md index" >&2; exit 1; }
 
 command -v python3 >/dev/null 2>&1 || { echo "  (python3 absent — memories not checked)"; exit 0; }

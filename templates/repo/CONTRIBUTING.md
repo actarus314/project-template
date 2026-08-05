@@ -11,30 +11,24 @@ reports, fixes, and small improvements are welcome.
 - No new dependencies for what a few lines of code can do.
 - User-facing change (a fix, a feature, a behavior change)? Add a line to the CHANGELOG.
 
-<!-- BRANCHING -->
-
 - Keep commits atomic and messages descriptive.
-- **CI must be green before a merge.** Check it:
+- **CI must be green before a merge**, and while the repository is private **nothing on the server
+  enforces that** — the rule is held by whoever merges. The exact command, what counts as green,
+  and the two absences that are normal rather than failures: **[`AGENTS.md`](AGENTS.md)**.
 
-  ```bash
-  sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)
-  gh run list --commit "$sha" --json workflowName,status,conclusion
-  ```
+## Everything else lives in `AGENTS.md`
 
-  Green means **every expected workflow is `completed / success`** — `CI`, plus `Publish image`
-  when the project publishes an image, plus **`CodeQL` once the repository is public** (it does
-  not run while private). A workflow **missing** from the list is **not** a green: it has not
-  reported yet.
+`AGENTS.md` is the authority, and this page holds only what it does not — each of the lines below
+was written in both files until the two copies started to disagree.
 
-  ⚠️ **Match on `workflowName`, not on `name`.** CodeQL runs through GitHub's *default setup*, so
-  it has no workflow file: its `name` reads `Push on main` — the run's title. Only `workflowName`
-  says `CodeQL`.
-
-  While the repository is **private**, this is *not* enforced by the server: a Free-plan private
-  repo has no rulesets, so GitHub would accept the merge of a red pull request, and a direct push
-  to `main`. A `pre-push` hook refuses the direct push; **nothing refuses the red merge but the
-  person doing it**. Once the repository is public, the ruleset enforces this and the rule stops
-  depending on anyone's memory.
+| To… | Read in [`AGENTS.md`](AGENTS.md) |
+|---|---|
+| know which branch to start from, and where the pull request goes | **Branching** |
+| verify a green before merging, then the `push` run on `main` | **While the repository is PRIVATE** |
+| replay the CI locally before pushing | **Checks that run** — `./check.sh` |
+| open the pull request and confirm the CI actually started | **Checks that run** — `./open-pr.sh` |
+| know which language to write in, and the conventions that apply | **Conventions** |
+| decide whether a change earns a `CHANGELOG` line | **Conventions** |
 
 ## Vendored bundle
 

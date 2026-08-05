@@ -10,9 +10,11 @@
 # Three targets, one script: multiplying tools is its own failure mode, and these three are read at
 # the same moment, for the same question ("is anything quietly unplugged?").
 #
-# Two of the three live OUTSIDE the repository, so the CI has nothing to look at. When they are
-# absent the script says so and moves on — but the third one, which is inside, always runs: a guard
-# that skips everything and prints a tick is worse than no guard.
+# Two of them live OUTSIDE the repository, so the CI has nothing to look at, and one is the
+# generator's own — absent from every project this repo generates. Each target DETECTS whether it
+# applies here; what is skipped is NAMED in the verdict, never folded into a bare tick. A guard that
+# skips everything and prints a tick is worse than no guard, and a guard that DEMANDS a file the
+# place cannot have is worse still: it fails where nothing is wrong.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -23,11 +25,18 @@ fi
 
 fail=0
 repo_root=$(pwd -P)
+read_targets=""   # what this run actually looked at
+skipped=""        # what it did not, and why it could not
 
 # 1 — the skill is reached through a SYMLINK into this repository. A copy would drift, and drifting
 #     copies of these recipes are what the anchoring was meant to end.
+#     The link belongs to whichever repository HOLDS the skill. Every other one shares the machine
+#     with it and must not be asked to account for it: without this condition, the link pointing at
+#     the template — which is correct — failed every generated project on the same disk.
 skill_link="$HOME/.claude/skills/new-project"
-if [ -e "$skill_link" ] || [ -L "$skill_link" ]; then
+if [ ! -d skills/new-project ]; then
+  skipped="$skipped skill-link(this repository does not hold the skill)"
+elif [ -e "$skill_link" ] || [ -L "$skill_link" ]; then
   if [ ! -L "$skill_link" ]; then
     echo "✗ $skill_link is NOT a symlink — a copy drifts, silently"
     fail=1
@@ -38,19 +47,27 @@ if [ -e "$skill_link" ] || [ -L "$skill_link" ]; then
       fail=1
     fi
   fi
+  read_targets="$read_targets skill-link"
 else
-  echo "  (skill not installed here — nothing to check)"
+  skipped="$skipped skill-link(not installed here)"
 fi
 
 # 2 — the three files the neighbouring template .gitignore would otherwise swallow. They are
 #     tracked through `git add -f`, so `git rm --cached` removes them without a word.
+#     They exist only where the templates do: demanding them anywhere else fails a project for not
+#     being the generator. The folder that holds them is the observable, so it is the condition.
 forced="templates/repo/.envrc templates/repo/CLAUDE.md templates/repo/requirements-ci.txt"
-for f in $forced; do
-  if ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
-    echo "✗ $f is no longer tracked — the template .gitignore swallowed it (re-add with: git add -f $f)"
-    fail=1
-  fi
-done
+if [ -d templates/repo ]; then
+  for f in $forced; do
+    if ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+      echo "✗ $f is no longer tracked — the template .gitignore swallowed it (re-add with: git add -f $f)"
+      fail=1
+    fi
+  done
+  read_targets="$read_targets forced-add-files"
+else
+  skipped="$skipped forced-add-files(no templates/ here)"
+fi
 
 # 3 — the absolute paths the assistant's own instructions point at. They are read from disk at every
 #     session start, so a moved file breaks every session without raising anything.
@@ -62,8 +79,9 @@ if [ -f "$claude_md" ]; then
   while IFS= read -r p; do
     [ -e "$p" ] || { echo "✗ $claude_md points at a path that no longer exists: $p"; fail=1; }
   done < <(grep -oE '(^|[[:space:]`(])/[A-Za-z0-9._/-]+\.md' "$claude_md" | sed 's|^[^/]*||' | sort -u)
+  read_targets="$read_targets absolute-pointers"
 else
-  echo "  (no assistant instructions here — nothing to check)"
+  skipped="$skipped absolute-pointers(no assistant instructions here)"
 fi
 
 # 4 — the hooks. They are the only checks nothing else can see running: they live in the
@@ -87,8 +105,22 @@ if [ -f "$settings" ] && [ -f "$table" ]; then
       echo "✗ hooks wired in $settings, but NOT these:$missing — they exist and never fire"
       fail=1
     fi
+    read_targets="$read_targets hooks"
+  else
+    skipped="$skipped hooks(the table declares none)"
   fi
+else
+  skipped="$skipped hooks(no assistant settings or no control table here)"
 fi
 
-[ "$fail" = 0 ] && echo "✓ nothing quietly unplugged: skill link, forced-add files, absolute pointers, hooks"
+# The verdict names what was READ and what was NOT. Four targets, each optional: a tick listing all
+# four while three were skipped is the shape of green this repo has already been caught printing.
+if [ "$fail" = 0 ]; then
+  if [ -n "$read_targets" ]; then
+    echo "✓ nothing quietly unplugged — read:$read_targets"
+  else
+    echo "✓ nothing to check here — none of the four targets exists in this project"
+  fi
+  if [ -n "$skipped" ]; then echo "  NOT read:$skipped"; fi
+fi
 exit "$fail"

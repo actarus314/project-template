@@ -45,13 +45,27 @@ else
   tracked=$(git -C "$ws" ls-files 2>/dev/null | grep -iE '(^|/)(secrets?|\.env)(\.[a-z]+)?$' || true)
   [ -n "$tracked" ] && say "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
 
-  # One living tracking document. Archives are excluded: a closed stage keeps its own account.
-  # Zero is not a fault — METHODE allows another system entirely (GSD's .planning/, a Linear) as
-  # long as there is only one. So the number gets REPORTED rather than judged: the message used to
-  # claim "one tracking doc" whatever the count, including none.
+  # ONE living tracking system. Archives are excluded: a closed stage keeps its own account.
+  # Zero is not a fault — METHODE allows another system entirely, as long as there is only one.
+  #
+  # 🔴 A SYSTEM, not a file. Counting only `SUIVI|TRACKING|PROGRESS.md` was blind to the collision
+  # METHODE actually forbids: a `.planning/` sitting beside a SUIVI.md is two systems for one
+  # question, and it is the stale one that gets read first. Measured: such a workspace returned the
+  # same "1 tracking doc" as one holding nothing else at all.
   n=$(git -C "$ws" ls-files 2>/dev/null | grep -icE '(^|/)(SUIVI|TRACKING|PROGRESS)\.md$' || true)
-  [ "${n:-0}" -gt 1 ] && say "$n tracking documents — two sources compete, and the stale one gets read first"
+  systems=$n
+  # ⚠ This list cannot be complete — no check can know every tracking tool. So it is NAMED in the
+  # verdict below: whoever reads it sees what was looked for, and therefore what was not.
+  OTHERS=".planning .gsd .taskmaster"
+  found_others=""
+  for d in $OTHERS; do
+    if git -C "$ws" ls-files "$d" 2>/dev/null | grep -q .; then
+      systems=$((systems + 1)); found_others="$found_others $d/"
+    fi
+  done
+  [ "$systems" -gt 1 ] &&
+    say "$systems tracking systems compete (${n} doc(s)${found_others:+, plus${found_others}}) — METHODE allows one, and the stale one gets read first"
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${n:-0} tracking doc(s)"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "$OTHERS" | sed 's|\([^ ]*\)|\1/|g; s| |, |g') (any other tool is invisible here)"
 exit "$fail"

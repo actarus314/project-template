@@ -85,23 +85,18 @@ cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
 # Under checks/, exactly where they live here — check.sh looks for them THERE, and dropping them at
-# the root left all three shipped but never run: the path died where the file landed.
+# the root left them shipped but never run: the path died where the file landed.
 #
-# Same model again: the second-person rule (standard §1) is stated in the project's AGENTS.md, so
-# the check that enforces it has to travel with it — otherwise check.sh finds nothing there and
-# goes silently green on a rule the project is still held to.
+# 🔴 ALL of them, and that is the rule, not a convenience. Three used to be named here one by one,
+# and the other fifteen stayed behind for no stated reason beyond the order they were written in.
+# A check DETECTS whether its subject exists where it lands: present, it bites; absent, it says so
+# and returns 0. So the question "does this one deserve to travel?" has no addressee — the check
+# answers it itself, at the place, which no list written here can do.
+# The hooks travel too: they read an event, not a file, so they are universal by construction, and
+# a project that wants to wire them needs them on disk first.
 mkdir -p "$DEST/repo/checks"
-cp "$TPL/checks/verify-tone.sh" "$DEST/repo/checks/verify-tone.sh"
-chmod +x "$DEST/repo/checks/verify-tone.sh"
-# And the same again for the dated narrative: METHODE applies to every write, in this project AND
-# in each one it generates, so a generated project needs the check too — its code carries comments.
-cp "$TPL/checks/verify-narrative.sh" "$DEST/repo/checks/verify-narrative.sh"
-chmod +x "$DEST/repo/checks/verify-narrative.sh"
-# And the memories, for the same reason plus one: EVERY project has them, under a path derived
-# from its own location — and they are the only place with no Git structure, so nothing else
-# would ever report an unindexed memory or a dangling link there.
-cp "$TPL/checks/verify-memories.sh" "$DEST/repo/checks/verify-memories.sh"
-chmod +x "$DEST/repo/checks/verify-memories.sh"
+cp "$TPL/checks/"verify-*.sh "$DEST/repo/checks/"
+chmod +x "$DEST/repo/checks/"verify-*.sh
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -164,10 +159,12 @@ FRAG="$DEST/repo/.branching.frag"
   fi
 } > "$FRAG"
 
-for f in CONTRIBUTING.md AGENTS.md; do
-  sed -e "/<!-- BRANCHING -->/r $FRAG" -e "/<!-- BRANCHING -->/d" "$DEST/repo/$f" > "$DEST/repo/$f.tmp"
-  mv "$DEST/repo/$f.tmp" "$DEST/repo/$f"
-done
+# ONE file receives it, and that is the whole point. The block used to be injected into both
+# CONTRIBUTING.md and AGENTS.md, so every generated project was born with the same paragraph twice —
+# the duplication METHODE forbids, in the two files that TEACH its rules. AGENTS.md keeps it: it is
+# the authority, and the one an agent reads; CONTRIBUTING.md points at it.
+sed -e "/<!-- BRANCHING -->/r $FRAG" -e "/<!-- BRANCHING -->/d" "$DEST/repo/AGENTS.md" > "$DEST/repo/AGENTS.md.tmp"
+mv "$DEST/repo/AGENTS.md.tmp" "$DEST/repo/AGENTS.md"
 rm -f "$FRAG"
 
 # Stamp WHICH version of the template built this project. A generated project carries a FROZEN

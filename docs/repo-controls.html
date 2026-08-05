@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:c524f6036e5dc9f467693ff9f54f39e7edfbc063fb6bd93cf095379d1af1a40a
+  checksum-source-md: sha256:42d74c3a836c0792a0af186b1b39a91bb22cb782cdedfe9efbe8a29433758013
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1481,16 +1481,17 @@
   <p>A rule held by discipline alone is a rule re-established by periodic manual passes — never a rule that holds. Everything below is armed: <code>check.sh</code> runs it, and so does the CI.</p>
 
   <div class="note">
-    <h3>The table describes THIS repository</h3>
-    <p>Three of these checks travel into a generated project — <code>verify-tone.sh</code>, <code>verify-narrative.sh</code>, <code>verify-memories.sh</code>, at its root, run by <strong>its</strong> <code>check.sh</code>. The rest stay here, either because their target does (<code>templates/</code>, <code>docs/*.html</code>, the neighbouring <code>workspace/</code>) or because they are still to be carried over.</p>
-    <p>⚠️ And <strong>no generated workflow calls a <code>verify-*</code> script</strong>, so those three run <strong>locally only</strong> over there: a generated project has the checks, not the gate. Measured by generating one, not by reading the tree.</p>
+    <h3>All checks travel, and the gate travels with them</h3>
+    <p>🔴 <strong>ALL of them travel, and none of them is told where it is.</strong> <code>init-project.sh</code> copies <code>checks/</code> whole, and every check <strong>DETECTS whether its subject exists where it lands</strong>: present, it bites; absent, it says so and returns 0. Three used to be named one by one, and the other fifteen stayed behind for no reason beyond the order they were written in — the question <em>"does this one deserve to travel?"</em> has no addressee, because only the check, at the place, can answer it.</p>
+    <p>🔴 <strong>And a generated project has the GATE, not just the checks.</strong> Its <code>ci.yml</code> carries the same single line this repository's does — <code>./check.sh --house</code> — behind which everything under <code>checks/</code> runs. A check added is a file dropped in, with no workflow to edit, in any project. <em>(Before that line existed, no generated workflow called a <code>verify-*</code> at all: the checks shipped, ran locally at best, and gated nothing.)</em> <code>verify-checks-wiring.sh</code> fails the build if that line leaves any gating workflow, here or in the templates.</p>
     <p>→ <strong>Why a check stops where it stops</strong> is a question of writing, not of tooling. The <em>Perimeter</em> column applies a discriminator it does not restate: see <code>METHODE.md</code>, <em>"What is ARMED — and how far a rule travels"</em>.</p>
+    <p>⚠️ <strong>The perimeter is what a check READS, never where it is allowed to run.</strong> A check whose subject lives outside the repository still runs at the gate — it reports there that it had nothing to read, which is a verdict, where a silence was not.</p>
   </div>
 
   <div class="tablewrap">
     <table>
       <thead>
-        <tr><th>Check</th><th>Perimeter</th><th>Moment</th><th>At this repo's gate?</th></tr>
+        <tr><th>Check</th><th>Perimeter</th><th>Moment</th><th>Blocks at the gate?</th></tr>
       </thead>
       <tbody>
         <tr class="grp" role="row"><td colspan="4">Fired by the assistant's own events — <code>check.sh</code> never starts them</td></tr>
@@ -1534,23 +1535,35 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-changelog.sh</code></td>
-          <td>the <strong>branch</strong> — needs <code>fetch-depth: 0</code></td>
+          <td>the <strong>branch</strong>, against a perimeter of published paths <strong>detected, never listed</strong> — needs <code>fetch-depth: 0</code></td>
           <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-checksums.sh</code> · <code>verify-version.sh</code></td>
-          <td><code>repo/</code> only</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+          <td>the <code>.md</code>/<code>.html</code> pairs, and the tag — each absent from a fresh project, each said out loud</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span> (<code>verify-version.sh</code> needs <code>fetch-tags: true</code>: without the tags it passes by finding nothing)</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-travel.sh</code></td>
-          <td><code>repo/</code> only — reads a <strong>generated</strong> project</td>
-          <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+          <td>wherever a <strong>generator</strong> is — it reads a project it generates</td>
+          <td class="t">after</td><td class="p"><span class="pill on">gate</span> — silent-no-more where no <code>init-project.sh</code> exists, which is every generated project</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-checks-wiring.sh</code></td>
-          <td>this table and the two hand-written lists that must obey it (the CI steps, and what <code>init-project.sh</code> copies)</td>
+          <td>this table, the runner's hook exclusions, <strong>and the gate line in every gating workflow</strong> — the part that says something in a generated project too</td>
           <td class="t">after</td><td class="p"><span class="pill on">gate</span></td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-memories.sh</code></td>
+          <td>outside both — memories belong to neither</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill on">gate</span> — it runs there and <strong>names the folder it found none in</strong>. A CI has no memories, and saying so is the verdict</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-workspace.sh</code></td>
+          <td><code>workspace/</code> only — no remote, nothing secret tracked</td>
+          <td class="t">after</td>
+          <td class="p"><span class="pill on">gate</span> — same shape: at the gate it reports that no <code>workspace/</code> sits beside the checkout</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-do-not-break.sh</code></td>
@@ -1560,18 +1573,6 @@
         </tr>
 
         <tr class="grp" role="row"><td colspan="4">Run by <code>check.sh</code>, outside the gate — and it is deliberate</td></tr>
-        <tr>
-          <td class="w"><code>checks/verify-memories.sh</code></td>
-          <td>outside both — memories belong to neither</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill off">structural</span> the target lives outside the repository, so the CI has nothing to look at</td>
-        </tr>
-        <tr>
-          <td class="w"><code>checks/verify-workspace.sh</code></td>
-          <td><code>workspace/</code> only — no remote, nothing secret tracked</td>
-          <td class="t">after</td>
-          <td class="p"><span class="pill off">structural</span> same reason</td>
-        </tr>
         <tr>
           <td class="w"><code>checks/verify-echo.sh</code></td>
           <td><code>repo/</code> AND <code>workspace/</code>, each on its own — a method rule follows the method, but the two repositories are in different languages</td>
@@ -1592,6 +1593,15 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <h3>The gate — one line, and it is the same one everywhere</h3>
+  <p><code>./check.sh --house</code> runs the house checks <strong>and nothing else</strong>: <code>gitleaks</code>, <code>semgrep</code>, <code>osv-scanner</code>, <code>actionlint</code> and <code>zizmor</code> are the CI's own steps, at versions it pins and checksums itself, and replaying them inside the same job would download and rerun the whole lot for the same verdict.</p>
+  <p>That single line is what every gating workflow calls — this repository's <code>ci.yml</code> and the three shipped <code>templates/workflows/ci-*.yml</code>. <strong>It used to be a step per check, written by hand in each file</strong>, which is a list, in four places, that has to be edited in every direction the day a check is added. <code>verify-checks-wiring.sh</code> fails the build if the line goes missing from any of them.</p>
+
+  <div class="note">
+    <h3>⚠️ Two conditions belong to the checkout, not to the script</h3>
+    <p>Each one turns a guard blind without failing: <code>fetch-depth: 0</code> (<code>verify-changelog.sh</code> compares against a merge base) and <code>fetch-tags: true</code> (<code>verify-version.sh</code> reads the tag, and finds nothing without them).</p>
   </div>
 
   <h3>The three rhythms — what triggers each, and what each costs</h3>
@@ -1656,7 +1666,8 @@
     <h3>Two invariants that cost a green each</h3>
     <p>🔴 <strong>A check that reads the tree reads ALL of it, in both modes.</strong> Narrowing one to the diff is blind by construction: deleting a file breaks a link in another one, and no diff mentions that. What the changed files decide is whether a check <strong>runs</strong>, never what it looks at.</p>
     <p>🔴 <strong>A check publishes WHAT IT READ, never a bare tick.</strong> An absent root, a glob matching nothing and a <code>|| true</code> swallowing an error all produce zero targets, and zero targets reads exactly like a clean tree. Three checks were caught claiming <em>"in both repos"</em> with the neighbouring <code>workspace/</code> renamed away; each now names what it read and what it did not.</p>
-    <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
+    <p><strong>A hook declares itself</strong>, in its own header — <code># hook: &lt;event&gt;</code>. <code>check.sh</code> detects that line rather than naming the hooks, which was the last hand-written list left in it, and the one that travelled into every project with nothing to guard it. A fifth hook dropped into <code>checks/</code> would have joined the parallel lot and hung on STDIN, with no output at all.</p>
+  <p>The three hooks are outside all of this: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so <strong>as a skip</strong> — a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.</p>
   </div>
 </section>
 

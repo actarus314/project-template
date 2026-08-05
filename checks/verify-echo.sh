@@ -59,7 +59,11 @@ def paragraphs(path):
 # vocabulary, so comparing them would only ever produce silence dressed up as a verdict.
 GROUPS = [("repo/", sorted(glob.glob("docs/*.md")) + ["README.md", "AGENTS.md", "CONTRIBUTING.md"])]
 if pathlib.Path("../workspace").is_dir():
-    GROUPS.append(("workspace/", sorted(glob.glob("../workspace/*.md"))))
+    # Root AND docs/: `workspace/docs/SUIVI.md` is where the generator puts the tracking doc, so a
+    # project following the documented default sat entirely outside this check's reach. Here the
+    # SUIVI happens to live at the root, which is exactly why the gap stayed quiet.
+    GROUPS.append(("workspace/", sorted(glob.glob("../workspace/*.md"))
+                                 + sorted(glob.glob("../workspace/docs/*.md"))))
 
 FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus)\b", re.I)
 def language(text):

@@ -71,9 +71,14 @@ PY
 
 fail=0
 shopt -s nullglob
+# The pairs are the observable, and a project that has none is the normal case: no generated project
+# ships a hand-authored .html beside its .md. Counted so the verdict can say what was read — an
+# empty glob otherwise ran the loop zero times and returned the same silent 0 as a clean tree.
+pairs=0
 for html in docs/*.html; do
   recorded=$(grep -o 'checksum-source-md: sha256:[0-9a-f]*' "$html" | awk -F: '{print $3}' || true)
   [ -n "$recorded" ] || continue   # no marker -> this .html is not concerned
+  pairs=$((pairs + 1))
 
   md="${html%.html}.md"
   if [ ! -f "$md" ]; then
@@ -102,5 +107,9 @@ for html in docs/*.html; do
     fail=1
   fi
 done
+
+if [ "$pairs" = 0 ]; then
+  echo "  (no docs/*.md + docs/*.html pair carrying a checksum marker here — nothing to check)"
+fi
 
 exit "$fail"

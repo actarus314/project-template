@@ -21,7 +21,68 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Every check now travels into a generated project, and every check has a gate there.** A project
+  received three of the eighteen, and **no generated workflow called any of them**: the checks
+  shipped, ran locally at best, and gated nothing. `init-project.sh` copies `checks/` whole, and
+  each project's `ci.yml` carries one line — **`./check.sh --house`** — behind which everything
+  under `checks/` runs. Adding a check is dropping a file in: no list to update, no workflow to
+  edit, in any project.
+- **`./check.sh --house`** — the house checks and nothing else. The external tools *(gitleaks,
+  semgrep, osv-scanner, actionlint, zizmor)* stay the CI's own steps, at the versions it pins and
+  checksums; replaying them inside the same job would download and rerun the lot for one verdict.
+- **`verify-checks-wiring.sh` guards the gate itself**: the line missing from any gating workflow
+  — this repo's `ci.yml` or the three shipped templates — fails the build. It also compares the
+  hooks the table calls `n/a` against the ones the runner actually keeps out, closing the gap it
+  used to state about itself.
+
+### Changed
+- **A hook declares itself** — `# hook: <event>` in its own header — and `check.sh` detects that
+  line instead of naming the three. That was the **last hand-written list left in the runner**, and
+  the one that travelled into every project with nothing to guard it: a fifth hook dropped into
+  `checks/` would have joined the parallel lot and **hung on STDIN, with no output at all**.
+- **A check is universal: it detects whether its subject exists where it lands.** Present, it
+  bites; absent, it **says so** and returns 0. This is what made the travel possible at all — and
+  what a *"which ones deserve to travel?"* list could never answer, since only the check, at the
+  place, knows.
+- **This repository's `ci.yml` calls the same one line**, in place of twelve hand-written steps.
+  That list was one of the three that had to be kept in agreement by hand, and a check missing from
+  it passed no gate at all.
+- **`CONTRIBUTING.md` and `AGENTS.md` stop restating each other in generated projects.** The
+  `## Branching` block was injected into **both**, and the merge-verification procedure was written
+  out twice — so every project was born with the duplication METHODE forbids, in the two files that
+  teach its rules. `AGENTS.md` keeps both *(it is the authority, and what an agent reads)*;
+  `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
+
 ### Fixed
+- **One malformed JSONL line disarmed all three signals of `verify-turn-claims.sh`, in silence.**
+  The `try` wrapped the whole read loop, so a single unparseable line anywhere in the turn threw
+  out of it and left both lists `None`. Parsing is per line now, and a PARTIAL read splits the
+  signals: the one accusing on an **absence** (nothing edited) stands down, since an unread line
+  could hold the very edit; the two accusing on what is **present** keep biting. *(Planted: the
+  signal fired on a healthy transcript and vanished entirely when one junk line was appended.)*
+- **`verify-workspace.sh` counted tracking FILES, not tracking SYSTEMS.** A `.planning/` sitting
+  beside a `SUIVI.md` — the exact collision METHODE forbids — returned the same *"1 tracking doc"*
+  as a workspace holding nothing else. It now counts systems, and **names what it looked for**, so
+  a reader sees which tools remain invisible to it. A project using GSD alone stays green.
+- **Two checks would have FAILED in every generated project, not merely gone quiet.**
+  `verify-travel.sh` demanded an `init-project.sh` no project has, and `verify-do-not-break.sh`
+  demanded three `templates/repo/` files and a skill symlink that belong to the generator alone.
+  Each target now detects whether it applies, and **names what it did not read**.
+- **Four checks returned a silent 0 where they had read nothing** — `verify-memories.sh`,
+  `verify-checksums.sh`, `verify-changelog.sh` *(four exits)*, and one target of
+  `verify-do-not-break.sh`. The caller printed a tick over each: the bare ✓ this repo arms itself
+  against, in the checks that carry the arming.
+- **`verify-changelog.sh` carried a hand-written list of what counts as user-visible** — three
+  shipped scripts, while ten travelled. The perimeter is now **detected** from what the repository
+  holds, and a project holding none of it says so instead of reporting a permanent "nothing
+  visible". *(A branch-name trigger was measured and rejected: 11 of the last 40 pull requests here
+  carry no CHANGELOG line and are right not to.)*
+- **`verify-travel.sh` reported three checks that guard their targets correctly.** It only honoured
+  a shell test on the same line as the path; it now also honours a negated test, a Python existence
+  test, a literal bound to a name tested elsewhere, and a tested parent folder.
+- **The three hooks pointed at `docs/claude-code-setup.md`** in their own messages — a path that
+  resolves nowhere once they travel. Named by URL now, which resolves from anywhere.
 - **The three hooks were watched by nothing.** They live in the assistant's local settings, outside
   every repository: an entry that drops simply stops firing — no error, no trace, and the session
   reads as it always did. `verify-do-not-break.sh` now checks them, **deducing which checks are
