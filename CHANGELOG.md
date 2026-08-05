@@ -21,6 +21,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A check for FRENCH left in published content** *(`checks/verify-language.sh`)*. Nothing looked
+  for it: `verify-tone.sh` hunts the second person, never the language, so a paragraph written
+  entirely in French passed it without a murmur — and two words shipped into published documents
+  that way, spotted by the maintainer rather than by a control.
+  🔴 **The signal is the ACCENT, and the limit is stated instead of hidden**: unaccented French goes
+  straight through, and the verdict says so in those words rather than claiming the language is
+  covered. Measured before it was written: of 90 accented lines here, 65 are the two bilingual
+  READMEs, 16 the French tracking doc the generator writes into the workspace, 8 the French
+  patterns the checks must spell out, 1 the skill's trigger phrases — four classes, each with a
+  reason that already existed elsewhere.
+  **The exceptions are DETECTED, never listed**: a `# … (français)` heading opens a bilingual
+  README's French half; a heredoc redirected into `workspace/` writes the French side by
+  construction; quoted material is verbatim; and `fr-pattern` is **verify-tone.sh's existing
+  marker**, reused rather than doubled. `repo/` only — English is a rule of published style, so it
+  stops where publication stops.
+- **It found a defect on its first run.** `templates/repo/README.md` opened with a **French block
+  of instructions**, shipped into every generated project. Translated.
+
 ### Changed
 - **`verify-growth.sh` reads its two revisions in four calls instead of two per file** — 0,88 s →
   0,17 s, **5,1× faster**, and the verdict is identical at four thresholds *(8, 5, 3 and 0

@@ -354,6 +354,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `CodeQL` | flaws spanning several files — **public repositories only** | GitHub | PR + weekly | ✅ | settled | ~2 min | ✅ |
 | `dependency-review` | a vulnerable or badly-licensed dependency getting **in** — public only | GitHub | every PR | ✅ | settled | ~5 s | ✅ |
 | `checks/verify-tone.sh` | the second person (`you`/`your`, `tu`/`vous`) in published content | both | every commit | ✅ | settled | 0,08 s | ✅ |
+| `checks/verify-language.sh` | **accented** French left in published content — the language, which its neighbour above never looked at | repo/ *(English stops where publication stops)* | every commit | ✅ | needs watching — the accent is the cheap half of the signal: unaccented French passes, and the verdict says so rather than claiming the language is covered | 0,07 s | ✅ |
 | `checks/verify-narrative.sh` | a dated story told in a code comment — it belongs in the archive | both | every commit | ✅ | settled | 0,08 s | ✅ |
 | `checks/verify-workspace.sh` | two tracking systems competing, or a secret tracked by git | both | every commit | ✅ | **needs watching** — the list of rival tools cannot be complete, and it names what it looked for | 0,12 s | ✅ |
 | `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,11 s | ✅ |

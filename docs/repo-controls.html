@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:71b27606e38b658607b07262a1bd8d2c49ebfedbc92a9e82fa622a2e77067833
+  checksum-source-md: sha256:5f1e1f2ca9454bd649e13acfa4bad2892dac185aafddf4444a41e2fbf31d7736
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1637,6 +1637,16 @@
           <td class="p">✅</td>
           <td>settled</td>
           <td class="t">0,08 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-language.sh</code></td>
+          <td><strong>accented</strong> French left in published content — the language, which its neighbour above never looked at</td>
+          <td class="h">repo/ (English stops where publication stops)</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td>needs watching — the accent is the cheap half of the signal: unaccented French passes, and the verdict says so rather than claiming the language is covered</td>
+          <td class="t">0,07 s</td>
           <td>✅</td>
         </tr>
         <tr>
