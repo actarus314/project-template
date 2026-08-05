@@ -22,6 +22,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **More pinned tooling moved.** `trivy` **v0.72.0 → v0.73.0** in
+  `templates/workflows/docker-publish.yml` — it **travels**, so every project generated with
+  `--artefact` scans its image with the newer one; `renovate` **44.7.0 → 44.13.1**.
+  *(Renovate `#105` and `#106` — the first two automated pull requests to go green on their own
+  since the gate stopped demanding prose from a bot, and the CI log shows the check skipping with
+  its reason named rather than passing by accident.)*
 - **The pinned tooling moved, and a human records it because the bot cannot.** `zizmor`
   **1.28.0 → 1.29.0** in `templates/repo/requirements-ci.txt`, so **every project generated from
   now on pins the newer one**; `renovate` **43.288.0 → 44.7.0**, the version `check.sh` and the CI
@@ -32,7 +38,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   merges, for the bumps that actually reach a user. `zizmor` does: it travels in a template.
 
 ### Fixed
-- 🔴 **No Renovate or Dependabot pull request could ever go green.** `verify-changelog.sh` demands a
+- 🔴 **The bot exemption is REVERTED, one day old.** It made the control silent on exactly the
+  changes that need it most: `zizmor` and `trivy` are pinned **inside `templates/`**, so a bump
+  **travels into every generated project** — user-visible by the convention's own definition. What
+  replaced the trace was a human writing the line in a **later** pull request: a discipline, not a
+  guard, and this repository holds that a rule kept by discipline is a rule that lapses.
+  ⚠️ **The friction it was meant to remove comes back, knowingly**: an automated pull request is red
+  until someone adds the line to **its own branch**. That is the cost of the trace being where the
+  change is, and it is the maintainer's call.
+- 🔴 **~~No Renovate or Dependabot pull request could ever go green.~~** *(Superseded by the line
+  above — kept because the diagnosis stands: the gate did block every automated pull request.)* `verify-changelog.sh` demands a
   `CHANGELOG` line for a user-visible change, a dependency bump touches exactly the paths it counts
   as visible, and **no bot writes prose** — so every automated pull request was red on a check
   nothing could satisfy. Observed on two at once: `#101` (zizmor) and `#102` (renovate).
