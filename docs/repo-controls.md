@@ -387,6 +387,20 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-forbidden-command.sh` | a command forbidden here, before it runs | local | before the command | ✅ | **needs watching** — same reason | instant | n/a — refuses the command |
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by `stop_hook_active` | instant | n/a — refuses the end of the turn |
 
+> 🔴 **What a check does with a verdict is DECLARED, and the declaration is confronted twice.**
+> Every check carries `# blocking: yes|no` in its header, next to `# hook:` — and *advisory* is a
+> claim about the **exit code**, never about the wording: `check.sh` turns any non-zero into a `ko`,
+> which fails the gate and stops the commit. **Three checks contradicted themselves before anything
+> looked**, in both directions: one called itself advisory in its header *and* in this table while
+> exiting 1, and two announced `ADVISORY` for a day after being made blocking. A human found it by
+> reading this table.
+> The two readings do not replace each other: **`verify-checks-wiring` compares the declaration to
+> this table** *(it catches a pair that disagree, at no cost, at every commit)*, and **`check.sh`
+> compares it to the REAL exit code** the moment that code exists *(it catches the case where the
+> code contradicts both — the only one a comparison of declarations cannot see)*. The price of the
+> second is that it speaks only when the check actually bites; fabricating a biting case for all 21
+> was weighed and left out.
+
 > **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and
 > a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.
 > The three hooks travel too; a project that wants them has to declare them in its own settings.

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:e29c92f1cce5edcd6317e82ef55ee085fe6b43e101b05a742a7d4f9087ada9a3
+  checksum-source-md: sha256:a2ae47f2b6748e3945529229f744b7c2f48b2637438f1753ed132aa1b5657a10
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1845,6 +1845,7 @@
   </div>
 
   <div class="note">
+        <p>🔴 <strong>What a check does with a verdict is DECLARED, and the declaration is confronted twice.</strong> Every check carries <code># blocking: yes|no</code> in its header, next to <code># hook:</code> — and <em>advisory</em> is a claim about the <strong>exit code</strong>, never about the wording: <code>check.sh</code> turns any non-zero into a <code>ko</code>, which fails the gate and stops the commit. <strong>Three checks contradicted themselves before anything looked</strong>, in both directions: one called itself advisory in its header and in this table while exiting 1, and two announced <code>ADVISORY</code> for a day after being made blocking. A human found it by reading this table. The two readings do not replace each other: <strong><code>verify-checks-wiring</code> compares the declaration to this table</strong> (it catches a pair that disagree, at no cost, at every commit), and <strong><code>check.sh</code> compares it to the REAL exit code</strong> the moment that code exists (it catches the case where the code contradicts both). The price of the second is that it speaks only when the check actually bites; fabricating a biting case for all 21 was weighed and left out.</p>
     <p><strong>Travels: yes, all of them, and that is the rule</strong> — <code>init-project.sh</code> copies <code>checks/</code> whole, and a control DETECTS whether its subject exists where it lands: present it bites, absent it says so. The three hooks travel too; a project that wants them has to declare them in its own settings. The external tools travel through the workflow templates, at the versions those files pin.</p>
     <p>⚠️ <strong><code>local</code>, <code>GitHub</code> or <code>both</code></strong> describes where the control RUNS, never what it may look at. <code>verify-memories.sh</code> runs at the gate like the others — it reports there that it found no memories to read, which is a verdict where silence was not one.</p>
   </div>

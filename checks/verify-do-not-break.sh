@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The invariants of AGENTS.md, "Do not break".
 #
 # What those entries have in common is the reason they are written down at all: breaking one of

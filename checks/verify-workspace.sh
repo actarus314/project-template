@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place NO other control can see.
 #
 # 🔴 It has no remote, ON PURPOSE. That is what lets repo/ be public: workspace/ carries private

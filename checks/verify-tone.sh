@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Second person in versioned content — forbidden by the standard (§1) and by the AGENTS.md of every
 # generated project. Until this script existed, NOTHING verified it: the rule held by discipline
 # alone, and that is how it reached nine files, four of them templates copied into every project

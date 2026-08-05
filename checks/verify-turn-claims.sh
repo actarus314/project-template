@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # hook: Stop — fired by the assistant, never by check.sh: it reads its payload from STDIN.
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A `Stop` hook: two claims checked as the turn ends, against what the turn actually ran.
 #
 # The maintainer was doing this pass by hand, every time, because the thirteen other checks watch

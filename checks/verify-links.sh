@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Relative markdown links that resolve nowhere — in BOTH repos.
 #
 # A dead link is invisible: nothing renders an error, the reader simply lands nowhere and stops

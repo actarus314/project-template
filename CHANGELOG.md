@@ -22,6 +22,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **What a check does with a verdict is now DECLARED, and confronted twice.** Every check carries
+  `# blocking: yes|no` in its header, beside `# hook:` — and *advisory* is a claim about the **exit
+  code**, never about the wording, since `check.sh` turns any non-zero into a failed gate.
+  `verify-checks-wiring` compares that declaration to the control table, at every commit and at no
+  cost; **`check.sh` compares it to the REAL exit code** the moment that code exists, which is the
+  only reading that catches a script contradicting both its header and the table. Neither replaces
+  the other, and the second speaks only when a check actually bites — fabricating a biting case for
+  all 21 was weighed and left out. Three checks had been contradicting themselves, in both
+  directions, and a human found it by reading the table.
 - **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook
   *(`checks/verify-housekeeping.sh`)* counts the commits landed since the tracking doc was last
   written to; past a **measured** threshold it blocks the end of the turn and routes to the new

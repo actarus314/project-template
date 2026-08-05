@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # hook: Stop, PreCompact — fired by the assistant, never by check.sh: it reads its payload from STDIN.
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The development admin falling behind the work: commits piling up with nothing written down.
 #
 # TWO events, because there are two ways the record gets lost. `Stop` catches the drift, turn after

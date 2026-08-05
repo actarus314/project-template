@@ -222,7 +222,19 @@ PAR="$CACHE/par"
 reap() {
   [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
   LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
-  cat "$PAR/$1.out"; return "$(cat "$PAR/$1.rc")"
+  cat "$PAR/$1.out"
+  local rc; rc=$(cat "$PAR/$1.rc")
+  # 🔴 What it DECLARES against what it just DID — the only place both are known at once, and it
+  # costs one grep. A check calling itself advisory that returns non-zero IS a blocking check:
+  # `ko` below fails the gate and the commit stops. Three checks contradicted themselves this way
+  # before anything looked, two of them for a day; the contradiction was found by a human reading
+  # the table. Caught here at the exact moment it happens, on the real exit code, with no case to
+  # fabricate — which is what a comparison of two DECLARATIONS cannot do.
+  if [ "$rc" != 0 ] && grep -qE '^# blocking: no\b' "checks/$1.sh" 2>/dev/null; then
+    printf '  \033[31m✗ %s declares `# blocking: no` and just exited %s — advisory is a claim about the EXIT CODE\033[0m\n' "$1" "$rc"
+    fail=1
+  fi
+  return "$rc"
 }
 
 # Times a command and leaves the duration in LAST_MS for the ok()/ko() that follows. Everything

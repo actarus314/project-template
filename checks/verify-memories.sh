@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The memories: index complete, no broken [[link]], no index entry pointing nowhere.
 #
 # 🔴 Memories are the SIXTH place a fact can live, and the ONLY one with no Git structure: no diff

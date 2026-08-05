@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: no   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A stage that closed without leaving its archive behind.
 #
 # METHODE names three gestures at every closed stage: prune the hot side, write the stage's

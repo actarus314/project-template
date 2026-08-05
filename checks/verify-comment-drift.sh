@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A script's comment growing faster than the code under it.
 #
 # METHODE says a comment carries only what the code cannot: the WHY, a constraint that would

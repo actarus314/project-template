@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The checks are declared, and the DOOR that runs them is where it is supposed to be.
 #
 # 🔴 The failure this exists for is silent in every direction. A check nobody calls passes no gate,
@@ -107,6 +108,31 @@ if declared:
                    f"the runner would start it")
     for n in sorted(self_declared - table_hooks):
         bad.append(f"{n}.sh declares itself a hook, but {TABLE} does not say so")
+
+    # ── What each check says it does with a verdict, against what the table publishes ──────────
+    # Same shape as the hook comparison above, for the same reason: two statements of one fact, so
+    # they get compared. Three checks disagreed with themselves about blocking and nothing noticed
+    # — two of them announced ADVISORY in their header for a day after being made blocking.
+    # This catches the pair that DECLARE differently. The case where the code contradicts both is
+    # check.sh's, at the moment the exit code exists — neither reading replaces the other.
+    # Hooks are out: their column says `n/a` because check.sh renders no verdict for them, which
+    # answers a different question than whether they refuse anything.
+    for n in sorted(set(declared) - table_hooks):
+        p = pathlib.Path("checks") / f"{n}.sh"
+        if not p.exists():
+            continue
+        m = re.search(r"^# blocking: (yes|no)\b", p.read_text(encoding="utf-8"), re.M)
+        if not m:
+            bad.append(f"{n}.sh declares no `# blocking:` line — what it does with a verdict is "
+                       f"then a matter of reading the code")
+            continue
+        gate = declared[n]
+        table_blocks = gate.startswith("✅")
+        if m.group(1) == "yes" and not table_blocks:
+            bad.append(f"{n}.sh declares `# blocking: yes` but {TABLE} does not publish it as blocking")
+        if m.group(1) == "no" and table_blocks:
+            bad.append(f"{n}.sh declares `# blocking: no` but {TABLE} publishes it as blocking")
+    read.append(f"{len(set(declared) - table_hooks)} blocking declaration(s) against the table")
 
 # ── 3. THE DOOR — every workflow that gates a project calls it ────────────────────────────────
 # This is the part that says something everywhere. A generated project holds no table and no

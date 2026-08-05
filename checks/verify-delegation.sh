@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # hook: PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A PreToolUse hook: the three delegation instructions, checked BEFORE the subagent is launched.
 #
 # The rule (https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md): a subagent does the work ITSELF, does not re-delegate,

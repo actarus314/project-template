@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A path that resolves HERE but not where the file LANDS.
 #
 # Several files travel into every generated project — check.sh, verify-tone.sh, everything under

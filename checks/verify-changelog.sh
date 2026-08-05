@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A user-visible change without a CHANGELOG line.
 #
 # The rule (AGENTS.md): a line goes into `Unreleased` as soon as a change is visible TO WHOEVER
