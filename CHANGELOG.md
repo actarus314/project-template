@@ -22,6 +22,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
+  may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
+  is not, and this answers it instead of assuming. It records every opening as *with* or *WITHOUT* an
+  instruction and **returns** — it never refuses a tool and cannot wedge a session. It watches the
+  **gesture**, not one script: `gh pr create` appears 84 times in this repository's own history, so a
+  guard on `open-pr.sh` alone would leave the door beside it open.
+  🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
+  **20** openings, the gate does not get built. And the token is **consumed, never dated** — an order
+  and its opening were measured up to **31 turns** apart, so any expiry short enough to restrict would
+  refuse real orders.
 - **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
   hook holds the turn until the pass artefact **covers** the tracking doc — every backlog item number
   and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
