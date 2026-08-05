@@ -47,11 +47,22 @@ case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; e
 # prompt, so it must be quiet and quick: everything that does not match leaves without a word.
 if [ "$EVENT" = UserPromptSubmit ]; then
   JOURNAL_NAME="housekeeping (asked in words)"
+  field=$(printf '%s' "$payload" | python3 -c '
+import json, sys
+try: ev = json.load(sys.stdin)
+except Exception: sys.exit(0)
+# The field carrying the prompt is NOT documented for this event. Naming one and reading only it
+# makes the guard mute if the name ever differs — and mute is indistinguishable from "did not fire".
+META = {"hook_event_name", "session_id", "transcript_path", "cwd", "trigger", "permission_mode"}
+cand = [k for k, v in ev.items() if k not in META and isinstance(v, str) and v.strip()]
+print(",".join(cand) or "NONE")
+' || true)
   printf '%s' "$payload" | python3 -c '
 import json, re, sys
 try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
-txt = str(ev.get("user_input") or "")
+META = {"hook_event_name", "session_id", "transcript_path", "cwd", "trigger", "permission_mode"}
+txt = " ".join(v for k, v in ev.items() if k not in META and isinstance(v, str))
 PAT = [
     r"passe[s]? de fin de chantier|fais (?:la|une) fin de chantier",   # fr-pattern
     r"je vais /?clear|que je puisse /?clear|(?:pour|avant)\s+(?:un\s+|le\s+|de\s+)?/?clear\b|/?clear pour repartir",   # fr-pattern
@@ -67,8 +78,12 @@ print("[housekeeping] The maintainer just asked for the closing pass. Invoke the
 sys.exit(7)                      # 7: matched, so the shell below records it
 ' && rc=0 || rc=$?
   if [ "${rc:-0}" = 7 ]; then
-    record 1 "routed to the housekeeping skill"
+    record 1 "routed to the housekeeping skill (fields: ${field:-?})"
     arm
+  else
+    # Silence on a non-match used to make "fired and did not match" identical to "never fired" —
+    # which is what left a real gap unexplainable. It now records what it read.
+    record 0 "no match (fields: ${field:-?})"
   fi
   exit 0
 fi

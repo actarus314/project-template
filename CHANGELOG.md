@@ -47,6 +47,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only: the generator's own notes describe files a generated project does not have)*.
 
 ### Fixed
+- **The closing pass's word-routing named a payload field that is not documented, and said nothing
+  when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
+  was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
+  fired"* — which left a real gap unexplainable. It now records what it read. And it no longer names
+  a field at all: it reads **every text value** of the payload except the known technical keys, so it
+  routes whether the prompt arrives as `user_input`, `prompt`, `message` or `text`. The official docs
+  do not specify that field for `UserPromptSubmit`; naming one was a guess.
+  ⚠️ What the same reading settled: hooks are **reloaded by a file watcher**, so "the session had not
+  picked them up" is ruled out as an explanation.
 - **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
   committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
   adding the entry in the right commit was refused anyway, and the only ways through were an empty
