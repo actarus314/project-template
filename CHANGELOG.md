@@ -22,6 +22,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
+  whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
+  document written the same day, which is how four closed items sat in the open-work section for a
+  full day. It now states open or closed for **each** line, and a closed one leaves the section
+  rather than being marked and left in place. This enumeration is the only thing that catches a
+  closed item nobody marked: the check guarding that section matches a **marker**, so it is blind to
+  the rest. Two mechanical substitutes were ruled out — **staleness by measurement** *(all 11 items
+  read as under 0,2 days old, the document being rewritten too often for `git blame` to tell a
+  reviewed line from a displaced one)*, and **cross-referencing the CHANGELOG by structure** *(its
+  entries carry no item identifier, so no measurement can create that link)*.
 - **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
   `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
   few an assistant actually *sees*, so a request for the pass reaches the model as an instruction

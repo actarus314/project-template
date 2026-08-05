@@ -41,8 +41,16 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 The inventory counts; **none of the questions below is answered by counting**, which is why this
 part is not delegated and not scripted:
 
-1. **Does the tracking doc still reflect the work?** Not "has it been touched" — whether a cold
-   reader, human or AI, would find where things stand and what remains.
+1. **Go through the open-work section LINE BY LINE, and state open or closed for each one.**
+   Not "does the doc still reflect the work" in the round — that question gets answered *yes* by
+   glancing at a document that was written today, which is exactly how four closed items sat in the
+   backlog for a full day.
+   🔴 **This enumeration is the only thing that catches a closed item nobody marked.** The check
+   that guards this section matches a MARKER, so it sees the ones that were labelled and is blind to
+   the rest; measuring staleness instead was tried and failed — the document is rewritten often
+   enough that every line looks fresh. There is no counter for this, which is why it is a step here.
+   For each line: does its *next concrete gesture* still need doing? If it is done, the item **leaves
+   the section** — nothing is marked and left in place.
 2. **Did a stage close?** A release usually marks one; a fix's pull request does not. Only the
    conversation knows.
 3. **If one closed** — the three gestures the METHOD prescribes, in
