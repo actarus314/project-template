@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
-# hook: Stop — fired by the assistant, never by check.sh: it reads its payload from STDIN.
+# hook: Stop, PreCompact — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # The development admin falling behind the work: commits piling up with nothing written down.
+#
+# TWO events, because there are two ways the record gets lost. `Stop` catches the drift, turn after
+# turn. `PreCompact` catches the cliff: compaction drops the conversation, and everything decided in
+# it that was never written down goes with it. The pass is worth asking for again there even when
+# the turn-by-turn guard has already asked and been answered — which is why the "asked once" latch
+# below does not apply to it.
+#
+# ⚠ On PreCompact it blocks ONLY when compaction was asked for by hand. An `auto` compaction means
+#   the context window is full and Claude Code has to reclaim it; refusing that leaves the session
+#   with nowhere to go. A guard that can wedge the tool it protects is worse than the drift it
+#   watches, so `auto` gets the message and lets compaction through.
 #
 # This is the one thing no file-watching check can see. verify-growth.sh knows the tracking doc only
 # ever grows; verify-stage-closure.sh knows a release left no archive. Neither knows that eleven
@@ -48,7 +59,14 @@ record() {   # <rc|skip> <reason>
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$JOURNAL_NAME" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
-cat > /dev/null                      # the payload is read and dropped: nothing here needs it
+# The payload is read for two fields only: which event this is, and — on PreCompact — whether the
+# compaction was asked for or forced by a full context.
+payload=$(cat)
+EVENT=$(printf '%s' "$payload" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+TRIGGER=$(printf '%s' "$payload" | sed -n 's/.*"trigger"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+[ -n "$EVENT" ] || EVENT=Stop
+case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; esac
+
 WS="$REPO/../workspace"
 TRACK="$WS/SUIVI.md"
 
@@ -76,7 +94,9 @@ if [ "$behind" -lt "$THRESHOLD" ]; then
   record 0 ""
   exit 0
 fi
-if [ -f "$flag" ]; then
+# The latch holds for the turn-by-turn event only. Before compaction the record is about to be lost,
+# so the question is worth putting again even if it was already put and set aside an hour ago.
+if [ -f "$flag" ] && [ "$EVENT" != PreCompact ]; then
   record skip "already asked, waiting for a write"
   exit 0
 fi
@@ -93,20 +113,31 @@ if [ -n "$branch" ] && ! git -C "$REPO" rev-parse --verify --quiet "origin/$bran
   extra="$extra branch '$branch' has never been pushed;"
 fi
 
-record 1 "behind=$behind"
-python3 - "$behind" "$THRESHOLD" "$extra" <<'PY'
+record 1 "behind=$behind event=$EVENT${TRIGGER:+ trigger=$TRIGGER}"
+python3 - "$behind" "$extra" "$EVENT" "$TRIGGER" <<'PY'
 import json, sys
-behind, threshold, extra = sys.argv[1], sys.argv[2], sys.argv[3].strip()
+behind, extra, event, trigger = sys.argv[1], sys.argv[2].strip(), sys.argv[3], sys.argv[4]
 detail = f"{behind} commits have landed since the tracking doc was last written to"
 if extra:
     detail += " — also: " + extra.rstrip(";")
-print(json.dumps({
-    "decision": "block",
-    "reason": (f"Development admin is behind: {detail}. Run the `housekeeping` skill before ending "
-               f"the turn — it carries the checklist and decides what actually needs writing. "
-               f"If the pass genuinely does not apply here, say so in one line and finish; this "
-               f"will not ask again until the tracking doc is written to."),
-    "systemMessage": f"⚠ housekeeping: {detail}",
-}))
+
+out = {"systemMessage": f"⚠ housekeeping: {detail}"}
+if event == "PreCompact":
+    ask = (f"About to compact, and the development admin is behind: {detail}. Compaction drops the "
+           f"conversation — anything decided in it and never written down goes with it. Run the "
+           f"`housekeeping` skill first.")
+    # Forced compaction means the context window is full; refusing it leaves the session stuck.
+    if trigger == "auto":
+        out["systemMessage"] = "⚠ housekeeping, before an automatic compaction: " + detail
+    else:
+        out.update({"decision": "block", "reason": ask})
+else:
+    out.update({"decision": "block",
+                "reason": (f"Development admin is behind: {detail}. Run the `housekeeping` skill "
+                           f"before ending the turn — it carries the checklist and decides what "
+                           f"actually needs writing. If the pass genuinely does not apply here, say "
+                           f"so in one line and finish; this will not ask again until the tracking "
+                           f"doc is written to.")})
+print(json.dumps(out))
 PY
 exit 0

@@ -32,7 +32,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   guard speaks once every 2,1 days, against a pass asked for by hand every 2,3. Work left
   uncommitted and a branch never pushed are **reported** when it speaks, and never trigger it —
   an uncommitted tree mid-session is the normal state, and a guard firing on the normal state gets
-  bypassed within a day. **It ships inactive**, like its two siblings: a hook only acts once declared.
+  bypassed within a day. **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it. There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**. An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches. **It ships inactive**, like its two siblings: a hook only acts once declared.
 - **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
   recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
   hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
