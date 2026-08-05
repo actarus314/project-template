@@ -22,6 +22,60 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Two absolute limits on comments, beside the drift that was already there**: a **level** (25 %)
+  and a **longest block** (6 lines), on the files a branch **touches**. Drift alone cannot see a
+  file *born* verbose — it never grows, so it never speaks, and every one of the 25 scripts here
+  sat between 31 % and 64 % comment without a single verdict. Both values were measured before
+  being set: at a 4-line block the guard fires on legitimate warnings *(33 blocks read one by one:
+  "SQUASH-ONLY and a STAGING branch are INCOMPATIBLE", "in DRY-RUN the verdict cannot come from the
+  return code")*, at 8 it starts covering section headings. Touched-files-only is what makes the
+  rule landable: applied to the whole tree it would have turned all 25 scripts red at once.
+  ⚠️ **A shebang is not a comment** — counting it made every minimal header a violation.
+- **`docs/code/`** — one note per file, owning its **implementation** constraints, so the *why* has
+  somewhere to go when it leaves a script. What a check looks for stays in `repo-controls.md`; the
+  rule it enforces stays in `METHODE.md`. The notes **travel with the checks** *(`verify-*.md`
+  only: the generator's own notes describe files a generated project does not have)*.
+
+### Fixed
+- **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
+  its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
+  ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
+  a constraint far more often than a story), and the sixth needed narrowing from the noun to the
+  VERB: naming the maintainer is usually a constraint ("run by THE MAINTAINER, never by the
+  assistant"), what tells a story is "the maintainer said". 14 lines flagged became 4, all four
+  narrative. Recall is traded for precision, deliberately, because this one blocks.
+- **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
+  tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
+  list was short. Three candidates were measured over **1683 real messages** before one was picked:
+  `(pour|avant) [un|le|de] clear` → **2 new matches, zero false positives** *(kept)*; a
+  *clean/propre* variant → the same two but narrower; and the **bare word `clear` → 41 new matches**,
+  nearly all noise *(skill loads, session summaries)* — the original 82 all over again.
+  🔴 **It stops there**: *"Affiche l'état du suivi"* does not match, and must not — asking to SEE the
+  state is not asking for the pass.
+- **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
+  `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
+  writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a
+  commit that had not touched it. The rule the check enforces — a curated document **shrinks** when
+  a stage closes — has no meaning for a page no human writes, which is why it joins the CHANGELOG
+  and the archives among what accumulates by nature.
+
+### Changed
+- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping at
+  that list leaves every other section to rot, and the rot was measured: a pass did exactly that,
+  and the maintainer then found by hand, in one reading, an entry point stating the finished stage
+  instead of the next gesture, **two sections restating the same completed work**, a table broken by
+  block quotes cutting its header from its rows, and **three false facts**. The skill now asks four
+  questions of every section — does the entry point say where to RESUME · is this fact stated twice
+  · does it still hold *(re-measured, and **from the server** rather than a local cache — a stale
+  remote ref made one pass report 19 branches where the forge held 2)* · do the tables still render.
+  It also has to state what could **not** be verified: silence reads as verified.
+- **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
+  *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
+  directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
+  Delegation is now framed as a cost question, with the three opt-ins still required when it does
+  happen.
+
+### Added
 - **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
   forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a
   fault from a legitimate stage — the three highest-scoring pairs are steps of one undertaking)*,
