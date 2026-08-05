@@ -316,9 +316,27 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s**.
-not add up: `check.sh` starts them together, so the lot costs its slowest, not their sum — the whole
-gate runs in about 3,7 s. Anything under 0,4 s does not show at all.
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,05 s, a commit in 1,09 s, the full lot in 5,31 s**. Anything under 0,4 s does not show at all.
+
+> **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
+> journal. `check.sh` writes every verdict it reaches to `.ci-tools/controls-log.tsv` *(gitignored:
+> local telemetry, never repository content)*, and `--report` renders the record into
+> `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes through, so
+> no list of controls has to be kept anywhere.
+>
+> **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot
+> show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding
+> verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own
+> firing**, which `check.sh` cannot do: it never runs them.
+>
+> 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the
+> recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
+>
+> ⚠️ **Its medians run about a fifth above the column above, and neither is wrong.** The column times
+> a check **alone**; the journal times it **inside the parallel lot**, where the checks contend for the
+> machine. *(Measured 2026-08-05: `verify-growth` 0,88 s alone against 1,10 s in the lot,
+> `verify-comment-drift` 0,83 s against 1,03 s.)* A duration quoted without its case is how a figure
+> once got read as wrong by a factor of 2,7 when it was simply measuring something else.
 
 | Control | Looks for | Where | When | Travels | Maturity | Time | Blocks? |
 |---|---|---|---|---|---|---|---|
@@ -408,9 +426,9 @@ The split is not how long a check takes, it is **what has to change for it to sa
 | `.md` + `.sh` + a workflow | everything above | **2,6 s** |
 | `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,0 – 5,6 s** |
 
-**Parallelism absorbs, and the numbers say so**: the house checks add up to **5,1 s** of their own time, and the full lot takes **5,0 – 5,6 s** while adding osv, semgrep and gitleaks on top. **The slowest by far is `verify-travel` (1,66 s), which generates four projects in series**, then `verify-echo` (1,36 s), `verify-comment-drift` (0,83 s) and `verify-growth` (0,48 s); every other one sits under 0,11 s. Adding a check below ~0,4 s does not show.
+**Parallelism absorbs, and the numbers say so**: the fifteen timed house checks add up to **5,24 s** of their own time, and the gate that runs them takes **3,05 s**. **The slowest by far is `verify-travel` (1,77 s), which generates four projects in series**, then `verify-growth` (0,91 s), `verify-comment-drift` (0,85 s) and `verify-version` (0,55 s); every other one sits at or under 0,25 s.
 
-> ⚠️ **`verify-travel` costs what it costs because it covers five toolchain/capability combinations instead of one** *(0,46 s → 1,66 s, measured 2026-08-04)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
+> ⚠️ **`verify-travel` costs what it costs because it covers four toolchain/capability combinations instead of one** — `static`, `node`, `generic`, `static+all`, which is what the check itself names as it passes *(0,46 s → 1,77 s)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
 
 > **A hook DECLARES ITSELF**, in its own header — `# hook: <event>`. `check.sh` detects that line rather than naming the hooks, which was the last hand-written list left in it, and the one that travelled into every project with nothing to guard it. A fifth hook dropped into `checks/` would have joined the parallel lot and hung on STDIN, with no output at all.
 >

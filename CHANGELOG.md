@@ -21,6 +21,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **`repo-controls.md` carried two sets of durations that disagreed.** The per-control table was
+  re-measured on 2026-08-05; the prose two sections below was not, and still announced
+  `verify-echo` at 1,36 s after it had been made **7× faster** (0,25 s), ranked it second-slowest
+  when it had become the slowest-but-four, and trailed the **tail of a replaced sentence** —
+  starting mid-clause on `not add up:` — putting the gate at *"about 3,7 s"* two lines under the
+  3,05 s just stated. The `.html` render carried the same stale text.
+- **The control journal was documented in the CHANGELOG and nowhere else**, while `AGENTS.md`
+  states that what the controls cost lives in `repo-controls.md` *"and nowhere else"* — so the
+  instrument that now produces those numbers was missing from the document that owns them. It is
+  there now, with the one fact that keeps the two figure sets from reading as a contradiction:
+  **the table times a check alone, the journal times it inside the parallel lot** *(measured:
+  `verify-growth` 0,88 s against 1,10 s)*.
+
 ### Added
 - **`./check.sh --report` — a control journal, and a DEVELOPMENT instrument.** It answers two
   questions a green tick never does: **how long each control costs**, and **whether its gate ever
