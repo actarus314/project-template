@@ -30,7 +30,8 @@
 # An extension nobody listed is NOT silently skipped: it is named at the end, per repository. A
 # missing language would otherwise be a hole that looks exactly like a clean result.
 #
-# ADVISORY: growth is often legitimate. What this makes impossible is not noticing.
+# BLOCKING. Growth is often legitimate, and this header called itself advisory long after that
+# stopped being true. What it makes impossible is not noticing.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 

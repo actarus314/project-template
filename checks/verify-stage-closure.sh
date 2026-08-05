@@ -60,18 +60,26 @@ rev=$(git -C "$WS" rev-list -1 --before "$last_at" HEAD 2>/dev/null || true)
 hot=""
 [ -n "$rev" ] && hot=$(git -C "$WS" ls-tree --name-only "$rev" | grep '^RECHERCHE-' || true)
 
-fail=0
+# ⚠ marks, and the exit code stays 0. Advisory is a claim about the EXIT CODE, not about the
+# wording: check.sh turns any non-zero into a ko, which fails the gate and blocks the commit — so a
+# script that prints ✗ and exits 1 is a blocking check whatever its header says.
+said=0
 if [ "$archived" -eq 0 ]; then
-  echo "✗ $prev_name → $last_name closed without touching $WS/archives — the stage left no synthesis"
-  fail=1
+  echo "⚠ $prev_name → $last_name closed without touching $WS/archives — the stage left no synthesis"
+  said=1
 fi
 if [ -n "$hot" ]; then
-  echo "✗ still on the hot side at $last_name: $(echo "$hot" | tr '\n' ' ')— a finished RECHERCHE-* belongs in its stage folder"
-  fail=1
+  echo "⚠ still on the hot side at $last_name: $(echo "$hot" | tr '\n' ' ')— a finished RECHERCHE-* belongs in its stage folder"
+  said=1
 fi
 
 # What was READ, published whether or not anything was found: a bare ✓ cannot be told apart from a
 # check that looked at nothing. This repository has paid for that distinction.
-[ "$fail" -eq 0 ] && echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* left at the root"
+if [ "$said" -eq 0 ]; then
+  echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* left at the root"
+else
+  echo "  (advisory — the gate stays green: whether a release closed a stage is a judgement, and a"
+  echo "   patch release often closes none. Settling it is the housekeeping pass, not this counter.)"
+fi
 echo "  (the stage opened by $last_name is left alone — it may still be running)"
-exit "$fail"
+exit 0
