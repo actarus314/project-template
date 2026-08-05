@@ -22,7 +22,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **The "second pull request on the same undertaking" warning now states the OVERLAP.** It counts,
+- **The "second pull request on the same undertaking" rule now ASKS THE MAINTAINER**, instead of
+  printing a notice the assistant reads past. It fired when `#109` was opened and changed nothing —
+  not even a mention. The rule itself says only the maintainer can tell whether two pull requests
+  carry one undertaking, and it was putting that question to the assistant; `permissionDecision:
+  "ask"` puts it where it belongs, and one keystroke settles what a paragraph could not. It also
+  states the OVERLAP.** It counts,
   locally and instantly, how many of the branch's files the previous pull request also touched — the
   question was already asked, it is now answered on a fact rather than from memory.
   **The mechanical version of this rule was measured and ruled out**, which is the finding here:

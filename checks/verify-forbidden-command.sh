@@ -110,8 +110,16 @@ BLOCK = [
      "`gh run list --commit \"$sha\" --json workflowName,status,conclusion` — and treat a MISSING "
      "workflow as not green. AGENTS.md."),
 ]
-# Warned, not blocked: opening a second pull request is sometimes right — a change of SUBJECT
-# justifies one. Only the maintainer can tell, so this states the question rather than deciding it.
+# 🔴 ASKED, not warned — and the difference is the whole point. This rule spent its life as a
+# message printed before the command ran, and the assistant read straight past it: it fired when
+# pull request #109 was opened and did not change a thing, not even a mention. A notice nobody acts
+# on is worse than no notice, since it looks like a guard while guaranteeing nothing.
+#
+# The rule itself states that only the MAINTAINER can tell whether two pull requests carry the same
+# undertaking — and it was putting that question to the assistant. `permissionDecision: "ask"` puts
+# it where it belongs: the command stops, the human approves or refuses, and one keystroke settles
+# what a paragraph of prose could not. Not `deny`, because the measurement below rules that out;
+# not a message, because a message was already there and did nothing.
 #
 # 🔴 MEASURED, and the mechanical version of this rule was ruled OUT. Two candidates, on the 20 most
 # recent pull requests:
@@ -124,7 +132,7 @@ BLOCK = [
 #     undertaking. It would refuse correct work. The ratio also misleads on small diffs (one shared
 #     file out of two reads as 0,50) and bot batches open six in minutes.
 # What survives decides nothing: state the OVERLAP, so the question below is answered on a fact.
-WARN = [
+ASK = [
     ("second-pr-same-undertaking",
      r"open-pr\.sh\b",
      "Before opening: does the PREVIOUS pull request carry the SAME undertaking? If it does, commit "
@@ -164,15 +172,18 @@ def overlap():
             f"previous pull request ({', '.join(sorted(shared)[:4])}{'…' if len(shared) > 4 else ''})"
             f" — that is the signal the question above is about.")
 
-for tag, pattern, reason in WARN:
+for tag, pattern, reason in ASK:
     if re.search(pattern, cmd, re.I):
         try:
             extra = overlap()
         except Exception:
             extra = ""               # a measurement never stops the command it comments on
-        record(1, "warned: " + tag)
-        print(json.dumps({"systemMessage": "⚠ " + reason + extra}))
-        sys.exit(0)                  # advisory: states the question, lets the command through
+        record(1, "asked: " + tag)
+        print(json.dumps({
+            "hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask",
+                                   "permissionDecisionReason": reason + extra},
+        }))
+        sys.exit(0)                  # the human decides; nothing here refuses anything
 
 record(0)
 sys.exit(0)
