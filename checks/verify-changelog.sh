@@ -55,6 +55,20 @@ if [ "$here" = "${base#origin/}" ]; then
   exit 0
 fi
 
+# 🔴 A BOT's branch is exempt, and this is not a hole. The convention it enforces says the GitHub
+# Release carries the auto-generated list of merged pull requests while the CHANGELOG says what
+# changed for a user — a dependency bump is already in the first, and no bot writes the second.
+# Demanding it made EVERY Renovate and Dependabot pull request permanently red: a gate nothing can
+# satisfy is a gate that gets bypassed, and the bypass is what would stop being read.
+# `GITHUB_HEAD_REF` first: a `pull_request` run checks out a DETACHED merge commit, so the branch
+# name is not in HEAD where it matters most — reading HEAD alone would exempt nothing under CI.
+ref="${GITHUB_HEAD_REF:-$here}"
+case "$ref" in
+  renovate/*|dependabot/*)
+    echo "  (skipped — $ref is a bot's branch: its bump is listed in the Release, and the CHANGELOG is prose no bot writes)"
+    exit 0;;
+esac
+
 merge_base=$(git merge-base "$base" HEAD 2>/dev/null || true)
 [ -n "$merge_base" ] || { echo "  (no common ancestor with $base — nothing to compare)"; exit 0; }
 changed=$(git diff --name-only "$merge_base"...HEAD 2>/dev/null || true)
