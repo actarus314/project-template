@@ -12,13 +12,14 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# The reference is the last MERGED pull request, not the last release: a release is rare, and a
-# file can be born verbose and stay so for weeks between two. origin/main IS that state here,
-# since this repo is pull-request-only. Falls back to the tag where there is no remote yet.
-tag=$(git rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/main \
+# The reference is the last MERGED pull request, never the last release: a far anchor re-judges
+# work already merged green. Why that, and not "releases are rare": docs/code/verify-comment-drift.md.
+# origin/main IS the last-merged state here, this repo being pull-request-only; falls back to the
+# tag where there is no remote yet — hence a name that says reference, not release.
+ref=$(git rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/main \
       || git describe --tags --abbrev=0 2>/dev/null || true)
-[ -n "$tag" ] || { echo "  (no reference point yet — nothing to compare against)"; exit 0; }
-released_at=$(git log -1 --format=%cI "$tag")
+[ -n "$ref" ] || { echo "  (no reference point yet — nothing to compare against)"; exit 0; }
+ref_at=$(git log -1 --format=%cI "$ref")
 grown=0
 
 COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
@@ -126,17 +127,17 @@ scan_tree() {            # <repository> <revision> <label>
   return 0
 }
 
-scan_tree . "$tag" "repo/"
+scan_tree . "$ref" "repo/"
 
 # The workspace is a separate repository with no remote and no tag, and it is optional: a generated
 # project can be created without it.
 if [ -d ../workspace/.git ]; then
-  ws_rev=$(git -C ../workspace rev-list -1 --before="$released_at" HEAD 2>/dev/null || true)
+  ws_rev=$(git -C ../workspace rev-list -1 --before="$ref_at" HEAD 2>/dev/null || true)
   if [ -n "$ws_rev" ]; then
     scan_tree ../workspace "$ws_rev" "workspace/"
     scope="repo/ and workspace/"
   else
-    echo "  ⚠ workspace: no commit predates $tag — nothing to compare against"
+    echo "  ⚠ workspace: no commit predates $ref — nothing to compare against"
     grown=1
     scope="repo/ only (workspace unreadable)"
   fi
@@ -206,5 +207,5 @@ PY
 scan_touched . "repo/" || grown=1
 [ -d ../workspace/.git ] && { scan_touched ../workspace "workspace/" || grown=1; }
 
-[ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $tag, and none crossed ${COMMENT_LEVEL}% or a ${COMMENT_BLOCK}-line block — $scope; read:$read_out $level_checked touched file(s) for level and block"
+[ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $ref, and none crossed ${COMMENT_LEVEL}% or a ${COMMENT_BLOCK}-line block — $scope; read:$read_out $level_checked touched file(s) for level and block"
 exit "$grown"   # blocking: same reason

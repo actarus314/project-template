@@ -1,30 +1,9 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# A user-visible change without a CHANGELOG line.
-#
-# The rule (AGENTS.md): a line goes into `Unreleased` as soon as a change is visible TO WHOEVER
-# USES THE REPO — "a template that changes, a RUNBOOK step that moves, a script's behaviour".
-#
-# Two of those three are PATHS, so two thirds of the rule are mechanical. Only the third is a
-# judgement, and this check deliberately leaves it alone: an internal refactor stays out.
-#
-# 🔴 What it catches is the case that actually happened: four checks shipped, CHANGELOG untouched.
-# Nobody notices a missing line — the file simply stays plausible.
-#
-# Compared against the merge base with the default branch, so the unit is the BRANCH, which is the
-# unit a pull request reviews. When there is nothing to compare — on the default branch itself, or
-# in a fresh project with no remote — it SAYS SO: a run that read nothing must not look like a run
-# that found nothing.
-#
-# 🔴 WHAT COUNTS AS VISIBLE IS DETECTED, NEVER LISTED. This check travels into every generated
-# project, where none of the paths below exist; a hand-kept list would then be a list of absent
-# things, and would go on being read as a verdict. The paths are taken from what the repository
-# actually holds, so the perimeter is whatever the place publishes — and nothing where it publishes
-# nothing. A list of three shipped scripts sat here while ten travelled.
-#
-# The branch NAME was measured as a candidate trigger and rejected: 11 of this repository's last 40
-# pull requests carry no CHANGELOG line and are right not to (docs, README, i18n, dependency bumps).
-# A guard firing on better than one pull request in four is a guard that gets overridden by reflex.
+# A user-visible change without a CHANGELOG line — the case that happened: four checks shipped,
+# CHANGELOG untouched, and a missing line leaves the file perfectly plausible.
+# The perimeter is DETECTED, never listed: this travels where none of these paths exist.
+# The rule, the three diff sources, and what was measured and rejected: docs/code/verify-changelog.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -33,13 +12,9 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# The perimeter, detected from what this repository actually holds. Empty is a legitimate answer,
-# and the one every generated project gives.
 published=()
 [ -d templates ]        && published+=('^templates/')
 [ -f docs/RUNBOOK.md ]  && published+=('^docs/RUNBOOK\.md$')
-# The tooling a generated project receives — only meaningful where a generator exists to ship it.
-# A check's behaviour changing IS visible to whoever runs it, and they all travel now.
 [ -f init-project.sh ]  && published+=('^check\.sh$' '^open-pr\.sh$' '^checks/' '^init-project\.sh$' '^configure-repo\.sh$')
 
 if [ "${#published[@]}" -eq 0 ]; then
@@ -59,7 +34,10 @@ fi
 
 merge_base=$(git merge-base "$base" HEAD 2>/dev/null || true)
 [ -n "$merge_base" ] || { echo "  (no common ancestor with $base — nothing to compare)"; exit 0; }
-changed=$(git diff --name-only "$merge_base"...HEAD 2>/dev/null || true)
+# THREE sources — committed, staged, neither. Why: docs/code/verify-changelog.md.
+changed=$({ git diff --name-only "$merge_base"...HEAD
+            git diff --name-only --cached
+            git diff --name-only; } 2>/dev/null | sort -u || true)
 [ -n "$changed" ] || { echo "✓ nothing changed since $base — no CHANGELOG line owed"; exit 0; }
 
 visible=$(printf '%s\n' "$changed" | grep -E "$(IFS='|'; echo "${published[*]}")" || true)

@@ -68,5 +68,50 @@ Other things worth saying — work left uncommitted, a branch never pushed — a
 guard speaks, and never trigger it. Uncommitted work mid-session is the normal state of a working
 tree, and a guard firing on the normal state is one that gets bypassed within a day.
 
+## The sequencer — a step that skips itself, and nothing sees it
+
+Asking for the pass is not the same as the pass happening. **A skill is text**: a step gets skipped
+and there is no mechanism to notice. Lived on 2026-08-05 — the line-by-line enumeration skipped, 5
+facts re-measured out of 40, and a result that would have passed any "the file is not empty" check.
+
+So the turn does not end while a pass is under way and its artefact does not yet **cover** the
+tracking doc.
+
+**Coverage, never presence.** Every backlog item number and every `##` section title is read **from
+the tracking doc itself** — the total is never a figure someone picked — and each must appear in the
+artefact with a verdict from a **closed set** (`open` / `closed` / `unchanged`). A closed set is what
+makes this mechanical: naming an entry without a verdict does not count it, and free prose could not
+be told apart from a list. That is the first of the four invariants taken from prior art: **the
+verdict lives IN the artefact**, not its existence — "the file is not empty" is the same shape of
+claim as the checksum that once hid 29 % of missing facts.
+
+**Armed by all three routes.** The pass is reached by drift, by compaction, and by being asked for
+in words; arming on the last one alone would leave the most frequent path sequenced by nothing.
+The fourth route — the model invoking the skill on its own reading — stays outside the mechanism.
+That is a limit, not an oversight: nothing arms a model's judgement.
+
+**Disarmed by a WRITE to the tracking doc**, never by the turn ending. Falling back on the drift
+threshold would disarm a pass asked for on a day with no drift at all — which is most of them.
+
+🔴 **The 3-cycle ceiling is ours to write.** `Stop` has NO native loop protection: a hook that always
+returns `block` never lets Claude stop. So the count is kept in the state directory, and on the third
+send-back the turn is **released** — with what is still uncovered published, not swallowed. A guard
+that can wedge the session is worse than the gap it watches, and the same reasoning already governs
+`auto` compaction above.
+
+⚠ **The artefact is scratch.** It lives in the state directory, outside both repositories, and is
+deleted when the doc is written. It is deliberately not a file beside the tracking doc: a second
+resume document is a second source, and the stale one is always the one that gets read.
+
+### Three invariants deliberately NOT implemented
+
+Prior art (`harness-engineering-skills`, `statewright`) carries four invariants. One is in. The other
+three all require **fresh subagents** — an evaluator session that cannot be reused between cycles, a
+fresh agent per checkpoint so the judge is not also the producer, and tools restricted per phase.
+They are not oversights and they are not refused: the maintainer's own arbitration was **the closing
+pass first, see whether it works, extend afterwards**. Extending is where they belong, and the
+question to settle then is whether a judge that costs an agent per cycle buys more than a coverage
+count that costs nothing.
+
 Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "<abs>/verify-housekeeping.sh" } ] } ] }

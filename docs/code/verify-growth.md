@@ -22,6 +22,10 @@ An absolute size would be arbitrary: repo-controls.md is legitimately long, it a
 sections. What IS observable is a document that grows and never comes back down. So the
 comparison is against the last RELEASE, not against a number someone picked.
 
+The neighbouring check anchors on the last merged pull request instead, and the two are not
+interchangeable: given this one's far anchor each guard fails, in opposite directions. Measured,
+and tabulated, in [`verify-comment-drift.md`](verify-comment-drift.md).
+
 The workspace carries no tag, so what crosses over is the release TIMESTAMP: both repositories
 advance on the same undertaking, and its last commit strictly before that instant is the same
 reference point. Reaching for a tag that does not exist there would print "no release yet" and
