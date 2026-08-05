@@ -21,7 +21,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **`verify-growth.sh` reads its two revisions in four calls instead of two per file** — 0,88 s →
+  0,17 s, **5,1× faster**, and the verdict is identical at four thresholds *(8, 5, 3 and 0
+  documents reported)*. It forked `git show` **and** `git cat-file -s` once per document: 585 ms of
+  pure process startup for 24 files, against 40 ms for the bulk calls that replace them.
+  🔴 **`git cat-file --batch` was the obvious route and was rejected**: its stream interleaves
+  headers with raw bytes, no awk can skip a byte count, and one file without a trailing newline
+  shifts every object after it. `ls-tree -l` and `git grep -c` give the same two numbers with
+  nothing to parse — verified equal on all 24 documents before the swap.
+- **`verify-version.sh` asks its eighteen scripts in parallel** — 0,52 s → 0,27 s. The answers land
+  in files, never on a shared pipe: interleaved writes are what makes a parallel loop attribute one
+  script's version to another.
+
 ### Fixed
+- **The control journal's page never said whether the journal was still running.** The state was
+  printed to the terminal alone, so `CONTROLES.md` carried no trace of it — and its timestamps are
+  those of the RECORDS, not of the reading. A page whose newest record is a day old could not tell
+  *"recording stopped"* from *"nothing has run"*: two different facts, one indistinguishable line.
+  The page now states which one it is, on its own line.
+- **Seven controls had no duration at all in the journal** — `travelling paths`, `gitleaks`,
+  `shellcheck`, `actionlint`, `zizmor`, `osv`, `renovate`. Only the parallel lot was timed, so
+  everything outside it showed a bare `—`, which reads as *free* rather than as *unmeasured*, and
+  no curve can be drawn through a dash. They run on the same clock as the lot now.
+- **`verify-comment-drift.sh` never crossed into the neighbouring `workspace/`**, unlike its twin
+  `verify-narrative.sh`. "A comment says only what the code cannot" is a rule of METHOD, and
+  METHODE's discriminator sends those into the workspace too — the exemption was nothing but an
+  oversight, and it would have gone on looking exactly like a clean result. **Both repositories
+  now, and the count of files read in each is published**: "workspace/" in a verdict says which
+  tree was *intended*, only a count says whether anything of that kind was there.
+- **`verify-echo.sh` reported nothing about a group that came back clean.** With pairs found in one
+  group the others vanished from the output, so `workspace/ ` clean and `workspace/` never opened
+  produced the same silence — the *"publish what was read"* correction never applied to this file.
+  It now prints what each group held **whatever the verdict**, and drops the *"in either
+  repository"* claim it made even with no neighbour present.
+- **`verify-workspace.sh` was blind to any tracking tool outside its three known names.** A
+  `.linear/` dropped into the workspace left the verdict identical to a workspace holding nothing.
+  Every tracked top-level dot-directory is surfaced now, minus the editor and forge ones — **named,
+  never counted**: calling an unknown directory a tracking system would fire on the next editor
+  that ships one, and a guard that fires where it should not earns overrides.
 - **`repo-controls.md` carried two sets of durations that disagreed.** The per-control table was
   re-measured on 2026-08-05; the prose two sections below was not, and still announced
   `verify-echo` at 1,36 s after it had been made **7× faster** (0,25 s), ranked it second-slowest

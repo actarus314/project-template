@@ -46,32 +46,69 @@ released_at=$(git log -1 --format=%cI "$tag")
 grown=0
 
 # `grep -c ''` on both sides so both count the same thing: `wc -l` counts newlines, and misses a
-# last line with no final newline. Looped over rather than indexed — /bin/bash 3.2, which ships
-# with macOS, has no associative arrays.
+# last line with no final newline. Awk counts RECORDS below, which is the same semantics.
 #
 # The file list is filtered in the shell rather than through a pathspec: `ls-tree` matches a
 # pathspec literally, so `docs/*.md` selects nothing, and it rejects `:(exclude)` outright. Both
 # failures are empty output, which reads exactly like a clean tree.
+#
+# 🔴 FOUR calls, whatever the file count. This used to fork `git show` AND `git cat-file -s` once
+# per document — measured at 585 ms of pure process startup for 24 files, the single dominant cost
+# of this check, against 40 ms for the four bulk calls that replace them. `git cat-file --batch`
+# was the obvious route and was rejected: its stream interleaves headers with raw bytes, and no awk
+# can skip a byte count, so a file with no trailing newline shifts every object after it.
+# The join happens in awk because /bin/bash 3.2, which macOS ships, has no associative arrays.
 compare_tree() {         # <repository> <revision> <label> <ERE selecting the curated documents>
   local dir="$1" rev="$2" label="$3" select="$4"
-  local listing f before_l before_b now_l now_b pct_l pct_b worst
-  listing=$(git -C "$dir" ls-tree -r --name-only "$rev")   # unmuzzled: a failure here must shout
-  while IFS= read -r f; do
-    [ -f "$dir/$f" ] || continue                  # deleted since that point: nothing to compare
-    before_l=$(git -C "$dir" show "$rev:$f" | grep -c '' || true)
-    before_b=$(git -C "$dir" cat-file -s "$rev:$f")
-    [ "$before_l" -gt 0 ] && [ "$before_b" -gt 0 ] || continue
-    now_l=$(grep -c '' "$dir/$f" || true)
-    now_b=$(wc -c < "$dir/$f" | tr -d ' ')
-    pct_l=$(( (now_l - before_l) * 100 / before_l ))
-    pct_b=$(( (now_b - before_b) * 100 / before_b ))
-    worst=$pct_l; [ "$pct_b" -gt "$worst" ] && worst=$pct_b
-    if [ "$worst" -ge "$THRESHOLD" ]; then
-      printf '  ↑ %-32s %4d → %4d lines (%+d%%), %6d → %6d bytes (%+d%%)\n' \
-        "$label$f" "$before_l" "$now_l" "$pct_l" "$before_b" "$now_b" "$pct_b"
-      grown=1
-    fi
-  done < <(printf '%s\n' "$listing" | grep -E "$select" | grep -vE "$EXCLUDE" || true)
+  local T; T=$(mktemp -d)
+  git -C "$dir" ls-tree -r --name-only "$rev" \
+    | grep -E "$select" | grep -vE "$EXCLUDE" > "$T/paths" || true
+  # Deleted since that point: nothing to compare, and it must not reach the bulk readers either.
+  : > "$T/live"
+  while IFS= read -r f; do [ -f "$dir/$f" ] && printf '%s\n' "$f" >> "$T/live"; done < "$T/paths"
+  [ -s "$T/live" ] || { rm -rf "$T"; return 0; }
+
+  git -C "$dir" ls-tree -r -l "$rev"  > "$T/rev-bytes" 2>/dev/null || true
+  git -C "$dir" grep -c '' "$rev"     > "$T/rev-lines" 2>/dev/null || true
+  # `-H` is load-bearing: with a SINGLE file grep prints the bare count and drops the name, which
+  # would make the join silently attribute that count to nothing at all.
+  ( cd "$dir" && tr '\n' '\0' < "$T/live" | xargs -0 grep -cH '' ) > "$T/now-lines" 2>/dev/null || true
+  ( cd "$dir" && tr '\n' '\0' < "$T/live" | xargs -0 wc -c )       > "$T/now-bytes" 2>/dev/null || true
+
+  awk -v label="$label" -v threshold="$THRESHOLD" '
+    function pct(now, before) { return int((now - before) * 100 / before) }
+    FNR == 1 { stage++ }
+    stage == 1 { live[$0] = 1; next }                                  # live
+    stage == 2 { p = $0; sub(/^[^\t]*\t/, "", p)                        # rev-bytes
+                 split($0, h, "\t"); split(h[1], f, " ")
+                 if (p in live) revb[p] = f[4]; next }
+    stage == 3 { line = $0; i = index(line, ":"); line = substr(line, i + 1)   # rev-lines
+                 j = length(line); while (j > 0 && substr(line, j, 1) != ":") j--
+                 p = substr(line, 1, j - 1); c = substr(line, j + 1)
+                 if (p in live) revl[p] = c + 0; next }
+    stage == 4 { line = $0                                              # now-lines
+                 j = length(line); while (j > 0 && substr(line, j, 1) != ":") j--
+                 p = substr(line, 1, j - 1); c = substr(line, j + 1)
+                 if (p in live) nowl[p] = c + 0; next }
+    stage == 5 { if ($NF == "total") next                               # now-bytes
+                 c = $1; p = $0; sub(/^[ \t]*[0-9]+[ \t]+/, "", p)
+                 if (p in live) nowb[p] = c + 0; next }
+    END {
+      n = 0
+      for (p in live) {
+        if (!(p in revl) || !(p in revb) || !(p in nowl) || !(p in nowb)) continue
+        if (revl[p] <= 0 || revb[p] <= 0) continue
+        pl = pct(nowl[p], revl[p]); pb = pct(nowb[p], revb[p])
+        worst = (pb > pl) ? pb : pl
+        if (worst >= threshold + 0) {
+          printf "  ↑ %-32s %4d → %4d lines (%+d%%), %6d → %6d bytes (%+d%%)\n",
+                 label p, revl[p], nowl[p], pl, revb[p], nowb[p], pb
+          n++
+        }
+      }
+      exit (n > 0)
+    }' "$T/live" "$T/rev-bytes" "$T/rev-lines" "$T/now-lines" "$T/now-bytes" || grown=1
+  rm -rf "$T"
 }
 
 # 🔴 DETECTED, never listed. It used to name `docs/*.md` plus three files at the root, which

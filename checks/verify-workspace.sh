@@ -65,7 +65,20 @@ else
   done
   [ "$systems" -gt 1 ] &&
     say "$systems tracking systems compete (${n} doc(s)${found_others:+, plus${found_others}}) — METHODE allows one, and the stale one gets read first"
+
+  # 🔴 What the list above cannot see: every tracked top-level dot-directory, minus the editor and
+  # forge ones. NAMED, never counted — calling an unknown directory a tracking system would fire on
+  # the next editor that ships one, and a guard that fires where it should not earns overrides.
+  # Filtered on `/` first: a tracked path holding a slash has a directory as its head, which beats
+  # testing the disk for one git tracks and the worktree happens not to hold.
+  INNOCENT=".github .gitlab .vscode .idea .devcontainer .husky .claude .config .cache .venv"
+  unlisted=""
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    case " $OTHERS $INNOCENT " in *" $d "*) continue;; esac
+    unlisted="$unlisted $d/"
+  done < <(git -C "$ws" ls-files 2>/dev/null | grep '/' | cut -d/ -f1 | grep -E '^\.[a-zA-Z]' | sort -u || true)
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "$OTHERS" | sed 's|\([^ ]*\)|\1/|g; s| |, |g') (any other tool is invisible here)"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s) — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
 exit "$fail"
