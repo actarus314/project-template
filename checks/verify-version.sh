@@ -34,11 +34,18 @@ fi
 # DERIVED, never written, and with NO extension filter: what git tracks as EXECUTABLE, whatever the
 # language. Filtering on `*.sh` presumes the project is written in shell.
 # The pattern matches a HANDLER, never a mention: check.sh names `--version` in a comment and answers
-# it by running the whole lot, which a looser grep would then execute. Shell, Python and Node forms
-# are recognised; another language is not, and the verdict says so.
-HANDLER='"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)|add_argument\([^)]*--version|argv[^=]*==?=?[^=]*--version|includes\(.--version'
+# it by running the whole lot, which a looser grep would then execute. Shell, Python, Node, Go and
+# Java forms are recognised.
+# 🔴 A COMPILED executable cannot be grepped at all — there is no source to match. Those are counted
+# and NAMED as unexamined instead of being silently cleared, which is what the verdict used to do
+# while its own comment claimed the opposite.
+HANDLER='"\$\{1:-\}" = "--version"|^[[:space:]]*--version\)|add_argument\([^)]*--version|argv[^=]*==?=?[^=]*--version|includes\(.--version|Args\[[^]]*\][^=]*==[^=]*--version|equals\("--version"'
 execs=$(git ls-files -s 2>/dev/null | awk '$1=="100755"{ $1=$2=$3=""; sub(/^ +/,""); print }')
 scripts=$(printf '%s\n' "$execs" | grep -v '^$' | tr '\n' '\0' | xargs -0 grep -lE "$HANDLER" 2>/dev/null || true)
+binaries=$(printf '%s\n' "$execs" | grep -v '^$' | while IFS= read -r f; do
+             # `|| true` per iteration: the loop's status is the LAST test's, and under `set -e`
+             # a final non-binary file killed the script with no output at all.
+             { [ -f "$f" ] && ! grep -qI . "$f" 2>/dev/null && printf '%s ' "$f"; } || true; done)
 [ -n "$scripts" ] || { echo "✗ no script handles --version — this check would pass by looking at nothing"; exit 1; }
 for s in $scripts; do
   # STDIN closed: three of these are hooks that read their payload from it, and asking a
@@ -64,5 +71,6 @@ if [ -f .claude-plugin/plugin.json ]; then
   fi
 fi
 
+[ -n "$binaries" ] && echo "  (compiled executables, no source to read, not examined:$binaries)"
 [ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG"
 exit "$fail"

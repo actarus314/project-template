@@ -116,10 +116,14 @@ for label, files in GROUPS:
         vecs.append({w: x / norm for w, x in v.items()})
 
     pairs = []
+    # Computed ONCE per paragraph, not once per PAIR. The loop below is quadratic, so a regex over
+    # the full text was being rerun n²/2 times on the same strings — the single dominant cost of
+    # this check, and of the gate that waits on it.
+    langs = [language(d[1]) for d in docs]
     for i in range(n):
         for j in range(i + 1, n):
             # The README is bilingual by design, and its two halves restate each other on purpose.
-            if language(docs[i][1]) != language(docs[j][1]):
+            if langs[i] != langs[j]:
                 continue
             s = sum(vecs[i][w] * vecs[j].get(w, 0.0) for w in vecs[i])
             if s >= THRESHOLD:
