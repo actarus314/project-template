@@ -21,6 +21,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
+  `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
+  writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a
+  commit that had not touched it. The rule the check enforces — a curated document **shrinks** when
+  a stage closes — has no meaning for a page no human writes, which is why it joins the CHANGELOG
+  and the archives among what accumulates by nature.
+
+### Changed
+- **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
+  *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
+  directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
+  Delegation is now framed as a cost question, with the three opt-ins still required when it does
+  happen.
+
 ### Added
 - **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
   forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a

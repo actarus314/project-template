@@ -15,15 +15,18 @@ control that watches the neighbouring workspace says so in its own header, and t
 answer. What this pass establishes is that the doc has been **brought up to date deliberately**,
 by someone who read the work.
 
-## Step 1 — the inventory, delegated and parallel
+## Step 1 — the inventory
 
-The inventory is countable, decomposable, and worth no orchestrator tokens.
-**Delegate it, on a cheaper model, and prefer a parallel workflow over one sequential pass** — the
-rule, the three opt-ins it requires, and why leaving them unwritten silently does the opposite:
-[`docs/claude-code-setup.md`, "Delegating"](../../docs/claude-code-setup.md).
+The inventory is countable and decomposable. **Delegating it is a cost question, not a rule** —
+the underlying one is *delegate as soon as it costs LESS*
+*([`docs/claude-code-setup.md`, "Delegating"](../../docs/claude-code-setup.md))*, and the six `git`
+commands below cost less run directly than wrapped in a subagent launch. Delegate when the
+inventory actually spans several projects, or when it grows past what one pass reads comfortably;
+otherwise run it here.
 
-⚠️ A subagent launch whose prompt omits *"does the work itself"*, *"does not re-delegate"* or
-*"does not call the advisor"* is **refused** by `verify-delegation.sh`. Write the three.
+⚠️ **If it is delegated**: a cheaper model, a parallel workflow over one sequential pass, and a
+prompt carrying the three opt-ins — *"does the work itself"*, *"does not re-delegate"*, *"does not
+call the advisor"*. A launch omitting any of them is **refused** by `verify-delegation.sh`.
 
 What the inventory brings back, per repository *(the code one and the neighbouring workspace)*:
 

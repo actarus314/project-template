@@ -119,7 +119,13 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
 # or `guide/` was invisible to it. Every tracked `.md` is compared now, minus what accumulates by
 # nature — a CHANGELOG, an archive, a form template. Same exclusions as verify-echo.sh: concision
 # is one rule, and two checks reading two different sets of documents would be two answers to it.
-EXCLUDE='(^|/)(CHANGELOG\.md$|archives?/|\.github/)'
+#
+# ⚠ `CONTROLES.md` joins them because it is not CURATED: `check.sh` rewrites it whole at every
+# verdict, one row per control recorded, so it grows by recording rather than by writing. With the
+# journal left on, it crossed the threshold on its own (+42 %) and blocked a commit that had not
+# touched it. The rule this check enforces — a curated document SHRINKS when a stage closes — has
+# no meaning for a page no human writes.
+EXCLUDE='(^|/)(CHANGELOG\.md$|archives?/|\.github/|CONTROLES\.md$)'
 compare_tree . "$tag" "" '\.md$'
 
 # The workspace is a separate repository with no remote and no tag, and it is optional: a generated
