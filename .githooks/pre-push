@@ -19,6 +19,12 @@
 # to repair an emergency. Bypassing is a decision, not an accident.
 set -euo pipefail
 
+# The version, so the sweep that compares them all can see this one too.
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 PROTECTED="main develop"
 ZERO='0000000000000000000000000000000000000000'
 

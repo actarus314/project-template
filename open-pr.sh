@@ -23,6 +23,12 @@
 # project (like check.sh), so it is written in English regardless of the repo's language.
 set -euo pipefail
 
+# The version, so the sweep that compares them all can see this one too.
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 BASE="${1:?usage: open-pr.sh <base-branch> <title> <body-file>}"
 TITLE="${2:?usage: open-pr.sh <base-branch> <title> <body-file>}"
 BODY_FILE="${3:?usage: open-pr.sh <base-branch> <title> <body-file>}"

@@ -67,7 +67,10 @@ cp "$TPL/templates/repo/README.md"     "$DEST/repo/README.md"
 cp "$TPL/templates/repo/.env.example"  "$DEST/repo/.env"        # to fill in (gitignored)
 
 # pre-commit hook (gitleaks) — versioned to be shared; enabled further below via core.hooksPath.
-cp -R "$TPL/templates/repo/.githooks"        "$DEST/repo/.githooks"
+# The hooks come from the ROOT, like check.sh and checks/ — never from templates/. A second
+# copy drifts, and this pair had already started: pre-push was byte-identical, pre-commit
+# carried the same code under two different wordings.
+cp -R "$TPL/.githooks"                       "$DEST/repo/.githooks"
 # chmod on ALL hooks, never by name on just one: git SILENTLY ignores a hook
 # that isn't executable. A hardcoded `chmod +x pre-commit` would have silenced any hook added later —
 # a missing check that doesn't show, exactly what this template spends its time tracking down.

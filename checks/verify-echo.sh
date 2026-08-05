@@ -87,11 +87,14 @@ def tracked_md(root="."):
 here = tracked_md()
 GROUPS = [("repo/", [f for f in here if not f.startswith("templates/")]),
           ("templates/", [f for f in here if f.startswith("templates/")])]
-if pathlib.Path("../workspace").is_dir():
+neighbour = pathlib.Path("../workspace").is_dir()
+if neighbour:
     # Every tracked `.md` there too: `workspace/docs/SUIVI.md` is where the generator puts the
     # tracking doc, so a project following the documented default sat outside this check's reach.
     GROUPS.append(("workspace/", tracked_md("../workspace")))
-GROUPS = [(label, files) for label, files in GROUPS if files]
+# 🔴 An empty group is KEPT, and reported. Dropping it here is what made a silent group
+# indistinguishable from a group that was never read: with pairs found elsewhere, `workspace/`
+# simply did not appear, and nothing said whether it had been clean or absent.
 
 FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus|du|aux|ses|leur|jamais|sans|selon|chaque|ainsi|donc|cette|cet)\b", re.I)
 def language(text):
@@ -103,9 +106,11 @@ def words(s):
     return [w for w in re.findall(r"[a-zà-ÿ]{4,}", re.sub(r"[`*_#>\[\]()]", " ", s.lower()))]
 
 total = 0
+read_out = []
 for label, files in GROUPS:
     docs = [(f, p) for f in files for p in paragraphs(f)]
     n = len(docs)
+    read_out.append(f"{label} {len(files)} file(s), {n} paragraph(s)")
     if n < 2:
         continue
     toks = [words(p) for _, p in docs]
@@ -154,7 +159,14 @@ for label, files in GROUPS:
         if len(pairs) > 10:
             print(f"    … and {len(pairs) - 10} more (raise ECHO_THRESHOLD to narrow)")
 
+if not neighbour:
+    # Said out loud: the verdict used to claim "in either repository" with no neighbour there.
+    print("  (no ../workspace beside this repo — its group was not read)")
+# 🔴 Printed whatever the verdict. Confining this to the clean case is the defect itself: with
+# pairs found in one group, the others vanished from the output and a reader could not tell a
+# group that came back clean from one that was never opened.
+print("  read: " + "; ".join(read_out))
 if total == 0:
-    print("✓ no paragraph restates another, in either repository")
+    print("✓ no paragraph restates another")
 sys.exit(1 if total else 0)
 PY

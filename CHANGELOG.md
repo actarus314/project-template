@@ -21,7 +21,107 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
+  across sixteen threshold combinations** *(up to 13 documents reported; a green-equals-green
+  comparison at the shipped settings would have proved nothing)*. Four forks per file became three
+  bulk `git grep` calls per marker family per side, expressed as the three counts the awk produced:
+  non-empty lines, leading-comment lines, and lines holding the marker — comments are the third,
+  code is the first minus the second.
+  ⚠️ **Written once wrong**: the first join keyed off argument ORDER, which breaks twice over —
+  several marker families produce several files per kind, and a family with no match produces an
+  empty one awk never opens. Every count lands tagged now.
+- **The control table's durations were re-measured, all sixteen** *(medians of three, standalone)*.
+  Their sum falls from **5,24 s to 3,89 s** while gaining a check, and the ordering changed:
+  `verify-echo` and `verify-growth` are no longer where the prose said they were.
+- **The git hooks stop being duplicated under `templates/`.** `init-project.sh` copies `.githooks/`
+  **from the root**, like `check.sh`, `open-pr.sh` and `checks/`. The second copy had already
+  drifted: `pre-push` was byte-identical to its twin while `pre-commit` carried the same code under
+  two different wordings.
+
+### Added
+- **Every tracked executable answers `--version` — 18, then 25.** Seven did not, so
+  `verify-version.sh` never compared them: `verify-tone.sh`, **`verify-version.sh` itself**,
+  `open-pr.sh`, the git hooks, and `check.sh` — the last resting on a grep carefully kept from
+  matching a mention. `check.sh` answers in its mode switch, before anything runs.
+- **Three more checks publish what they read.** `verify-tone.sh` gave a bare tick with no count and
+  no perimeter; `verify-version.sh` said nothing about the executables it compared, having gone
+  from 3 to 25; `verify-narrative.sh` claimed *"repo/ and workspace/"* with no count per side — the
+  gap just closed in its twin.
+- **`verify-checks-wiring.sh` was satisfiable by a COMMENT.** Its new read-back test matched the
+  literal anywhere in `check.sh`, so a check merely NAMED in prose cleared it with its verdict
+  still on the floor — the same false negative as the `[ -x … ]` form, one layer down. Code lines
+  only now.
+
+### Added
+- **A check for FRENCH left in published content** *(`checks/verify-language.sh`)*. Nothing looked
+  for it: `verify-tone.sh` hunts the second person, never the language, so a paragraph written
+  entirely in French passed it without a murmur — and two words shipped into published documents
+  that way, spotted by the maintainer rather than by a control.
+  🔴 **The signal is the ACCENT, and the limit is stated instead of hidden**: unaccented French goes
+  straight through, and the verdict says so in those words rather than claiming the language is
+  covered. Measured before it was written: of 90 accented lines here, 65 are the two bilingual
+  READMEs, 16 the French tracking doc the generator writes into the workspace, 8 the French
+  patterns the checks must spell out, 1 the skill's trigger phrases — four classes, each with a
+  reason that already existed elsewhere.
+  **The exceptions are DETECTED, never listed**: a `# … (français)` heading opens a bilingual
+  README's French half; a heredoc redirected into `workspace/` writes the French side by
+  construction; quoted material is verbatim; and `fr-pattern` is **verify-tone.sh's existing
+  marker**, reused rather than doubled. `repo/` only — English is a rule of published style, so it
+  stops where publication stops.
+- **It found a defect on its first run.** `templates/repo/README.md` opened with a **French block
+  of instructions**, shipped into every generated project. Translated.
+- 🔴 **And adding it exposed a hole in the wiring guard itself.** `verify-language.sh` was declared
+  in the table, copied by the generator, started by the parallel lot — and `check.sh` had **no
+  `reap` line for it**, so its exit code was written to a file nobody opened. `verify-checks-wiring`
+  said *"wired"* throughout: it compared the table, the hooks and the workflows, never **whether the
+  runner reads each verdict back**. A check can therefore be armed, documented, gated and unread,
+  which is the failure this repository has already paid for once. The guard now checks that too —
+  in **both** shapes, since `verify-travel` cannot join the lot (it generates a whole project) and
+  is invoked directly instead.
+  ⚠️ **Written once wrong, and caught by its own bite test**: the first pattern accepted
+  `if [ -x checks/foo.sh ]` — the *existence test* that opens the block — as proof the verdict was
+  read. It passed on the exact case it was written for.
+
+### Changed
+- **`verify-growth.sh` reads its two revisions in four calls instead of two per file** — 0,88 s →
+  0,17 s, **5,1× faster**, and the verdict is identical at four thresholds *(8, 5, 3 and 0
+  documents reported)*. It forked `git show` **and** `git cat-file -s` once per document: 585 ms of
+  pure process startup for 24 files, against 40 ms for the bulk calls that replace them.
+  🔴 **`git cat-file --batch` was the obvious route and was rejected**: its stream interleaves
+  headers with raw bytes, no awk can skip a byte count, and one file without a trailing newline
+  shifts every object after it. `ls-tree -l` and `git grep -c` give the same two numbers with
+  nothing to parse — verified equal on all 24 documents before the swap.
+- **`verify-version.sh` asks its eighteen scripts in parallel** — 0,52 s → 0,27 s. The answers land
+  in files, never on a shared pipe: interleaved writes are what makes a parallel loop attribute one
+  script's version to another.
+
 ### Fixed
+- **The control journal's page never said whether the journal was still running.** The state was
+  printed to the terminal alone, so `CONTROLES.md` carried no trace of it — and its timestamps are
+  those of the RECORDS, not of the reading. A page whose newest record is a day old could not tell
+  *"recording stopped"* from *"nothing has run"*: two different facts, one indistinguishable line.
+  The page now states which one it is, on its own line.
+- **Seven controls had no duration at all in the journal** — `travelling paths`, `gitleaks`,
+  `shellcheck`, `actionlint`, `zizmor`, `osv`, `renovate`. Only the parallel lot was timed, so
+  everything outside it showed a bare `—`, which reads as *free* rather than as *unmeasured*, and
+  no curve can be drawn through a dash. They run on the same clock as the lot now.
+- **`verify-comment-drift.sh` never crossed into the neighbouring `workspace/`**, unlike its twin
+  `verify-narrative.sh`. "A comment says only what the code cannot" is a rule of METHOD, and
+  METHODE's discriminator sends those into the workspace too — the exemption was nothing but an
+  oversight, and it would have gone on looking exactly like a clean result. **Both repositories
+  now, and the count of files read in each is published**: "workspace/" in a verdict says which
+  tree was *intended*, only a count says whether anything of that kind was there.
+- **`verify-echo.sh` reported nothing about a group that came back clean.** With pairs found in one
+  group the others vanished from the output, so `workspace/ ` clean and `workspace/` never opened
+  produced the same silence — the *"publish what was read"* correction never applied to this file.
+  It now prints what each group held **whatever the verdict**, and drops the *"in either
+  repository"* claim it made even with no neighbour present.
+- **`verify-workspace.sh` was blind to any tracking tool outside its three known names.** A
+  `.linear/` dropped into the workspace left the verdict identical to a workspace holding nothing.
+  Every tracked top-level dot-directory is surfaced now, minus the editor and forge ones — **named,
+  never counted**: calling an unknown directory a tracking system would fire on the next editor
+  that ships one, and a guard that fires where it should not earns overrides.
 - **`repo-controls.md` carried two sets of durations that disagreed.** The per-control table was
   re-measured on 2026-08-05; the prose two sections below was not, and still announced
   `verify-echo` at 1,36 s after it had been made **7× faster** (0,25 s), ranked it second-slowest

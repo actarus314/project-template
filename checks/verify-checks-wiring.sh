@@ -75,6 +75,29 @@ if RUNNER.exists():
     read.append(f"{len(self_declared)} self-declared hook(s)")
 else:
     unread.append(f"the runner's hook detection (no {RUNNER} here)")
+
+# ── 2b. The runner READS BACK every verdict it starts ─────────────────────────────────────────
+# The parallel lot writes each check's exit code to a file, and a check with no `reap` line has
+# that file dropped on the floor: it runs, it is documented, it gates nothing, and every part
+# above still says "wired". A check can sit in the table AND behind the door AND be unread.
+# TWO shapes count as read, because there are two: the parallel lot is replayed through `reap`,
+# and whatever cannot join it — verify-travel generates a whole project — is invoked directly in
+# the condition of an `if`. Demanding `reap` alone accused the one check that is correctly wired.
+if RUNNER.exists():
+    non_hooks = {p.stem for p in pathlib.Path("checks").glob("verify-*.sh")} - self_declared
+    # 🔴 The `./` is the whole discriminator, and leaving it out made this guard pass on the very
+    # case it was written for: `if [ -x checks/foo.sh ]` is the EXISTENCE TEST that opens the block,
+    # while `./checks/foo.sh` is the invocation whose status is read. Matching the former accepted a
+    # check whose verdict was thrown away, which is a guard failing by passing.
+    # Matched on CODE lines only: the literal appears in prose too, and a check merely NAMED in a
+    # comment would clear this test with its verdict still on the floor.
+    code = [l for l in runner.splitlines() if not l.lstrip().startswith("#")]
+    def read_back(n):
+        return any(f"reap {n}" in l or re.search(rf"\./checks/{re.escape(n)}\.sh", l) for l in code)
+    for n in sorted(n for n in non_hooks if not read_back(n)):
+        bad.append(f"{n}.sh is started but {RUNNER} never reads its verdict back — "
+                   f"it is computed and thrown away")
+    read.append(f"{len(non_hooks)} verdict(s) read back by {RUNNER}")
 # The table says the same thing in words, for a reader. Two statements of one fact, so they are
 # compared — this is the wiring this script used to be blind to.
 if declared:

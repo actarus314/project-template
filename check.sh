@@ -46,6 +46,9 @@ case "${1:-}" in
   --commit) MODE=commit;;
   --house)  MODE=house;;
   --report) MODE=report;;
+  # Answered here, before anything runs: this was the ONE tracked executable outside the sweep that
+  # compares them, and its absence rested on a grep that had to be kept from matching a mention.
+  --version) echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"; exit 0;;
 esac
 
 if [ "$MODE" = report ]; then
@@ -58,7 +61,12 @@ if [ "$MODE" = report ]; then
   [ -f "$CACHE/journal-on" ] || echo "  (journal is OFF — showing what was recorded before. Switch on: ./check.sh --report --on)" >&2
   [ -f "$J" ] || { echo "No control has run while the journal was on. Switch it on: ./check.sh --report --on"; exit 0; }
   OUT=${3:-../workspace/docs/CONTROLES.md}
-  python3 - "$J" "$OUT" <<'PY'
+  # The state travels INTO the page, and not to the terminal alone. The timestamps below are those
+  # of the RECORDS, never of the reading: a page whose newest record is a day old cannot, on its
+  # own, tell "recording stopped yesterday" from "nothing has run since yesterday" — two different
+  # facts reading as one line. Whoever opens the file later does not see this terminal.
+  STATE=off; [ -f "$CACHE/journal-on" ] && STATE=on
+  python3 - "$J" "$OUT" "$STATE" <<'PY'
 import sys, collections, pathlib, statistics
 rows = [l.rstrip("\n").split("\t") for l in open(sys.argv[1], encoding="utf-8") if l.strip()]
 rows = [r for r in rows if len(r) >= 4]
@@ -78,9 +86,19 @@ for r in rows:
 def med(v): return f"{statistics.median(v)/1000:.2f} s" if v else "—"
 total_ms = sum(statistics.median(a["ms"]) for a in agg.values() if a["ms"])
 
+recording = sys.argv[3] == "on"
+status = ("🟢 **Recording is ON** — this page grows at every verdict."
+          if recording else
+          "🔴 **Recording is OFF — this page is FROZEN.** Nothing has been added since the newest "
+          "record below, and nothing will be. Switch it back on: `./check.sh --report --on`.")
+
 out = ["# Controls — performance, and whether their gates actually fire", "",
-       "> Written by `./check.sh` itself at every verdict, while the journal is ON.",
+       "> Written by `./check.sh` itself at every verdict.",
        "> A **development instrument**: `./check.sh --report --on | --off | --reset`.", "",
+       status, "",
+       "> ⚠️ **The timestamps are those of the RECORDS, never of the reading.** Read alone, an old "
+       "newest-record cannot tell *recording stopped* from *nothing has run* — which is why the "
+       "line above states which one it is.", "",
        f"**{len(rows)} records**, **{len(agg)} controls**, "
        f"`{rows[0][0]}` → `{rows[-1][0]}`. Median time of the whole set, run one by one: "
        f"**{total_ms/1000:.2f} s** *(they run together, so the lot costs its slowest, not this sum)*.", "",
@@ -159,6 +177,21 @@ reap() {
   [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
   LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
   cat "$PAR/$1.out"; return "$(cat "$PAR/$1.rc")"
+}
+
+# Times a command and leaves the duration in LAST_MS for the ok()/ko() that follows. Everything
+# in the parallel lot gets its milliseconds from reap(); everything OUTSIDE it had none at all, so
+# seven controls showed a bare `—` in the journal — which reads as "free" rather than "unmeasured",
+# and no curve can be drawn from a dash. Same clock as the lot: EPOCHREALTIME, no subprocess.
+# `|| _rc=$?` rather than `; _rc=$?` so the function is safe outside a condition, where errexit
+# would otherwise take the script down before the duration is ever recorded.
+timed() {
+  local _t0 _t1 _rc=0
+  _t0=${EPOCHREALTIME/./}
+  "$@" || _rc=$?
+  _t1=${EPOCHREALTIME/./}
+  [ -n "$_t0" ] && [ -n "$_t1" ] && LAST_MS=$(( (_t1 - _t0) / 1000 ))
+  return "$_rc"
 }
 
 pin()   { grep -m1 "^[[:space:]]*$1:" "$CI" | awk '{print $2}' || true; }   # a `NAME: value` env from ci.yml (empty if absent)
@@ -292,12 +325,12 @@ if external && in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
   if [ -d .githooks ]; then while IFS= read -r f; do targets+=("$f"); done < <(find .githooks -type f); fi
   if [ "${#targets[@]}" -eq 0 ]; then ok "no shell scripts"
   elif ! command -v shellcheck >/dev/null 2>&1; then ko "shellcheck missing — 'brew install shellcheck'"
-  elif shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
+  elif timed shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
 fi
 
 if external && in_ci actionlint && [ -d .github/workflows ] && touched '^\.github/workflows/'; then
   note "actionlint — workflows"
-  if "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
+  if timed "$CACHE/actionlint" -color; then ok "actionlint"; else ko "actionlint"; fi
 fi
 
 # Its CONFIG counts as much as the workflows: tightening or loosening a rule in
@@ -305,18 +338,18 @@ fi
 # .github/workflows/ — so gating on the workflows alone left the config unwatched.
 if external && in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/workflows/|zizmor\.yml$'; then
   note "zizmor — workflows (config $zconfig)"
-  if "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
+  if timed "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
 
 if in_ci semgrep && [ "$MODE" = full ]; then
   note "semgrep — the code (curated packs)"
-  if "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \
+  if timed "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \
        --config p/security-audit --config p/owasp-top-ten .; then ok "semgrep"; else ko "semgrep"; fi
 fi
 
 if in_ci osv-scanner && [ "$MODE" = full ]; then
   note "osv-scanner — dependencies (all manifests)"
-  if "$CACHE/osv-scanner" scan source -r . --allow-no-lockfiles; then ok "osv"; else ko "osv"; fi
+  if timed "$CACHE/osv-scanner" scan source -r . --allow-no-lockfiles; then ok "osv"; else ko "osv"; fi
 fi
 
 # Scanning the whole history again at a constant binary version re-reads commits that already
@@ -327,10 +360,10 @@ if external && [ -n "$GITLEAKS_VERSION" ]; then
   upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
   if [ "$MODE" = commit ] && [ -n "$upstream" ]; then
     note "gitleaks — what is not on $upstream yet"
-    if "$CACHE/gitleaks" git --no-banner --redact --log-opts="$upstream..HEAD"; then ok "gitleaks"; else ko "gitleaks"; fi
+    if timed "$CACHE/gitleaks" git --no-banner --redact --log-opts="$upstream..HEAD"; then ok "gitleaks"; else ko "gitleaks"; fi
   else
     note "gitleaks — full history"
-    if "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
+    if timed "$CACHE/gitleaks" git --no-banner --redact; then ok "gitleaks"; else ko "gitleaks"; fi
   fi
 fi
 
@@ -434,7 +467,7 @@ fi
 # where the files actually land: a grep of this tree cannot see a path that dies on landing.
 if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
-  if ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
+  if timed ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
 
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
@@ -453,7 +486,7 @@ if external && [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$|^\.
   note "renovate-config-validator — ${#renovate_files[@]} config(s)"
   # ONE npx call for all configs: npx reloads the renovate package on every invocation, and the
   # validator takes a file list and still names each file it rejects.
-  if npx --yes --package "$RENOVATE_PKG" renovate-config-validator "${renovate_files[@]}" >/dev/null 2>&1
+  if timed npx --yes --package "$RENOVATE_PKG" renovate-config-validator "${renovate_files[@]}" >/dev/null 2>&1
   then ok "renovate configs valid"; else ko "renovate config invalid"; fi
 fi
 
@@ -462,6 +495,13 @@ fi
 if [ -x checks/verify-tone.sh ]; then
   note "verify-tone.sh — second person (standard §1)"
   if reap verify-tone; then ok "no second person"; else ko "second person in versioned content"; fi
+fi
+
+# verify-language.sh — the LANGUAGE, which the check above never looked at. Same shared-script
+# model, and it travels: a generated project publishes in English too.
+if [ -x checks/verify-language.sh ]; then
+  note "verify-language.sh — French in published content"
+  if reap verify-language; then ok "no French in published content"; else ko "French in published content"; fi
 fi
 
 echo

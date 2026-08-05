@@ -1,10 +1,10 @@
 <!--
-  README modèle — DOUBLE CIBLE, sans choisir :
-    (1) un dev qui clone / forke / contribue → install, run, structure, contribution ;
-    (2) une vitrine honnête qui donne envie sans survendre.
-  Léché, concis, ZÉRO salade. Bilingue : anglais d'abord (défaut), français ensuite, séparés par `---`.
-  Ton : jamais de 2e personne — « the user / l'utilisateur », pas « you / vous ».
-  Supprimer ces commentaires une fois rempli.
+  README template — TWO AUDIENCES, without picking one:
+    (1) a developer who clones, forks or contributes -> install, run, structure, contributing;
+    (2) an honest shop window, appealing without overselling.
+  Polished, short, ZERO filler. Bilingual: English first (the default), French after, split by `---`.
+  Tone: never the second person — "the user", never the reader addressed directly.
+  Delete these comments once the file is filled in.
 -->
 
 # <project> — <one-line subtitle that says what it is>

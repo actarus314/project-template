@@ -13,6 +13,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
+# The version, so the sweep that compares them all can see this one too.
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
 TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
 if [ -z "$TAG" ]; then
   echo "no tag yet — nothing to compare (the guard arms itself at the first release)"
@@ -47,13 +53,23 @@ binaries=$(printf '%s\n' "$execs" | grep -v '^$' | while IFS= read -r f; do
              # a final non-binary file killed the script with no output at all.
              { [ -f "$f" ] && ! grep -qI . "$f" 2>/dev/null && printf '%s ' "$f"; } || true; done)
 [ -n "$scripts" ] || { echo "✗ no script handles --version — this check would pass by looking at nothing"; exit 1; }
+# Asked in PARALLEL, answers read back in order. Files rather than a pipe: interleaved writes from
+# concurrent jobs are what makes a parallel loop report the wrong script's version.
+answers=$(mktemp -d)
+trap 'rm -rf "$answers"' EXIT
 for s in $scripts; do
   # STDIN closed: three of these are hooks that read their payload from it, and asking a
   # script its version must never leave one waiting on the terminal — inside check.sh's
   # parallel lot that is a hang with no output at all.
   # `./` is not decoration: git returns `configure-repo.sh`, and a bare relative name is
   # looked up in PATH, not in the tree — the whole lot then answered "command not found".
-  got=$("./$s" --version </dev/null 2>/dev/null | tail -1 | awk '{print $NF}')
+  ( "./$s" --version </dev/null 2>/dev/null | tail -1 | awk '{print $NF}' \
+      > "$answers/$(printf '%s' "$s" | tr '/' '_')" ) &
+done
+wait
+for s in $scripts; do
+  # A job that died wrote nothing, and an empty answer must read as a MISMATCH, never as a pass.
+  got=$(cat "$answers/$(printf '%s' "$s" | tr '/' '_')" 2>/dev/null || true)
   if [ "$got" != "$TAG" ]; then
     echo "✗ $s --version prints '${got:-nothing}', expected '$TAG'"
     fail=1
@@ -72,5 +88,6 @@ if [ -f .claude-plugin/plugin.json ]; then
 fi
 
 [ -n "$binaries" ] && echo "  (compiled executables, no source to read, not examined:$binaries)"
-[ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG"
+n_scripts=$(printf '%s\n' "$scripts" | grep -c . || true)
+[ "$fail" = 0 ] && echo "✓ version coherent everywhere: $TAG — read: CHANGELOG, $n_scripts executable(s)$([ -f .claude-plugin/plugin.json ] && echo ', the plugin manifest')"
 exit "$fail"
