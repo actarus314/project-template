@@ -22,6 +22,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
+  may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
+  is not, and this answers it instead of assuming. It records every opening as *with* or *WITHOUT* an
+  instruction and **returns** — it never refuses a tool and cannot wedge a session. It watches the
+  **gesture**, not one script: `gh pr create` appears 84 times in this repository's own history, so a
+  guard on `open-pr.sh` alone would leave the door beside it open.
+  🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
+  **20** openings, the gate does not get built. And the token is **consumed, never dated** — an order
+  and its opening were measured up to **31 turns** apart, so any expiry short enough to restrict would
+  refuse real orders.
 - **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
   hook holds the turn until the pass artefact **covers** the tracking doc — every backlog item number
   and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
@@ -47,6 +57,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only: the generator's own notes describe files a generated project does not have)*.
 
 ### Fixed
+- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table assigned
+  "PR `develop → main`, green CI, merge" to Claude, and the sealing step said "through a pull
+  request" — both read as a standing authorisation to OPEN one. A fresh-context agent asked to read
+  this repository's rules answered **yes** to all three of "may an assistant open a pull request on
+  its own initiative / open then merge / merge an existing one", and quoted those lines. Opening now
+  says, in both documents, that it happens **on the maintainer's instruction**; merging is unchanged.
+  ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
+  opening with `open-pr.sh` as an ordinary step. That one now states it describes **how**, never
+  **whether**.
 - **The closing pass's word-routing named a payload field that is not documented, and said nothing
   when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
   was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never

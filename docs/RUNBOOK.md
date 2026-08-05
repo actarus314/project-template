@@ -223,9 +223,9 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 | # | Who | Action |
 |---|---|---|
-| 1 | Claude | *(if `--staging`)* PR `develop → main`, green CI, merge **as a merge commit** *(never squash — `repo-controls.md`)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
+| 1 | Claude | *(if `--staging`)* PR `develop → main` — **opened on the maintainer's instruction, like every pull request** *(`AGENTS.md`)* — then green CI, merge **as a merge commit** *(never squash — `repo-controls.md`)*. ⚠️ **THEN: see the box below — this merge DELETES `develop` as long as the repo is private.** |
 | 2 | Claude | `git tag vX.Y.Z && git push origin vX.Y.Z` → the **Release** is created, and the **ghcr image** pushed *(if `--artefact`)*. ⚠️ **With `--artefact`, the Release is the `release` job of `docker-publish.yml`** *(`needs: build-push` — no Release if the image was not published)*; **without** this capability, it is `release.yml`. **Only one of the two exists**, never both. |
-| 3 | Claude | **THEN** seal `CHANGELOG.md`: `Unreleased` becomes `## [X.Y.Z] - <date>`, and `.claude-plugin/plugin.json` gets the same number. Through a pull request — **and only now can it be green.** |
+| 3 | Claude | **THEN** seal `CHANGELOG.md`: `Unreleased` becomes `## [X.Y.Z] - <date>`, and `.claude-plugin/plugin.json` gets the same number. Through a pull request — **opened on the maintainer's instruction** — **and only now can it be green.** |
 
 > 🔴 **THE TAG COMES FIRST, THE SEALING SECOND. Doing it the other way round cannot be merged.**
 > `verify-version.sh` compares the CHANGELOG's newest **versioned** heading to the newest **tag**
