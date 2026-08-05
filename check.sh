@@ -494,6 +494,13 @@ if [ -x checks/verify-tone.sh ]; then
   if reap verify-tone; then ok "no second person"; else ko "second person in versioned content"; fi
 fi
 
+# verify-language.sh — the LANGUAGE, which the check above never looked at. Same shared-script
+# model, and it travels: a generated project publishes in English too.
+if [ -x checks/verify-language.sh ]; then
+  note "verify-language.sh — French in published content"
+  if reap verify-language; then ok "no French in published content"; else ko "French in published content"; fi
+fi
+
 echo
 if [ "$fail" = 0 ]; then
   printf '\033[32m✓ local == github: all pass.\033[0m\n'

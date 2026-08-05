@@ -39,6 +39,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   stops where publication stops.
 - **It found a defect on its first run.** `templates/repo/README.md` opened with a **French block
   of instructions**, shipped into every generated project. Translated.
+- 🔴 **And adding it exposed a hole in the wiring guard itself.** `verify-language.sh` was declared
+  in the table, copied by the generator, started by the parallel lot — and `check.sh` had **no
+  `reap` line for it**, so its exit code was written to a file nobody opened. `verify-checks-wiring`
+  said *"wired"* throughout: it compared the table, the hooks and the workflows, never **whether the
+  runner reads each verdict back**. A check can therefore be armed, documented, gated and unread,
+  which is the failure this repository has already paid for once. The guard now checks that too —
+  in **both** shapes, since `verify-travel` cannot join the lot (it generates a whole project) and
+  is invoked directly instead.
+  ⚠️ **Written once wrong, and caught by its own bite test**: the first pattern accepted
+  `if [ -x checks/foo.sh ]` — the *existence test* that opens the block — as proof the verdict was
+  read. It passed on the exact case it was written for.
 
 ### Changed
 - **`verify-growth.sh` reads its two revisions in four calls instead of two per file** — 0,88 s →
