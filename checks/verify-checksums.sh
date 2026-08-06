@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# Anti-drift safeguard between docs/X.md (source of truth) and docs/X.html (hand-crafted layout).
+# Anti-drift safeguard between a docs/*.md (source of truth) and its hand-crafted docs/*.html.
 #
-# Every docs/X.html carrying a `checksum-source-md: sha256:<hash>` line in its header
-# comment declares "I am the view of docs/X.md at THIS hash". This script recomputes the sha256
-# of the .md and compares it to the one recorded in the .html. No `checksum-source-md:` line in
-# an .html -> this file is not concerned, silent (the case for every generated project, which has
-# none of these files).
-#
-# Usage:
-#   checks/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
-#   checks/verify-checksums.sh --update    # recomputes and rewrites the checksum in each .html
+# A docs/*.html carrying a `checksum-source-md: sha256:<hash>` header comment declares "I am the
+# view of that .md at THIS hash". No such line -> this file is not concerned, silent (the case for
+# every generated project: none of them ship one of these pairs).
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
 
+# Usage:
+#   checks/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
+#   checks/verify-checksums.sh --update    # recomputes and rewrites the checksum in each .html
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
   exit 0
@@ -28,21 +25,10 @@ sha256() {
   fi
 }
 
-# Technical-token coverage — the check the checksum CANNOT do.
-#
-# A checksum proves the .html was TOUCHED after the .md moved. Nothing more: an assembly has
-# already passed it GREEN with 29% of the arriving facts missing — a whole block, sources
-# included, rendered nowhere.
-# (The full account — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
-#
-# So this lists the .md's technical tokens (whatever it puts between backticks: commands, files,
-# flags — what cannot be reworded without becoming false) that appear nowhere in the .html's text.
-# Comparing SENTENCES does not work: these pages REINTERPRET their source, and only 42% of the
-# sentences survive, which drowns the signal.
-#
-# ADVISORY, never blocking — deliberately. A styled page renders a placeholder its own way, so a
-# residue of two or three is normal, and a guard that cries on every run is a guard nobody reads.
-# What it catches is the ORDER OF MAGNITUDE: 2 residual tokens against 23 when a block disappears.
+# ADVISORY, never blocking: a checksum proves the .html was TOUCHED, never that it says the same
+# thing. This lists the .md's technical tokens (backticked commands, files, flags) missing from the
+# .html's rendered text — sentence comparison does not work here, these pages REINTERPRET their
+# source. The measurements behind both thresholds: verify-checksums.md.
 coverage() {
   command -v python3 >/dev/null 2>&1 || { echo "  (python3 absent — coverage skipped)"; return 0; }
   python3 - "$1" "$2" <<'PY'
@@ -72,9 +58,8 @@ PY
 
 fail=0
 shopt -s nullglob
-# The pairs are the observable, and a project that has none is the normal case: no generated project
-# ships a hand-authored .html beside its .md. Counted so the verdict can say what was read — an
-# empty glob otherwise ran the loop zero times and returned the same silent 0 as a clean tree.
+# The pairs are the observable: a project with none is the normal case (no generated project ships
+# one). Counted so the verdict can say what was actually read, not just "found nothing".
 pairs=0
 for html in docs/*.html; do
   recorded=$(grep -o 'checksum-source-md: sha256:[0-9a-f]*' "$html" | awk -F: '{print $3}' || true)

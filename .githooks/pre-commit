@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
-# Blocks a commit whose staged changes contain a secret.
-#
-# On a PRIVATE repository under a Free plan, GitHub provides no secret scanning and no
-# push protection: this hook is the only barrier. It is therefore a hard failure, not a
-# warning — a missing scanner must never look like a clean scan.
-#
-# Enabled by `git config core.hooksPath .githooks` (done by init-project.sh; a fresh clone
-# must run it once). Hooks are bypassable with `git commit --no-verify`, so CI runs
-# gitleaks again on the full history as the enforced backstop.
+# Blocks a commit whose staged changes contain a secret (gitleaks --staged).
 set -euo pipefail
 
 # The version, so the sweep that compares them all can see this one too.
@@ -22,9 +14,6 @@ if ! command -v gitleaks >/dev/null 2>&1; then
   exit 1
 fi
 
-# --staged: scans what is about to be committed. Exit code 1 when a secret is found.
-# --redact: never print the secret value itself.
-# Output is held back and shown only on failure, so a clean commit stays silent.
 if ! output=$(gitleaks git --staged --no-banner --redact 2>&1); then
   printf '%s\n' "$output"
   echo
@@ -36,16 +25,7 @@ if ! output=$(gitleaks git --staged --no-banner --redact 2>&1); then
   exit 1
 fi
 
-# --- Pre-flight "local == github" ---------------------------------------------------------------
-# Two rhythms, because two things make a check answer differently. What reads the TREE runs at every
-# commit — that is the only moment the tree moves — and costs about a second. What reads an external
-# base (the OSV database, the semgrep packs) or the pushed history cannot change between two commits
-# at constant tool versions, so it runs every N hours instead (default 6, tune via
-# CHECK_MAX_AGE_HOURS).
-#
-# BLOCKING, where it used to only speak: a gap that merely gets printed is a gap that gets scrolled
-# past, and the next gate is the pull request. `git commit --no-verify` remains the way through —
-# a decision, not an accident.
+# Same two-rhythm split as check.sh's own doc; a gap here blocks the commit too.
 if [ -x ./check.sh ]; then
   stamp=.ci-tools/.last-check
   max_h="${CHECK_MAX_AGE_HOURS:-6}"

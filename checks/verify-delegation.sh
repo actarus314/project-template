@@ -1,28 +1,13 @@
 #!/usr/bin/env bash
 # hook: PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# A PreToolUse hook: the three delegation instructions, checked BEFORE the subagent is launched.
-#
-# The rule (https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md): a subagent does the work ITSELF, does not re-delegate,
-# does not call the advisor, and runs on a cheaper model.
-#
-# 🔴 All three are OPT-INS. Left unwritten, the default does the opposite of all three, SILENTLY —
-# which is why discipline alone never held: nothing reported the omission, in either direction.
-#
-# This is the only check in this repo that runs A PRIORI, and it is mechanical rather than a
-# judgement: `model` is a field, and the other two are strings that are present or absent. No
-# model reviews anything here, so blocking is safe.
-#
-# ⚠ Deliberately NARROW: everything other than a subagent launch exits immediately. A guard that
-#   fires everywhere earns overrides until nobody reads it any more.
-#
-# Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
-#   "hooks": { "PreToolUse": [ { "matcher": "Agent",
-#     "hooks": [ { "type": "command", "command": "<abs>/verify-delegation.sh" } ] } ] }
-#
-# PreToolUse DOES fire on a subagent launch (tool_name = Agent), and tool_input carries `prompt`,
-# `model` and `subagent_type` as separate fields — measured, not assumed.
-# (How it was measured — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
+# A PreToolUse hook: the three delegation instructions — work itself, no re-delegation, no advisor,
+# cheaper model — checked BEFORE the subagent launches. Rule, opt-in status, why blocking is safe:
+# https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md.
+
+# PreToolUse DOES fire on a subagent launch (tool_name = Agent), with `prompt`, `model` and
+# `subagent_type` as separate fields in tool_input — measured, not assumed
+# (workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md).
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -30,15 +15,8 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# The journal, if it is on. A hook is the most fragile gate there is: it lives in a LOCAL settings
-# file outside every repository, and one that stops being declared simply never fires — no error,
-# no output, no trace. Recording the firing is the only way an indicator can tell "this gate works"
-# from "this gate is gone", and check.sh cannot do it: it never runs the hooks.
-#
-# 🔴 Two properties this needs, and neither is decorative: ANCHORED TO THE SCRIPT, never to the
-# working directory — a hook fires wherever the session sits, and a relative path drops every
-# firing from elsewhere in silence. And THE VERDICT, not merely the firing: a `0` written before
-# the analysis answers "did the gate fire", never "did it bite".
+# The journal, if it is on — a hook lives in a LOCAL settings file, so nothing versioned proves it
+# ran; why it must be anchored to the script and record the VERDICT: verify-turn-claims.md.
 JOURNAL_NAME="delegation (before launch)"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PROJECT="$(basename "$(dirname "$REPO")")/$(basename "$REPO")"

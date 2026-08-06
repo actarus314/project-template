@@ -109,6 +109,10 @@ found, tags = [], []          # tags name the SIGNAL, so the journal says which 
 # requiring the assertion form and a file reference brought it to 0.5%.
 DEFECT = re.compile(r"(?:^|[.\n])[^.\n]{0,120}\b(?:est|sont|reste|restent|n'est pas|ne sont pas)\s+"
                     r"(?:\*\*)?(faux|périmée?s?|divergentes?|obsolètes?|incohérentes?|mortes?|absente?s?)\b", re.I)  # fr-pattern
+# HANDLED exempts on the WORD, never on proof: it takes the turn at its word that the defect was
+# dealt with. Deliberate — the alternative is a guard that calls a fixed defect a lie, which trains
+# whoever reads it to stop reading. What it costs is the case where the word is written and nothing
+# was done; that one is caught by the tracking doc, not here.
 HANDLED = re.compile(r"\b(corrigé|corrigée|fixé|réparé|✅|je corrige|j'ai corrigé)\b", re.I)  # fr-pattern
 FILEREF = re.compile(r"[\w./-]+\.(?:sh|md|ya?ml|json|py|txt)\b")
 

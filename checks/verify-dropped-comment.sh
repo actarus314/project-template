@@ -22,6 +22,9 @@ python3 - "$ref" "$BLOCK" <<'PY'
 import re, subprocess, sys, pathlib
 
 ref, block = sys.argv[1], int(sys.argv[2])
+# `#`-commented languages only: the three this repo and its generated projects actually ship. A
+# `//` or `--` dialect appearing here would be a new kind of file, and a check silently covering
+# nothing is worse than one whose perimeter is stated.
 CODE = re.compile(r"\.(sh|py|ya?ml)$")
 
 

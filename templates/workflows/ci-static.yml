@@ -1,5 +1,4 @@
-# Installed as .github/workflows/ci.yml by `init-project.sh --type static`. Job name MUST stay
-# `checks` (the ruleset requires it).
+# Installed as .github/workflows/ci.yml by `init-project.sh --type static`.
 name: CI
 
 on:
@@ -27,8 +26,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      # The pre-commit hook can be bypassed with --no-verify, and only exists on machines
-      # that installed it. This is the enforced backstop.
       - name: Install gitleaks (pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -50,52 +47,15 @@ jobs:
           echo "${ACTIONLINT_SHA256}  ${f}" | sha256sum -c -
           tar -xzf "$f" actionlint
           ./actionlint -color
-      # Semgrep + osv-scanner — why BOTH, and what each one ACTUALLY does.
-      #
-      # semgrep = the ONLY static analysis of the CODE that runs while PRIVATE. CodeQL is barred
-      #   there by LICENCE (not by a technical limit), and a repository spends its whole youth
-      #   private: without semgrep the code is NEVER analysed until the flip, where CodeQL then
-      #   dumps the entire backlog at once.
-      #   ⚠ Do NOT write "semgrep catches what CodeQL misses". That is the comfortable line, and
-      #     NOTHING backs it. Semgrep CE is intra-file AND intra-function — inter-procedural
-      #     dataflow lives in the paid Pro edition — where CodeQL does cross-file dataflow. semgrep
-      #     PRECEDES CodeQL, it does not surpass it. It is kept for the PRIVATE PHASE: that reason
-      #     is sufficient on its own, and a false one added on top helps nobody.
-      #
-      # osv-scanner = the pre-merge dependency GATE.
-      #   ⚠ Do NOT write "nothing else sees vulnerabilities while private": Dependabot ALERTS does
-      #     work on a private repository, for free. But it alerts AFTER THE FACT, on the default
-      #     branch — once the code is ALREADY in. osv-scanner BLOCKS THE PULL REQUEST. A different
-      #     role, not a duplicate. (`dependency-review` is the NATIVE gate — but it requires a
-      #     public repository, or GHAS.)
-      #   There is NO `npm audit` alongside it: that was a STRICT SUBSET of osv-scanner (same GHSA
-      #   database, same lockfile, same job).
-      #
-      # --exclude=.github: the workflows have their own linters (actionlint + zizmor), which enforce
-      #   THIS REPOSITORY'S PINNING POLICY (SHA for third-party actions, a major tag tolerated for
-      #   actions/* and github/* — compromising those means compromising GitHub itself). semgrep's
-      #   workflow rules CONTRADICT that policy and would fail every scaffold on day one.
-      #   ⚠ Do NOT write "one scope each, no overlap": that has been FALSE since April 2025. CodeQL
-      #     now analyses the `actions` language (GA, and ACTIVE IN DEFAULT SETUP, no opt-in): its
-      #     default suite already covers most of what zizmor does — code-injection, artifact/cache
-      #     poisoning, untrusted-checkout, exposed secrets, missing-workflow-permissions. THE
-      #     OVERLAP IS REAL. What zizmor keeps ON ITS OWN, and what justifies keeping it: this
-      #     repository's pinning policy (`zizmor.yml`) — the CodeQL `unpinned-tag` query sits in
-      #     security-extended, NOT in default — plus artipacked (persist-credentials),
-      #     impostor-commit, ref-confusion, typosquat-uses.
       - name: Static analysis (semgrep, pinned)
         run: |
           set -euo pipefail
           python3 -m pip install --quiet -r requirements-ci.txt
           semgrep scan --error --quiet --metrics=off --exclude=.github \
             --config p/security-audit --config p/owasp-top-ten .
-      # osv-scanner AUTO-DISCOVERS every lockfile/manifest in the repo (`-r .`): npm, pip, go, cargo…
-      # — the scope follows the code, never a hand-kept list. The one carve-out is likewise NOT a
-      # per-target list: CI-only tooling (requirements-ci.txt) is subtracted in .gitignore, which osv
-      # honours (dev tools, never shipped — see that file). `--allow-no-lockfiles` exits 0 when a
-      # repo has none (a pure static site) instead of erroring. No `hashFiles` guard: the step always
-      # runs and always reports (a required check that never reports leaves every PR stuck on
-      # "Expected — waiting for status").
+      # osv-scanner AUTO-DISCOVERS every lockfile/manifest (`-r .`); `--allow-no-lockfiles` keeps a
+      # pure static site green. No `hashFiles` guard: a required check that never reports leaves
+      # every PR stuck on "Expected — waiting for status", so this step always runs.
       - name: Vulnerable dependencies (osv-scanner, pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -104,6 +64,10 @@ jobs:
           echo "${OSV_SHA256}  osv-scanner" | sha256sum -c -
           chmod +x osv-scanner
           ./osv-scanner scan source -r . --allow-no-lockfiles
+      # zizmor overlaps CodeQL's `actions` language (GA since Apr 2025, on by default) for code-
+      # injection, artifact/cache poisoning, untrusted-checkout, exposed secrets, missing-permissions.
+      # What zizmor keeps ON ITS OWN: this repo's SHA-pinning policy (CodeQL's unpinned-tag query
+      # needs security-extended, not default) + artipacked, impostor-commit, ref-confusion, typosquat.
       - name: Audit workflows (zizmor)
         run: |
           set -euo pipefail
@@ -115,13 +79,11 @@ jobs:
       # Real check with no per-project wiring: syntax-check every JS file.
       - name: Syntax check (all JS)
         run: find . -name '*.js' -not -path './node_modules/*' -not -path './.git/*' -exec node --check {} +
-      # Shell is the one language every project holds whatever its toolchain: the hooks, check.sh,
-      # open-pr.sh and everything under checks/. It was the only control this template ran on itself
-      # and shipped to nobody — a shell bug committed here was blocked, and in a generated project
-      # it went through in silence, locally AND on the server.
-      # Targets are FOUND, never listed: a forgotten one is a silent hole. `shellcheck` is
-      # preinstalled on the runner. Adding this step also arms it LOCALLY: check.sh reads this file
-      # to decide what to replay, so the same line covers both sides.
+      # Shell is the one language every project holds regardless of toolchain (hooks, check.sh,
+      # open-pr.sh, checks/). It was the only control this template ran on itself and shipped to
+      # nobody: a shell bug committed here was blocked, but in a generated project it went through
+      # in silence, locally AND on the server. Targets are FOUND, never listed: a forgotten one is
+      # a silent hole.
       - name: shellcheck the scripts and the hooks (preinstalled on the runner)
         run: |
           mapfile -t targets < <(find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
@@ -129,13 +91,8 @@ jobs:
           if [ "${#targets[@]}" -eq 0 ]; then echo "no shell here"; exit 0; fi
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"
-      # ── The house checks — the rules this project arms itself ──────────────────────────────────
-      # ONE line, and everything under checks/ runs behind it. A check added to the project means
-      # a file dropped in; there is no workflow to edit here, in any project.
-      # Each check DETECTS whether its subject exists here: present, it bites; absent, it says so
-      # and returns 0 — so this step is the same in every toolchain, and stays right as they grow.
-      # It runs the house checks ONLY: gitleaks, semgrep, osv-scanner, actionlint and zizmor are the
-      # steps above, at the versions this file pins and checksums.
+      # House checks ONLY — gitleaks, semgrep, osv-scanner, actionlint and zizmor are the pinned
+      # steps above; `checks/verify-*.sh` is everything this project adds for itself.
       - name: House checks (checks/verify-*.sh, via check.sh --house)
         run: ./check.sh --house
       # Uncomment the checks the project actually has:

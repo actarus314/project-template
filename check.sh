@@ -327,6 +327,8 @@ if external && in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/wo
   if timed "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
 
+# `full` only, for semgrep and osv below: their verdict comes from an EXTERNAL base queried online,
+# never from the tree, so a commit cannot make either say anything new. The rhythm is the matrix's.
 if in_ci semgrep && [ "$MODE" = full ]; then
   note "semgrep — the code (curated packs)"
   if timed "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \

@@ -1,7 +1,5 @@
-# CI of the TEMPLATE repo itself — NOT a shipped template file.
-# It validates the scripts and the Renovate config, and above all GENERATES projects to lint their
-# workflows in real conditions — the automation of the manual test00x runs. This is what gives the
-# PR-only switch its meaning: the pre-push hook points here ("check the CI is green").
+# CI of the TEMPLATE repo itself — NOT a shipped template file: above all it GENERATES projects
+# to lint their workflows in real conditions (automates the former manual test00x runs).
 name: CI
 
 on:
@@ -20,14 +18,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      # Pinned EXACT, and bumped by Renovate itself (custom.regex + npm datasource, automerged —
-      # `check.sh` carries the same version and is covered by the same manager).
-      # The floor matters: the version npx resolves by default (37.x) IGNORES `managerFilePatterns`
-      # and reports a FALSE "invalid config" — a validator that lies is worse than none.
-      # The ceiling matters just as much: a floating major re-resolves the newest release ON EVERY
-      # RUN, so `main` can go red without a line changing. A floating range does not only bring
-      # the fixes — it brings the regressions too, instantly, with NO known-good version to fall
-      # back to.
+      # Pinned EXACT (checked by check.sh, same version) and bumped by Renovate itself.
+      # Floor: npx's default 37.x IGNORES `managerFilePatterns` and falsely reports "invalid
+      # config". Ceiling: a floating major re-resolves on every run, so `main` can go red with
+      # no line changed, and brings regressions instantly with no known-good fallback.
       - name: Validate both Renovate configs
         run: |
           set -euo pipefail
@@ -43,13 +37,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-          # verify-changelog.sh compares against the merge base with the default branch. On a
-          # truncated history there IS no merge base, and the script says so and returns 0 — a
-          # guard that looks installed and watches nothing. The full history is what makes it real.
+          # fetch-depth 0 (verify-changelog.sh needs a merge base) and fetch-tags (verify-version.sh
+          # needs the tag): both apply here, since they run via --house on this checkout.
           fetch-depth: 0
-          # 🔴 checkout fetches NO tags by default, and the tag is the single source of the version:
-          # without this, verify-version.sh finds nothing to compare and passes by being BLIND.
-          # It runs inside `--house` here, so the condition it needs belongs to THIS checkout.
           fetch-tags: true
       # verify-travel.sh generates throwaway projects, and generating one ends in `git commit`,
       # which refuses to run without an identity. Set here for the same reason the generation job
@@ -69,15 +59,8 @@ jobs:
           if [ -d .githooks ]; then mapfile -t -O "${#targets[@]}" targets < <(find .githooks -type f); fi
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"
-      # ── The house checks — ONE step, and it is the SAME line every generated project runs ───────
-      # This used to be a step per check, written by hand. That list was one of three naming the
-      # checks one by one, and each way of missing one was silent: a check absent from here passed
-      # no gate at all. Behind `--house` runs whatever sits under checks/, so adding one is dropping
-      # a file in — here and in every project, with no workflow to edit.
-      # Each check states what it READ: an absent target is announced, never folded into a tick.
-      # `--house` runs the house checks ONLY — gitleaks, semgrep, osv-scanner, actionlint and zizmor
-      # have their own jobs, at the versions this file pins and checksums.
-      # Needs the branch, so it needs full history: fetch-depth 0 on this job's checkout.
+      # Each check announces what it read; an absent target is never folded into a silent pass.
+      # This job's checkout needs fetch-depth 0 too: the branch itself is in scope, not just the tree.
       - name: House checks (checks/verify-*.sh, via check.sh --house)
         run: ./check.sh --house
 
@@ -120,13 +103,11 @@ jobs:
           sudo mv actionlint /usr/local/bin/
       - name: Install zizmor (the version the template ships — single source)
         run: python3 -m pip install --quiet "$(grep '^zizmor==' templates/repo/requirements-ci.txt)"
-      # The template must eat its own food: it imposes actionlint + zizmor on every generated
-      # project, so it runs them on its OWN ci.yml too, under the very pin policy it ships
-      # (templates/repo/.github/zizmor.yml — single source, no second copy to drift). Only the
-      # workflow linters apply here: semgrep needs app code and osv-scanner a lockfile, neither
-      # of which this scripts-and-docs repo has.
-      # Gated to one matrix shard — the tools are already installed here; a dedicated
-      # job would duplicate the pinned install for a 2-second lint.
+      # The template eats its own food: it lints its OWN ci.yml under the same pin policy it
+      # ships (single source, no second copy to drift). Only the workflow linters apply here —
+      # semgrep needs app code and osv-scanner a lockfile, neither of which this repo has.
+      # Gated to one matrix shard: the tools are already installed here; a dedicated job would
+      # duplicate the pinned install for a 2-second lint.
       - name: Lint the template's OWN workflow (actionlint + zizmor, its shipped config)
         if: matrix.name == 'node-full'
         run: |
@@ -156,13 +137,11 @@ jobs:
           proj="$RUNNER_TEMP/proj/repo"
           ( cd "$proj" && actionlint -color )
           zizmor --persona regular --config "$proj/.github/zizmor.yml" "$proj/.github/workflows/"
-      # Regression guard for the osv scope fix. The steps above lint a generated project's WORKFLOWS,
-      # but never replay its osv step — which is exactly where the "CI-only tooling out of scope" fix
-      # lives (requirements-ci.txt subtracted via .gitignore). So replay that project's EXACT osv step on
-      # the freshly generated tree: if the template .gitignore ever stops subtracting requirements-ci.txt
-      # (or a bump reintroduces tooling CVEs), THIS job goes red — before any real project ships a red
-      # osv CI. The `git add -f` itself is already guarded by the "repo clean" check below (an uncommitted
-      # file leaves `git status` dirty). One shard suffices: the fix is driven by the shared template file
+      # Regression guard for the osv scope fix (PR #23): the steps above lint a generated project's
+      # workflows but never replay its osv step, which is where "CI-only tooling out of scope" lives
+      # (requirements-ci.txt subtracted via .gitignore). Replaying it here means a regression — the
+      # .gitignore no longer subtracting it, or a reintroduced CVE — turns THIS job red before any
+      # real project ships a red osv CI. One shard suffices: the fix is the shared template
       # .gitignore, identical across every --type.
       - name: Generated project passes its own osv step (regression guard, PR #23)
         if: matrix.name == 'node-full'
@@ -207,13 +186,10 @@ jobs:
       - name: Secret scan (full history)
         run: ./gitleaks git --no-banner --redact
 
-  # 🔴 The ruleset requires ONE status check named `checks` — the name every generated project's
-  # ci.yml uses for its single gate. This repo's CI is split across several jobs instead, so
-  # without this aggregator the required check NEVER arrives and every PR sits forever on
-  # "Expected — waiting for status". `configure-repo.sh` is right to demand `checks`; it is this
-  # repo that has to provide one.
-  # `if: always()` is what makes it a real gate: without it the job would be skipped as soon as a
-  # dependency fails, the check would never report, and the PR would block on a green CI.
+  # 🔴 The ruleset requires ONE status check named `checks` (the single-gate name every generated
+  # project's ci.yml uses). This repo's CI is split across several jobs, so without this
+  # aggregator the check never arrives and every PR waits forever. `if: always()` makes it a real
+  # gate: without it, a failed dependency would skip this job instead of reporting failure.
   checks:
     needs: [validate-renovate, lint-scripts, generate-and-lint, gitleaks]
     if: always()

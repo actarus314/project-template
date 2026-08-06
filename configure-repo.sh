@@ -1,39 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Configures the SERVER settings of a public GitHub repo per the standard.
-# One-shot, IDEMPOTENT (rerunnable without creating a duplicate).
-#
-# ⚠ Run by THE MAINTAINER — NEVER by the assistant, which never has Administration: write
-#   (PAT matrix: see docs/secrets-and-auth.md).
-#
-# AUTH — EPHEMERAL fine-grained PAT, to create then REVOKE right after:
-#   Permissions: EXACT recipe in docs/RUNBOOK.md, step 7a
-#   (a missing permission fails SILENTLY).
-#   · "Only select repositories" = THIS repo only  → blast radius = 1 repo
-#   · Create/revoke: https://github.com/settings/personal-access-tokens
-#
-#   The token is stored NOWHERE: not in the keychain, not in .envrc, not in shell history.
-#   The script asks for it as MASKED INPUT (or reads GH_TOKEN if already exported).
-#   Nothing to remove or forget afterwards: the token is revoked, its rights are never downgraded.
-#
+# Server config for a repo (AGENTS.md: run by the maintainer, ephemeral admin PAT — recipe:
+# docs/RUNBOOK.md step 7a; permission-to-endpoint map: docs/repo-controls.md, "Setup" table).
+# One-shot, idempotent. --dry-run: diagnostics stay real GETs, only mutations are intercepted.
 # Usage: ./configure-repo.sh <owner>/<repo> [homepage-url] [description] [topics-csv] [--dry-run]
-#
-# What "Use this template" / init-project.sh do NOT do (server config):
-# merge-methods, delete-branch, secret scanning, push protection, Dependabot,
-# CodeQL, ruleset. This script is the one that sets them.
-#
-# --dry-run: READS everything, WRITES nothing. Diagnostics (visibility, plan, CodeQL, community)
-#   stay REAL — they are GETs, harmless. Only MUTATIONS are intercepted and
-#   displayed. Used to run the script on a LIVE repo without risking anything: this is exactly
-#   the case of bringing existing repos into compliance, where a mistake isn't an option.
 
 DRY=0
-# An ARRAY, not a string. With `ARGS="$ARGS $a"` then `set -- $ARGS` (unquoted), the shell
-# redid word splitting on arguments already split: the EMPTY argument (`''` for "no
-# homepage") DISAPPEARED — shifting everything by one — and the description got CUT at its first
-# word.
-ARGS=()
+ARGS=()   # array, not a rebuilt string — see docs/code/configure-repo.md
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
@@ -56,45 +30,22 @@ case "$HOMEPAGE" in
      exit 1 ;;
 esac
 
-# ONE SINGLE interception point for ALL writes. A guard per call (there are 14 of them)
-# would have guaranteed missing one — and a dry-run that writes even once is worse than none,
-# since it's the one being trusted.
-#
-# ⚠ FD 3 = copy of the ORIGINAL stdout. Essential: almost every call is followed by
-#   `>/dev/null 2>&1`, which would SWALLOW the dry-run message — the script would display its "✓"
-#   without ever showing what it plans to write. A silent dry-run is worse than no dry-run at all.
-exec 3>&1
+# Single interception point for every write (14 call sites) — why one, and the dry-run stdin
+# trap it guards against: docs/code/configure-repo.md.
+exec 3>&1   # copy of the real stdout: most calls end in `>/dev/null 2>&1`, which would hide the dry-run message
 mutate() {
   if [ "$DRY" -eq 1 ]; then
     printf '  [dry-run] WOULD WRITE: %s\n' "$*" >&3
-    # DRAIN stdin, otherwise the dry-run KILLS ITSELF. Two calls are PIPED (`… | jq | mutate gh api
-    # --input -`): without reading, jq writes into a pipe nobody opens → SIGPIPE, and
-    # `set -e` + `pipefail` kill the script AT THE RULESET UPSERT — without a word (exit 141).
-    # Everything after that was then LOST SILENTLY: the `tags` ruleset (so the version pin), the
-    # `develop` ruleset, community health, and even the reminder to REVOKE THE ADMIN PAT. Yet it's
-    # precisely on a repo that ALREADY HAS a ruleset — bringing an existing repo into compliance — that dry-run is meant for.
-    # Real mode never had the bug: `gh api --input -` consumes stdin, that one does.
-    # `-p`, NOT `-t`: it needs to drain THE PIPE, not "anything that isn't a terminal". With
-    # `[ -t 0 ]`, the 12 non-piped calls launched from a non-interactive shell (CI, agent) would have
-    # waited on a `cat` that never returns control: a dry-run that freezes instead of lying.
-    [ -p /dev/stdin ] && cat >/dev/null 2>&1
+    [ -p /dev/stdin ] && cat >/dev/null 2>&1   # drain a piped call, else SIGPIPE kills the script (`-p`, not `-t`: see doc)
     return 0
   fi
   "$@"
 }
 
-# ═══ gh_val <jq-expr> <default> <gh api args…> — READ a value, or return the DEFAULT ═══════════
-#
-# 🔴 NEVER WRITE `x=$(gh api … || echo "default")`. THIS IS BROKEN, ALWAYS.
-#    `gh api` writes the JSON body of its errors to **STDOUT**, not to stderr. The substitution
-#    therefore captures THIS JSON, *then* appends the `echo`:
-#        x = '{"message":"Rate Limit Exceeded","status":"403"}default'
-#    — a string that is equal to NOTHING. Every test that follows then goes down the wrong
-#    branch, SILENTLY: `[ "$x" = "configured" ]` is false, `[ "$x" -eq 0 ]` blows up, `[ -n "$x" ]`
-#    is TRUE even though the call FAILED.
-#
-#    The rule: `out=$(cmd)` KEEPS the output even when `cmd` fails — but the ASSIGNMENT itself
-#    inherits the return code. So test THAT code, and DISCARD the output. That is the whole fix.
+# gh_val <jq-expr> <default> <gh api args…> — read a value, or return the default.
+# 🔴 Never write `x=$(gh api … || echo default)`: `gh api` writes error JSON to STDOUT, so that
+#   pattern silently produces a non-empty, non-matching string instead of the default — see
+#   docs/code/configure-repo.md. Test the assignment's OWN exit code instead, and discard the output.
 gh_val() {
   local expr="$1" fb="$2"; shift 2
   local out
@@ -110,17 +61,11 @@ fi
 command -v gh >/dev/null || { echo "✗ gh CLI required"; exit 1; }
 command -v jq >/dev/null || { echo "✗ jq required"; exit 1; }
 
-# EPHEMERAL Administration PAT — entered BY HAND, never stored (no keychain, no file).
-# GH_TOKEN from the ENVIRONMENT is deliberately IGNORED: every repo's .envrc exports it = the WRITE
-# PAT (without Administration: write). ADMIN_PAT is the ONLY injection door, EXPLICIT (tests/CI)
-# — never a .envrc.
+# Ephemeral admin PAT, entered by hand, never stored. `GH_TOKEN` from the environment is ignored
+# on purpose (it's the write PAT); `ADMIN_PAT` is the only injection door — docs/code/configure-repo.md.
 if [ -n "${ADMIN_PAT:-}" ]; then
   GH_TOKEN="$ADMIN_PAT"
 else
-  # ⚠ DO NOT re-copy the recipe here. This line listed it once, and the copy DRIFTED silently:
-  #   it was missing `Contents:read` (to read CONTRIBUTING.md) then `Issues:read` (to date the
-  #   Dependency Dashboard). Yet this very line is what gets read when creating the token — a short
-  #   and wrong recipe is worse than a pointer, and each missing permission fails SILENTLY.
   printf 'Ephemeral admin PAT on %s — EXACT recipe: docs/RUNBOOK.md, step 7a\n' "$SLUG" >&2
   printf '  (a missing permission raises NO error: the missing check does not show)\n' >&2
   printf 'Masked input: ' >&2
@@ -133,10 +78,8 @@ export GH_TOKEN
 
 echo "→ Server configuration for $SLUG"
 
-# ⚠ Read visibility BEFORE any diagnostic. Without it, the script would accuse the PAT of a missing
-#   permission where it's actually the PLAN that blocks (private/Free) — sending the maintainer to look
-#   for a right that's already there. It is the FOUNDATION of the diagnostic: unreadable, stop here —
-#   otherwise every downstream message would accuse the wrong cause, silently. A clean failure beats a false report.
+# Read visibility BEFORE any diagnostic below: unreadable here, every downstream message would
+# accuse the PAT instead of the plan (private/Free) — see docs/code/configure-repo.md.
 IS_PRIVATE=$(gh api "repos/$SLUG" --jq '.private' 2>/dev/null || true)
 if [ "$IS_PRIVATE" != "true" ] && [ "$IS_PRIVATE" != "false" ]; then
   echo "✗ Visibility of $SLUG unreadable — the PAT can't see the repo (wrong slug, expired PAT, or out of scope)."
@@ -144,10 +87,8 @@ if [ "$IS_PRIVATE" != "true" ] && [ "$IS_PRIVATE" != "false" ]; then
   exit 1
 fi
 
-# 1. Merge: squash ONLY + delete branch on merge (clean history). This is ALSO the
-#    Administration PREFLIGHT: this PATCH is the 1st write and requires Administration:write. In
-#    real mode, a 403 here = a token without Administration (wrong token pasted, or "Read" instead
-#    of "Read and write") — this is SAID explicitly, instead of gh's raw 403 which doesn't show the cause.
+# 1. Merge: squash only + delete branch on merge. Also the Administration preflight — the first
+#    write in the script (docs/code/configure-repo.md).
 if [ "$DRY" -eq 1 ]; then
   mutate gh repo edit "$SLUG" \
     --enable-squash-merge --enable-merge-commit=false --enable-rebase-merge=false --delete-branch-on-merge
@@ -160,19 +101,11 @@ elif ! gh repo edit "$SLUG" \
   exit 1
 fi
 [ -n "$HOMEPAGE" ] && mutate gh repo edit "$SLUG" --homepage "$HOMEPAGE"
-# The description counts toward community health (100% is unreachable without it) and requires
-# Administration: the assistant gets a 403 — only this script can set it.
-# The API rejects with 422 any control character ("description control characters are not
-# allowed") — a copy-paste from a terminal or a doc easily slips one in, invisibly.
-# They are stripped, and what was stripped is reported rather than done silently.
+# Description and topics require Administration:write (RUNBOOK.md step 7a) — only this script
+# can set them. Control characters (a stray copy-paste artefact) make the API reject with 422;
+# they're replaced (not deleted, which would glue words together) and the result echoed back —
+# docs/code/configure-repo.md.
 if [ -n "$DESCRIPTION" ]; then
-  # REMOVING a control character leaves a HOLE in its place: "organization,··public" — two
-  # spaces where the invisible character stood. The guard did avoid the 422, but it
-  # PUBLISHED a damaged description, and nobody reread what was actually set.
-  # → clean up, THEN glue back together (`tr -s ' '` compresses spaces), THEN READ IT BACK OUT LOUD.
-  # `tr ' '` and NOT `tr -d`: DELETING a control character GLUES the surrounding words together —
-  # a tab in "A tool<TAB>for X" gave "A toolfor X", published as-is. It is REPLACED
-  # with a space, THEN spaces are compressed, THEN what's being set is read back out loud.
   CLEAN=$(printf '%s' "$DESCRIPTION" | LC_ALL=C tr '\000-\037\177' ' ' | tr -s ' ' | sed 's/^ *//; s/ *$//')
   if [ "$CLEAN" != "$DESCRIPTION" ]; then
     echo "  ⚠ description cleaned (control characters / duplicate spaces — the API refuses the former with a 422):"
@@ -184,10 +117,7 @@ if [ -z "$DESCRIPTION" ] && [ -z "$(gh api "repos/$SLUG" --jq '.description // "
   echo "  ⚠ no description on the repo → community health capped at 85%."
   echo "    Set it: ./configure-repo.sh $SLUG '' '<description>'"
 fi
-# Topics REQUIRE Administration:write (`PUT /repos/{o}/{r}/topics` → `administration=write`)
-# — so the assistant, which NEVER has `Administration: write`, gets a 403: ONLY this script can set them.
-# `--add-topic` ADDS, it does not overwrite what's there.
-if [ -n "$TOPICS" ]; then
+if [ -n "$TOPICS" ]; then   # `--add-topic` adds, it does not overwrite what's there
   mutate gh repo edit "$SLUG" --add-topic "$TOPICS"
 elif [ "$(gh_val '.names | length' 0 "repos/$SLUG/topics")" -eq 0 ]; then
   echo "  ⚠ no topics on the repo → it surfaces in NO GitHub search by subject."
@@ -195,14 +125,10 @@ elif [ "$(gh_val '.names | length' 0 "repos/$SLUG/topics")" -eq 0 ]; then
 fi
 echo "  ✓ merge and delete-branch-on-merge (BOTH revisited below based on 'develop')${HOMEPAGE:+, homepage}${DESCRIPTION:+, description}${TOPICS:+, topics}"
 
-# Discussions — the `.github/ISSUE_TEMPLATE/config.yml` template points to `/discussions` on
-# EVERY generated repo. Without this being enabled, that link is a 404: the first third party
-# trying to ask a question lands on a dead page, and nothing signals it to the maintainer. Set here
-# rather than in the runbook — the script already holds the admin PAT that this activation requires.
+# Discussions: `.github/ISSUE_TEMPLATE/config.yml` links every generated repo to `/discussions` —
+# unset, that link 404s. Read back rather than trusted from the exit code: `has_discussions` isn't
+# a documented PATCH body param, so an unknown-field 200 would enable nothing — docs/code/configure-repo.md.
 mutate gh api -X PATCH "repos/$SLUG" -F has_discussions=true >/dev/null 2>&1 || true
-# READ IT BACK, and don't trust the exit code: `has_discussions` is not a documented bodyParameter
-# of `PATCH /repos/{owner}/{repo}`, and REST ignores an unknown field WITHOUT an error. The PATCH then
-# returns 200 while enabling nothing, and a `&&` would show a ✓ for a setting that was never set.
 if [ "$DRY" -eq 1 ] || [ "$(gh_val '.has_discussions' false "repos/$SLUG")" = "true" ]; then
   echo "  ✓ Discussions open (without them, the 'Question / Discussion' link in the issue template is a 404)"
 else
@@ -210,20 +136,14 @@ else
   echo "    Open them in the UI: https://github.com/$SLUG/settings → Features → Discussions"
 fi
 
-# 2. Security features (ADMINISTRATION).
-#    ⚠ On a personal account (non-org), some sub-keys can be no-ops —
-#      confirm afterwards in Settings → Code security.
+# 2. Security features (Administration).
 SS_OK=0
 mutate gh api -X PATCH "repos/$SLUG" \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
   >/dev/null 2>&1 || SS_OK=1
-# 🔴 IN DRY-RUN, THE VERDICT CANNOT COME FROM THE RETURN CODE: `mutate` ALWAYS succeeds (it
-#    calls nothing). The ✓ would therefore show even where the call is BOUND to fail — and on a
-#    private Free repo, secret scanning is UNAVAILABLE. Yet dry-run is precisely the tool used to
-#    audit a LIVE repo without risking anything: letting it announce "set" produces a FALSE
-#    COMPLIANCE REPORT, exactly on the private repos being audited. So the branch is decided on VISIBILITY.
-#    (Same guard as CodeQL further below — it was set for that one call only, never generalized.)
+# In dry-run `mutate` always "succeeds" — decide the verdict from visibility instead (repeated
+# below for PVR and Pages): docs/code/configure-repo.md.
 if [ "$DRY" -eq 1 ]; then
   [ "$IS_PRIVATE" = "true" ] && SS_OK=1 || SS_OK=0
 fi
@@ -236,50 +156,32 @@ else
   echo "    → REPLAY this script when flipping to public."
 fi
 
-# Three-stage flow? Detected RIGHT HERE, not only in the ruleset step which also uses it: §3a needs to know
-# whether to set the Dependabot safety net. A PUT followed by a DELETE further down would NOT be neutral —
-# enabling security updates WAKES the bot up on ALREADY open alerts, and the PR goes out before the DELETE.
-#   TWO probes, because neither is enough alone: the branch may have been DESTROYED by the
-#   promotion (see docs/repo-controls.md), and the repo still publish a three-stage flow regardless. `CONTRIBUTING.md`
-#   is versioned, and its `## Branching` block is composed by init-project.sh based on the STAGING
-#   capability: if it announces 3 stages, the branch MUST exist — that's what the ruleset step handles the gap for.
+# Staging detected once, up front — §3a below needs it too. Two probes, because either alone can
+# lie (docs/code/configure-repo.md): the branch's existence, and what CONTRIBUTING.md publishes.
 HAS_DEVELOP=0
 gh api "repos/$SLUG/branches/develop" >/dev/null 2>&1 && HAS_DEVELOP=1
 WANTS_STAGING=0
 gh api "repos/$SLUG/contents/CONTRIBUTING.md" --jq '.content' 2>/dev/null \
   | base64 -d 2>/dev/null | grep -q 'Three stages' && WANTS_STAGING=1
 
-# 3. Dependabot alerts — CVE DETECTION (native, free in private). Kept: Renovate READS it
-#    (vulnerabilityAlerts) to open its remediation PRs. Without it, no Renovate security PR.
+# 3. Dependabot alerts — CVE detection; Renovate reads it for its security PRs (repo-controls.md).
 mutate gh api -X PUT "repos/$SLUG/vulnerability-alerts" >/dev/null 2>&1 \
   && echo "  ✓ Dependabot alerts (detection — Renovate reads these for its security PRs)" \
   || echo "  ⚠ vulnerability-alerts: failed — check in the UI"
 
-# 3a. Dependabot security updates — the SAFETY NET, set ONLY on two-stage flows: on three stages its
-#     PRs would target `main` and bypass staging (removed further below for the prior state).
-#     The why, and the proof-of-life of Renovate that gates the removal: standard, "Who updates
-#     dependencies".
-#     ⚠ DEDICATED ENDPOINT, not a sub-key of `security_and_analysis`: `dependabot_security_updates`
-#       appears in the RESPONSE schema of GET /repos, but NOT in the PATCH body-params.
-#       Passing it to PATCH raises no error — it's simply ignored, SILENTLY. A setting believed
-#       set because the call answered 200 is worse than a setting that's absent.
-#     Must follow `vulnerability-alerts`: security updates have nothing to remediate without detection.
+# 3a. Dependabot security updates — safety net, 2-stage flows only (repo-controls.md:544 for the
+#     dedicated-endpoint gotcha). Must follow vulnerability-alerts: nothing to remediate without detection.
 if [ "$HAS_DEVELOP" -eq 0 ] && [ "$WANTS_STAGING" -eq 0 ]; then
   mutate gh api -X PUT "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
     && echo "  ✓ Dependabot security updates (safety net)" \
     || echo "  ⚠ automated-security-fixes: failed — check Settings → Advanced Security."
 fi
 
-# 3b. Private vulnerability reporting — WITHOUT IT, THE SECURITY.md LINK IS DEAD.
-#     SECURITY.md points to /security/advisories/new: if the feature is disabled,
-#     an external researcher has NO WAY to report a flaw privately… and will
-#     therefore publish it as a public issue, before any fix. Free, no upkeep.
-#     PVR is **public-only**: it's a VISIBILITY gate, not a plan gate. In dry-run the `✓`
-#     below would therefore be wrongly announced on a private repo — same guard as in §2.
+# 3b. Private vulnerability reporting — public-only, without it SECURITY.md's link is dead
+#     (repo-controls.md:512,538).
 PVR_OK=0
 mutate gh api -X PUT "repos/$SLUG/private-vulnerability-reporting" >/dev/null 2>&1 || PVR_OK=1
-# ⚠ `[ a ] && [ b ] && x=1` ALONE on its line would return 1 when the test is false — and `set -e`
-#   would kill the script. The `if` isn't a style choice: it's what keeps it alive in real mode.
+# `if`, not `[ a ] && [ b ] && x=1` on one line: that form returns 1 on a false test and `set -e` kills the script.
 if [ "$DRY" -eq 1 ] && [ "$IS_PRIVATE" = "true" ]; then PVR_OK=1; fi
 if [ "$PVR_OK" -eq 0 ]; then
   echo "  ✓ private vulnerability reporting (the SECURITY.md link works)"
@@ -291,21 +193,9 @@ else
   echo "    A researcher then has no way to report privately: they will publish the flaw."
 fi
 
-# 3d. IMMUTABLE RELEASES — the RELEASE-side counterpart of the 'tags' ruleset (docs/repo-controls.md).
-#     The 'tags' ruleset pins the tag; this one pins the release's ASSETS. Without both,
-#     the prod pin `APP_IMAGE_TAG=1.2.3` remains bypassable: the tag isn't moved,
-#     the binary attached under that same tag is swapped instead.
-#     🔴 NOT RETROACTIVE: "immutability will only apply to future releases". This is what dictates
-#       the timing: set it AS EARLY AS POSSIBLE, without waiting, because whatever isn't covered at
-#       the time of a release's publication NEVER will be.
-#     ⚠ SET FROM PRIVATE ALREADY — and specifically NOT gated on public. The setting IS available on
-#       a private Free repo: the "Enable release immutability" checkbox is present and actionable
-#       (Settings → General → Releases), without the "Upgrade or make this repository public" banner
-#       that GitHub shows on features that are actually gated (Wikis, right below it).
-#       Gating it would leave the releases of a repo that never flips to public PERMANENTLY bare —
-#       and the tradeoff is asymmetric: setting it early costs nothing (idempotent),
-#       setting it too late can never be recovered.
-#     PUT with no body → 204. GET returns { enabled, enforced_by_owner }.
+# 3d. Immutable releases — release-side counterpart of the 'tags' ruleset below, NOT retroactive,
+#     set from private on rather than deferred to the flip (repo-controls.md:511,537 and
+#     docs/code/configure-repo.md). PUT with no body → 204; GET returns { enabled, enforced_by_owner }.
 if mutate gh api -X PUT "repos/$SLUG/immutable-releases" >/dev/null 2>&1; then
   echo "  ✓ immutable releases (a published release's assets can no longer be replaced)"
 else
@@ -314,11 +204,9 @@ else
   echo "    Settings → Releases → Enable release immutability (NOT retroactive: before v1)."
 fi
 
-# 3c. GITHUB_TOKEN READ-ONLY by default (OpenSSF "Token-Permissions" check).
-#     All our workflows already declare their `permissions:` block — so the gain isn't immediate.
-#     It's a safety net for the FUTURE workflow that forgets to do it: without this default, it
-#     inherits a write token. Free, and the default is only restrictive for repos created
-#     after February 2023 — so it's set explicitly rather than assumed.
+# 3c. GITHUB_TOKEN read-only by default — safety net for a future workflow with no `permissions:`
+#     block (repo-controls.md:516); only restrictive by default on repos created after Feb 2023,
+#     so set explicitly rather than assumed.
 mutate gh api -X PUT "repos/$SLUG/actions/permissions/workflow" \
   -f 'default_workflow_permissions=read' \
   -F 'can_approve_pull_request_reviews=false' >/dev/null 2>&1 \
@@ -327,15 +215,9 @@ mutate gh api -X PUT "repos/$SLUG/actions/permissions/workflow" \
 
 # 4. CodeQL: ENABLED BY THIS SCRIPT, in DEFAULT SETUP (see the "═══ CodeQL" block further below).
 
-# 5. GitHub Pages — CREATE the site, source = GitHub Actions.
-#    ⚠ `enablement: true` in actions/configure-pages is NOT ENOUGH: creating a Pages site requires
-#      Administration, which a workflow's GITHUB_TOKEN doesn't have → "Resource not accessible by
-#      integration", on EVERY deploy, as long as the site doesn't exist. It's therefore a one-shot
-#      admin action, and its place is here.
-#    Triggered automatically if the repo has a pages.yml: nothing to remember, no flag to pass.
-# ⚠ On a PRIVATE repo, GET /contents requires "Contents: read". Without it, the call fails and the
-#   entire Pages block (homepage included) would be skipped SILENTLY. So the 3 cases are told apart:
-#   workflow present / absent / unreadable. (On a public repo, the contents API is open.)
+# 5. GitHub Pages — create the site (source = Actions); a workflow's GITHUB_TOKEN can't (needs
+#    Administration). 3 cases told apart on purpose: workflow present / absent / unreadable
+#    (Contents: read, private only) — docs/code/configure-repo.md.
 PAGES_WF=$(gh api "repos/$SLUG/contents/.github/workflows/pages.yml" --jq '.name' 2>/dev/null || true)
 if [ -z "$PAGES_WF" ] && [ "$IS_PRIVATE" = "true" ]; then
   echo "  ↳ pages.yml not readable — if this repo has one, the admin PAT is missing \"Contents: read\"."
@@ -345,19 +227,13 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
     mutate gh api -X PUT "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1 \
       && echo "  ✓ Pages: already created, source confirmed = GitHub Actions" \
       || echo "  ⚠ Pages: site exists, source not modifiable — check Settings → Pages"
-  # 3rd call gated on VISIBILITY (after secret scanning and PVR): Pages is unavailable on a
-  # private Free repo. Same dry-run guard — without it, `mutate` succeeds and the script would
-  # announce a site "created" where it can't exist. (The "already created" branch above does NOT
-  # need it: the READ having succeeded proves this repo can carry Pages.)
-  else
+  else   # gated on visibility like §2/§3b: same dry-run guard, Pages unavailable on private Free
     PAGES_OK=0
     mutate gh api -X POST "repos/$SLUG/pages" -f 'build_type=workflow' >/dev/null 2>&1 || PAGES_OK=1
     if [ "$DRY" -eq 1 ] && [ "$IS_PRIVATE" = "true" ]; then PAGES_OK=1; fi
     if [ "$PAGES_OK" -eq 0 ]; then
       echo "  ✓ Pages: site created, source = GitHub Actions"
-    # DO NOT blame the failure on visibility without reading it: the real cause
-    # here was the admin PAT missing "Pages: write" — a permission DISTINCT from Administration.
-    elif [ "$IS_PRIVATE" = "true" ]; then
+    elif [ "$IS_PRIVATE" = "true" ]; then   # "Pages: write" is distinct from Administration — don't blame visibility unread
       echo "  ⚠ Pages: unavailable on a PRIVATE repo on the Free plan → will be created on the flip to public."
     else
       echo "  ⚠ Pages: creation refused on a PUBLIC repo → the admin PAT is missing \"Pages: write\""
@@ -365,15 +241,11 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
     fi
   fi
 
-  # The homepage feeds the "documentation" item of the community profile: without it, the
-  # PUBLIC score caps at 87% (the item doesn't even exist on a private repo).
-  # It's derived from the Pages site just created: the loop closes on its own.
+  # Homepage feeds the "documentation" item of the community profile — derived from the Pages
+  # site just created, closing the loop on its own.
   if [ -z "$HOMEPAGE" ]; then
     PAGES_URL=$(gh api "repos/$SLUG/pages" --jq '.html_url' 2>/dev/null || true)
-    # Both outcomes speak. A read that fails — permission, or a freshly created site still
-    # propagating — leaves PAGES_URL empty, and a case with no default would end silently: no ✓,
-    # no ⚠, and an unset homepage costs a community-profile point nothing else here reports.
-    case "$PAGES_URL" in
+    case "$PAGES_URL" in   # both outcomes speak: a silent default here would cost a community-profile point unreported
       https://*) mutate gh repo edit "$SLUG" --homepage "$PAGES_URL" >/dev/null 2>&1 \
                    && echo "  ✓ homepage = $PAGES_URL  (→ \"documentation\" item of the community profile)" \
                    || echo "  ⚠ homepage could NOT be set to $PAGES_URL — set it by hand: Settings → General → Website." ;;
@@ -383,39 +255,26 @@ if [ "$PAGES_WF" = "pages.yml" ]; then
   fi
 fi
 
-# 6. Ruleset 'main' — idempotent: update if a ruleset of the same name exists, else create.
-#    Robust minimum: PR required (0 review, squash), no force-push/delete, CI required.
-#    ✅ REPLAYABLE WITHOUT DAMAGE: rules added by hand
-#       (code_quality…) are PRESERVED on merge. Previously, a bare PUT
-#       replaced the whole ruleset and wiped them out silently.
+# 6. Ruleset 'main' — idempotent (create or update). Rules added by hand are merged in, never
+#    wiped by a bare PUT (docs/code/configure-repo.md).
 RULESET_NAME="main"
 
-# CodeQL as a REQUIRED check (docs/repo-controls.md). Impossible on a brand-new repo — CodeQL has never run,
-# requiring it would block EVERY PR. So it's set as soon as the 1st analysis exists, instead of
-# deferring it to a manual step "for later" — which means never.
-#
-# ⚠ NEVER confuse "0 analyses" with "not allowed to look". The admin PAT does NOT have
-#   "Code scanning alerts: read" by default: the call then returns 403, and reading that as
-#   "CodeQL has never run" SILENTLY skips the check.
-# Checks REQUIRED before merge. `build-check` (ARTEFACT capability) validates the Dockerfile AND
-# scans the image (Trivy, CRITICAL/HIGH). If it isn't REQUIRED, the scan is DECORATIVE: a PR
-# carrying a critical CVE would still pass. Detected from the workflow's presence — nothing to remember.
+# CodeQL becomes a required check only once its 1st analysis exists (else every PR blocks forever
+# — see "code_scanning analyses" further below, and the same 0-vs-forbidden trap it guards
+# against). `build-check` required as soon as docker-publish.yml exists — unrequired, Trivy is
+# decorative (repo-controls.md:290,518).
 CHECKS_JSON='[ { "context": "checks" } ]'
-# Probed ONCE: the file cannot appear or vanish while this script runs, and the ghcr block below
-# asks the same question 400 lines further down.
-HAS_DOCKER_WF=0
+HAS_DOCKER_WF=0   # probed once here; the ghcr block near the end asks the same question again
 if gh api "repos/$SLUG/contents/.github/workflows/docker-publish.yml" >/dev/null 2>&1; then
   HAS_DOCKER_WF=1
   CHECKS_JSON='[ { "context": "checks" }, { "context": "build-check" } ]'
   echo "  ↳ ARTEFACT capability detected (docker-publish.yml) → 'build-check' (Dockerfile + Trivy scan) becomes a REQUIRED check."
 fi
 
-# 🔴 The rulesets API accepts ANY string as a required context — including one no job will ever
-# produce. Every PR then sits on "Expected — waiting for status" forever, the PR that would add the
-# job included. So each context is verified against the workflows of the DEFAULT BRANCH: the SERVER,
-# not the working tree — this script takes a slug and runs without a checkout.
-# ⚠ Ceiling, NOT caught here: a job carrying `name:` or a `matrix` reports under a DIFFERENT
-#   check-run name, and a workflow with no `pull_request` trigger never reports on a PR at all.
+# The rulesets API accepts any string as a required context (repo-controls.md:705) — so each
+# context is verified against the SERVER's default-branch workflows, not the working tree. Not
+# caught: a job with `name:`/a matrix reports under a different check-run name; no `pull_request`
+# trigger means it never reports on a PR at all.
 job_declared() {
   local wf body
   for wf in $(gh api "repos/$SLUG/contents/.github/workflows" --jq '.[].name' 2>/dev/null); do
@@ -439,16 +298,8 @@ if [ -n "$MISSING" ]; then
   [ "$DRY" -eq 1 ] || exit 1
 fi
 
-# ═══ CodeQL: the native DEFAULT SETUP, and NO LONGER a committed `codeql.yml` ═══════════════════
-# The default setup DETECTS languages and UPDATES ITSELF as the repo changes, scheduled scans
-# included. The WHY, sources, and where the advanced setup would be justified:
-# docs/repo-controls.md. (The check-run keeps the name "CodeQL": the ruleset rule below is
-# unchanged.)
-# ⚠ `gh api` writes the error's JSON body to STDOUT, not stderr. A naive
-#   `DS=$(gh api … || echo unreadable)` therefore produces "{"message":"403…"}unreadable" — a string
-#   equal to NOTHING, and every test that follows goes down the wrong branch, silently.
-#   The SAME trap already fixed for rulesets (see further below). So a JSON that actually carries
-#   `.state` is REQUIRED before believing what's read.
+# CodeQL native default setup, not a committed codeql.yml (repo-controls.md:482-504). Same
+# stdout-JSON trap as gh_val() above: require `.state` to actually be present before trusting it.
 DS_RAW=$(gh api "repos/$SLUG/code-scanning/default-setup" 2>/dev/null || true)
 if printf '%s' "$DS_RAW" | jq -e 'has("state")' >/dev/null 2>&1; then
   DS_STATE=$(printf '%s' "$DS_RAW" | jq -r '.state')
@@ -458,33 +309,20 @@ fi
 if [ "$DS_STATE" = "configured" ]; then
   echo "  ✓ CodeQL default setup already active — languages detected and KEPT UP TO DATE by GitHub."
 elif [ "$DS_STATE" = "unreadable" ] && [ "$IS_PRIVATE" = "false" ]; then
-  # DO NOT guess. On a PUBLIC repo, this endpoint MUST respond: if it doesn't, it's the
-  # PAT missing `Administration` — and without this guard the script would go on to a PATCH that
-  # also fails, wrongly blaming "the default setup wasn't configured".
+  # Unreadable on a PUBLIC repo must be the PAT, not a guess — else the PATCH below would also
+  # fail and wrongly blame "not configured".
   echo "  ⚠ CodeQL default setup state UNREADABLE on a PUBLIC repo → the PAT is missing 'Administration'."
   echo "    CodeQL will be NEITHER enabled NOR checked. Fix the PAT, then REPLAY."
 else
-  # A committed `codeql.yml` (a repo from BEFORE this change) will be DISABLED by the switch.
-  # SAY IT, never silently: a file in the repo stops running, and an orphaned workflow
-  # sitting around is a check nobody reads anymore.
-  if gh api "repos/$SLUG/contents/.github/workflows/codeql.yml" >/dev/null 2>&1; then
+  if gh api "repos/$SLUG/contents/.github/workflows/codeql.yml" >/dev/null 2>&1; then   # switch → disabled_manually (repo-controls.md:503)
     echo "  ⚠ this repo carries a committed 'codeql.yml' → the switch flips it to 'disabled_manually'."
     echo "    This is INTENTIONAL: the default setup covers MORE languages, and GitHub keeps them up to date."
     echo "    → The file becomes DEAD: REMOVE it via a PR."
   fi
-  # ⚠ THE ONLY WRITE IN THIS SCRIPT THAT DOES NOT GO THROUGH `mutate()` — and it matters to know why.
-  #   `mutate()` exists only to intercept; it does NOT RETURN the command's output. Yet the
-  #   `run_id` returned by the PATCH is needed here. So the dry-run guard is kept BY HAND.
-  #   🔴 The "ONE SINGLE interception point" invariant (see `mutate`) is therefore FALSE RIGHT HERE:
-  #      the dry-run's safety hinges on this `if`, and on it alone. Any future edit that moved
-  #      the PATCH out of the `else` branch would WRITE FOR REAL, silently, on a live repo.
+  # 🔴 The only write bypassing `mutate()` (its dry-run guard is kept by hand here instead) — and
+  # dry-run must not lie about what would happen: docs/code/configure-repo.md.
   if [ "$DRY" -eq 1 ]; then
     mutate gh api -X PATCH "repos/$SLUG/code-scanning/default-setup" -f state=configured
-    # ⚠ DRY-RUN MUST NOT LIE — it announces what WOULD happen, not what's hoped for.
-    #   It used to say "✓ ENABLED" EVEN ON A PRIVATE REPO, where the PATCH is bound to fail (Advanced
-    #   Security required): the script contradicted itself TWO LINES DOWN ("CodeQL unavailable in
-    #   private"). A dry-run promising an impossible setting is worse than a silent dry-run: it gets
-    #   believed.
     if [ "$IS_PRIVATE" = "true" ]; then
       echo "  ↳ CodeQL: the PATCH WILL FAIL — unavailable on a PRIVATE repo (Advanced Security required)."
       echo "    EXPECTED. CodeQL will activate on the NEXT RUN of this script AFTER the flip to public (§4)."
@@ -493,21 +331,12 @@ else
     fi
   else
     DS_RUN=$(gh_val '.run_id' '' -X PATCH "repos/$SLUG/code-scanning/default-setup" -f state=configured)
-    # BELT AND SUSPENDERS: a run_id is an INTEGER. Everything else — error body, empty string,
-    # `null` — means the activation FAILED. Without this filter, an error JSON passed for a
-    # run_id, the script announced "✓ ENABLED" on a repo where CodeQL is unavailable, and the two
-    # branches below (private / public failure) became UNREACHABLE.
-    case "$DS_RUN" in ''|*[!0-9]*) DS_RUN="" ;; esac
+    case "$DS_RUN" in ''|*[!0-9]*) DS_RUN="" ;; esac   # run_id is an integer; anything else means activation FAILED (docs/code/configure-repo.md)
     if [ -n "$DS_RUN" ]; then
       echo "  ✓ CodeQL default setup ENABLED — 1st analysis launched (run $DS_RUN)."
-      # 🔴 WAITING — this is NOT a nicety. The 'code_scanning' rule is only set further below IF
-      #    an analysis EXISTS. Without this wait, the script would have JUST ENABLED CodeQL, read
-      #    "0 analyses", and NOT SET the rule: `main` would stay UNPROTECTED until
-      #    someone thinks to rerun the script. A security hole opened BY THE SCRIPT ITSELF.
-      # ⚠ The loop MUST tell "not finished yet" apart from "not allowed to look".
-      #   Since `gh api` writes its errors to STDOUT, a plain `= "completed"` NEVER sees the
-      #   difference: on a 403 it would spin 36 × 10s = SIX MINUTES, silently, only to
-      #   continue without knowing. So the status is tested AGAINST THE LIST of valid values.
+      # Waiting is not a nicety: without it, `main` stays unprotected until someone reruns the
+      # script. Status tested against a list of valid values, not `= "completed"` alone — a 403
+      # (errors on stdout) would otherwise spin the full 6 minutes blind (docs/code/configure-repo.md).
       printf '    … waiting for the 1st analysis — without it, the rule would not be set '
       DS_DONE=0; DS_BLIND=0
       for _ in $(seq 1 36); do
@@ -515,12 +344,7 @@ else
         case "$RS" in
           completed) DS_DONE=1; break ;;
           queued|in_progress|requested|waiting|pending) DS_BLIND=0; printf '.'; sleep 10 ;;
-          # ⚠ DO NOT conclude on the 1st miss. GitHub takes a few seconds to MATERIALIZE the run: a
-          #   transient 404 (or a rate-limit) is NORMAL at the start. Concluding immediately "the PAT
-          #   is missing Actions:read" would be a WRONG DIAGNOSIS — the very defect this file spends
-          #   its time chasing: accusing the PAT of a permission it actually has. 3 CONSECUTIVE
-          #   unreadable responses are tolerated before deciding.
-          *) DS_BLIND=$((DS_BLIND + 1))
+          *) DS_BLIND=$((DS_BLIND + 1))   # a transient 404 right after creation is normal — 3 in a row before blaming the PAT
              if [ "$DS_BLIND" -ge 3 ]; then
                echo
                echo "  ⚠ CodeQL run UNREADABLE (3 times in a row) → the admin PAT is missing \"Actions: read\"."
@@ -543,12 +367,8 @@ else
   fi
 fi
 
-# THREE distinct cases, NEVER to confuse:
-#   · JSON list           → CodeQL has run: we know how many analyses exist.
-#   · 404 "no analysis found" → the endpoint RESPONDS, there is simply NO analysis yet.
-#   · 403 / other          → we are NOT allowed to look (permission or plan).
-# Treating the 404 as a 403 accuses the PAT of a permission it actually has — and sends the
-# human off looking for a right that's already there.
+# Three states, never collapsed to two: JSON list (ran) / 404 "no analysis found" (responds,
+# nothing yet) / 403-other (not allowed to look) — docs/code/configure-repo.md.
 CS_BODY=$(gh api "repos/$SLUG/code-scanning/analyses" 2>&1 || true)
 if printf '%s' "$CS_BODY" | jq -e 'type == "array"' >/dev/null 2>&1; then
   ANALYSES=$(printf '%s' "$CS_BODY" | jq 'length')
@@ -600,20 +420,13 @@ elif [ "$CS_READABLE" -eq 0 ]; then
 elif [ "$ANALYSES" -gt 0 ]; then
   RULESET_JSON=$(printf '%s' "$RULESET_JSON" | jq -c --argjson r "$CS_RULE" '.rules += [$r]')
   echo "  ↳ CodeQL produced $ANALYSES analysis(es) → 'code_scanning' rule set: an alert blocks the PR."
-else
-  # This case should NO LONGER happen on a public repo: the script has just enabled the default
-  # setup AND waited for its 1st analysis. Landing here means the ANALYSIS FAILED — it's
-  # therefore not "not yet", it's "not working", and it should be said that way.
+else   # shouldn't happen after enabling + waiting above: this is the analysis having FAILED, not "not yet"
   echo "  ⚠ NO CodeQL analysis despite activation → the 'code_scanning' rule is NOT set."
   echo "    'main' is therefore NOT guarded by CodeQL. Check the 'CodeQL Setup' run in Actions,"
   echo "    then REPLAY this script once the analysis is green."
 fi
 
-# ⚠ On an HTTP error (403 "Upgrade to GitHub Pro" on a PRIVATE Free repo), `gh api`
-# writes the error's JSON body to STDOUT. Without this guard, that JSON was swallowed as if
-# it were a ruleset ID, then pasted back into the PUT's URL → an unintelligible error.
-# So a REAL JSON list is required before going any further.
-RULESETS=$(gh api "repos/$SLUG/rulesets" 2>/dev/null || true)
+RULESETS=$(gh api "repos/$SLUG/rulesets" 2>/dev/null || true)   # same stdout-JSON trap as gh_val() above
 if ! printf '%s' "$RULESETS" | jq -e 'type == "array"' >/dev/null 2>&1; then
   echo "  ⚠ rulesets UNAVAILABLE on this repo — expected on a PRIVATE repo on the Free plan (docs/repo-controls.md)."
   echo "    'main' is therefore NOT protected: no PR required, no required checks, force-push possible."
@@ -622,13 +435,8 @@ if ! printf '%s' "$RULESETS" | jq -e 'type == "array"' >/dev/null 2>&1; then
   RULESETS=""
 fi
 
-# upsert_ruleset <name> <json> — create if absent, update otherwise. IDEMPOTENT.
-#   · Rules of a type THIS ruleset doesn't manage (e.g. `code_quality` set by hand, or
-#     `code_scanning` when CodeQL hasn't run yet) are PRESERVED: the managed scope is
-#     derived from the types present in the supplied JSON, not from a fixed list that would drift.
-#   · DEDUPLICATED merge by type → no duplicates on replay.
-#   · bypass_actors: never removed silently (the standard wants none, but it's up to
-#     the human to decide).
+# upsert_ruleset <name> <json> — create if absent, else merge (docs/code/configure-repo.md):
+# rule types outside the supplied JSON are preserved, bypass_actors never removed silently.
 upsert_ruleset() {
   RS_NAME="$1"; RS_JSON="$2"
   [ -n "$RULESETS" ] || return 0
@@ -662,25 +470,13 @@ upsert_ruleset() {
     && echo "  ✓ ruleset '$RS_NAME' updated (#$RS_ID) — script's rules applied, the rest untouched"
 }
 
-# ⚠ SQUASH-ONLY and a STAGING branch are INCOMPATIBLE.
-#   Squashing `develop` into `main` rewrites the commits: the two branches then diverge on EVERY
-#   cycle (same changes, different SHAs), and the `feat/*` history is lost.
-#   → If `develop` exists, `main` ALSO accepts merge commits (that's what docs/repo-controls.md prescribes for
-#     the staging → prod promotion). `develop` itself stays squash-only: `feat/*` branches get
-#     squashed into a single clean commit there.
+# Squash-only and a staging branch are incompatible (squashing `develop` into `main` diverges the
+# branches every cycle): if `develop` exists, `main` also accepts merge commits; `develop` stays
+# squash-only.
 
-# ⚠️ PROMOTING TO PROD DESTROYS STAGING — and the script used to be its silent victim.
-#   `delete_branch_on_merge` (set above, useful for `feat/*` branches) deletes the SOURCE branch
-#   of EVERY merged PR — so `develop` itself, when the `develop → main` promotion PR gets merged.
-#   In PUBLIC, the 'develop' ruleset (the `deletion` rule) prevents this. In PRIVATE, there is NO
-#   ruleset at all: the 1st production deploy DELETES the staging branch, without a word.
-#
-#   The script used to infer staging from `develop`'s EXISTENCE. Once gone, it concluded "no
-#   staging" and aligned everything on that: no 'develop' ruleset, and `main` FELL BACK to squash-only
-#   — making the next promotion IMPOSSIBLE. A cascading failure, triggered by success.
-#
-#   → So the branch's mere existence is no longer trusted: the repo is ALSO asked what it
-#     PUBLISHES (`WANTS_STAGING`, probed up front alongside `HAS_DEVELOP`).
+# `delete-branch-on-merge` deletes `develop` on its own promotion-PR merge, unprotected in
+# private — so staging is inferred from what the repo PUBLISHES too, not the branch alone
+# (docs/code/configure-repo.md).
 if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "  ⚠ INCONSISTENCY — the repo PUBLISHES a THREE-stage flow, but the 'develop' branch DOES NOT EXIST."
   echo "    Near-certain cause: 'delete-branch-on-merge' DELETED it on the merge of the develop → main PR."
@@ -692,34 +488,18 @@ if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "      The 'develop' ruleset ('deletion' rule) will then prevent it from being deleted again."
 fi
 
-# ⚠️ THE SAME SETTING, BUT TAKEN UPSTREAM — because WARNING WASN'T ENOUGH.
-#   The block above only speaks AFTER the damage, and only if this script is replayed. Yet the
-#   loss is CERTAIN and AUTOMATIC: `delete_branch_on_merge` targets the SOURCE branch of the PR, and
-#   the source of a promotion IS `develop`. What saves it in PUBLIC is the ruleset (its
-#   `deletion` rule: GitHub never deletes a protected branch, even with the option enabled). In
-#   PRIVATE Free there is NO ruleset at all — so no safety net, and warning isn't enough.
-#   → So here the setting is REMOVED. What's lost is automatic cleanup of `feat/*` branches — a
-#     convenience, one click — against a long-lived branch destroyed silently, which breaks the
-#     NEXT promotion (without `develop`, this script concludes "no staging" and `main` falls back to
-#     squash-only). Flipping to public restores it: replay this script, the ruleset takes over.
-# Dependabot security updates: its PRs ALWAYS target the default branch — on three stages they
-# would bypass staging. §3a no longer sets them here; this block REMOVES the PRIOR state
-# (a repo configured before this change, or enabled by hand), and only if Renovate is PROVEN
-# alive. The why and the threshold: standard, "Who updates dependencies".
-#   ⚠ FRESHNESS, not existence: an opted-out repo keeps its Dependency Dashboard intact.
-#     Probing `.updated_at` is the only signal that tells a running bot apart from a dead one.
+# Same setting, taken upstream (warning after the fact isn't enough — `delete-branch-on-merge` is
+# actually REMOVED further below when private+3-stage, restored once the ruleset takes over).
+
+# Dependabot security updates removed here only for repos configured before §3a stopped setting
+# them, and only once Renovate is proven ALIVE — freshness, not mere existence, of its Dependency
+# Dashboard (docs/code/configure-repo.md).
 if [ "$HAS_DEVELOP" -eq 1 ] || [ "$WANTS_STAGING" -eq 1 ]; then
   DASH_RC=0
   DASH_AT=$(gh api "repos/$SLUG/issues?state=open&per_page=100" \
     --jq 'map(select(.title=="Dependency Dashboard"))|.[0].updated_at // empty' 2>/dev/null) || DASH_RC=$?
-  # ⚠ `gh api` writes its error JSON to STDOUT: without this SHAPE filter, a `{"message":"Not Found"}`
-  #   compared to an ISO date is judged MORE RECENT (`{` > `2` in ASCII) — a read failure would REMOVE
-  #   the safety net. Measured: that's what an empty `$SLUG` returns.
-  #   The exit code is kept SEPARATELY: without it, "refused" and "absent" look alike, and a
-  #   missing permission would send the maintainer looking toward Renovate — the silent failure this forbids.
-  case "$DASH_AT" in 20[0-9][0-9]-*) ;; *) DASH_AT="" ;; esac
-  # `date -v` (BSD/macOS) then `date -d` (GNU): the script runs on both.
-  FRESH=$(date -u -v-14d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
+  case "$DASH_AT" in 20[0-9][0-9]-*) ;; *) DASH_AT="" ;; esac   # shape filter: an error body else outranks any ISO date (docs/code/configure-repo.md)
+  FRESH=$(date -u -v-14d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)   # -v (BSD) then -d (GNU)
   if [ -n "$DASH_AT" ] && [[ "$DASH_AT" > "$FRESH" ]]; then
     mutate gh api -X DELETE "repos/$SLUG/automated-security-fixes" >/dev/null 2>&1 \
       && echo "  ✓ Dependabot security updates REMOVED — 3 stages, Renovate alive (dashboard $DASH_AT)" \
@@ -782,14 +562,8 @@ read -r -d '' TAGS_JSON <<'JSON' || true
 JSON
 upsert_ruleset "tags" "$TAGS_JSON"
 
-# 6c. *CLASSIC* BRANCH PROTECTION — the OTHER system, which `GET /rulesets` DOES NOT SHOW.
-#     An existing repo may carry one, inherited, requiring checks named after ITS old
-#     jobs. Adopting the template's workflows makes those checks STOP EXISTING: the rule survives and
-#     forever demands a status nothing will ever produce again — the branch is LOCKED, CI
-#     green or not, and `gh pr merge` only answers "base branch policy prohibits the merge".
-#     The two systems STACK: setting the ruleset does not neutralize the old rule.
-# ⚠ This DETECTS and REPORTS — it does not delete: the classic rule may carry settings the
-#   ruleset doesn't replicate, and destroying a protection is a decision for the maintainer (like visibility).
+# 6c. Classic branch protection — the OTHER system, invisible to `GET /rulesets` and stacking
+#     with it. Detects and reports only, never deletes — docs/code/configure-repo.md.
 for BR in main develop; do
   PROT=$(gh api "repos/$SLUG/branches/$BR/protection" 2>/dev/null || true)
   [ -n "$PROT" ] || continue
@@ -800,15 +574,13 @@ for BR in main develop; do
   echo "    → remove it now that the ruleset protects: https://github.com/$SLUG/settings/branches"
 done
 
-# 7. FINAL CHECK — community profile.
-#    The score is the only indicator for settings the API does NOT expose ("Reported content":
-#    neither REST nor GraphQL). Without this check,
-#    a missing item stays invisible: the script would say "everything is applied" and it would be false.
+# 7. Final check — community profile: the only indicator for "Reported content", which has no
+#    API at all (repo-controls.md:690). Without this check, a missing item stays invisible.
 PROFILE=$(gh api "repos/$SLUG/community/profile" 2>/dev/null || true)
 if printf '%s' "$PROFILE" | jq -e '.health_percentage' >/dev/null 2>&1; then
   HEALTH=$(printf '%s' "$PROFILE" | jq '.health_percentage')
-  # `issue_template` is ALWAYS null when the templates are in a folder (an API artifact,
-  # with no effect on the score) → exclude it, otherwise a missing item is reported that doesn't exist.
+  # `issue_template` is always null when templates live in a folder (API artefact, no effect on
+  # the score) — excluded below, else a missing item is reported that doesn't exist.
   MISSING=$(printf '%s' "$PROFILE" | jq -r '[.files | to_entries[]
               | select(.value == null)
               | select(.key | IN("issue_template","code_of_conduct_file") | not) | .key]
@@ -820,9 +592,7 @@ if printf '%s' "$PROFILE" | jq -e '.health_percentage' >/dev/null 2>&1; then
   else
     echo "  ⚠ community profile: $HEALTH% — incomplete."
     [ -n "$MISSING" ] && echo "    Missing files/fields: $MISSING"
-    if [ -z "$MISSING" ]; then
-      # All files are there but the score isn't full → it's the UI-only item, which
-      # exists ONLY on ORGANIZATION repos (8-item checklist instead of 7).
+    if [ -z "$MISSING" ]; then   # nothing missing → it's the UI-only item (org repos only, RUNBOOK.md:271)
       echo "    All files are present → what's left is the NON-SCRIPTABLE item:"
       echo "    Settings > Moderation options > Reported content > 'Prior contributors and collaborators'"
       echo "    https://github.com/$SLUG/settings/moderation/reported-content"
@@ -830,9 +600,7 @@ if printf '%s' "$PROFILE" | jq -e '.health_percentage' >/dev/null 2>&1; then
       echo "     created PRIVATE then flipped public — exactly our case.)"
     fi
   fi
-else
-  # The check that exists so a gap cannot stay invisible must not go missing invisibly itself.
-  # Unread, it says nothing — and the line below would then announce a completeness it never verified.
+else   # the check meant to catch invisible gaps must not go missing invisibly itself
   echo "  ⚠ community profile UNREADABLE — the final check did NOT run."
   echo "    Nothing below attests the score: read it by hand at https://github.com/$SLUG/community"
 fi
@@ -843,24 +611,12 @@ echo "  ⚠️  REVOKE THE ADMIN PAT NOW — it no longer has any reason to exis
 echo "     https://github.com/settings/personal-access-tokens"
 echo
 if [ "$HAS_DOCKER_WF" -eq 1 ]; then
-# VERIFY instead of REMINDING. A GREEN "Publish image" job does NOT prove the image is
-# pullable. This test queries the registry EXACTLY like the prod host does:
-# anonymously, with no token at all. It's the only proof that counts.
-# (The packages API is out of reach: fine-grained PATs do NOT support ghcr — classic only.)
-# THREE states, not two. A `PULL_OK` boolean used to conflate "tested and FAILED" with "NOT TESTABLE",
-# and would therefore demand making public a package THAT DOESN'T EXIST YET — on a brand-new repo, with
-# no release at all. Demanding an action on a nonexistent object is the BUG 4 defect RECURRING:
-# TALKING WITHOUT KNOWING. And the noise has a cost: it ends up drowning out the reminder to REVOKE THE ADMIN PAT.
+# Verify instead of reminding — a green "Publish image" job doesn't prove the image is pullable;
+# three states, not a boolean, and the package name is read from `images:`, never derived from the
+# slug (docs/code/configure-repo.md).
 PULL_STATE=untested
 if [ "$IS_PRIVATE" = "false" ] && [ "$(gh_val 'length' 0 "repos/$SLUG/releases")" -gt 0 ]; then
   TAG=$(gh api "repos/$SLUG/releases/latest" --jq '.tag_name' 2>/dev/null | sed 's/^v//')
-  # The ghcr package name is NOT derivable from the slug. It happens to match on a GENERATED project
-  # (init-project.sh substitutes `<image-name>` with the repo's name) — hence a bug long invisible.
-  # A MIGRATED repo publishes under whatever name it wants (`<Repo>` → `<repo>-collector`): deriving it
-  # made the script test a NONEXISTENT package, therefore announce "image NOT PULLABLE, the prod pin is
-  # worthless" and demand making public an object that doesn't exist. The source of truth — the
-  # workflow's `images:` — is READ instead, falling back to the slug if unreadable (a strictly additive fix).
-  # `Accept: raw` avoids a base64 decode (`-d` GNU vs `-D` BSD aren't portable).
   IMG_NAME=$(gh api -H "Accept: application/vnd.github.raw" \
       "repos/$SLUG/contents/.github/workflows/docker-publish.yml" 2>/dev/null \
     | sed -n 's|^[[:space:]]*images:[[:space:]]*ghcr\.io/[^/]*/\([A-Za-z0-9._-][A-Za-z0-9._-]*\).*|\1|p' \
@@ -882,8 +638,7 @@ if [ "$IS_PRIVATE" = "false" ] && [ "$(gh_val 'length' 0 "repos/$SLUG/releases")
     echo "    Near-certain cause: the ghcr package is PRIVATE."
   fi
 fi
-# NO IMAGE YET: INFORM, demand NOTHING. The action, if needed, will be needed at the
-# 1st release — and that's where the RUNBOOK §3 reminds of it, at the moment the object finally exists.
+# No image yet: inform, demand nothing — the action, if needed, is needed at the 1st release.
 if [ "$PULL_STATE" = "untested" ]; then
   if [ "$IS_PRIVATE" = "true" ]; then
     echo "  ↳ PRIVATE repo: the ghcr package's visibility isn't relevant yet. It will be at the flip."
@@ -892,10 +647,8 @@ if [ "$PULL_STATE" = "untested" ]; then
     echo "    At the 1st release, REPLAYING this script will test the anonymous pull and report it (RUNBOOK §3)."
   fi
 fi
-# ⚠️ The "make the package public" reminder is shown ONLY if the anonymous pull is NOT proven.
-#   The default is NOT universal: on a PERSONAL account, a package published from a PUBLIC repo
-#   inherits its access and is pullable IMMEDIATELY. On an ORG, it can be PRIVATE (org default).
-#   → No more ASSUMING: it's TESTED, and only spoken about if it fails.
+# Shown only if the anonymous pull actually failed — the default visibility depends on account
+# type, so it's tested, never assumed (docs/code/configure-repo.md).
 if [ "$PULL_STATE" = "ko" ]; then
   echo "  MANUAL ACTION NEEDED — ghcr package visibility (no API: fine-grained PATs do NOT"
   echo "  cover ghcr, only classic PATs do)."
@@ -904,10 +657,7 @@ if [ "$PULL_STATE" = "ko" ]; then
   # /users/<o>/… for a personal account.
   OWNER_TYPE=$(gh_val '.type' 'Organization' "users/${SLUG%%/*}")
   if [ "$OWNER_TYPE" = "User" ]; then PKG_NS="users"; else PKG_NS="orgs"; fi
-  # The package name comes from `images:` (see above), NEVER from the slug: `<Repo>` publishes
-  # under `<repo>-collector`. Deriving it gave a 404 URL — right at the moment this
-  # reminder matters most. `IMG` is in scope: PULL_STATE=ko is only set where it's computed.
-  echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${IMG#*/}/settings"
+  echo "     https://github.com/$PKG_NS/${SLUG%%/*}/packages/container/${IMG#*/}/settings"   # $IMG: set wherever PULL_STATE=ko is
   echo "     Without this action, the anonymous pull returns 403: neither the prod host nor a"
   echo "     user can pull the image."
   echo "     Org-wide: Settings > Packages > Package creation > default visibility."
