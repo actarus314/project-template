@@ -1,22 +1,12 @@
 #!/usr/bin/env bash
-# Replays THIS repo's CI security checks LOCALLY, at the SAME pinned versions.
-# Goal: local == github. What passes here passes CI — no more "green locally, red on GitHub".
-#
-# AUTO-DETECTING: it reads `.github/workflows/ci.yml` and runs ONLY what that CI runs
-# (shellcheck, actionlint, zizmor, semgrep, osv-scanner, gitleaks — depending on the markers present).
-# So a SINGLE file serves the template AND every generated project (node/static/generic/Android/C++…).
-# The ONLY deliberate addition: it also validates any `renovate.json` present — to catch the failure
-# mode "broken Renovate config → silent freeze of updates", which a project's CI does not cover.
-#
+
 # Usage:  ./check.sh            everything
 #         ./check.sh --commit   only what a commit can make say something new (see MODE below)
 #         ./check.sh --house    ONLY the house checks — the gate a CI calls (see MODE below)
 #         ./check.sh --report   the control journal, a DEV instrument: --on | --off | --reset
-#
-# Versions are NEVER hardcoded: read from `ci.yml` (+ `requirements-ci.txt`). Binaries are cached
-# under `.ci-tools/` (gitignored). CI itself verifies the SHA256 of the Linux asset; here we pin the
-# VERSION (same rules → same findings) and verify it via `--version`. The strong checksum stays CI's
-# job, the authority. This script is a pre-flight, not the barrier.
+
+# Versions are NEVER hardcoded: read from ci.yml (+ requirements-ci.txt), cached under .ci-tools/.
+# Local pins the VERSION and checks it via --version; CI additionally verifies the asset's SHA256.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -26,17 +16,9 @@ mkdir -p "$CACHE"
 [ -f "$CI" ] || { echo "No $CI here — nothing to replay."; exit 0; }
 
 # ── The control journal lives OUTSIDE every repository ────────────────────────────────────────
-# It used to sit under .ci-tools/, which made it per-project and per-machine: a project's telemetry
-# could never be compared with its neighbour's, and the one question worth asking of it — is a gate
-# firing everywhere, or only here — had no place to be answered. It is telemetry, never repository
-# content, so nothing about it belongs in a tree.
-#
-# 🔴 The location is deliberately NOT named after this repository. The journal outlives the project
-# that first wrote it: every generated project appends to this same file, which is the whole point,
-# and the tools that read it will one day live somewhere else entirely.
-#
-# XDG_STATE_HOME is the convention for exactly this — data that persists between runs, that a user
-# would not miss if it were deleted, and that has no business being backed up.
+# Why there, why not named after this repository, and what a shared journal buys: the control
+# matrix states it in full. XDG_STATE_HOME is the convention for data that persists between runs
+# and that nobody would miss if it were deleted.
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
 JOURNAL="$STATE_DIR/controls-log.tsv"
 JOURNAL_ON="$STATE_DIR/journal-on"
@@ -45,22 +27,6 @@ JOURNAL_ON="$STATE_DIR/journal-on"
 root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PROJECT="$(basename "$(dirname "$root")")/$(basename "$root")"
 
-# --commit: the lot a COMMIT can make say something new. Left out is everything whose verdict is
-# fixed by an external base rather than by the tree — the OSV database and the semgrep packs are
-# fetched, and gitleaks' rules are baked into a pinned binary, so at constant versions the pushed
-# history returns the same answer it did an hour ago. Those stay with the full lot and the CI.
-#
-# The checks that DO read the tree read ALL of it, in both modes: a check narrowed to the diff is
-# blind by construction — deleting a file breaks a link in another one, which no diff mentions.
-# What `touched` decides is whether a check RUNS, never what it looks at.
-#
-# --house is the CI's door, and the reason it exists is that the alternative is a hand-kept list.
-# A workflow naming its checks one step at a time has to be edited in every template the day a check
-# is added, in every direction, silently — the failure this repository has already paid for. One
-# line calls this mode, and whatever sits under checks/ runs behind it.
-# It runs the house checks and NOTHING else: gitleaks, semgrep, osv-scanner, actionlint and zizmor
-# are the CI's OWN steps, at versions it pins and checksums itself. Replaying them here would
-# download and rerun the whole lot a second time, in the same job, for the same verdict.
 MODE=full
 case "${1:-}" in
   --commit) MODE=commit;;
@@ -88,19 +54,16 @@ if [ "$MODE" = report ]; then
   [ -f "$JOURNAL_ON" ] || echo "  (journal is OFF — showing what was recorded before. Switch on: ./check.sh --report --on)" >&2
   [ -f "$J" ] || { echo "No control has run while the journal was on. Switch it on: ./check.sh --report --on"; exit 0; }
   OUT=${3:-../workspace/docs/CONTROLES.md}
-  # The state travels INTO the page, and not to the terminal alone. The timestamps below are those
-  # of the RECORDS, never of the reading: a page whose newest record is a day old cannot, on its
-  # own, tell "recording stopped yesterday" from "nothing has run since yesterday" — two different
-  # facts reading as one line. Whoever opens the file later does not see this terminal.
+  # The timestamps below are those of the RECORDS, never of the reading — said to the reader in the
+  # page itself, just below.
   STATE=off; [ -f "$JOURNAL_ON" ] && STATE=on
   python3 - "$J" "$OUT" "$STATE" "$PROJECT" <<'PY'
 import sys, collections, pathlib, statistics
 rows = [l.rstrip("\n").split("\t") for l in open(sys.argv[1], encoding="utf-8") if l.strip()]
 rows = [r for r in rows if len(r) >= 4]
-# The journal is shared by every project; this page speaks for ONE. Filtering here rather than at
-# write time is what lets the same record answer both questions — this project's rates, and the
-# cross-project view a dashboard will want. Lines written before the column existed have no owner:
-# they are kept, because dropping records to tidy a page is how a measurement quietly loses its base.
+# Filtered here (at read time, not write time) so one file answers both the per-project and the
+# cross-project question. Records written before the column existed have no owner and are KEPT:
+# dropping records to tidy a page is how a measurement quietly loses its base.
 me = sys.argv[4] if len(sys.argv) > 4 else ""
 others = sorted({r[6] for r in rows if len(r) > 6 and r[6] and r[6] != me})
 rows = [r for r in rows if len(r) <= 6 or not r[6] or r[6] == me]
@@ -179,10 +142,7 @@ changed=""
 # doubles in size wakes nothing unless a .md happens to move here in the same commit.
 [ "$MODE" = commit ] && changed=$( { git diff --name-only HEAD 2>/dev/null || true
                                      git -C ../workspace diff --name-only HEAD 2>/dev/null || true; } )
-# Only --commit narrows anything: in every other mode a check runs, and what it READS is never
-# narrowed in any of them.
 touched() { [ "$MODE" != commit ] || printf '%s\n' "$changed" | grep -qE "$1"; }
-# The external tools are the CI's own steps — skipped at the gate, run in the other two modes.
 external() { [ "$MODE" != house ]; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
@@ -191,25 +151,17 @@ gl_arch=arm64; al_arch=arm64; osv_arch=arm64
 [ "$uarch" = x86_64 ] && { gl_arch=x64; al_arch=amd64; osv_arch=amd64; }
 
 fail=0
-# Every verdict of THIS script passes through ok() or ko(), so the journal is written THERE and
-# nowhere else: a per-check call would be a list to keep, and the one thing this file no longer
-# keeps is a list. The three hooks are the exception, and they have to be: check.sh never runs them,
-# so each writes its own verdict — same file, same six columns, same rule that the line is written
-# where the verdict exists.
-# It lands outside every repository (see STATE_DIR above) — telemetry, not repository content, and
-# it travels with this script into every generated project, which all append to the same file.
-# 🔴 OFF unless switched ON. This is a DEVELOPMENT instrument — useful while tuning the controls,
-# pointless once they are settled, and a file that grows at every commit forever is a cost paid for
-# nothing. The switch is a witness file beside the journal: present, the journal records; absent,
-# `journal()` returns immediately and costs one test. `./check.sh --report --on` / `--off`.
+
+# 🔴 OFF unless switched ON. The switch is a witness file beside the journal: absent, journal()
+# returns immediately and costs one file test.
 journal() {   # <control> <rc|skip> <reason> [milliseconds]
   [ -f "$JOURNAL_ON" ] || return 0
   # The tools-ready line is not a control, it is this script reporting on itself.
   case "$1" in "ready under "*) return 0;; esac
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MODE" "$1" "$2" "${4:-}" "$3" "$PROJECT" >> "$JOURNAL"
 }
-# A check whose rhythm held it back: recorded as a SKIP, with the gate that decided. Its absence
-# from the journal and its being deliberately skipped are two different facts, and only one is fine.
+# A skip recorded here, and a check simply absent from the journal, are two different facts —
+# only one of them is fine.
 skipped() { journal "$1" skip "$2"; }
 note() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 LAST_MS=""
@@ -224,12 +176,6 @@ reap() {
   LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
   cat "$PAR/$1.out"
   local rc; rc=$(cat "$PAR/$1.rc")
-  # 🔴 What it DECLARES against what it just DID — the only place both are known at once, and it
-  # costs one grep. A check calling itself advisory that returns non-zero IS a blocking check:
-  # `ko` below fails the gate and the commit stops. Three checks contradicted themselves this way
-  # before anything looked, two of them for a day; the contradiction was found by a human reading
-  # the table. Caught here at the exact moment it happens, on the real exit code, with no case to
-  # fabricate — which is what a comparison of two DECLARATIONS cannot do.
   if [ "$rc" != 0 ] && grep -qE '^# blocking: no\b' "checks/$1.sh" 2>/dev/null; then
     printf '  \033[31m✗ %s declares `# blocking: no` and just exited %s — advisory is a claim about the EXIT CODE\033[0m\n' "$1" "$rc"
     fail=1
@@ -237,12 +183,8 @@ reap() {
   return "$rc"
 }
 
-# Times a command and leaves the duration in LAST_MS for the ok()/ko() that follows. Everything
-# in the parallel lot gets its milliseconds from reap(); everything OUTSIDE it had none at all, so
-# seven controls showed a bare `—` in the journal — which reads as "free" rather than "unmeasured",
-# and no curve can be drawn from a dash. Same clock as the lot: EPOCHREALTIME, no subprocess.
-# `|| _rc=$?` rather than `; _rc=$?` so the function is safe outside a condition, where errexit
-# would otherwise take the script down before the duration is ever recorded.
+# timed() clocks a command OUTSIDE the parallel lot so LAST_MS is never a bare —.
+# `|| _rc=$?` (never `; _rc=$?`) keeps this safe under set -e, recording the duration even on failure.
 timed() {
   local _t0 _t1 _rc=0
   _t0=${EPOCHREALTIME/./}
@@ -282,12 +224,9 @@ ensure_osv() {
   curl -sSfL -o "$bin" "https://github.com/google/osv-scanner/releases/download/${tag}/osv-scanner_${os}_${osv_arch}"
   chmod +x "$bin"
 }
-# Shared Python venv for zizmor and semgrep; only reinstalls if a version is missing.
-#
-# The installed version is read from disk: asking each tool booted a Python interpreter, 1.5 s per run.
-# That no longer proves the tool STARTS, and one way to break it is known — moving the project
-# directory leaves the venv's absolute shebangs pointing nowhere, `pip` included, so it cannot be
-# repaired in place. The interpreter pip's shebang names is checked instead, and the venv rebuilt.
+# Reinstalls only when a version is missing on disk — not via --version (~1.5 s/run, and it would
+# not catch a moved project leaving the venv's absolute shebangs dangling). pip's shebang
+# interpreter is checked instead, and the venv rebuilt if broken.
 ensure_venv() {
   local need=0 spec tool ver interp
   if [ -f "$CACHE/venv/bin/pip" ]; then
@@ -332,26 +271,15 @@ else
   note "House checks only (--house) — the external tools are the CI's own steps"
 fi
 
-# The house checks read the tree and write nothing, so they all start here, at once: their sum
-# becomes their slowest, and it runs under the external tools instead of after them. Each output is
-# captured and replayed further down by the block that owns it, so the report reads in the order it
-# always did. `verify-travel.sh` stays out — it generates a whole project, and only runs when a
-# travelling file moved; `verify-delegation.sh` too — it is a hook, and check.sh never calls it.
+# House checks read the tree and write nothing: they all start together here, so their sum is their
+# slowest, running under the external tools rather than after. Each capture is replayed later by the
+# block that owns it, keeping report order stable.
 rm -rf "$PAR"; mkdir -p "$PAR"
 for s in checks/verify-*.sh; do
-  # A hook DECLARES ITSELF, in its own header (`# hook: <event>`). It reads its payload from STDIN,
-  # and inside this loop that means competing for stdin with every sibling started alongside it —
-  # a hang with no output at all. The names used to be written out here: four of them, in the one
-  # file whose whole point is that nothing keeps a list. A fifth hook dropped into checks/ would
-  # have joined the lot and hung, and in a generated project nothing would have said so.
   grep -qE '^# hook: ' "$s" && continue
   # verify-travel is NOT a hook — it generates a whole project, so it runs alone, further down.
   # Named here because it is recalled by name there too: the two lines fall together or not at all.
   case "$s" in *verify-travel.sh) continue;; esac
-  # Second rhythm: each runs when ITS OWN target moved, and the two targets differ. verify-echo
-  # reads prose only. verify-growth reads prose AND scripts — its second half compares a script's
-  # comment growth against its code, so gating it on prose alone would blind it precisely on a
-  # commit that touches nothing but scripts, which is when it has something to say.
   case "$s" in
     *verify-echo.sh)          touched '\.md$' || continue;;
     *verify-growth.sh)        touched '\.md$' || continue;;
@@ -359,14 +287,14 @@ for s in checks/verify-*.sh; do
   esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
-  # `set +e` inside the subshell, and it is what makes the capture work at all: this file runs
-  # under `set -e`, which the subshell inherits, so a check exiting non-zero killed it BEFORE the
-  # .rc was written. A missing .rc then reads as "it never ran" — announced instead of the check's
-  # own error message, which stayed in the .out and was never printed. Every failure looked alike,
-  # and a real never-ran became indistinguishable from an ordinary red.
   # `EPOCHREALTIME` (bash 5) rather than `date +%s%3N`: that format is GNU, and BSD `date` returns
   # the literal `%3N` WITHOUT failing, so a `||` fallback never fires and every duration read zero.
   # No subprocess either — an instrument that costs a fork per measurement measures itself.
+
+  # `set +e` is what makes the capture work at all: this file runs under `set -e`, which the
+  # subshell inherits, so a check exiting non-zero killed it BEFORE the .rc was written. A missing
+  # .rc then reads as "it never ran", announced instead of the check's own error message — which
+  # stayed in the .out and was never printed, making every failure look alike.
   ( set +e
     _t0=${EPOCHREALTIME/./}
     "./$s" >"$PAR/$n.out" 2>&1; _rc=$?
@@ -399,6 +327,8 @@ if external && in_ci zizmor && [ -d .github/workflows ] && touched '^\.github/wo
   if timed "$CACHE/venv/bin/zizmor" --persona regular --config "$zconfig" .github/workflows/; then ok "zizmor"; else ko "zizmor"; fi
 fi
 
+# `full` only, for semgrep and osv below: their verdict comes from an EXTERNAL base queried online,
+# never from the tree, so a commit cannot make either say anything new. The rhythm is the matrix's.
 if in_ci semgrep && [ "$MODE" = full ]; then
   note "semgrep — the code (curated packs)"
   if timed "$CACHE/venv/bin/semgrep" scan --error --quiet --metrics=off --exclude=.github \
@@ -410,10 +340,8 @@ if in_ci osv-scanner && [ "$MODE" = full ]; then
   if timed "$CACHE/osv-scanner" scan source -r . --allow-no-lockfiles; then ok "osv"; else ko "osv"; fi
 fi
 
-# Scanning the whole history again at a constant binary version re-reads commits that already
-# answered. What has NOT been pushed is the part that can still hold something new, and that scope
-# costs the same on a repository of any size. It also sees a secret from a local commit whose file
-# has since been deleted, which scanning the last commit alone misses.
+# Scope is what's NOT pushed yet (flat cost whatever the repo's size) — and it catches a secret
+# from a local commit whose file has since been deleted, which scanning the last commit alone misses.
 if external && [ -n "$GITLEAKS_VERSION" ]; then
   upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
   if [ "$MODE" = commit ] && [ -n "$upstream" ]; then
@@ -442,12 +370,6 @@ if [ -x checks/verify-secret-blindspots.sh ]; then
   if reap verify-secret-blindspots; then ok "no secret in a blind spot"; else ko "secret in a blind spot"; fi
 fi
 
-# verify-growth.sh — the curated docs must breathe, not only inflate. Compared against
-# the last RELEASE, so the yardstick is the project's own history and not a number someone picked.
-# Both of these follow the second rhythm, so a commit touching no prose skips them. That skip is
-# announced as a SKIP: `reap` reports a missing capture as "it never ran", which is right when a
-# check should have run and wrong here — and a skip that reads like a breakage is how a real
-# breakage stops being noticed.
 if [ -x checks/verify-echo.sh ]; then
   note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
   if touched '\.md$'; then
@@ -469,7 +391,13 @@ if [ -x checks/verify-comment-drift.sh ]; then
   else echo "  (skipped — no .sh changed in this commit)"; skipped "verify-comment-drift" "no .sh changed"; fi
 fi
 
-# verify-changelog.sh — two thirds of the CHANGELOG rule are PATHS, so two thirds are mechanical.
+if [ -x checks/verify-dropped-comment.sh ]; then
+  note "verify-dropped-comment.sh — a comment block deleted with nowhere to say where it went"
+  if touched '\.sh$'; then
+    if reap verify-dropped-comment; then ok "deleted comments accounted for"; else ko "a comment block vanished"; fi
+  else echo "  (skipped — no .sh changed in this commit)"; skipped "verify-dropped-comment" "no .sh changed"; fi
+fi
+
 if [ -x checks/verify-changelog.sh ]; then
   note "verify-changelog.sh — a user-visible change with no CHANGELOG line"
   if reap verify-changelog; then ok "changelog"; else ko "changelog"; fi
@@ -526,8 +454,6 @@ if [ -x checks/verify-checks-wiring.sh ]; then
   if reap verify-checks-wiring; then ok "checks wired"; else ko "a check is not wired as declared"; fi
 fi
 
-# verify-travel.sh — same shape. It GENERATES a throwaway project (~1s) to read the paths from
-# where the files actually land: a grep of this tree cannot see a path that dies on landing.
 if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if timed ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
@@ -539,7 +465,6 @@ if [ -x checks/verify-version.sh ]; then
   if reap verify-version; then ok "version"; else ko "version"; fi
 fi
 
-# renovate-config-validator — whenever a renovate.json exists (beyond a project's CI: anti silent-freeze).
 renovate_files=()
 while IFS= read -r f; do renovate_files+=("$f"); done < <(
   find . -type f -name 'renovate.json' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
@@ -553,15 +478,11 @@ if external && [ "${#renovate_files[@]}" -gt 0 ] && touched 'renovate\.json$|^\.
   then ok "renovate configs valid"; else ko "renovate config invalid"; fi
 fi
 
-# verify-tone.sh — same shared-script model: the rule lives THERE, the CI calls the same file.
-# Copied into generated projects, where the rule applies just as much.
 if [ -x checks/verify-tone.sh ]; then
   note "verify-tone.sh — second person (standard §1)"
   if reap verify-tone; then ok "no second person"; else ko "second person in versioned content"; fi
 fi
 
-# verify-language.sh — the LANGUAGE, which the check above never looked at. Same shared-script
-# model, and it travels: a generated project publishes in English too.
 if [ -x checks/verify-language.sh ]; then
   note "verify-language.sh — French in published content"
   if reap verify-language; then ok "no French in published content"; else ko "French in published content"; fi

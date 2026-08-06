@@ -68,7 +68,7 @@ Everything else follows from that.
 
 ⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact** — why: [Without `staging`](#without-staging-github-flow-two-branches-are-enough) below.
 
-**The triple filter catches this kind of regression before it reaches prod** (cf. "Why 3 stages" below) — but only where a host to validate exists. Elsewhere, it would have filtered nothing.
+**Only where a host to validate exists** — elsewhere the triple filter would have filtered nothing. *(What it catches, and why: "Why 3 stages" below.)*
 
 **Git Flow is dead**: `nvie/gitflow` was **archived by its author on 2025-10-14**. Do not bring it back.
 
@@ -316,7 +316,7 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s**. Anything under 0,4 s does not show at all.
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,65 s** *(re-measured 2026-08-06, 3 runs: 3,63 / 3,68 / 3,63)*, a commit on a clean tree in 1,12 s, the full lot in 5,63 s. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
 > journal. `check.sh` writes every verdict it reaches to
@@ -378,6 +378,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,08 s | ✅ |
 | `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,18 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-comment-drift.sh` | a comment growing faster than its code, sitting above 25 %, or running past 6 lines | both | a `.sh` moved | ✅ | **needs watching** — drift compares PERCENTAGES, so it over-reports on a small file *(+134 % comment against +94 % code was 34 lines against 36)*. Level and block apply to TOUCHED files only | 0,53 s | ✅ |
+| `checks/verify-dropped-comment.sh` | a comment block of 5+ lines deleted while neither its `docs/code/` note nor a `drop:` declaration **naming that file** says where it went | both | a `.sh` moved | ✅ | **settled** — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8. A `drop:` covers only the files it names *(the blanket form was caught by the exception sweep, on this check's own first commit)* | 0,10 s | ✅ |
 | `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,34 s | ✅ |
 | `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 0,26 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,76 s | ✅ |
@@ -456,7 +457,7 @@ The split is not how long a check takes, it is **what has to change for it to sa
 | `.md` + `.sh` + a workflow | everything above | **5,43 s** |
 | `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,63 s** |
 
-**Parallelism absorbs, and the numbers say so**: the sixteen timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **2,82 s**. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
+**Parallelism absorbs, and the numbers say so**: the timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **3,65 s** *(both figures move as checks are added — the count is the table above, never a number written here)*. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
 
 > ⚠️ **`verify-travel` costs what it costs because it covers four toolchain/capability combinations instead of one** — `static`, `node`, `generic`, `static+all`, which is what the check itself names as it passes *(0,46 s → 1,77 s)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
 
@@ -696,6 +697,8 @@ A **public** identifier shaped like a secret (contract address `0x…`/`C…`/`G
 ## Acquiring a CAPABILITY on an already-live repo
 
 The repo keeps everything else: the category doesn't change, a capability is **ACQUIRED**. A Pages site that starts publishing an image **stays** a Pages site.
+
+🔴 **A capability is one of THREE, and the list is closed**: Pages site · published image · staging host. Adding a tool — a task tracker, a linter, a dependency — is **not** a capability and follows none of what is below.
 
 `init-project.sh` sets capabilities **at creation**. Here the repo already has history, rulesets, and required checks: the generator isn't rerun, capabilities are **added** — in the right order.
 

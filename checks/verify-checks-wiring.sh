@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# The checks are declared, and the DOOR that runs them is where it is supposed to be.
-#
-# 🔴 The failure this exists for is silent in every direction. A check nobody calls passes no gate,
-# and reads exactly like a check that found nothing. That has happened here more than once.
-#
-# What it compares has changed with the door itself. There used to be three hand-written lists
-# naming the checks one by one — the CI steps, the files init-project.sh copied, the table — and
-# keeping three lists agreeing was the whole job. There is now ONE line, `check.sh --house`, behind
-# which everything under checks/ runs. So the question is no longer "is each check in each list"
-# but "is the door there, in every workflow that gates a project".
-#
-# It travels, like every other check, and it works on both sides of that trip:
-#   · here, it sees the control table, the shipped workflow templates and the generator;
-#   · in a generated project, none of those exist — but its ci.yml does, and the door must be in it.
+# The checks are declared, and the DOOR that runs them is where it belongs. Why it is written this
+# way, and why it travels: docs/code/verify-checks-wiring.md
 # Each part states whether it had anything to look at. A part with no subject says so.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
@@ -61,11 +49,8 @@ else:
     unread.append(f"the control table ({TABLE} is this repository's own, absent here)")
 
 # ── 2. The hooks declare themselves, and the runner detects them ──────────────────────────────
-# A hook reads its payload from STDIN: started inside the parallel lot it competes for stdin with
-# every sibling, and hangs with no output. Which checks are hooks is written in ONE place — their
-# own header, `# hook: <event>` — so the runner detects rather than lists, and this compares the
-# detection against the declaration. It works in a generated project too, where the table is
-# absent: the headers are there, and so is the runner.
+# A hook reads STDIN: inside the parallel lot it competes for it with every sibling, and hangs.
+# Which checks are hooks lives in ONE place — their own `# hook: <event>` header.
 self_declared = {p.stem for p in pathlib.Path("checks").glob("verify-*.sh")
                  if re.search(r"^# hook: ", p.read_text(encoding="utf-8"), re.M)}
 if RUNNER.exists():
@@ -78,12 +63,9 @@ else:
     unread.append(f"the runner's hook detection (no {RUNNER} here)")
 
 # ── 2b. The runner READS BACK every verdict it starts ─────────────────────────────────────────
-# The parallel lot writes each check's exit code to a file, and a check with no `reap` line has
-# that file dropped on the floor: it runs, it is documented, it gates nothing, and every part
-# above still says "wired". A check can sit in the table AND behind the door AND be unread.
-# TWO shapes count as read, because there are two: the parallel lot is replayed through `reap`,
-# and whatever cannot join it — verify-travel generates a whole project — is invoked directly in
-# the condition of an `if`. Demanding `reap` alone accused the one check that is correctly wired.
+# A check with no `reap` line has its exit code dropped on the floor, while every part above still
+# says "wired". TWO shapes count as read: `reap`, and a direct call in an `if` condition — the
+# second exists because verify-travel generates a whole project and cannot join the parallel lot.
 if RUNNER.exists():
     non_hooks = {p.stem for p in pathlib.Path("checks").glob("verify-*.sh")} - self_declared
     # 🔴 The `./` is the whole discriminator, and leaving it out made this guard pass on the very
@@ -110,13 +92,8 @@ if declared:
         bad.append(f"{n}.sh declares itself a hook, but {TABLE} does not say so")
 
     # ── What each check says it does with a verdict, against what the table publishes ──────────
-    # Same shape as the hook comparison above, for the same reason: two statements of one fact, so
-    # they get compared. Three checks disagreed with themselves about blocking and nothing noticed
-    # — two of them announced ADVISORY in their header for a day after being made blocking.
-    # This catches the pair that DECLARE differently. The case where the code contradicts both is
-    # check.sh's, at the moment the exit code exists — neither reading replaces the other.
-    # Hooks are out: their column says `n/a` because check.sh renders no verdict for them, which
-    # answers a different question than whether they refuse anything.
+    # Two statements of one fact, so they get compared. Hooks are out: their column says `n/a`.
+    # (docs/code/verify-checks-wiring.md)
     for n in sorted(set(declared) - table_hooks):
         p = pathlib.Path("checks") / f"{n}.sh"
         if not p.exists():
@@ -142,7 +119,9 @@ gates = sorted(pathlib.Path(".github/workflows").glob("ci*.yml")) if pathlib.Pat
 gates += sorted(pathlib.Path("templates/workflows").glob("ci-*.yml")) if pathlib.Path("templates/workflows").is_dir() else []
 if gates:
     for g in gates:
-        if DOOR not in g.read_text(encoding="utf-8"):
+        # CODE lines only, as in section 2b: a door merely NAMED in a comment leaves the gate shut.
+        gcode = [l for l in g.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith("#")]
+        if not any(DOOR in l for l in gcode):
             bad.append(f"{g} runs no `{DOOR}` — the checks it should gate would ship and never run")
     read.append(f"{len(gates)} gating workflow(s): {', '.join(str(g) for g in gates)}")
 else:

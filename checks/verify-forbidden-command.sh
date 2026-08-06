@@ -1,24 +1,10 @@
 #!/usr/bin/env bash
 # hook: PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# A PreToolUse hook on Bash: the commands this repo forbids, refused BEFORE they run.
-#
-# Each rule below is refused only because its verdict is MECHANICAL — a literal string, present or
-# absent. That is the same test `verify-delegation.sh` states: no model judges anything here, so
-# blocking is safe. A rule whose verdict depends on context is a WARNING instead, never a block: a
-# guard wrong even one time in three teaches its own bypass, and the bypass then disarms the rules
-# that were right.
-#
-# What NOT to add here: anything that has never actually happened. Measured over 4489 commands
-# really executed across this project's 47 sessions, `gh pr merge --admin` occurred zero times.
-# A rule that never bites costs maintenance and protects nothing, while every extra rule is another
-# chance to be wrong — of roughly six guards written in a single day, three were green and blind on
-# first writing.
-#
-# ⚠ Heredocs are stripped before matching, and that is not a detail: the very measurements that
-#   sized these rules were shell commands CONTAINING these strings inside a heredoc. A naive match
-#   would have blocked the work that justified it.
-#
+# A PreToolUse hook on Bash: the commands this repo forbids, refused BEFORE they run — only when the
+# verdict is MECHANICAL. Why that is safe, what was measured, and a 4th rule tried and dropped:
+# verify-forbidden-command.md.
+
 # Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 #   "hooks": { "PreToolUse": [ { "matcher": "Bash",
 #     "hooks": [ { "type": "command", "command": "<abs>/verify-forbidden-command.sh" } ] } ] }
@@ -29,15 +15,8 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# The journal, if it is on. A hook is the most fragile gate there is: it lives in a LOCAL settings
-# file outside every repository, and one that stops being declared simply never fires — no error,
-# no output, no trace. Recording the firing is the only way an indicator can tell "this gate works"
-# from "this gate is gone", and check.sh cannot do it: it never runs the hooks.
-#
-# 🔴 Two properties this needs, and neither is decorative: ANCHORED TO THE SCRIPT, never to the
-# working directory — a hook fires wherever the session sits, and a relative path drops every
-# firing from elsewhere in silence. And THE VERDICT, not merely the firing: a `0` written before
-# the analysis answers "did the gate fire", never "did it bite".
+# The journal, if it is on — a hook lives in a LOCAL settings file, so nothing versioned proves it
+# ran; why it must be anchored to the script and record the VERDICT: verify-turn-claims.md.
 JOURNAL_NAME="forbidden-command (before run)"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PROJECT="$(basename "$(dirname "$REPO")")/$(basename "$REPO")"
@@ -110,18 +89,8 @@ BLOCK = [
      "`gh run list --commit \"$sha\" --json workflowName,status,conclusion` — and treat a MISSING "
      "workflow as not green. AGENTS.md."),
 ]
-# ⚠ THE "second pull request on the same undertaking" RULE WAS REMOVED FROM HERE, after three forms
-# were tried and each ruled out. It stays a convention in AGENTS.md; it stops pretending to guard.
-#   · BLOCK — ruled out by measurement: the signal cannot separate a fault from a legitimate stage.
-#     #94, #95 and #96 score highest and are the assumed steps of ONE undertaking, so it would refuse
-#     correct work. The overlap ratio also misleads on small diffs, and bot batches open six at once.
-#   · A MESSAGE — ruled out by observation: it fired when #109 was opened and changed nothing, not
-#     even a mention. A notice nobody acts on is worse than none — it looks like a guard.
-#   · ASK the maintainer — ruled out by the maintainer: escalation is a LAST RESORT, never routine.
-#     Asking at every opening adds a decision to the person who wanted fewer of them.
-# Nothing viable was left, and this file's own rule is that a verdict which is neither mechanical nor
-# affordable does not belong in it. The cost named afterwards is the full open+merge CYCLE (48% of
-# pull requests carry a single commit) — a grouping discipline upstream, not a gate at opening time.
+# ⚠ A 4th rule — a SECOND pull request on the same undertaking — was tried three ways and dropped,
+# each ruled out by measurement or observation, not by taste: verify-forbidden-command.md.
 for tag, pattern, reason in BLOCK:
     if re.search(pattern, cmd, re.I):
         record(1, "denied: " + tag)

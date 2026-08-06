@@ -1,37 +1,7 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
-# A path that resolves HERE but not where the file LANDS.
-#
-# Several files travel into every generated project — check.sh, verify-tone.sh, everything under
-# templates/. A path written in one of them is read by whoever has THAT copy in front of them, in a
-# project that holds neither docs/ nor templates/.
-#
-# ⚠ A grep of the tree cannot see this. It proves no file NAMES a deleted doc; it is blind to a
-#   path that stays written and simply resolves nowhere once it has travelled.
-#   (That blindness cost two fixes — see workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md.)
-#
-# So the only way to see it is to GENERATE a project and read the paths from THERE.
-#
-# The signal is a DIFFERENTIAL, and that is what keeps it quiet: a path is reported only when it
-# resolves in the template AND fails in the generated project. A generic pattern (docs/X.md), a
-# naming example (docs/adr/0001-short-title.md) or a URL resolves in neither, so none of them shows
-# up. Measured: 0 reported on a healthy state, 1 on the real defect.
-#
-# 🔴 ONE GENERATION IS NOT ENOUGH, and for two opposite reasons.
-#   · Because the signal is a differential, the POOREST tree is the harshest: `generic` ships no
-#     capability at all, so a path that survives everywhere else dies there.
-#   · And a capability brings FILES OF ITS OWN — pages.yml, docker-publish.yml — whose paths are
-#     read by nobody unless a variant carrying them is generated.
-#   This is not combinatorics: what has to be covered is the set of files that can LAND, not the
-#   set of flag combinations. One generation per toolchain, plus one carrying every capability at
-#   once, is what reaches every file.
-#   (What a single `--type node` run left unread — see workspace/archives/2026-08-audit-des-controles/SYNTHESE.md.)
-#
-# To declare a path deliberately absent from a generated project, TEST it — `[ -f x ]`, `[ -x x ]`.
-# A file that checks a path's existence knows it may be missing, and this script honours that.
-#
-# Usage:
-#   ./verify-travel.sh          # generates the variants, compares, cleans up; exits 1 on a find
+# A path that resolves here but not where a generated project lands — why a grep of the tree can't
+# see it, the measured differential, and why one generation isn't enough: verify-travel.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 
@@ -42,17 +12,14 @@ fi
 
 command -v python3 >/dev/null 2>&1 || { echo "python3 absent — skipped"; exit 0; }
 
-# Its subject is the GENERATOR, which a generated project does not hold. Said out loud rather than
-# by a silent exit: without it the two reads below come back empty, and empty is what they FAIL on.
+# Its subject is the generator, which a generated project does not hold — said out loud, not a silent exit.
 if [ ! -f init-project.sh ]; then
   echo "  (no init-project.sh here — nothing generates projects from this repository, nothing to check)"
   exit 0
 fi
 
-# The toolchains and the capabilities are READ from init-project.sh, never listed here: the `case`
-# that VALIDATES --type is what decides them, so one added there is covered the day it is accepted.
-# 🔴 An empty read FAILS the check rather than skipping it — zero variants would generate nothing,
-# find nothing, and print a tick, which is exactly how a guard goes green and blind.
+# Read from init-project.sh's own `case`, never listed here (why: verify-travel.md).
+# An empty read FAILS rather than skips — zero variants would find nothing and print a tick.
 types=$(sed -n 's/^case "\$TYPE" in \([a-z|]*\)).*/\1/p' init-project.sh | head -1 | tr '|' ' ')
 caps=$(grep -oE '^[[:space:]]+--[a-z]+\)[[:space:]]+[A-Z]+=1;' init-project.sh \
        | grep -oE '\-\-[a-z]+' | sort -u | tr '\n' ' ')
@@ -70,10 +37,8 @@ trap 'rm -rf "$tmp"' EXIT
 gens=()
 for v in "${VARIANTS[@]}"; do
   label="${v%%|*}"; args="${v#*|}"
-  # stdout is muted on purpose HERE and nowhere else: what matters is the generated tree, and
-  # init-project.sh prints the whole next-steps guide. Its errors stay on stderr and stay visible.
-  # The variant is NAMED in the failure: a generation that dies without saying which combination
-  # died is the "a failing check does not say why" defect, one level up.
+  # stdout muted here only (init-project.sh's next-steps guide; errors stay on stderr) — the
+  # variant is NAMED in the failure below, so a dead generation still says which one (why: verify-travel.md).
   # shellcheck disable=SC2086  # $args is a flag list, word splitting is what makes it one
   if ! ./init-project.sh travelprobe actarus314/travelprobe "$tmp/$label" $args >/dev/null; then
     echo "✗ generation failed for variant '$label' ($args) — cannot check travelling paths" >&2
@@ -92,9 +57,8 @@ LOOSE = re.compile(r"[A-Za-z0-9_./-]+\.(?:" + EXT + r")")
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 norm = lambda p: p[2:] if p.startswith("./") else p
 
-# Keyed by (file, path): the same dead path in one file is ONE defect however many variants show
-# it, while the same path in two files is two. The variants that saw it are listed with it —
-# a path dying only under `generic` is a different fact from one dying everywhere.
+# Keyed by (file, path): the same dead path in one file is ONE defect, listed with every variant
+# that saw it (why this shape: verify-travel.md).
 hits = {}
 for label, gendir in gens:
     gen = pathlib.Path(gendir)
@@ -103,9 +67,8 @@ for label, gendir in gens:
             text = g.read_text()
         except (UnicodeDecodeError, OSError):
             continue
-        # A file that TESTS a path knows it may be missing, and this honours that claim: a shell
-        # test (negated or not), a Python existence test, or a literal bound to a name tested
-        # elsewhere. Requiring test and literal on ONE line reported three checks that guard fine.
+        # A file that TESTS a path knows it may be missing: a shell test (negated or not), a
+        # Python existence test, or a literal bound to a name tested elsewhere (why: verify-travel.md).
         guarded = {norm(p) for line in text.splitlines()
                    if re.search(r"\[\s+!?\s*-[fxeds]\s|\.(?:exists|is_file|is_dir)\(\)", line)
                    for p in LOOSE.findall(line)}
@@ -116,9 +79,7 @@ for label, gendir in gens:
             assign = re.compile(r'\b(?:' + names + r')\s*=\s*(?:pathlib\.Path\()?["\']?'
                                 r'([A-Za-z0-9_./-]+\.(?:' + EXT + r'))')
             guarded |= {norm(m) for m in assign.findall(text)}
-        # Testing the FOLDER guards everything under it: `[ -d templates/repo ]` is exactly how a
-        # file says "these paths belong to a place that may not be here", and it is a stronger
-        # statement than testing each one, not a weaker one.
+        # Testing the FOLDER guards everything under it — a stronger statement than testing each path.
         guarded_dirs = {d.rstrip("/") for d in
                         re.findall(r'\[\s+!?\s*-d\s+"?([A-Za-z0-9_./-]+)', text)}
         for m in sorted({norm(p) for p in PATH.findall(text)} - guarded):

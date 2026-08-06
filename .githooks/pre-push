@@ -1,22 +1,7 @@
 #!/usr/bin/env bash
-# Refuses a direct push to a protected branch (main, develop).
-#
-# WHY THIS EXISTS — on a PRIVATE repository under a Free plan, GitHub provides NO rulesets.
-# Nothing on the server requires a pull request, and nothing forbids pushing straight to main.
-# Every CI check still runs, but NONE of them is required: a red pull request can be merged,
-# and main can be written to directly. This hook is the ONLY thing standing there.
-#
-# It is not theoretical: a direct push to main has already shipped a broken compose directive to a
-# production host, after :latest had been pulled. A pull request would have shown the diff. This
-# hook is that missed guardrail, brought back to the one place that still works while the
-# repository is private: the developer's machine.
-#
-# Kept active even once the repo is public, where the server-side ruleset refuses the same push:
-# defence in depth, and the local message is far clearer than a remote rejection.
-#
-# Enabled by `git config core.hooksPath .githooks` (done by init-project.sh; a fresh clone must
-# run it once). Bypassable with `git push --no-verify` — deliberately: it must remain possible
-# to repair an emergency. Bypassing is a decision, not an accident.
+# Refuses a direct push to a protected branch (main, develop) — the local substitute while no
+# server-side ruleset exists. Bypassable with `git push --no-verify`, deliberately: a decision,
+# not an accident.
 set -euo pipefail
 
 # The version, so the sweep that compares them all can see this one too.
@@ -34,8 +19,7 @@ while read -r _local_ref _local_sha remote_ref remote_sha; do
   [ -n "${remote_ref:-}" ] || continue
   branch="${remote_ref#refs/heads/}"
 
-  # The branch does not exist on the remote yet => this is its CREATION (the very first push
-  # of a new repository). Refusing it would make the repo impossible to initialise.
+  # Zero sha => branch doesn't exist on the remote yet (first push of a new repo).
   [ "$remote_sha" = "$ZERO" ] && continue
 
   for p in $PROTECTED; do

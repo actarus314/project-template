@@ -103,4 +103,13 @@ else
 fi
 
 [ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope"
+if [ "$grown" != 0 ]; then
+  cat >&2 <<'MSG'
+  Prune the WHOLE document, not only what this branch added: the newest section is rarely the
+  fattest, and trimming that alone leaves the new part thin and the old part fat.
+  Each cut is one of two decisions, and they are not the same: what should never have been written
+  here is DELETED outright; what earns its keep MOVES to the file that owns it — rewritten if the
+  new home calls for it. Neither is the default: the choice is made per passage.
+MSG
+fi
 exit "$grown"   # blocking: same reason

@@ -2,17 +2,9 @@
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The memories: index complete, no broken [[link]], no index entry pointing nowhere.
 #
-# 🔴 Memories are the SIXTH place a fact can live, and the ONLY one with no Git structure: no diff
-# shows them, no CI sees them, so they rot unnoticed. A memory absent from the index is NEVER
-# recalled — it exists and does nothing. A broken [[link]] is reported by nothing at all.
-#
-# They live OUTSIDE the repo, under ~/.claude/projects/<slug>/memory/, where <slug> is the project's
-# absolute path with every / turned into a dash. So this check is
-# LOCAL-ONLY by nature: the CI has no memories to look at, and that is not a gap.
-#
-# No-op when the folder does not exist — most projects have none — but a SPOKEN one: the caller
-# printed "✓ memories" over a run that had read nothing at all, which is the exact shape of tick
-# this repository arms itself against.
+# LOCAL-ONLY by nature — they live outside the repo, under ~/.claude/projects/<slug>/memory/, where
+# <slug> is the project's absolute path with every / turned into a dash. Why that matters more than
+# it looks, and the tick this script refuses to print for free: verify-memories.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
 

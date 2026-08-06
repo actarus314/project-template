@@ -93,7 +93,7 @@ Three things to distinguish clearly:
 | | `repo/` | `workspace/` |
 |---|---|---|
 | **Content** | the app: what's needed to clone, build, run | the memory: tracking, decisions, plans, archives |
-| **Remote** | ✅ GitHub *(private or public)* | ❌ **none — never pushed** |
+| **Remote** | ✅ GitHub — **PRIVATE at creation**, public later and deliberately *(RUNBOOK §1, §4)* | ❌ **none — never pushed** |
 | **Claude Code's cwd** | ✅ | — *(reached via `../workspace/`)* |
 | **Off-site backup** | GitHub | the working folder's **NAS backup** |
 

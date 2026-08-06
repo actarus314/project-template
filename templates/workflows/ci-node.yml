@@ -1,5 +1,4 @@
-# Installed as .github/workflows/ci.yml by `init-project.sh --type node`. Job name MUST stay
-# `checks` (the ruleset requires it).
+# Installed as .github/workflows/ci.yml by `init-project.sh --type node`.
 # ⚠ That also rules out a `strategy.matrix` on this job: a matrix renames the check to
 # `checks (backend)`, `checks (frontend)`… so the name the ruleset waits for NEVER reports, and
 # every pull request sits forever on "Expected — waiting for status". To cover several
@@ -30,14 +29,10 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      # Blocks a vulnerable/badly-licensed dependency BEFORE the merge. Dependabot only alerts
-      # AFTER it has landed on the default branch — the two are complementary, not redundant.
-      # Requires the dependency graph, which on a PRIVATE repo needs GitHub Advanced Security:
-      # "Dependency review is not supported on this repository" — it would fail on EVERY pull
-      # request for the whole private phase (i.e. the whole development), and a permanently red CI
-      # stops being read. Same gate, same treatment as CodeQL and Pages: skipped while private,
-      # wakes up on its own once the repo goes public.
-      # `!= 'private'` (never `== 'public'`): a missing field means RUN, never "silently off".
+      # Requires the dependency graph, unavailable on a private repo without GitHub Advanced
+      # Security ("Dependency review is not supported on this repository"). Guarded `!= 'private'`
+      # (never `== 'public'`): a missing field must RUN the step, not silently skip it. Skipped
+      # while private, wakes up on its own at the public flip.
       - name: Dependency review (PR only, public repo only)
         if: github.event_name == 'pull_request' && github.event.repository.visibility != 'private'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
@@ -46,9 +41,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      # A freshly scaffolded repo has no package.json yet. A REQUIRED check that cannot possibly
-      # pass on the scaffold is a structural red — the very thing that makes a CI stop being read.
-      # These steps wake up on their own as soon as the manifest exists.
+      # A freshly scaffolded repo has no package.json yet — a REQUIRED check that can't pass here
+      # would be a structural red. These steps wake up on their own as soon as the manifest exists.
       - name: No package.json yet (scaffolded repo)
         if: hashFiles('package.json') == ''
         run: echo "No package.json yet — nothing to check. These steps activate once it exists."
@@ -58,13 +52,11 @@ jobs:
         if: hashFiles('package.json') != ''
       - run: npm run typecheck
         if: hashFiles('package.json') != ''
-      # The guards above are ROOT-ONLY, and that is a trap on any repo whose manifests live in
-      # subdirectories (a monorepo, or just backend/ + frontend/). There, `hashFiles('package.json')`
-      # is empty, all three steps are SKIPPED — and the job goes GREEN having installed, tested and
-      # compiled nothing. A CI that reports success without running is worse than no CI: it is read
-      # as a pass. So the scaffold guard stays (a fresh repo must not go red), but the SILENCE does
-      # not: this step turns it into a red that says what to do. Delete it once the steps above are
-      # replaced by the workspaces this repo actually has (one `npm ci --prefix <dir>` per workspace).
+      # The guards above are ROOT-ONLY: on a monorepo (backend/ + frontend/), `hashFiles('package.json')`
+      # is empty, all three steps SKIP, and the job goes GREEN having installed, tested and compiled
+      # nothing — worse than no CI, since it reads as a pass. The scaffold guard stays (a fresh repo
+      # must not go red), but the SILENCE doesn't: the step below turns it red. Delete it once the
+      # steps above are replaced by this repo's real workspaces (`npm ci --prefix <dir>` per workspace).
       - name: Refuse to pass silently when the npm steps were skipped
         run: |
           set -euo pipefail
@@ -75,11 +67,10 @@ jobs:
             echo "::error::Replace them with the workspaces this repo has, e.g. 'for w in backend frontend; do npm ci --prefix \$w; npm run build --prefix \$w; done'."
             exit 1
           fi
-      # No `npm audit` here, and that is deliberate. It was a STRICT SUBSET of the osv-scanner step
-      # further down: same advisory database (npm audit has been powered by the GitHub Advisory
-      # Database since 2021; OSV aggregates GHSA too), same lockfile, same job, same moment — and
-      # `--omit=dev` made it narrower still. A second scanner that finds a subset of the first
-      # adds no signal; it only adds a step to maintain, and a false sense of depth.
+      # No `npm audit` here, deliberately: it's a STRICT SUBSET of osv-scanner below — same advisory
+      # database (npm audit runs on the GitHub Advisory Database since 2021; OSV aggregates GHSA
+      # too), same lockfile, same job, `--omit=dev` narrower still. A subset scanner adds no signal,
+      # only upkeep.
       - name: Install gitleaks (pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -101,37 +92,6 @@ jobs:
           echo "${ACTIONLINT_SHA256}  ${f}" | sha256sum -c -
           tar -xzf "$f" actionlint
           ./actionlint -color
-      # Semgrep + osv-scanner — why BOTH, and what each one ACTUALLY does.
-      #
-      # semgrep = the ONLY static analysis of the CODE that runs while PRIVATE. CodeQL is barred
-      #   there by LICENCE (not by a technical limit), and a repository spends its whole youth
-      #   private: without semgrep the code is NEVER analysed until the flip, where CodeQL then
-      #   dumps the entire backlog at once.
-      #   ⚠ Do NOT write "semgrep catches what CodeQL misses". That is the comfortable line, and
-      #     NOTHING backs it. Semgrep CE is intra-file AND intra-function — inter-procedural
-      #     dataflow lives in the paid Pro edition — where CodeQL does cross-file dataflow. semgrep
-      #     PRECEDES CodeQL, it does not surpass it. It is kept for the PRIVATE PHASE: that reason
-      #     is sufficient on its own, and a false one added on top helps nobody.
-      #
-      # osv-scanner = the pre-merge dependency GATE.
-      #   ⚠ Do NOT write "nothing else sees vulnerabilities while private": Dependabot ALERTS does
-      #     work on a private repository, for free. But it alerts AFTER THE FACT, on the default
-      #     branch — once the code is ALREADY in. osv-scanner BLOCKS THE PULL REQUEST. A different
-      #     role, not a duplicate. (`dependency-review` is the NATIVE gate — but it requires a
-      #     public repository, or GHAS.)
-      #
-      # --exclude=.github: the workflows have their own linters (actionlint + zizmor), which enforce
-      #   THIS REPOSITORY'S PINNING POLICY (SHA for third-party actions, a major tag tolerated for
-      #   actions/* and github/* — compromising those means compromising GitHub itself). semgrep's
-      #   workflow rules CONTRADICT that policy and would fail every scaffold on day one.
-      #   ⚠ Do NOT write "one scope each, no overlap": that has been FALSE since April 2025. CodeQL
-      #     now analyses the `actions` language (GA, and ACTIVE IN DEFAULT SETUP, no opt-in): its
-      #     default suite already covers most of what zizmor does — code-injection, artifact/cache
-      #     poisoning, untrusted-checkout, exposed secrets, missing-workflow-permissions. THE
-      #     OVERLAP IS REAL. What zizmor keeps ON ITS OWN, and what justifies keeping it: this
-      #     repository's pinning policy (`zizmor.yml`) — the CodeQL `unpinned-tag` query sits in
-      #     security-extended, NOT in default — plus artipacked (persist-credentials),
-      #     impostor-commit, ref-confusion, typosquat-uses.
       - name: Static analysis (semgrep, pinned)
         run: |
           set -euo pipefail
@@ -140,8 +100,6 @@ jobs:
             --config p/security-audit --config p/owasp-top-ten .
       # osv-scanner auto-discovers every lockfile/manifest (`-r .`), not just package-lock.json;
       # `--allow-no-lockfiles` keeps it green if none are present. No guard: always runs and reports.
-      # One exception, and it is NOT a hand-kept list: CI-only tooling (requirements-ci.txt) is
-      # subtracted in .gitignore, which osv honours — see that file for why (dev tools, never shipped).
       - name: Vulnerable dependencies (osv-scanner, pinned + checksum-verified)
         run: |
           set -euo pipefail
@@ -150,18 +108,20 @@ jobs:
           echo "${OSV_SHA256}  osv-scanner" | sha256sum -c -
           chmod +x osv-scanner
           ./osv-scanner scan source -r . --allow-no-lockfiles
+      # zizmor overlaps CodeQL's `actions` language (GA since Apr 2025, on by default) for code-
+      # injection, artifact/cache poisoning, untrusted-checkout, exposed secrets, missing-permissions.
+      # What zizmor keeps ON ITS OWN: this repo's SHA-pinning policy (CodeQL's unpinned-tag query
+      # needs security-extended, not default) + artipacked, impostor-commit, ref-confusion, typosquat.
       - name: Audit workflows (zizmor)
         run: |
           set -euo pipefail
           python3 -m pip install --quiet -r requirements-ci.txt
           zizmor --persona regular --config .github/zizmor.yml .github/workflows/
-      # Shell is the one language every project holds whatever its toolchain: the hooks, check.sh,
-      # open-pr.sh and everything under checks/. It was the only control this template ran on itself
-      # and shipped to nobody — a shell bug committed here was blocked, and in a generated project
-      # it went through in silence, locally AND on the server.
-      # Targets are FOUND, never listed: a forgotten one is a silent hole. `shellcheck` is
-      # preinstalled on the runner. Adding this step also arms it LOCALLY: check.sh reads this file
-      # to decide what to replay, so the same line covers both sides.
+      # Shell is the one language every project holds regardless of toolchain (hooks, check.sh,
+      # open-pr.sh, checks/). It was the only control this template ran on itself and shipped to
+      # nobody: a shell bug committed here was blocked, but in a generated project it went through
+      # in silence, locally AND on the server. Targets are FOUND, never listed: a forgotten one is
+      # a silent hole.
       - name: shellcheck the scripts and the hooks (preinstalled on the runner)
         run: |
           mapfile -t targets < <(find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
@@ -169,12 +129,7 @@ jobs:
           if [ "${#targets[@]}" -eq 0 ]; then echo "no shell here"; exit 0; fi
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"
-      # ── The house checks — the rules this project arms itself ──────────────────────────────────
-      # ONE line, and everything under checks/ runs behind it. A check added to the project means
-      # a file dropped in; there is no workflow to edit here, in any project.
-      # Each check DETECTS whether its subject exists here: present, it bites; absent, it says so
-      # and returns 0 — so this step is the same in every toolchain, and stays right as they grow.
-      # It runs the house checks ONLY: gitleaks, semgrep, osv-scanner, actionlint and zizmor are the
-      # steps above, at the versions this file pins and checksums.
+      # House checks ONLY — gitleaks, semgrep, osv-scanner, actionlint and zizmor are the pinned
+      # steps above; `checks/verify-*.sh` is everything this project adds for itself.
       - name: House checks (checks/verify-*.sh, via check.sh --house)
         run: ./check.sh --house

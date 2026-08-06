@@ -22,6 +22,49 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
+  block of 5+ lines removed from a script, which of two decisions was made: it should never have been
+  written there — then a `drop:` line in a commit message says so — or it is worth keeping, and it
+  moves into `docs/code/<name>.md`. **Neither is the default**, which is the whole point: a comment
+  repeating the documentation should leave no trace, a measurement should survive somewhere.
+  🔴 **The threshold was measured before being set**: over 40 commits, blocks of that size were
+  deleted 24 times, **19 alongside their own note and 5 without** — so the declaration is asked for
+  on roughly **one commit in eight**. And a `drop:` covers **only the files it NAMES**: the first
+  version let one blanket line clear an entire branch, a maximal-scope exception hidden inside a
+  minimal-scope mechanism — caught by an exception sweep the day it was written, on its own first
+  commit *(one declaration, 19 blocks passed)*.
+  ⚠️ It judges **commits, never the working tree**: a `pre-commit` hook cannot read the message of
+  the commit being made *(verified — `COMMIT_EDITMSG` does not exist yet at that point)*, so reading
+  the working tree would refuse a declaration that was correctly written.
+
+### Fixed
+- **Four facts the documentation stated and that were no longer true**, each re-measured rather than
+  reasoned about: `AGENTS.md` described the repo as **private** while it has been public since
+  2026-07-31, with two active rulesets · `README.md` listed `verify-version.sh` among the root tools
+  although it moved under `checks/` on 2026-08-04 · `repo-controls.md` announced a gate at **2,82 s**
+  where three consecutive runs give **3,65 s**, and *"sixteen"* timed checks where the table above it
+  lists more — that count is now stated as belonging to the table, so it cannot drift again ·
+  `README.md` showed `init-project.sh <owner>/<repo>` without saying the **GitHub repo must already
+  exist**, created by hand and PRIVATE, which the command alone suggested otherwise.
+- **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
+  unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
+  dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
+  tracking doc records for a real repository. What was missing was its entry in the RUNBOOK, not the
+  file. *(A mechanically correct "orphan" verdict, with the wrong conclusion.)*
+
+- **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
+  `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
+  `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact
+  silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
+  reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
+  requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
+- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A `# tone-self` or
+  `# fr-pattern` marker exempts its line **anywhere in the tree** — bound to no file and no line,
+  which is what makes it precise enough to mark a single line, and invisible enough to spread. The
+  verdict now counts them out loud, as `verify-language.sh` already did for its own skipped lines.
+  **10 lines are exempted today**; a number that grows can be noticed, an unwritten one cannot.
+
+### Added
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
   is not, and this answers it instead of assuming. It records every opening as *with* or *WITHOUT* an

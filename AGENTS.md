@@ -13,7 +13,7 @@ This repo **builds and configures** projects, never one itself — what it is (a
 
 | | Remote | Content |
 |---|---|---|
-| **`repo/`** *(the cwd)* | → GitHub **private** — `actarus314/project-template` | the tools, `templates/`, `docs/`, `skills/` |
+| **`repo/`** *(the cwd)* | → GitHub **public since 2026-07-31** — `actarus314/project-template` | the tools, `templates/`, `docs/`, `skills/` |
 | **`../workspace/`** | ❌ **none — never pushed** | the tracking, the archives, the research |
 
 **`skills/new-project/` is the CANONICAL version of the skill**, and `~/.claude/skills/new-project` is a **symlink** to it.
@@ -39,14 +39,14 @@ It sits at the **root**, never under `templates/` — and **not** because `init-
 
 `check.sh` reads the pinned versions in `ci.yml` *(single source)*, pulls the binaries under `.ci-tools/` *(gitignored)* and replays **everything the CI runs**: shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus **two deliberate additions**: validation of any `renovate.json` present *(local-only — it catches the silent freeze of updates on a broken config)*, and the **house checks** under `checks/`. It is **auto-detecting** *(it reads the repo's `ci.yml` and runs ONLY what's found there)*, so the **same** file serves this repo AND every generated project.
 
-🔴 **`./check.sh --house` is the CI's door** — the house checks and nothing else, since the CI pins and runs the external tools itself. **One line, in every gating workflow**, so a check added to `checks/` is gated everywhere with no workflow to edit; `verify-checks-wiring.sh` fails the build if that line ever leaves one. What passes locally passes the CI — but **the CI remains the authority**. *(Why one line and never a list — and which workflows carry it: [`docs/repo-controls.md`](docs/repo-controls.md).)*
+🔴 **`./check.sh --house` is the CI's door** — the house checks and nothing else, since the CI pins and runs the external tools itself. **One line, in every gating workflow**, and `verify-checks-wiring.sh` fails the build if it ever leaves one. What passes locally passes the CI — but **the CI remains the authority**. *(Why one line and never a list — and which workflows carry it: [`docs/repo-controls.md`](docs/repo-controls.md).)*
 
 The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a gap** *(gitleaks on staged files was already blocking)*. Escape hatch: `git commit --no-verify`, a decision, not an accident.
 **The three rhythms — what triggers each, what runs in it, what it costs, and how to stretch the longest one — live in [`docs/repo-controls.md`](docs/repo-controls.md), and nowhere else.** They were once written out here too, with a duration that had drifted to less than half the measured one.
 
 ## Discipline — PR-only
 
-**`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it *(it stands in for the ruleset, absent as long as the repo is private)*.
+**`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it, and since the public flip the **ruleset** refuses it server-side too. *(Which of the two actually blocks, and what a still-private generated project has instead: [`repo-controls.md`](docs/repo-controls.md).)*
 
 - 🔴 **Open a pull request only on an instruction to open one, and NAME that instruction when doing it** —
   quote the words that authorise it, the way a merge quotes the green it relies on. Pushing needs no
@@ -61,6 +61,7 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
   gh run list --commit "$sha" --json workflowName,status,conclusion
   ```
   **Green ⇔ every expected workflow is `completed/success`**: `CI`, **+ `Publish image`** if `docker-publish.yml` exists *(the same set as the ruleset's required checks, derived the same way — so the human barrier used while private and the server that replaces it at the public flip say exactly the same thing)*. A workflow **missing** from the list is **not** a green: GitHub registers workflows **one by one** after a push, so for a few seconds `CI` can be `success` while `Publish image` does not exist yet. *"Nothing red" and "everything green" are not the same claim.*
+  ⚠️ **This green is the MERGE criterion, and nothing more.** In particular it says nothing about a published artefact being usable: a green `Publish image` can leave the ghcr package **private and unpullable** — only an anonymous pull proves otherwise *(RUNBOOK §3)*. Measured 2026-08-06: read alone, this paragraph led to the conclusion that everything green meant the image was ready.
 - **After the merge, also verify the `push` run on `main`** — a different event, so a different run: the PR's green says nothing about that one, and `main` is what counts.
   🔴 **`--commit` does NOT find this run — filter by BRANCH.** On a SHA born from a merge, `gh run list --commit <sha>` returns **0 runs**, while `--branch main` returns the `CI [push]` run carrying **exactly this `headSha`**, green. The `--commit` filter works on `pull_request` runs — hence the command above, which stays correct. Run as-is after a merge, it returns "0 runs": **the exact pattern this file teaches to read as a dispatch failure.**
   ```bash
