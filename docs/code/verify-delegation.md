@@ -34,13 +34,19 @@ stderr and returns 0. Refusing would block a legitimate call over a file it cann
 silent would let it read as checked. This is the same shape as the neighbouring guards' `NOT read:`
 lines.
 
-## What is NOT proven here
+## Measured in flight, both halves
 
-The `Agent` payload was measured in flight. The **`Workflow` payload was not**: its field names
-(`script`, `scriptPath`, `name`) come from the tool's own schema, and the code was exercised against
-hand-built events — bite and silence both — not against a real launch. If the envelope differs, the
-hook does not block: an unreadable or unexpected payload returns 0, which is the failure a guard is
-allowed to have.
+`PreToolUse` does fire on `Workflow`, and the event carries the script under `script`: a probe
+workflow with one bare `agent()` call was **refused**, its verdict naming the call count it had
+read; a compliant one ran and returned. Bite and silence, on real launches, not on hand-built
+events.
+
+That probe also produced the reason the `meta` block is stripped: it was **described** as being
+about the delegation hook, and that word alone — in a description, instructing nothing — satisfied
+the re-delegation test. With `meta` out of the way, the same script reports all three gaps.
+
+An unreadable or unexpected payload still returns 0: a guard is allowed to fail by standing aside,
+never by wedging the tool.
 
 ## Why the word test is still a word test
 

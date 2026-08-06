@@ -30,9 +30,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   script-wide, never per call *(a script builds its prompts from variables; tying one call to its
   own text would need a JS parser and a guess)*.
   🔴 **A workflow invoked by NAME is declared unread rather than passed**: its script is not in the
-  event, and silence would read as checked. ⚠️ **What is not proven**: the `Agent` payload was
-  measured in flight, the `Workflow` one was not — its field names come from the tool's schema, and
-  the code was exercised against hand-built events, bite and silence both.
+  event, and silence would read as checked. **Both halves were then measured on real launches**: a
+  probe workflow with one bare `agent()` call was refused, a compliant one ran.
+  ⚠️ **And the probe found a hole in its own test**: the workflow was *described* as being about the
+  delegation hook, and that word — in a description, instructing nothing — satisfied the
+  re-delegation check. The `meta` block is stripped before the words are looked for, so what counts
+  is what the script instructs, never how it presents itself.
 - **The French half of the same guard listed three spellings of one verb and missed the ordinary
   conjugated one**, so a prompt written in French — the way the maintainer writes them — matched
   none of the three and was refused. The accents are a character class now, not a list.

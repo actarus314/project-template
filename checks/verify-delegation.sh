@@ -100,7 +100,19 @@ else:
     if calls == 0:
         record("skip", "no agent() call in the script")
         sys.exit(0)
-    prompt = script
+    # The `meta` block is stripped before the words are looked for: a workflow DESCRIBING itself as
+    # being about delegation satisfied the test while instructing nothing — measured in flight on
+    # this very check's own probe.
+    body = script
+    m = re.search(r"export\s+const\s+meta\s*=\s*\{", body)
+    if m:
+        i, depth = m.end() - 1, 0
+        for j in range(i, len(body)):
+            depth += (body[j] == "{") - (body[j] == "}")
+            if depth == 0:
+                body = body[:m.start()] + body[j + 1:]
+                break
+    prompt = body
     what = f"the script ({calls} agent() call(s))"
     # `model` is per-call here; unset, an agent inherits the SESSION model, which is the expensive one.
     if not re.search(r"model\s*:\s*['\"]?(haiku|sonnet)", script, re.I):
