@@ -69,3 +69,13 @@ clone has to set it again. ⚠ AFTER, not before: the initial commit is clean BY
 would require gitleaks to commit this scaffolding, and the hook HARD-FAILING in its absence would block
 generation itself — the script would sabotage itself right after warning "gitleaks missing". The hook
 protects DEV commits, not the scaffolding.
+
+---
+
+The two copy traps, both found by GENERATING a project and looking at it — neither shows up when
+reading the script. `cp -R src dst` copies **into** `dst` when `dst` already exists, so the moment
+the checks' notes started creating `docs/`, the ADRs began landing in `docs/docs/adr/`: present,
+one level too deep, and no path dead enough for `verify-travel.sh` to have anything to say. The
+trailing `/.` copies the CONTENT instead. And `cp -R` reads the disk rather than git, so untracked
+macOS index files ride along with any directory copied whole — ignored by the generated
+`.gitignore`, never committed, and still not something a project should be born carrying.

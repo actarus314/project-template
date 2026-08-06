@@ -22,6 +22,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **Every project generated since 2026-08-05 got its structuring decisions filed under
+  `docs/docs/adr/`.** `cp -R src dst` copies *into* `dst` when `dst` already exists, and the notes
+  that now travel beside the checks had created `docs/` a few lines earlier. Nothing failed, nothing
+  was reported: the directory was there, one level too deep. **Found by generating a project and
+  looking at it** — no path was dead, so `verify-travel.sh` was right to stay quiet, and reading the
+  script would not have shown it either.
+- **A generated project no longer ships macOS index files.** `cp -R` copies from the disk, not from
+  git, so `.DS_Store` rode along with three of the copied directories. The generated `.gitignore`
+  ignores them, so they never reached a commit — but a project does not get to be born with someone
+  else's clutter in it.
+
+### Changed
+- **`METHODE.md` names the implementation notes among the roles.** The table said where a fact
+  lives — tracking doc, archives, actions, conventions, code, memories — and `docs/code/` was in
+  none of them: a level created without the one column that makes the others work, *what it NEVER
+  contains*. A level that refuses nothing absorbs its neighbours, and it did: 26 pairs of paragraphs
+  now state the same fact in a note and in the header of the script it documents.
+
+### Fixed
 - **The delegation guard was blind to every subagent a workflow starts.** It hooks the `Agent` tool,
   and a workflow's `agent()` calls never go through it — so the three instructions were enforced on
   one path and merely *habitual* on the other. Measured on a 13-agent run: all of them ran on the

@@ -91,7 +91,10 @@ cp "$TPL/templates/repo/CODE_OF_CONDUCT.md"  "$DEST/repo/CODE_OF_CONDUCT.md"
 cp "$TPL/templates/repo/CONTRIBUTING.md"     "$DEST/repo/CONTRIBUTING.md"
 cp "$TPL/templates/repo/CHANGELOG.md"        "$DEST/repo/CHANGELOG.md"
 cp "$TPL/templates/repo/AGENTS.md"           "$DEST/repo/AGENTS.md"   # versioned: read by ALL agents
-cp -R "$TPL/templates/repo/docs"             "$DEST/repo/docs"        # docs/adr/ — structuring decisions
+# Trailing `/.`, and the two copy traps it avoids: docs/code/init-project.md.
+cp -R "$TPL/templates/repo/docs/."           "$DEST/repo/docs/"       # docs/adr/ — structuring decisions
+find "$DEST/repo" -name .DS_Store -delete 2>/dev/null || true   # cp -R reads the DISK, not git
+
 # <year> AND <copyright holder>: substituting only one leaves a legally shaky LICENSE.
 HOLDER="${SLUG%%/*}"; HOLDER="${HOLDER:-$PROJ}"   # without a fallback, LICENSE would ship with an EMPTY holder
 for l in LICENSE LICENSE-MIT; do
@@ -223,9 +226,7 @@ if [ -n "$HUMAN" ]; then
   echo "     ⚠ '<contact>' in SECURITY.md: without it, no one can report a vulnerability."
 fi
 
-# No Dependabot block: Renovate (renovate.json) is the only update bot and AUTO-DETECTS
-# npm/docker/actions/pip from the manifests — no list of ecosystems to maintain per toolchain.
-# (Full-Renovate switch, 2026-07 — see workspace/archives/2026-07-autodetection/SYNTHESE.md.)
+# No dependabot.yml on purpose: docs/security-and-updates.md owns which bot updates what, and why.
 
 # workspace/ templates
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
