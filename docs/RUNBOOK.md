@@ -146,11 +146,17 @@ cd ~/Documents/Claude/template/repo
 
 The script **requests the PAT as masked input** *(it appears neither on screen, nor in history, nor in `ps`)*.
 
+> 🔴 **A successful run does NOT end the step.** The admin PAT is still alive, and it can delete the
+> repo and change its visibility — **step 7c below revokes it, and it is never optional.**
+> *(Measured 2026-08-06: read alone, this block led to the conclusion that configuration was over
+> once the script had run.)*
+
 - **On a PRIVATE/Free repo, it sets what it can**: **Dependabot alerts** *(everywhere — Renovate reads them)*, **security updates** *(safety net — **2 tiers only**)*, description, merge method, `default_workflow_permissions`.
 - 🔴 **On a 3-TIER flow, RE-RUN it once the Renovate app is installed.** The script only removes the Dependabot safety net *(whose security PRs target `main`, short-circuiting staging)* on seeing Renovate **alive** — its *Dependency Dashboard* dated less than 14 days old. Run **before** onboarding, it finds no dashboard, **keeps** the safety net and **says so**: this message is an invitation to re-run it, not a failure.
 - **It announces that rulesets / secret scanning / CodeQL are unavailable** — **this is EXPECTED, not a failure**: they arrive at the flip *(§4)*.
 - ⚠️ **The description must not contain any control character** *(the API returns 422)* — the script removes them and flags it. **Also avoid em dashes stuck together from a copy-paste.**
 - 💡 **`--dry-run`**: reads everything, **writes nothing**. To use on a **live** repo when unsure.
+- 🔴 **None of the above ends the step.** Whatever the script reports, the admin PAT is still alive and step 7c revokes it — **the run is not the end, the revocation is.**
 
 ### 🔴🔴 Step 7c — the maintainer: **REVOKE THE ADMIN PAT. NOW.**
 
@@ -175,8 +181,9 @@ The script **requests the PAT as masked input** *(it appears neither on screen, 
 > Here, the order is correct **by construction**: the template puts `.github/renovate.json` in place as early as step 1, so at step 8 the file is already on `main` — **no onboarding PR appears**.
 >
 > **⚠️ On an EXISTING repo** *(bringing into compliance, §7)*, **the order reverses on its own**: the app is often installed before the file arrives → **the onboarding PR shows up**.
-> **NEVER MERGE IT** *(merging it would activate Renovate's **DEFAULT** config, not the template's **tuned** `renovate.json`)*.
-> 🔴🔴 **AND NEVER CLOSE IT — this is the bot's DOCUMENTED OPT-OUT.** *"If you wish to opt-out of having Renovate run for your repo, simply close the onboarding Pull Request without merging it."*
+> 🔴🔴 **NEITHER MERGE IT NOR CLOSE IT — LEAVE IT OPEN and ask the maintainer.** Both are wrong, and they are not equally wrong: merging only activates Renovate's **DEFAULT** config instead of the template's **tuned** `renovate.json`, whereas **closing is the bot's DOCUMENTED OPT-OUT** and silently disables the repo.
+> *(The two interdictions are stated in one sentence on purpose: read alone, a bare "never merge it" reads as an invitation to close — measured on 2026-08-06, an agent given that line and nothing else concluded exactly that.)*
+> **What Renovate's own documentation says — quoted here as the TRAP, never as the instruction:** *"If you wish to opt-out of having Renovate run for your repo, simply close the onboarding Pull Request without merging it."* **That sentence describes how to DISABLE the bot. It is not what to do here.**
 > The `disabled` status lives **on Mend's side, not in the repo**: **committing `renovate.json` afterward reactivates NOTHING.**
 > **Experienced on 14/07/2026** — the 4 onboarding PRs closed on that instruction left **4 repos** `disabled`, **6 days without a single job**, and one of them **with no update bot left at all** *(the full-Renovate switch had just removed its `dependabot.yml`, betting on a bot that was not running)*.
 > ✅ **Course of action: LEAVE IT OPEN and ask the maintainer.** Never close it by reflex.
@@ -208,7 +215,7 @@ gh run list --commit "$sha" --json workflowName,status,conclusion
 gh pr merge --squash                # ONLY if all expected workflows are completed/success
 ```
 
-> 🔴 **In PRIVATE, nothing requires CI.** No ruleset → GitHub **would accept** the merge of a red PR. Verifying CI before any merge is the **only point that has remained human** in the entire chain: no hook can intercept it, the merge happens server-side.
+> 🔴 **In PRIVATE, nothing requires CI.** No ruleset → GitHub **would accept** the merge of a red PR. *(Why this one gesture stays human, and where the rule is written for agents: `repo-controls.md`.)*
 >
 > **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
 
@@ -273,6 +280,9 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 ## 5 · Evolving a live project
 
 **The archetype does not change — a capability is ACQUIRED.** *(`repo-controls.md`, detailed checklists)*
+🔴 **"Capability" is a CLOSED list of three: Pages · published image · staging host.** Adding a tool
+— a task tracker, a linter, a library — is **not** one, follows none of this section, and starts by
+checking what already exists *(`METHODE.md`)*.
 
 | Need | Capability | ⚠️ The trap |
 |---|---|---|
@@ -292,7 +302,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 | **Dependabot** and **code scanning** alerts | Claude — **autonomously** *(dismiss/reopen)* | on receipt |
 | **SECRET SCANNING alerts** | 🔴 **THE MAINTAINER ALONE** | The assistant is **read-only** on these *(why: §1 step 3)*. |
 | **Write PAT rotation** | Claude **alerts at D-14** · **the maintainer regenerates** | every **90 days** |
-| **`SUIVI.md`** | Claude — **on its own** | consolidate · purge what's shipped |
+| **`SUIVI.md`** | Claude — **on its own** | consolidate · purge what's shipped **from HERE — it is synthesized into an archive, never lost** *(`METHODE.md`)* |
 
 ---
 

@@ -21,6 +21,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
+  `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
+  `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact
+  silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
+  reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
+  requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
+- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A `# tone-self` or
+  `# fr-pattern` marker exempts its line **anywhere in the tree** — bound to no file and no line,
+  which is what makes it precise enough to mark a single line, and invisible enough to spread. The
+  verdict now counts them out loud, as `verify-language.sh` already did for its own skipped lines.
+  **10 lines are exempted today**; a number that grows can be noticed, an unwritten one cannot.
+
 ### Added
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate

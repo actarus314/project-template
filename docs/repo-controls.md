@@ -68,7 +68,7 @@ Everything else follows from that.
 
 ⚠️ **`init-project.sh` REFUSES `--staging` on a Pages site without an artefact** — why: [Without `staging`](#without-staging-github-flow-two-branches-are-enough) below.
 
-**The triple filter catches this kind of regression before it reaches prod** (cf. "Why 3 stages" below) — but only where a host to validate exists. Elsewhere, it would have filtered nothing.
+**Only where a host to validate exists** — elsewhere the triple filter would have filtered nothing. *(What it catches, and why: "Why 3 stages" below.)*
 
 **Git Flow is dead**: `nvie/gitflow` was **archived by its author on 2025-10-14**. Do not bring it back.
 
@@ -378,6 +378,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,08 s | ✅ |
 | `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,18 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-comment-drift.sh` | a comment growing faster than its code, sitting above 25 %, or running past 6 lines | both | a `.sh` moved | ✅ | **needs watching** — drift compares PERCENTAGES, so it over-reports on a small file *(+134 % comment against +94 % code was 34 lines against 36)*. Level and block apply to TOUCHED files only | 0,53 s | ✅ |
+| `checks/verify-dropped-comment.sh` | a comment block of 5+ lines deleted while neither its `docs/code/` note nor a `drop:` declaration says where it went | both | a `.sh` moved | ✅ | **settled** — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8 | 0,10 s | ✅ |
 | `checks/verify-version.sh` | the tag, the `CHANGELOG` and every script disagreeing on the version | both | every commit | ✅ | settled *(needs `fetch-tags`, or it passes by finding nothing)* | 0,34 s | ✅ |
 | `checks/verify-echo.sh` | two paragraphs stating the same thing in different words | both | a `.md` moved | ✅ | **needs watching** — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold | 0,26 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-travel.sh` | a path written here that leads nowhere once the file has shipped | both | `templates/`, `checks/` moved | ✅ | settled | 1,76 s | ✅ |
@@ -696,6 +697,8 @@ A **public** identifier shaped like a secret (contract address `0x…`/`C…`/`G
 ## Acquiring a CAPABILITY on an already-live repo
 
 The repo keeps everything else: the category doesn't change, a capability is **ACQUIRED**. A Pages site that starts publishing an image **stays** a Pages site.
+
+🔴 **A capability is one of THREE, and the list is closed**: Pages site · published image · staging host. Adding a tool — a task tracker, a linter, a dependency — is **not** a capability and follows none of what is below.
 
 `init-project.sh` sets capabilities **at creation**. Here the repo already has history, rulesets, and required checks: the generator isn't rerun, capabilities are **added** — in the right order.
 

@@ -208,4 +208,11 @@ scan_touched . "repo/" || grown=1
 [ -d ../workspace/.git ] && { scan_touched ../workspace "workspace/" || grown=1; }
 
 [ "$grown" = 0 ] && echo "✓ no comment outgrew its code since $ref, and none crossed ${COMMENT_LEVEL}% or a ${COMMENT_BLOCK}-line block — $scope; read:$read_out $level_checked touched file(s) for level and block"
+if [ "$grown" != 0 ]; then
+  cat >&2 <<'MSG'
+  The whole file counts, not only the lines this branch added — a header written long ago is the
+  usual reason a file crosses the level, and cutting today's lines instead leaves it uncorrected.
+  A WHY that is worth keeping MOVES to docs/code/<name>.md; only a copy of the docs is deleted.
+MSG
+fi
 exit "$grown"   # blocking: same reason

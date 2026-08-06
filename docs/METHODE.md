@@ -27,7 +27,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 
 | Role | Contains | **NEVER contains** |
 |---|---|---|
-| **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | Where things stand · decisions · pitfalls · **what remains** *(brief — POINTS to a plan if it's heavy)*. **Enough for a human OR an AI to pick back up cold.** | the detail of the evidence · the story of the bugs · the long why · **what has shipped** *(purged)* · full plans |
+| **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | Where things stand · decisions · pitfalls · **what remains** *(brief — POINTS to a plan if it's heavy)*. **Enough for a human OR an AI to pick back up cold.** | the detail of the evidence · the story of the bugs · the long why · **what has shipped** *(purged from HERE — it moves to the archive, it is never lost)* · full plans |
 | **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by phase or by topic.** | — *(it's the overflow: it can grow)* |
 | **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, the pitfalls. | the why *(→ conventions)* · the history *(→ archives)* |
 | **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |

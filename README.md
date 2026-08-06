@@ -76,7 +76,8 @@ template/
 
 ### `docs/` — the reference
 
-🎯 **`RUNBOOK.md` is the operational document — start with it**: the full lifecycle, in order, and **who** performs each step.
+🎯 **`RUNBOOK.md` is the operational document — start with it to PERFORM an operation** *(create a project, configure a repo, publish a version)*: the full lifecycle, in order, and **who** performs each step.
+*(To RESUME interrupted work, the first file is `../workspace/SUIVI.md` — see below. Two different "first", and reading either line alone used to answer the other question.)*
 
 The rest is **one file per subject** — the method · the standard · secrets and auth · assistant setup · docker hardening · repo controls · security and updates.
 **`claude-code-project-standard.md` is their index**: it says which file answers which question, and keeps a one-line pointer for every section that moved out, so an old *"standard §12"* still resolves.
@@ -197,7 +198,8 @@ template/
 
 ### `docs/` — la référence
 
-🎯 **`RUNBOOK.md` est le document opérationnel — c'est par lui qu'on commence** : le cycle de vie complet, dans l'ordre, et **qui** fait chaque geste.
+🎯 **`RUNBOOK.md` est le document opérationnel — c'est par lui qu'on commence pour EXÉCUTER un geste** *(créer un projet, configurer un repo, publier une version)* : le cycle de vie complet, dans l'ordre, et **qui** fait chaque geste.
+*(Pour REPRENDRE un travail interrompu, le premier fichier est `../workspace/SUIVI.md` — plus bas. Deux « premiers » différents, et lire l'une des deux lignes seule répondait à l'autre question.)*
 
 Le reste est **un fichier par sujet** — la méthode · le standard · les secrets et l'authentification · la configuration de l'assistant · le durcissement Docker · les contrôles du repo · la sécurité et les mises à jour.
 **`claude-code-project-standard.md` en est l'index** : il dit quel fichier répond à quelle question, et garde un pointeur d'une ligne pour chaque section qui en est partie, si bien qu'un ancien *« standard §12 »* résout toujours.

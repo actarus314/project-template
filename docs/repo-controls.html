@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:999a471571af93c3ade9e1ca5e3affa3faee3628113fbbf116e753121f4d7f59
+  checksum-source-md: sha256:78874439019af39c6f1d82c4a9b3e139cd4e45a034bfbf3542fd18852263384e
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1433,6 +1433,7 @@
 
 <section>
   <h2>Acquiring a capability on a live repo</h2>
+  <p class="sub"><strong>🔴 A capability is one of THREE, and the list is closed</strong>: Pages site · published image · staging host. Adding a tool — a task tracker, a linter, a dependency — is <strong>not</strong> a capability and follows none of what is below.</p>
   <p class="sub">The repo keeps everything else: the category does not change, a capability is <strong>ACQUIRED</strong>. A Pages site that starts publishing an image <strong>stays</strong> a Pages site. <code>init-project.sh</code> only sets capabilities at creation — here the repo already has history, rulesets, and required checks, so the generator is <strong>not rerun</strong>: capabilities are added, in the right order.</p>
 
   <div class="note" style="margin:0 0 22px">
@@ -1761,6 +1762,16 @@
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
+          <td class="w"><code>checks/verify-dropped-comment.sh</code></td>
+          <td>a comment block of 5+ lines deleted while neither its <code>docs/code/</code> note nor a <code>drop:</code> declaration says where it went</td>
+          <td class="h">both</td>
+          <td>a <code>.sh</code> moved</td>
+          <td class="p">✅</td>
+          <td><strong>settled</strong> — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8</td>
+          <td class="t">0,10 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
           <td class="w"><code>checks/verify-version.sh</code></td>
           <td>the tag, the <code>CHANGELOG</code> and every script disagreeing on the version</td>
           <td class="h">both</td>
@@ -1839,6 +1850,16 @@
           <td><strong>needs watching</strong> — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by <code>stop_hook_active</code></td>
           <td class="t">instant</td>
           <td>n/a — refuses the end of the turn</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-pr-instruction.sh</code></td>
+          <td>a pull request <strong>opened</strong> with no instruction from the maintainer</td>
+          <td class="h">local</td>
+          <td>opening a pull request</td>
+          <td class="p">✅</td>
+          <td><strong>an INSTRUMENT, never a gate</strong> — it records and returns, it never refuses a tool and cannot wedge a session. Its decision threshold was written before its data: under 5 % without an instruction over 20 openings, no gate gets built</td>
+          <td class="t">instant</td>
+          <td>n/a — records, never refuses</td>
         </tr>
       </tbody>
     </table>

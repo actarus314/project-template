@@ -87,7 +87,7 @@ The same skill covers:
 - **§2 — day-to-day work**: `feat/` → PR → green CI → merge. ⚠️ In private, **nothing requires CI** — it's the **only point that stays human**. Verify via `sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)` then `gh run list --commit "$sha"` — **never `gh pr checks`** (guaranteed 403, `Checks` permission absent from fine-grained PATs). ⚠️ A workflow **absent** from the list is **not** a green. Detail: RUNBOOK §2.
 - **§3 — publishing a release**: CHANGELOG → tag `v*` → Release + image. ⚠️ **1st release: VERIFY that the ghcr package is pullable** *(`configure-repo.sh` tests it itself)* — pullable right away on a personal account, potentially private by default on an org; act only if the test fails.
 - **§4 — flipping private → public**: **the most dangerous moment of the lifecycle** (the entire history becomes public all at once). Follow the 8 steps **in order**, starting with `gitleaks` on **all refs**.
-- **§5 — acquiring a capability** on a live repo. ⚠️ **The ORDER is a trap**: the workflow must reach `main` **BEFORE** `configure-repo.sh` requires `build-check` — otherwise **the repo locks itself out**.
+- **§5 — acquiring a capability** on a live repo — a capability is **Docker image / staging / Pages**, never a tooling choice such as a task tracker *(that one is METHODE's: check what already exists first)*. ⚠️ **The ORDER is a trap**: the workflow must reach `main` **BEFORE** `configure-repo.sh` requires `build-check` — otherwise **the repo locks itself out**.
 - **§6 — maintenance**: Dependabot and Renovate autonomously. 🔴 **SECRET SCANNING alerts are reserved for the maintainer.**
 
 ## Lifecycle docs — SEARCH BEFORE BUILDING
