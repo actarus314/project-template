@@ -21,6 +21,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
+  block of 5+ lines removed from a script, which of two decisions was made: it should never have been
+  written there — then a `drop:` line in a commit message says so — or it is worth keeping, and it
+  moves into `docs/code/<name>.md`. **Neither is the default**, which is the whole point: a comment
+  repeating the documentation should leave no trace, a measurement should survive somewhere.
+  🔴 **The threshold was measured before being set**: over 40 commits, blocks of that size were
+  deleted 24 times, **19 alongside their own note and 5 without** — so the declaration is asked for
+  on roughly **one commit in eight**. And a `drop:` covers **only the files it NAMES**: the first
+  version let one blanket line clear an entire branch, a maximal-scope exception hidden inside a
+  minimal-scope mechanism — caught by an exception sweep the day it was written, on its own first
+  commit *(one declaration, 19 blocks passed)*.
+  ⚠️ It judges **commits, never the working tree**: a `pre-commit` hook cannot read the message of
+  the commit being made *(verified — `COMMIT_EDITMSG` does not exist yet at that point)*, so reading
+  the working tree would refuse a declaration that was correctly written.
+
 ### Fixed
 - **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
   `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a

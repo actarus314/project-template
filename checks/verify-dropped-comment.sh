@@ -38,9 +38,19 @@ touched = set(run("git", "diff", "--name-only", f"{ref}...HEAD").split())
 # A note written for THIS branch may not be tracked yet, and an untracked file is in no diff.
 touched |= set(run("git", "ls-files", "--others", "--exclude-standard").split())
 
-# `drop:` in any commit message of the branch — the declaration that a passage was deleted on
-# purpose. It names what went, so the decision is readable later; the check never judges the reason.
-declared = "drop:" in run("git", "log", "--format=%B", f"{ref}..HEAD").lower()
+# `drop:` in a commit message declares a deletion made on purpose. A declaration covers ONLY the
+# files it NAMES: one blanket `drop:` used to exempt every block on the branch, which is a
+# maximal-scope exception hiding inside a minimal-scope mechanism (found by a third-party sweep the
+# day this check was written, on this check's own first commit — 1 declaration, 19 blocks passed).
+# The check reads which files are named; it never judges the reason given.
+declarations = [l for l in run("git", "log", "--format=%B", f"{ref}..HEAD").splitlines()
+                if "drop:" in l.lower()]
+
+
+def declared_for(p):
+    """A declaration names the file when it carries its path or its bare name."""
+    stem = pathlib.Path(p).name
+    return any(p in d or stem in d for d in declarations)
 
 dropped, path, size = [], None, 0
 for line in diff.splitlines():
@@ -60,7 +70,7 @@ if path and size >= block:
 unexplained = []
 for p, n in dropped:
     note = f"docs/code/{pathlib.Path(p).stem}.md"
-    if note in touched or declared:
+    if note in touched or declared_for(p):
         continue
     unexplained.append((p, n, note))
 
@@ -71,10 +81,12 @@ if not unexplained:
     sys.exit(0)
 
 for p, n, note in unexplained:
-    print(f"  ↑ {p:<40} {n} comment lines deleted, and {note} was not touched", file=sys.stderr)
+    print(f"  ↑ {p:<40} {n} comment lines deleted — neither {note} touched, "
+          f"nor a `drop:` line naming {pathlib.Path(p).name}", file=sys.stderr)
 print("""
   A deleted passage is a DECISION, and this asks which one it was:
-    · it should never have been written there -> `drop: <what went, and why>` in a commit message;
+    · it should never have been written there -> `drop: <file>, what went and why` in a commit
+      message. It covers ONLY the files it NAMES — one blanket line does not clear a branch;
     · it belongs to its own note              -> it MOVES into docs/code/<name>.md, rewritten to
       fit its new home if that is what it takes;
     · it belongs to another owner             -> move it there, and name that in the same

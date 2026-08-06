@@ -34,9 +34,16 @@ meaning is the same defect `verify-delegation.sh` has, and it is not worth repro
 
 Two decisions, and the check only insists that one of them was made:
 
-· **deleted outright** — the passage should never have been written there. `drop: <what went, and
-why>` in any commit message of the branch. The check reads the messages and never judges the
-reason: what it refuses is the absence of a decision, not a decision it disagrees with.
+· **deleted outright** — the passage should never have been written there. `drop: <file>, what went
+and why` in a commit message. The check reads the messages and never judges the reason: what it
+refuses is the absence of a decision, not a decision it disagrees with.
+
+🔴 **A declaration covers ONLY the files it NAMES.** The first version accepted any `drop:` anywhere
+on the branch and cleared every deleted block with it — a **maximal**-scope exception hiding inside
+a **minimal**-scope mechanism. It was found the day this check was written, by a sweep inventorying
+every exception in the repository, on this check's **own first commit**: one declaration, nineteen
+blocks passed. The verdict had not lied — it said *"19 with a note or a declaration"* — but nobody
+had justified those nineteen one by one.
 · **kept** — it moves into `docs/code/<name>.md`, rewritten to fit its new home if that is what it
 takes. Touching that note is the whole signal.
 
