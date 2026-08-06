@@ -21,6 +21,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **The delegation guard was blind to every subagent a workflow starts.** It hooks the `Agent` tool,
+  and a workflow's `agent()` calls never go through it — so the three instructions were enforced on
+  one path and merely *habitual* on the other. Measured on a 13-agent run: all of them ran on the
+  cheap model **because each call said so by hand**. The hook now also reads a workflow's script,
+  and states what it read — the number of `agent()` calls — because the claim it can make there is
+  script-wide, never per call *(a script builds its prompts from variables; tying one call to its
+  own text would need a JS parser and a guess)*.
+  🔴 **A workflow invoked by NAME is declared unread rather than passed**: its script is not in the
+  event, and silence would read as checked. ⚠️ **What is not proven**: the `Agent` payload was
+  measured in flight, the `Workflow` one was not — its field names come from the tool's schema, and
+  the code was exercised against hand-built events, bite and silence both.
+- **The French half of the same guard listed three spellings of one verb and missed the ordinary
+  conjugated one**, so a prompt written in French — the way the maintainer writes them — matched
+  none of the three and was refused. The accents are a character class now, not a list.
+  *(The deeper defect stands, written down and not fixed: the test is for the PRESENCE of the words,
+  so a prompt granting itself permission to delegate satisfies it.)*
+
 ## [1.4.0] - 2026-08-06
 
 ### Added

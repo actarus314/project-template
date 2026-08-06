@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:59e2dada804ea8d659c7585117ee1fd71973f447ecfe12b01224ce0ef403b695
+  checksum-source-md: sha256:ddf7cf9444d291672a24e9142f7f62687805d0bce962fab641c53b95c5b90370
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1823,11 +1823,11 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>
-          <td>a subagent launched without its three instructions</td>
+          <td>a subagent launched without its three instructions — <strong>from the <code>Agent</code> tool, and from a workflow's script</strong></td>
           <td class="h">local</td>
           <td>before the launch</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires</td>
+          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires. On a workflow it reads the SCRIPT, so the claim is script-wide, never per call <em>(and a workflow invoked by NAME is declared unread)</em></td>
           <td class="t">instant</td>
           <td>n/a — refuses the launch</td>
         </tr>
