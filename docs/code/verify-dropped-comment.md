@@ -38,6 +38,12 @@ Two decisions, and the check only insists that one of them was made:
 and why` in a commit message. The check reads the messages and never judges the reason: what it
 refuses is the absence of a decision, not a decision it disagrees with.
 
+🔴 **A declaration is the PARAGRAPH it opens, not its first line.** Found in flight: this check
+refused the very commit that brought 21 files under the comment limit, whose `drop:` named five of
+them across a line break. Reading line by line silently ignored every name past the first newline —
+the declaration was complete, the check saw a third of it. Requiring one long line instead would be
+an artificial constraint on commit messages, so the paragraph is what counts.
+
 🔴 **A declaration covers ONLY the files it NAMES.** The first version accepted any `drop:` anywhere
 on the branch and cleared every deleted block with it — a **maximal**-scope exception hiding inside
 a **minimal**-scope mechanism. It was found the day this check was written, by a sweep inventorying

@@ -46,8 +46,9 @@ touched |= set(run("git", "ls-files", "--others", "--exclude-standard").split())
 # maximal-scope exception hiding inside a minimal-scope mechanism (found by a third-party sweep the
 # day this check was written, on this check's own first commit — 1 declaration, 19 blocks passed).
 # The check reads which files are named; it never judges the reason given.
-declarations = [l for l in run("git", "log", "--format=%B", f"{ref}..HEAD").splitlines()
-                if "drop:" in l.lower()]
+# A declaration is the PARAGRAPH it opens, never its first line — see this check's note.
+declarations = [p for p in re.split(r"\n\s*\n", run("git", "log", "--format=%B", f"{ref}..HEAD"))
+                if "drop:" in p.lower()]
 
 
 def declared_for(p):
