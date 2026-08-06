@@ -13,7 +13,7 @@ This repo **builds and configures** projects, never one itself — what it is (a
 
 | | Remote | Content |
 |---|---|---|
-| **`repo/`** *(the cwd)* | → GitHub **private** — `actarus314/project-template` | the tools, `templates/`, `docs/`, `skills/` |
+| **`repo/`** *(the cwd)* | → GitHub **public since 2026-07-31** — `actarus314/project-template` | the tools, `templates/`, `docs/`, `skills/` |
 | **`../workspace/`** | ❌ **none — never pushed** | the tracking, the archives, the research |
 
 **`skills/new-project/` is the CANONICAL version of the skill**, and `~/.claude/skills/new-project` is a **symlink** to it.
@@ -46,7 +46,7 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
 
 ## Discipline — PR-only
 
-**`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it *(it stands in for the ruleset, absent as long as the repo is private)*.
+**`repo/` is PR-only.** `main` is **never** written to directly: the `pre-push` hook refuses it, and since the public flip the **ruleset** refuses it server-side too. *(Which of the two actually blocks, and what a still-private generated project has instead: [`repo-controls.md`](docs/repo-controls.md).)*
 
 - 🔴 **Open a pull request only on an instruction to open one, and NAME that instruction when doing it** —
   quote the words that authorise it, the way a merge quotes the green it relies on. Pushing needs no

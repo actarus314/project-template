@@ -38,6 +38,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the working tree would refuse a declaration that was correctly written.
 
 ### Fixed
+- **Four facts the documentation stated and that were no longer true**, each re-measured rather than
+  reasoned about: `AGENTS.md` described the repo as **private** while it has been public since
+  2026-07-31, with two active rulesets · `README.md` listed `verify-version.sh` among the root tools
+  although it moved under `checks/` on 2026-08-04 · `repo-controls.md` announced a gate at **2,82 s**
+  where three consecutive runs give **3,65 s**, and *"sixteen"* timed checks where the table above it
+  lists more — that count is now stated as belonging to the table, so it cannot drift again ·
+  `README.md` showed `init-project.sh <owner>/<repo>` without saying the **GitHub repo must already
+  exist**, created by hand and PRIVATE, which the command alone suggested otherwise.
+- **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
+  unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
+  dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
+  tracking doc records for a real repository. What was missing was its entry in the RUNBOOK, not the
+  file. *(A mechanically correct "orphan" verdict, with the wrong conclusion.)*
+
 - **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
   `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
   `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact

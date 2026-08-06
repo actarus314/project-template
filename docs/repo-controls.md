@@ -316,7 +316,7 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s**. Anything under 0,4 s does not show at all.
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,65 s** *(re-measured 2026-08-06, 3 runs: 3,63 / 3,68 / 3,63)*, a commit on a clean tree in 1,12 s, the full lot in 5,63 s. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
 > journal. `check.sh` writes every verdict it reaches to
@@ -457,7 +457,7 @@ The split is not how long a check takes, it is **what has to change for it to sa
 | `.md` + `.sh` + a workflow | everything above | **5,43 s** |
 | `./check.sh` in full | `osv-scanner` + `semgrep`, both over the network | **5,63 s** |
 
-**Parallelism absorbs, and the numbers say so**: the sixteen timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **2,82 s**. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
+**Parallelism absorbs, and the numbers say so**: the timed house checks add up to **3,89 s** of their own time, and the gate that runs them takes **3,65 s** *(both figures move as checks are added — the count is the table above, never a number written here)*. **The slowest by far is `verify-travel` (1,76 s), which generates four projects in series**, then `verify-comment-drift` (0,53 s), `verify-version` (0,34 s) and `verify-echo` (0,26 s); every other one sits at or under 0,18 s.
 
 > ⚠️ **`verify-travel` costs what it costs because it covers four toolchain/capability combinations instead of one** — `static`, `node`, `generic`, `static+all`, which is what the check itself names as it passes *(0,46 s → 1,77 s)*. It only starts when `templates/`, `checks/`, `check.sh` or `init-project.sh` moved, so it is paid on four file paths and nowhere else. **The generations run in series on purpose**: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.
 

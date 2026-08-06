@@ -25,6 +25,8 @@ The other structuring rule: **what SERVES to create a project** and **what TELLS
     [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
+> ⚠️ **The GitHub repo must ALREADY exist**, created by the maintainer through the UI, **PRIVATE** *(RUNBOOK §1)*. This script never creates it — it wires the local remote to it. Read alone, the command above suggested otherwise.
+
 `--type` decides **only the toolchain** (which `ci.yml`). Everything else follows **three independent capabilities**:
 
 | Capability | The question to ask | What it brings |
@@ -68,7 +70,7 @@ template/
 
 | | Role |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** · **`verify-version.sh`** | **The tools.** What gets run. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **The tools.** What gets run. *(The `verify-*.sh` checks live in `checks/`, called by `check.sh`.)* |
 | **`templates/`** | **What gets COPIED into a project** — and nothing else. `repo/` (versioned files) · `workflows/` (CI) · `workspace/` (outside Git). |
 | **`skills/`** | **`new-project/`** — the Claude Code skill that runs through the RUNBOOK, stopping at every action the maintainer must perform themselves. Canonical here, never under `templates/`: nothing duplicates into generated projects. |
 | **`docs/`** | **The reference, to be read as needed.** The method, the standard, the runbook, the map of checks. |
@@ -144,6 +146,8 @@ L'autre règle structurante : **ce qui SERT à créer un projet** et **ce qui RA
     [--type static|node|generic] [--pages] [--artefact] [--staging]
 ```
 
+> ⚠️ **Le repo GitHub doit DÉJÀ exister**, créé par le mainteneur via l'UI, en **PRIVÉ** *(RUNBOOK §1)*. Ce script ne le crée jamais — il y raccroche le remote local. Lue seule, la commande ci-dessus laissait croire l'inverse.
+
 `--type` décide **uniquement la toolchain** (quel `ci.yml`). Tout le reste suit **trois capacités indépendantes** :
 
 | Capacité | La question à poser | Ce que ça apporte |
@@ -190,7 +194,7 @@ template/
 
 | | Rôle |
 |---|---|
-| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** · **`verify-version.sh`** | **Les outils.** Ce qui s'exécute. |
+| **`init-project.sh`** · **`configure-repo.sh`** · **`check.sh`** · **`open-pr.sh`** | **Les outils.** Ce qui s'exécute. *(Les contrôles `verify-*.sh` vivent dans `checks/`, appelés par `check.sh`.)* |
 | **`templates/`** | **Ce qui est COPIÉ dans un projet** — et rien d'autre. `repo/` (fichiers versionnés) · `workflows/` (CI) · `workspace/` (hors Git). |
 | **`skills/`** | **`new-project/`** — la skill Claude Code qui déroule le RUNBOOK, en s'arrêtant à chaque action que le mainteneur doit accomplir lui-même. Canonique ici, jamais sous `templates/` : rien ne se duplique dans les projets générés. |
 | **`docs/`** | **La référence, à lire au besoin.** La méthode, le standard, le runbook, la carte des checks. |

@@ -291,6 +291,7 @@ checking what already exists *(`METHODE.md`)*.
 | "the site moves **off Pages**" | remove `--pages` | Delete `pages.yml`. **Never** leave it running "just in case" — an orphaned workflow is a check that no one reads anymore. |
 | **removing** a capability | — | ⚠️ Remove `build-check` from the **required** checks **BEFORE** deleting `docker-publish.yml`. Otherwise the check stays required while nothing produces it anymore → **every PR blocked forever**. |
 | bringing an **EXISTING** repo into compliance | — | ⚠️ Its CI names its jobs however it likes, while the ruleset requires **`checks`** *(and `build-check` with `--artefact`)*. **`configure-repo.sh` now REFUSES to set the ruleset** if no job carries the name — a `--dry-run` says so without writing. The fix: an aggregator job named `checks`, `needs:` every other job, `if: always()` *(model: this repo's own `ci.yml`)*. |
+| an existing repo has **NO secret scan at all** | — | **`templates/workflows/gitleaks.yml`** is a standalone workflow for exactly that case: pinned version, checksum-verified, full history, plus a weekly run that catches a secret pushed with `--no-verify`. **Copy it by hand** — no script places it, because a repo generated here already runs gitleaks inside its `ci.yml`, and two identical scans buy nothing. |
 
 ---
 
