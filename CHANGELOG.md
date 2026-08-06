@@ -21,6 +21,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-06
+
 ### Added
 - **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
   block of 5+ lines removed from a script, which of two decisions was made: it should never have been
