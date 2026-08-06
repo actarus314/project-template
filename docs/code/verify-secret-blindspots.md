@@ -34,7 +34,7 @@ from.
 
 ## Why the example remote is capitals, not angle brackets
 
-`https://github.com/OWNER/REPO.git` and not `<owner>/<repo>`: this file travels into every
+`https://github.com/OWNER/REPO.git`, in capitals, never in angle brackets: this file travels into every
 generated project, where the generator scans what it just wrote for placeholders it failed to
 substitute. An angle-bracketed owner and repo inside a message is indistinguishable from one of
 those, and would read to whoever generated the project as a template bug.
