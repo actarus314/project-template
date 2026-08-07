@@ -21,6 +21,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **The commit gate runs in 3,95 s instead of 9,1 s, and returns the same verdicts.** The two checks
+  that generate a whole project ran one after the other, outside the parallel lot, and dominated its
+  wall clock by themselves. Nothing required that: each works inside its own `mktemp -d`, and the
+  `check.sh` a generated project runs writes to *its* cache, since that path is relative. The reason
+  they had been kept out — that they generate a project — was never measured; the rule the loop
+  really enforces is about hooks, which read their payload from stdin and would compete for it.
+  Verdicts were captured before and after the change and compared: identical.
+
 ### Fixed
 - **The closing pass was being asked for again while it was already running, and it now says so
   instead.** The word-routing branch armed the sequencer without ever checking whether a pass was
