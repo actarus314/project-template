@@ -443,16 +443,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
 - **`verify-comment-drift` justified its reference point with a reason that is false in this very
   repository.** It said releases are rare; there were four tags in five days. The reason that holds
-  at any release cadence — and therefore in every generated project — is that a release-anchored
-  reference puts **already-merged, already-green work back on trial**: measured here, the touched-file
-  input goes from 1 file to 41 the moment the anchor moves back to the tag.
-  The symmetric half is why
-  `verify-growth` keeps the far anchor: `origin/main` advances at every merge, so accumulation resets
-  to zero by construction and that guard would go permanently silent *(same document, same instant:
-  **+24 %** against the tag, **−0,2 %** against `origin/main`)*. Both halves are now tabulated in
-  `docs/code/verify-comment-drift.md`, which also carried two claims the move had left stale.
-  ⚠️ Its two variables said the opposite of what they held — `tag` contained the string `origin/main`,
-  `released_at` a merge timestamp — in the one place a reader goes to ask which anchor is in force.
+  at any cadence is that a release-anchored reference puts **already-merged, already-green work back
+  on trial** — measured here, the touched-file input goes from 1 file to 41.
+  The symmetric half is why `verify-growth` keeps the far anchor: `origin/main` advances at every
+  merge, so accumulation resets to zero and that guard would go permanently silent *(same document,
+  same instant: **+24 %** against the tag, **−0,2 %** against `origin/main`)*.
+  ⚠️ Its two variables said the opposite of what they held, in the one place a reader goes to ask
+  which anchor is in force.
 - **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
   its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
   ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
@@ -512,16 +509,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   entirely in French passed it without a murmur — and two words shipped into published documents
   that way, spotted by the maintainer rather than by a control.
   🔴 **The signal is the ACCENT, and the limit is stated instead of hidden**: unaccented French goes
-  straight through, and the verdict says so in those words rather than claiming the language is
-  covered. Measured before it was written: of 90 accented lines here, 65 are the two bilingual
-  READMEs, 16 the French tracking doc the generator writes into the workspace, 8 the French
-  patterns the checks must spell out, 1 the skill's trigger phrases — four classes, each with a
-  reason that already existed elsewhere.
-  **The exceptions are DETECTED, never listed**: a `# … (français)` heading opens a bilingual
-  README's French half; a heredoc redirected into `workspace/` writes the French side by
-  construction; quoted material is verbatim; and `fr-pattern` is **verify-tone.sh's existing
-  marker**, reused rather than doubled. `repo/` only — English is a rule of published style, so it
-  stops where publication stops.
+  straight through, and the verdict says so rather than claiming the language is covered.
+  Measured before it was written: of 90 accented lines here, all fall into four classes — the
+  bilingual READMEs, the French tracking doc the generator writes, the French patterns the checks
+  must spell out, and the skill's trigger phrases.
+  **The exceptions are DETECTED, never listed**, and `fr-pattern` reuses `verify-tone.sh`'s existing
+  marker rather than doubling it. `repo/` only — English is a rule of published style, so it stops
+  where publication stops.
 - **It found a defect on its first run.** `templates/repo/README.md` opened with a **French block
   of instructions**, shipped into every generated project. Translated.
 - 🔴 **And adding it exposed a hole in the wiring guard itself.** `verify-language.sh` was declared
