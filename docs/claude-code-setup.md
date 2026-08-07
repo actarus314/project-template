@@ -1,20 +1,18 @@
 # Claude Code setup — configuring the assistant on a project
 
-> Reference. Extracted from `claude-code-project-standard.md` §6, §7, §8 and from `METHODE.md` (delegation).
+> Reference. Owns standard §6, §7, §8, and delegation (`METHODE.md`).
 
 ---
 
 ## `CLAUDE.md` — the file that makes the rules readable at all
 
 Claude Code reads `CLAUDE.md` from the working directory at every session, and **it reads nothing
-else on its own**: `AGENTS.md` is loaded only because `CLAUDE.md` imports it. Measured on 2026-08-06,
-on a clone of this repository — an agent started there reported that `AGENTS.md` was **not** in its
-context. Present on disk, and invisible.
+else on its own**: `AGENTS.md` is loaded only because `CLAUDE.md` imports it. Measured on a clone —
+an agent started there reported `AGENTS.md` was **not** in its context. On disk, and invisible.
 
 ### The rule
 
-> **On a repository that is public, or meant to become public, `CLAUDE.md` is VERSIONED — and it
-> carries nothing but the import.**
+> **`CLAUDE.md` is VERSIONED — and it carries nothing but the import.**
 
 Both halves matter. Versioned, because a gitignored file reaches no one who clones: the rules would
 be read by their author alone. Nothing but the import, because everything else is what makes
@@ -30,14 +28,18 @@ Anything personal goes to `~/.claude/CLAUDE.md` (that machine, all projects) or 
 file. `.claude/` stays gitignored: the one **documented** leak around AI tooling is
 `settings.local.json` carrying real credentials, never the text of `CLAUDE.md`.
 
-This is what the ecosystem does, and it was measured rather than assumed before the rule was
-written: of 25 public repositories examined one by one, 22 version the file as it is, and six of
-them — Next.js and Prisma among them — reduce it to a pointer at `AGENTS.md`. *(A versioned
-template works only where an installer performs the copy: Claude Code reads `CLAUDE.md` and nothing
-else, so a template nobody copies is a file nobody reads, silently.)*
+This is what the ecosystem does, measured rather than assumed: of 25 public repositories examined
+one by one, 22 version the file, and six — Next.js and Prisma among them — reduce it to a pointer
+at `AGENTS.md`. *(A versioned `.example` only works where an installer performs the copy: a template
+nobody copies is a file nobody reads, silently.)*
 
-⚠️ **A generated project is created PRIVATE** (runbook §1) and keeps it gitignored. The rule applies
-**the day it goes public** — that step belongs to the flip, not to the scaffolding.
+**It applies from the first commit, not from the flip.** Visibility was once the trigger, which made
+the rule wait on a gesture nobody performs on a private project — where the file is just as
+invisible to whoever clones. What makes publishing safe is the *content*, never the timing.
+
+⚠️ **A repository ADOPTED into the standard is the one case needing care**: its `CLAUDE.md` already
+exists, full of whatever its author put there. Read it before tracking it — machine paths, private
+repository names, preferences — because the history keeps whatever is pushed.
 
 ---
 

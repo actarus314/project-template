@@ -22,6 +22,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A generated project commits its `CLAUDE.md`, so cloning it is enough to read its rules.** It was
+  gitignored, and it is the only thing that loads `AGENTS.md` — measured on a clone: an agent started
+  there did not have that file in its context at all. It ships reduced to the `@AGENTS.md` import;
+  what it used to carry that was impersonal and useful (the `direnv exec` trap, the neighbouring
+  workspace) moved into `AGENTS.md`, where every agent reads it. **The rule no longer waits for the
+  flip**: what makes publishing safe is the content, not the timing — a file that cannot hold
+  anything personal needs no window during which it is kept out of sight. `RUNBOOK` §4 step 2b now
+  covers only an ADOPTED repository, whose `CLAUDE.md` already exists and must be read before it is
+  tracked.
+- **`configure-repo.sh` travels, with the documentation needed to run it — and nothing else.** A
+  generated project changes status on its own (it goes public, it gains a staging host), and that is
+  the one gesture requiring server configuration it could not reach. It ships with its implementation
+  note, a **pinned** link to the template's RUNBOOK (`init-project.sh` rewrites `main` into the exact
+  tag as it copies the file, so the link keeps describing the version that project was born from),
+  and a self-contained `docs/server-config.md` carrying the admin-PAT recipe, the replay-on-flip
+  reason, and the revocation. ⚠️ That guide is now a deliverable to keep up to date.
+- **A generated project's `AGENTS.md` states the rules its checks enforce.** It received 24 controls
+  and not one line saying why any of them refuses something — a gate whose verdicts read as
+  arbitrary. Six rules, worded for a project rather than copied from the method.
 - **A check now generates a project and plays its door on the spot** — `verify-generated-green.sh`.
   `verify-travel.sh` already generated projects, but it asks whether a *path* still resolves there;
   this one asks whether the *gate passes* there, and the gap between those two questions is where

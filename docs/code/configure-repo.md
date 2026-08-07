@@ -11,8 +11,8 @@ the *write* PAT (without `Administration: write`), so trusting it would silently
 under the wrong token. `ADMIN_PAT` is the one explicit door for injecting a token without the
 interactive masked prompt (tests, CI) — never something a `.envrc` should set.
 
-The permission recipe printed to the maintainer is a pointer to `docs/RUNBOOK.md` step 7a, not a
-copy: an earlier version copied it inline, and the copy drifted silently — first missing
+The permission recipe printed to the maintainer is a pointer, not a copy: an earlier version copied
+it inline, and the copy drifted silently — first missing
 `Contents: read` (needed to read `CONTRIBUTING.md`), then `Issues: read` (needed to date the
 Dependency Dashboard). That line is exactly what gets read when creating the token, so a short and
 wrong recipe is worse than a pointer — each missing permission fails with no error at all.

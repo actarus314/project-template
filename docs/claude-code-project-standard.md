@@ -37,9 +37,9 @@ Three things to distinguish clearly:
 `.gitignore` is the operational boundary between the two.
 
 **Language & tone rule**:
-> All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`) can stay in French. ⚠️ **`CLAUDE.md` is versioned once a repository is public** *(§6)*, so it follows the English rule from that day on.
+> All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`) can stay in French. ⚠️ **`CLAUDE.md` is versioned** *(§6)*, so it follows the English rule too.
 >
-> **Remaining exceptions**: the local file templates stay in French — `templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`.
+> **Remaining exceptions**: the local file templates stay in French — `templates/repo/.envrc`, `templates/workspace/*`. *(`templates/repo/CLAUDE.md` left that list the day it stopped being a local file: it is committed in every generated project.)*
 > They are gitignored in the generated project and never reach GitHub.
 >
 > **The bilingual `README.md` is a different kind of exception — deliberate, not a leftover**: it is the one **versioned** file allowed to carry French, in every project *(`README.md` here, `templates/repo/README.md` in each one generated)* — detail in §15.
@@ -130,7 +130,7 @@ Three questions, in order:
 | `.env` | No | Yes (app runtime) | `repo/.env` ignored |
 | `.envrc` | No | Yes (direnv → git/gh) | `repo/.envrc` ignored |
 | `.claude/settings.local.json` | No | Yes (Claude Code) | `repo/.claude/` ignored |
-| `CLAUDE.md` | No | Yes (Claude Code) | `repo/CLAUDE.md` — **versioned** once public, and reduced to the import (§6) |
+| `CLAUDE.md` | No | Yes (Claude Code) | `repo/CLAUDE.md` — **versioned**, and reduced to the import (§6) |
 | `node_modules/` | No | Yes (Node runtime) | `repo/node_modules/` ignored |
 | `data/` (SQLite) | No | Yes (app runtime) | `repo/data/` ignored |
 | Phase 2 plan | No | No | `workspace/plans/` |
@@ -154,7 +154,7 @@ Three questions, in order:
 
 ## 6. `CLAUDE.md` — the file that makes the rules readable at all
 
-→ **[`claude-code-setup.md`](claude-code-setup.md)** — why it is versioned on a public repository, what it carries, and what it never carries.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — why it is versioned, what it carries, and what it never carries.
 
 ---
 
@@ -178,8 +178,7 @@ Three questions, in order:
 .env.local
 .envrc
 .claude/
-# CLAUDE.md — while the repository is private. It comes OUT of this list at the flip (§6).
-CLAUDE.md
+# CLAUDE.md is NOT here: it is versioned, and carries only the @AGENTS.md import (§6).
 
 # deps
 node_modules/

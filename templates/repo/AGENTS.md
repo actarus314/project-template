@@ -2,7 +2,8 @@
 
 Read this before changing anything in this repository.
 This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding
-agents. Claude Code reads it through the import in `CLAUDE.md` (local, untracked).
+agents. Claude Code reads it through the import in `CLAUDE.md` — **versioned for that reason
+alone**: gitignored, it reaches nobody who clones, and nothing else loads this file.
 
 > Scaffolded by **project-template `<template-version>`**.
 > This project carries a **frozen copy** of that version's templates: a later fix to the template
@@ -91,10 +92,8 @@ red pull request. The safety net is local, and partly human.
   > gh run list --commit "$sha" --json workflowName,status,conclusion
   > ```
 
-  > `gh pr checks` cannot be used here. It reads `statusCheckRollup`, which needs the `Checks`
-  > permission — and that permission **does not exist** in the fine-grained token UI, so it cannot
-  > be granted (github/community#129512). The command above needs only `Actions: read`, which the
-  > repository token already has.
+  > `gh pr checks` cannot be used here: it needs the `Checks` permission, which **does not exist**
+  > in the fine-grained token UI (github/community#129512). The command above needs `Actions: read`.
 
 - **After the merge, check the `push` run on `main` too.** It is a *different event*, so it is a
   different run: the pull request being green says nothing about it. `main` is what ships.
@@ -119,6 +118,32 @@ red pull request. The safety net is local, and partly human.
 > This is the failure mode these rules close: a config regression no build step catches reaches
 > `main`, ships as `:latest`, and a host pulls it before anyone notices.
 
+## The rules the checks enforce
+
+The checks below are not style preferences with a script attached: each one guards a rule, and a
+project that receives them without the rules gets a gate whose verdicts read as arbitrary.
+
+- **A fact lives in ONE place.** Everywhere else, a link — never a copy, and never the same thing
+  said again in other words. Two copies drift, and the stale one is the one that gets read.
+- **A comment carries the constraint, never the story.** What the code cannot say, and nothing
+  more: no dated account of how a bug was found. That belongs in the neighbouring workspace's
+  archives, with a one-line pointer if it is worth finding again.
+- **A living document SHRINKS when a stage closes.** It grows while the work is open, and a closing
+  stage prunes it and files what it leaves behind. A document that only ever grows stops being read.
+- **Nothing named like a secret is versioned.** `.env`, `.envrc`, `secrets.*` — the name alone is
+  the defect, whatever the file contains today, because it is what gets filled in tomorrow. No
+  machine path either: it says who wrote the file and from where.
+- **The neighbouring `../workspace/` NEVER gains a remote.** It holds what must not be published.
+- **The git tag is the single source of the version.** Not a literal stored in a script.
+
+## Two traps that cost silence
+
+- **`git push` and `gh` need `direnv exec .`** in an agent's shell: it is non-interactive, the
+  direnv hook loads nothing, the PAT is absent. ⚠️ It does **not** change directory — from
+  elsewhere, pin the repo (`git -C repo`, `--repo`).
+- **`../workspace/`** is a git repo with **no remote**, never pushed: tracking doc, notes, secrets.
+  Read `../workspace/docs/SUIVI.md` first when resuming; keep it up, with `CHANGELOG.md`.
+
 ## Checks that run
 
 - **pre-commit hook** — `gitleaks` on staged files (a commit carrying a secret is rejected), then a
@@ -139,3 +164,6 @@ red pull request. The safety net is local, and partly human.
 
 - <vendored code, generated files, submodules…>
 - Never commit a secret. `.env` and `.envrc` are untracked, and must stay that way.
+- 🔴 **`requirements-ci.txt` is gitignored AND tracked** (`git add -f`) — listed there it escapes
+  the dependency scan, deliberately, but the CI runs `pip install -r` on it. **Never
+  `git rm --cached` it**: the CI breaks, and nothing local says why.

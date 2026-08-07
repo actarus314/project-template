@@ -61,8 +61,8 @@ else
 fi
 
 # 2b — CLAUDE.md, on a repository that is already public. It is the only thing that loads AGENTS.md,
-#      and putting it back in .gitignore breaks that silently. Detected, never assumed: a private
-#      repository legitimately keeps it out (standard §6, the flip is when it comes in).
+#      and putting it back in .gitignore breaks that silently. Detected, never assumed: an adopted
+#      repository may not have brought it in yet (standard §6).
 if [ "$(git config --get remote.origin.url 2>/dev/null)" ] && git ls-files --error-unmatch CLAUDE.md >/dev/null 2>&1; then
   if ! grep -q "@AGENTS.md" CLAUDE.md; then
     echo "✗ CLAUDE.md no longer imports @AGENTS.md — nothing loads the rules any more"
