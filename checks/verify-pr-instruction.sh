@@ -63,20 +63,35 @@ OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")
 # Wrappers are peeled ONE token at a time, testing before each peel — a single regex either ate the
 # target (./open-pr.sh looks like a path) or stopped short of it (direnv exec <dir> is three tokens).
 PEEL = re.compile(r"^(?:cd|direnv|exec|env|sudo|time|command|nohup)$|^[-./~]\S*$|^\S+=\S*$")
-def opens(seg):
-    # shlex, never .split(): a QUOTED assignment holding the name is one token, so the env-prefix
-    # rule cannot peel its opening half and promote the rest to a command. Falls back on unbalanced
-    # quotes, where shlex raises and a plain split is the only reading left.
-    try:
-        toks = shlex.split(seg)
-    except ValueError:
-        toks = seg.strip().split()
+OPS = {";", "&&", "||", "|", "&", "\n"}
+# A heredoc is CONTENT, never commands this shell runs. Left in, any text that merely quotes the
+# gesture — the documentation of this very check — reads as an opening. Measured: editing that note
+# was recorded as a pull request being opened, and it consumed the token the real one then needed.
+HEREDOC = re.compile(r"<<-?\s*[\"\x27]?(\w+)[\"\x27]?\n.*?\n\s*\1\s*$", re.S | re.M)
+def segments(cmd):
+    # Splitting on ; & | WITHOUT honouring quotes cuts strings open: an operator inside a quoted
+    # argument ends the segment, and whatever follows lands in command position. shlex tokenises
+    # and separates the operators itself. Both readings fall back on a plain split when quotes are
+    # unbalanced — there shlex raises, and there is nothing better to read.
+    cmd = HEREDOC.sub("\n", cmd)
+    lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
+    lex.whitespace_split = True
+    try: toks = list(lex)
+    except ValueError: return [s.split() for s in re.split(r"[;&|\n]+", cmd)]
+    segs, cur = [], []
+    for tok in toks:
+        if tok in OPS: segs.append(cur); cur = []
+        else: cur.append(tok)
+    segs.append(cur)
+    return segs
+def opens(toks):
+    toks = list(toks)
     while toks:
         if OPEN.match(" ".join(toks) + " "): return True
         if not PEEL.match(toks[0]): return False
         toks.pop(0)
     return False
-print("yes" if any(opens(s) for s in re.split(r"[;&|\n]+", sys.stdin.read())) else "no")
+print("yes" if any(opens(s) for s in segments(sys.stdin.read())) else "no")
 ' || echo no)
 [ "$opens" = yes ] || exit 0
 

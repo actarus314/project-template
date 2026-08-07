@@ -39,6 +39,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   substituted, by construction. ⚠️ **The CI carried a second copy of that net, and the two had
   already drifted** — the CI knew `<template-version>`, the script did not. Both now hold the same
   list and the same exclusion.
+- **The same instrument was counting its own documentation, and that inverted its verdict.** Two
+  splits happen — command into segments, then segment into tokens — and neither honoured quotes: an
+  operator *inside a quoted argument* ended the segment, so a JSON payload holding
+  `cd /repo && ./open-pr.sh` read as an opening, and editing this check's own note read as another.
+  🔴 **The cascade is the real defect**: a false positive **consumes the instruction token**, so the
+  genuine opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon,
+  one of them a real opening recorded as unauthorised. Both splits use `shlex` now, heredocs are
+  dropped as content, and it is verified on seven shapes — four openings, three quotations.
 - **The pull-request instrument counted an opening that never happened.** It peels wrappers to find
   the command position, and `VAR=value` is one of them — an environment prefix must not hide the
   command behind it. Split on whitespace, a quoted assignment carrying the name falls apart:
