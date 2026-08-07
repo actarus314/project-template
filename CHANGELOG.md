@@ -179,13 +179,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   pattern broad enough to fire on ordinary prose — the list carries that warning beside the entries.
 - **`CLAUDE.md` is versioned, so that cloning this repository is enough to read its rules.** It was
   ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
-  started there reported the file was **not in its context** — present on disk, invisible. The rules
-  of a public repository were reaching no one but the maintainer's own checkout.
+  started there reported the file was **not in its context** — present on disk, invisible.
   🔴 **The rule is not "publish it", it is what it may CONTAIN**: the file is versioned **and carries
   nothing but the import**. A file that cannot hold anything personal is one nobody has to remember
-  not to fill; anything personal goes to `~/.claude/CLAUDE.md`.
-  **Measured before deciding**: of 25 public repositories, **22 version the file as it is**, and six
-  reduce it to a pointer at `AGENTS.md` — this arrangement exactly.
+  not to fill.
+  **Measured before deciding**: of 25 public repositories, **22 version the file as it is**.
 - **Two guards, so the rule does not rest on anyone remembering it.** `verify-do-not-break.sh` fails
   when a versioned `CLAUDE.md` stops importing `@AGENTS.md` *(nothing would load the rules any more,
   and nothing would say so)* or when it gains a machine path. And `verify-secret-blindspots.sh` now
@@ -249,45 +247,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
   block of 5+ lines removed from a script, which of two decisions was made: it should never have been
   written there — then a `drop:` line in a commit message says so — or it is worth keeping, and it
-  moves into `docs/code/<name>.md`. **Neither is the default**: a comment repeating the
-  documentation should leave no trace, a measurement should survive somewhere.
-  🔴 **The threshold was measured**: over 40 commits, 24 such blocks were deleted, 19 alongside their
-  note and 5 without — the declaration is asked for on about **one commit in eight**. A `drop:`
-  covers **only the files it NAMES**: a blanket line once cleared a whole branch.
-  ⚠️ It judges **commits, never the working tree** — a `pre-commit` hook cannot read the message of
-  the commit being made, so the declaration and its verdict would never meet.
+  moves into `docs/code/<name>.md`. **Neither is the default.**
+  🔴 **The threshold was measured**: over 40 commits, 24 such blocks were deleted, 19 with their note
+  and 5 without — asked for on about **one commit in eight**. A `drop:` covers **only the files it
+  NAMES**.
+  ⚠️ It judges **commits, never the working tree**: a `pre-commit` hook cannot read the message of
+  the commit being made.
 
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
   is not, and this answers it instead of assuming.
-  It records every opening as *with* or *WITHOUT* an
-  instruction and **returns** — it never refuses a tool and cannot wedge a session. It watches the
-  **gesture**, not one script: `gh pr create` appears 84 times in this repository's own history, so a
-  guard on `open-pr.sh` alone would leave the door beside it open.
+  It records every opening as *with* or *WITHOUT* an instruction and **returns**: it never refuses a
+  tool. It watches the **gesture**, not one script — `gh pr create` appears 84 times here, so a guard
+  on `open-pr.sh` alone leaves the door beside it open.
   🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
   **20** openings, the gate does not get built.
-  And the token is **consumed, never dated** — an order
-  and its opening were measured up to **31 turns** apart, so any expiry short enough to restrict would
+  The token is **consumed, never dated** — an order and its opening were measured up to **31 turns**
+  apart, so any expiry short enough to restrict would
   refuse real orders.
 - **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
   hook holds the turn until the pass artefact **covers** the tracking doc — every backlog item number
   and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
-  A skill is text, so a step skips itself and nothing sees it *(lived: the line-by-line enumeration
-  skipped, 5 facts re-measured out of 40, a result that would have passed any "the file is not empty"
-  check)*.
-  **Coverage, never presence** — and the total is read from the tracking doc itself, so it is
-  not a figure anyone picked. Naming an entry without a verdict does not count it.
+  A skill is text, so a step skips itself and nothing sees it.
+  **Coverage, never presence** — the total is read from the tracking doc itself, so it is not a
+  figure anyone picked, and naming an entry without a verdict does not count it.
   🔴 **Ceiling of three send-backs, then the turn is released with the gap published**: `Stop` has no
-  native loop protection, so a guard that can wedge the session is worse than the gap it watches.
-  The artefact is scratch, outside both repositories, deleted the moment the doc is written.
+  native loop protection, and a guard that can wedge the session is worse than the gap it watches.
 - **Two absolute limits on comments, beside the drift that was already there**: a **level** (25 %)
   and a **longest block** (6 lines), on the files a branch **touches**. Drift alone cannot see a
   file *born* verbose — it never grows, so it never speaks, and every one of the 25 scripts here
   sat between 31 % and 64 % comment without a single verdict. Both values were measured before
-  being set: at a 4-line block the guard fires on legitimate warnings *(33 blocks read one by one:
-  "SQUASH-ONLY and a STAGING branch are INCOMPATIBLE", "in DRY-RUN the verdict cannot come from the
-  return code")*, at 8 it starts covering section headings. Touched-files-only is what makes the
-  rule landable: applied to the whole tree it would have turned all 25 scripts red at once.
+  being set: at 4 lines the guard fires on legitimate warnings, at 8 it starts covering section
+  headings. Touched-files-only is what makes the rule landable — applied to the whole tree it would
+  have turned all 25 scripts red at once.
   ⚠️ **A shebang is not a comment** — counting it made every minimal header a violation.
 - **`docs/code/`** — one note per file, owning its **implementation** constraints, so the *why* has
   somewhere to go when it leaves a script. What a check looks for stays in `repo-controls.md`; the
@@ -331,12 +323,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **What a check does with a verdict is now DECLARED, and confronted twice.** Every check carries
   `# blocking: yes|no` in its header, beside `# hook:` — and *advisory* is a claim about the **exit
   code**, never about the wording, since `check.sh` turns any non-zero into a failed gate.
-  `verify-checks-wiring` compares that declaration to the control table, at every commit and at no
-  cost; **`check.sh` compares it to the REAL exit code** the moment that code exists, which is the
-  only reading that catches a script contradicting both its header and the table. Neither replaces
-  the other, and the second speaks only when a check actually bites — fabricating a biting case for
-  all 21 was weighed and left out. Three checks had been contradicting themselves, in both
-  directions, and a human found it by reading the table.
+  `verify-checks-wiring` compares that declaration to the control table; **`check.sh` compares it to
+  the REAL exit code** the moment that code exists — the only reading that catches a script
+  contradicting both its header and the table. Three checks had been contradicting themselves, in
+  both directions, and a human found it by reading the table.
 - **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook counts the
   commits landed since the tracking doc was last written to; past a measured threshold it blocks the
   end of the turn and routes to the `housekeeping` skill, which does the writing. The split is the
@@ -355,15 +345,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is the reference point, never the rhythm — the check runs at every commit like its siblings.
 
 ### Changed
-- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping at
-  that list leaves every other section to rot, and the rot was measured: a pass did exactly that,
-  and the maintainer then found by hand, in one reading, an entry point stating the finished stage
-  instead of the next gesture, **two sections restating the same completed work**, a table broken by
-  block quotes cutting its header from its rows, and **three false facts**. The skill now asks four
-  questions of every section — does the entry point say where to RESUME · is this fact stated twice
-  · does it still hold *(re-measured, and **from the server** rather than a local cache — a stale
-  remote ref made one pass report 19 branches where the forge held 2)* · do the tables still render.
-  It also has to state what could **not** be verified: silence reads as verified.
+- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping there
+  leaves every other section to rot, and the rot was measured: in one reading the maintainer found an
+  entry point stating the finished stage instead of the next gesture, two sections restating the same
+  work, a broken table, and **three false facts**.
+  The skill asks four questions of every section — does it say where to RESUME · is this fact stated
+  twice · does it still hold *(re-measured **from the server**, never a local cache)* · do the tables
+  render. And it must state what could **not** be verified: silence reads as verified.
 - **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
   *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
   directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
@@ -380,11 +368,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the second question is the one a threshold is set on. Each now writes `1` with the **tag of the
   signal that caught**, `0` when it looked and found nothing, and `skip` for an event it never
   evaluated, so a rate reads off `bit / fired`.
-  The journal is also **anchored to the script** rather
-  than to the working directory: a hook fires wherever the session sits, and a relative path silently
-  dropped every firing from elsewhere — the denominator of that rate, lost without a trace.
-  `--report` gains nothing to configure: the columns already existed, and one of them stopped being
-  called `Blocked` since a warning is not a block.
+  The journal is **anchored to the script** rather than to the working directory: a hook fires
+  wherever the session sits, and a relative path silently dropped every firing from elsewhere.
 - **The control journal moved OUT of the repository**, to
   `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`. Under `.ci-tools/` it was
   per-project as well as per-machine, so the one question worth asking of it — *is this gate firing
