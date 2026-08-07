@@ -110,14 +110,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - **A generated project's origin stamp now says what it was generated WITH, not only from which
-  version.** Assisted regeneration starts by reproducing the project (`RUNBOOK` §5), and the options
-  were **deduced from the tree** — `pages.yml` implies `--pages`, a `develop` branch implies
-  `--staging`. Deduction reads today's tree, not the answers given back then, so a shortcut whose
-  default moves later reproduces a *different* project in silence. The stamp carries every flag
-  explicitly, negatives included, plus the origin URL. This is the shape `cruft` and `copier` use —
-  they regenerate from recorded answers rather than patching, which is exactly what that file is for.
+  version.** The options used to be deduced from the tree, and deduction reads today's tree rather
+  than the answers given back then: a flag whose default moves later reproduces a *different*
+  project in silence. The stamp now carries every flag explicitly, negatives included, plus the
+  origin URL — the shape `cruft` and `copier` use.
   ⚠️ A project generated before this carries the version alone; the runbook says to deduce once and
-  write the options in, so the next comparison never guesses again.
+  write the options in.
 - **Making `configure-repo.sh` travel broke the generator's own placeholder net.** The net scans the
   generated tree for `<owner>/<repo>`, `<image-name>` and friends — and the three files that now
   travel *(the script, its note, `docs/server-config.md`)* are precisely the ones that **document**
@@ -141,14 +139,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   *(The anchor itself does not move: growth needs the FAR one — measured, the tracking doc reads
   +24 % against the tag and −0,2 % against `origin/main`, where every merge resets the accumulation.)*
 - **A generated project commits its `CLAUDE.md`, so cloning it is enough to read its rules.** It was
-  gitignored, and it is the only thing that loads `AGENTS.md` — measured on a clone: an agent started
-  there did not have that file in its context at all. It ships reduced to the `@AGENTS.md` import;
-  what it used to carry that was impersonal and useful (the `direnv exec` trap, the neighbouring
-  workspace) moved into `AGENTS.md`, where every agent reads it. **The rule no longer waits for the
-  flip**: what makes publishing safe is the content, not the timing — a file that cannot hold
-  anything personal needs no window during which it is kept out of sight. `RUNBOOK` §4 step 2b now
-  covers only an ADOPTED repository, whose `CLAUDE.md` already exists and must be read before it is
-  tracked.
+  gitignored, and it is the only thing that loads `AGENTS.md` — measured on a clone, an agent started
+  there did not have that file in its context at all. It ships reduced to the `@AGENTS.md` import.
+  **The rule no longer waits for the flip**: what makes publishing safe is the content, not the
+  timing. `RUNBOOK` §4 step 2b now covers only an ADOPTED repository, whose `CLAUDE.md` already
+  exists and must be read before it is tracked.
 - **`configure-repo.sh` travels, with the documentation needed to run it — and nothing else.** A
   generated project changes status on its own (it goes public, it gains a staging host), and that is
   the one gesture requiring server configuration it could not reach.
@@ -166,20 +161,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   three defects sat at once, all of them invisible here and fatal on landing. It generates the
   richest variant, names it, and prints the exact command to replay a failure. It is deliberately
   ONE variant where `verify-travel` covers four: a check is the same file whatever the toolchain.
-- **A live project can be brought forward to a newer template, and the runbook now says how.** The
-  question had been open and untested; it was measured instead. Applying the template's own
-  `git diff` to a project **works for 56 of its 85 files and silently misses the rest**: the
-  generator filters *(3 of 12 checks copied at `v1.2.0`)*, renames *(`templates/repo/X` lands as
-  `X`)* and substitutes *(year, holder, slug, version, image name)* — a project is **not** a subset
-  of the template. Three-way merge does behave correctly where it applies — clean where the project
-  never diverged, **conflict markers** where it did — but only with the template as a remote and a
-  patch scoped to what the project actually received.
+- **A live project can be brought forward to a newer template, and the runbook now says how.**
+  Applying the template's own `git diff` **works for 56 of its 85 files and silently misses the
+  rest**: the generator filters, renames and substitutes — a project is **not** a subset of the
+  template.
   🔴 **Half-updated is not half-right**: measured, a project whose checks moved forward while its
-  workflow stayed behind **turns red for a fault it does not have** — the fresh check reads the
-  stale file. Hence **assisted regeneration**: generate a reference project with the same options
-  into a scratch directory, diff the two trees, separate what the project never touched from what it
-  deliberately changed, and finish when `./check.sh --house` is green — not when the files are
-  copied.
+  workflow stayed behind **turns red for a fault it does not have**. Hence **assisted
+  regeneration** — generate a reference project with the same options, diff the two trees, and
+  finish when `./check.sh --house` is green, not when the files are copied.
 - **A private project name was published here for two days, and nothing could have seen it.**
   `gitleaks` matches token SHAPES; a name has none. `verify-private-names.sh` reads a list that
   lives **outside** this repository — publishing the names to hide would publish them — and refuses
@@ -192,16 +181,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
   started there reported the file was **not in its context** — present on disk, invisible. The rules
   of a public repository were reaching no one but the maintainer's own checkout.
-  🔴 **The rule is not "publish it", it is what it may CONTAIN**: on a repository that is public, or
-  meant to become public, `CLAUDE.md` is versioned **and carries nothing but the import**. A file
-  that cannot hold anything personal is one nobody has to remember not to fill. Anything personal
-  goes to `~/.claude/CLAUDE.md`; `.claude/` stays ignored — the one **documented** leak around AI
-  tooling is `settings.local.json` holding real credentials, never the text of `CLAUDE.md`.
-  **Measured before deciding**: of 25 public repositories examined one by one, **22 version the file
-  as it is**, 2 ship a template, 1 has none — and six of them, Next.js and Prisma among them, reduce
-  it to a pointer at `AGENTS.md`, which is this arrangement exactly.
-  ⚠️ **A generated project is created PRIVATE and keeps it ignored**: the step belongs to the flip
-  (runbook §4), not to the scaffolding.
+  🔴 **The rule is not "publish it", it is what it may CONTAIN**: the file is versioned **and carries
+  nothing but the import**. A file that cannot hold anything personal is one nobody has to remember
+  not to fill; anything personal goes to `~/.claude/CLAUDE.md`.
+  **Measured before deciding**: of 25 public repositories, **22 version the file as it is**, and six
+  reduce it to a pointer at `AGENTS.md` — this arrangement exactly.
 - **Two guards, so the rule does not rest on anyone remembering it.** `verify-do-not-break.sh` fails
   when a versioned `CLAUDE.md` stops importing `@AGENTS.md` *(nothing would load the rules any more,
   and nothing would say so)* or when it gains a machine path. And `verify-secret-blindspots.sh` now
@@ -229,18 +213,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   else's clutter in it.
 - **The delegation guard was blind to every subagent a workflow starts.** It hooks the `Agent` tool,
   and a workflow's `agent()` calls never go through it — so the three instructions were enforced on
-  one path and merely *habitual* on the other. Measured on a 13-agent run: all of them ran on the
-  cheap model **because each call said so by hand**. The hook now also reads a workflow's script,
-  and states what it read — the number of `agent()` calls — because the claim it can make there is
-  script-wide, never per call *(a script builds its prompts from variables; tying one call to its
-  own text would need a JS parser and a guess)*.
+  one path and merely *habitual* on the other. The hook now also reads a workflow's script, and
+  states what it read — the count of `agent()` calls, since the claim it can make there is
+  script-wide and never per call.
   🔴 **A workflow invoked by NAME is declared unread rather than passed**: its script is not in the
-  event, and silence would read as checked. **Both halves were then measured on real launches**: a
-  probe workflow with one bare `agent()` call was refused, a compliant one ran.
-  ⚠️ **And the probe found a hole in its own test**: the workflow was *described* as being about the
-  delegation hook, and that word — in a description, instructing nothing — satisfied the
-  re-delegation check. The `meta` block is stripped before the words are looked for, so what counts
-  is what the script instructs, never how it presents itself.
+  event, and silence would read as checked.
+  ⚠️ **The probe found a hole in its own test** — the workflow was *described* as being about the
+  delegation hook, and that word satisfied the check. The `meta` block is stripped now.
 - **The French half of the same guard listed three spellings of one verb and missed the ordinary
   conjugated one**, so a prompt written in French — the way the maintainer writes them — matched
   none of the three and was refused. The accents are a character class now, not a list.
@@ -270,17 +249,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
   block of 5+ lines removed from a script, which of two decisions was made: it should never have been
   written there — then a `drop:` line in a commit message says so — or it is worth keeping, and it
-  moves into `docs/code/<name>.md`. **Neither is the default**, which is the whole point: a comment
-  repeating the documentation should leave no trace, a measurement should survive somewhere.
-  🔴 **The threshold was measured before being set**: over 40 commits, blocks of that size were
-  deleted 24 times, **19 alongside their own note and 5 without** — so the declaration is asked for
-  on roughly **one commit in eight**. And a `drop:` covers **only the files it NAMES**: the first
-  version let one blanket line clear an entire branch, a maximal-scope exception hidden inside a
-  minimal-scope mechanism — caught by an exception sweep the day it was written, on its own first
-  commit *(one declaration, 19 blocks passed)*.
-  ⚠️ It judges **commits, never the working tree**: a `pre-commit` hook cannot read the message of
-  the commit being made *(verified — `COMMIT_EDITMSG` does not exist yet at that point)*, so reading
-  the working tree would refuse a declaration that was correctly written.
+  moves into `docs/code/<name>.md`. **Neither is the default**: a comment repeating the
+  documentation should leave no trace, a measurement should survive somewhere.
+  🔴 **The threshold was measured**: over 40 commits, 24 such blocks were deleted, 19 alongside their
+  note and 5 without — the declaration is asked for on about **one commit in eight**. A `drop:`
+  covers **only the files it NAMES**: a blanket line once cleared a whole branch.
+  ⚠️ It judges **commits, never the working tree** — a `pre-commit` hook cannot read the message of
+  the commit being made, so the declaration and its verdict would never meet.
 
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
@@ -320,14 +295,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only: the generator's own notes describe files a generated project does not have)*.
 
 - **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
-  forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a
-  fault from a legitimate stage — the three highest-scoring pairs are steps of one undertaking)*,
-  **a message** by observation *(it fired when `#109` opened and changed nothing, not even a
-  mention)*, and **asking the maintainer** by the maintainer *(escalation is a last resort, not a
-  routine — it adds a decision to the person who wanted fewer)*. The rule stays a convention in
-  `AGENTS.md` and stops pretending to be a guard. The real cost is the full **open+merge cycle**
-  *(48 % of pull requests carry a single commit)* — a grouping discipline upstream, not a gate at
-  opening time.
+  forms were tried and each ruled out: **blocking** *(the signal cannot separate a fault from a
+  legitimate stage)*, **a message** *(it fired once and changed nothing)*, and **asking the
+  maintainer** *(escalation adds a decision to the person who wanted fewer)*. The rule stays a
+  convention in `AGENTS.md` and stops pretending to be a guard — the real cost is the full
+  **open+merge cycle**, so the discipline is grouping upstream, not a gate at opening time.
 - **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
   whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
   document written the same day, which is how four closed items sat in the open-work section for a
@@ -365,27 +337,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the other, and the second speaks only when a check actually bites — fabricating a biting case for
   all 21 was weighed and left out. Three checks had been contradicting themselves, in both
   directions, and a human found it by reading the table.
-- **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook
-  *(`checks/verify-housekeeping.sh`)* counts the commits landed since the tracking doc was last
-  written to; past a **measured** threshold it blocks the end of the turn and routes to the new
-  `housekeeping` **skill**, which holds the checklist and does the writing. The split is the point:
-  **code for what counts, a model only for what is judged** — no counter can tell whether a tracking
-  doc still reflects the work, or whether a stage actually closed. The threshold comes from 21 days
-  of history *(157 commits, 166 writes)*, counted per CROSSING rather than per turn: **6 commits**,
-  about once a week. **4 was tried first and withdrawn** — it looked ideal on the 21-day average
-  *(every 2,1 days, against a pass asked for by hand every 2,3)*, but an average flattens the dense
-  sessions, and on the day the guard shipped it would have spoken **five times**. 6 is the lowest
-  value at minimum noise: the count bottoms out there, so 8 or 10 buy no quiet and only arrive
-  later. Counting **pull requests** instead was measured and dropped: a threshold of 2 would speak
-  21 times over the same period, and a PR counter is blind to work not yet merged — the exact case
-  that motivated the guard. Work left
-  uncommitted and a branch never pushed are **reported** when it speaks, and never trigger it —
-  an uncommitted tree mid-session is the normal state, and a guard firing on the normal state gets
-  bypassed within a day.
-  **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it.
-  There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**.
-  An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches.
-  **It ships inactive**, like its two siblings: a hook only acts once declared.
+- **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook counts the
+  commits landed since the tracking doc was last written to; past a measured threshold it blocks the
+  end of the turn and routes to the `housekeeping` skill, which does the writing. The split is the
+  point: **code for what counts, a model only for what is judged**.
+  The threshold is **6 commits**, from 21 days of history: 4 was tried and withdrawn, and counting
+  pull requests was dropped as blind to work not yet merged.
+  **It also runs on `PreCompact`**, but blocks only on a hand-asked one: a guard that can wedge the
+  tool it protects is worse than the drift it watches.
 - **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
   recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
   hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
@@ -1069,24 +1028,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **practices** and rejecting the **tool** were stated in two files that never met, and read as a
   contradiction.
 
-- **The standard becomes the index of what it no longer carries — 1012 lines down to ~320.** It now
-  answers a single question, *where does this go?*, and opens with a table routing every other
-  question to its owner. `docs/` holds **eight files, eight subjects, eight owners**.
-  **`github-repo-config.md` is removed.** It owned nothing: four of its five sections had already
-  moved, and the fifth was a checklist restating the RUNBOOK. Its three genuinely unique facts were
-  relocated first — the list of files present from the first commit and the LICENSE decision to the
-  standard, and the reason an org repo caps at 87 % *(its checklist counts 8 items, a personal
-  account's 7 — so comparing the two scores means nothing)* to the RUNBOOK, next to the click it
-  qualifies.
-  **Standard §11 is removed**: thirteen of its entries restated §4-§8, two are held elsewhere.
-  🔴 **Its last entry was not an orphan but a CONTRADICTION**: §11 said a stale `.gitignore` entry
-  should be pruned periodically, §9 said leaving it in is defensive. Both are now stated once, and
-  reconciled — an entry covering a path generated only inside a container stays; one that matches
-  nothing at all goes.
-  **The circular reference is broken.** The tracking doc was owned by nobody: `METHODE.md` named the
-  standard §16 as its source, and §16 named `METHODE.md` as its source. `METHODE.md` owns it now.
-  Section numbers remain stable throughout: a removed section keeps its number as a one-line pointer,
-  so `standard §11` or `standard §16` written anywhere still resolves.
+- **The standard becomes the index of what it no longer carries — 1012 lines down to ~320.** It
+  answers one question, *where does this go?*, and routes every other to its owner: `docs/` holds
+  eight files, eight subjects, eight owners. **`github-repo-config.md` and §11 are removed** —
+  neither owned anything, and their few unique facts were relocated first.
+  🔴 **§11's last entry was not an orphan but a CONTRADICTION**: it said a stale `.gitignore` entry
+  should be pruned, §9 said leaving it in is defensive. Both are stated once now, and reconciled.
+  **The circular reference is broken** — `METHODE.md` and §16 each named the other as the tracking
+  doc's source. Section numbers stay stable: a removed one keeps its number as a pointer.
 
 ### Fixed
 - **🔴 The three checks shipped into every generated project were never run there.**
