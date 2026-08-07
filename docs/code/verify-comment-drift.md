@@ -27,7 +27,7 @@ guard that is red everywhere is a guard nobody reads.
 every generated project, and a `#`-only reading would count zero comments in a TypeScript or Go
 project — reporting a tidy "nothing to see" on a file that is 80 % commentary.
 
-**Both repositories are read** — see [`METHODE.md`](../METHODE.md) for why a method rule crosses.
+**Both repositories are read** — why a method rule crosses is [`AGENTS.md`](../../AGENTS.md)'s to say.
 
 The workspace carries neither remote nor tag, so what crosses over is the reference **timestamp** —
 the same mechanism [`verify-growth.md`](verify-growth.md) uses, but **not the same instant**, since

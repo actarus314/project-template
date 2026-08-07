@@ -26,10 +26,9 @@ like "nothing to see" whether or not `../workspace` exists at all.
 
 ## A tracked NAME betrays, not the content
 
-Anything named like a secret, tracked, is flagged by filename alone. The names are what betray,
-not the contents: `gitleaks` already looks for secret-shaped strings elsewhere in the pipeline, and
-it would never flag a file simply called `secrets.md` if the file happened to hold no real secret
-that day. This check catches the naming mistake gitleaks is not designed to catch.
+Why a filename is enough to flag, and what gitleaks is structurally unable to see, belongs to
+[`verify-secret-blindspots.md`](verify-secret-blindspots.md) — it is that check's subject. Here it
+is applied to one place gitleaks never reaches at all: the neighbouring repository.
 
 ## ONE tracking system, not one file
 

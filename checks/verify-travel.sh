@@ -22,7 +22,7 @@ fi
 # An empty read FAILS rather than skips — zero variants would find nothing and print a tick.
 types=$(sed -n 's/^case "\$TYPE" in \([a-z|]*\)).*/\1/p' init-project.sh | head -1 | tr '|' ' ')
 caps=$(grep -oE '^[[:space:]]+--[a-z]+\)[[:space:]]+[A-Z]+=1;' init-project.sh \
-       | grep -oE '\-\-[a-z]+' | sort -u | tr '\n' ' ')
+       | grep -oE '\-\-[a-z]+' | sort -u | tr '\n' ' ' || true)   # `|| true`: no capability is a legitimate read, and 0 matches would kill the script before the message below
 [ -n "$types" ] || { echo "✗ cannot read the toolchains from init-project.sh — this check would pass by looking at nothing" >&2; exit 1; }
 [ -n "$caps" ]  || { echo "✗ cannot read the capabilities from init-project.sh — same reason" >&2; exit 1; }
 

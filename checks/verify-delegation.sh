@@ -8,6 +8,9 @@
 # PreToolUse DOES fire on a subagent launch (tool_name = Agent), with `prompt`, `model` and
 # `subagent_type` as separate fields in tool_input — measured, not assumed
 # (workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md).
+# A WORKFLOW spawns subagents WITHOUT going through that tool, so watching `Agent` alone left the
+# rule unenforced on every one of them: what to read there, and what stays unproven, is in
+# docs/code/verify-delegation.md.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -61,26 +64,68 @@ except Exception:
     record("skip", "unreadable payload")
     sys.exit(0)                      # unreadable payload: never block on the guard's own failure
 
-if ev.get("tool_name") != "Agent":   # narrow trigger — anything else is none of this hook's business
-    record("skip", "not an Agent launch")
+tool = ev.get("tool_name")
+if tool not in ("Agent", "Workflow"):  # narrow trigger — anything else is none of this hook's business
+    record("skip", "not a subagent launch")
     sys.exit(0)
 
 ti = ev.get("tool_input") or {}
-prompt = str(ti.get("prompt") or "")
-model = str(ti.get("model") or "")
-
 CHEAP = ("haiku", "sonnet")
 missing = []
 
-if not any(c in model.lower() for c in CHEAP):
-    missing.append(f"cheaper model — `model` is {model or 'unset'}, expected one of {', '.join(CHEAP)}")
-if not re.search(r"deleg|délég|delèg|sous-agent|subagent", prompt, re.I):
-    missing.append("no re-delegation — the prompt never mentions delegating, so the subagent will")
+if tool == "Agent":
+    prompt = str(ti.get("prompt") or "")
+    model = str(ti.get("model") or "")
+    what = "the prompt"
+    if not any(c in model.lower() for c in CHEAP):
+        missing.append(f"cheaper model — `model` is {model or 'unset'}, expected one of {', '.join(CHEAP)}")
+else:
+    # A workflow carries its subagents INSIDE a script, so the three instructions are read there.
+    # The script arrives inline, or as a path, or as the name of a saved workflow whose text this
+    # hook cannot reach — and a name is declared as a skip, never passed off as a green.
+    script = str(ti.get("script") or "")
+    if not script and ti.get("scriptPath"):
+        try:
+            script = open(str(ti["scriptPath"]), encoding="utf-8").read()
+        except Exception:
+            record("skip", "unreadable scriptPath")
+            sys.exit(0)
+    if not script:
+        record("skip", f"named workflow {ti.get('name') or ''} — its script is not in the payload")
+        print(json.dumps({"systemMessage":
+            "verify-delegation: this workflow is invoked by NAME, so its script is not in the event "
+            "— the three delegation instructions were NOT read. Check them yourself."}), file=sys.stderr)
+        sys.exit(0)
+    calls = len(re.findall(r"\bagent\s*\(", script))
+    if calls == 0:
+        record("skip", "no agent() call in the script")
+        sys.exit(0)
+    # The `meta` block is stripped before the words are looked for: a workflow DESCRIBING itself as
+    # being about delegation satisfied the test while instructing nothing — measured in flight on
+    # this very check's own probe.
+    body = script
+    m = re.search(r"export\s+const\s+meta\s*=\s*\{", body)
+    if m:
+        i, depth = m.end() - 1, 0
+        for j in range(i, len(body)):
+            depth += (body[j] == "{") - (body[j] == "}")
+            if depth == 0:
+                body = body[:m.start()] + body[j + 1:]
+                break
+    prompt = body
+    what = f"the script ({calls} agent() call(s))"
+    # `model` is per-call here; unset, an agent inherits the SESSION model, which is the expensive one.
+    if not re.search(r"model\s*:\s*['\"]?(haiku|sonnet)", script, re.I):
+        missing.append(f"cheaper model — no `model: 'sonnet'` (or haiku) anywhere in {what}, "
+                       "so every agent inherits the session model")
+
+if not re.search(r"d[eéè]l[eéè]g|sous-agent|subagent", prompt, re.I):
+    missing.append(f"no re-delegation — {what} never mentions delegating, so the subagent will")
 if not re.search(r"advisor", prompt, re.I):
-    missing.append("no advisor — the prompt never mentions it, so the subagent will call it")
+    missing.append(f"no advisor — {what} never mentions it, so the subagent will call it")
 
 if not missing:
-    record(0)
+    record(0, f"{tool}: read {what}")
     sys.exit(0)
 
 detail = " · ".join(missing)

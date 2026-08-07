@@ -65,7 +65,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
   export GH_TOKEN="$GITHUB_PAT"
   ```
 - `direnv allow` once. Entering the folder → `GH_TOKEN` loaded → `git push`/`gh` use the repo's PAT. Leaving it → back to public-RO.
-- **Claude's Bash tool**: hits a pitfall of its own with this setup, documented once and in full at [`repo/CLAUDE.md`](../repo/CLAUDE.md#github-auth-the-non-interactive-shell-trap) — read it there rather than assuming a plain `git push` authenticates.
+- **Claude's Bash tool**: hits a pitfall of its own with this setup, documented once and in full at [`repo/AGENTS.md`](../repo/AGENTS.md#two-traps-that-cost-silence) — read it there rather than assuming a plain `git push` authenticates.
 
 **Usage:** no more need for `source .env` — direnv loads everything automatically in the folder.
 ```bash
@@ -107,4 +107,4 @@ If a key is exposed (accidental commit, leak, public chat, etc.):
 | PAT → git/gh bridge | `repo/.envrc` (`export GH_TOKEN=$GITHUB_PAT`) |
 | Application API keys | `repo/.env` |
 | Claude Code permissions | `repo/.claude/settings.local.json` (outside Git) |
-| Project instructions for Claude | `repo/CLAUDE.md` (outside Git) |
+| Project instructions for Claude | `repo/AGENTS.md` (versioned; `repo/CLAUDE.md` imports it) |

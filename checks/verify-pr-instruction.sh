@@ -58,13 +58,19 @@ print(str((ev.get("tool_input") or {}).get("command") or ""))
 # opening: a commit message quoting `open-pr.sh` counted as one, and a real opening was skipped
 # because the same line also ran a grep. Substring presence is not execution.
 opens=$(printf '%s' "$cmd" | python3 -c '
-import re, sys
+import re, shlex, sys
 OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")
 # Wrappers are peeled ONE token at a time, testing before each peel — a single regex either ate the
 # target (./open-pr.sh looks like a path) or stopped short of it (direnv exec <dir> is three tokens).
 PEEL = re.compile(r"^(?:cd|direnv|exec|env|sudo|time|command|nohup)$|^[-./~]\S*$|^\S+=\S*$")
 def opens(seg):
-    toks = seg.strip().split()
+    # shlex, never .split(): a QUOTED assignment holding the name is one token, so the env-prefix
+    # rule cannot peel its opening half and promote the rest to a command. Falls back on unbalanced
+    # quotes, where shlex raises and a plain split is the only reading left.
+    try:
+        toks = shlex.split(seg)
+    except ValueError:
+        toks = seg.strip().split()
     while toks:
         if OPEN.match(" ".join(toks) + " "): return True
         if not PEEL.match(toks[0]): return False

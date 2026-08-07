@@ -4,7 +4,7 @@
 
 ## Why a dead link matters more here
 
-This repo runs on pointers: [`METHODE.md`](../METHODE.md) states a fact lives in ONE place and
+This repo runs on pointers: [`AGENTS.md`](../../AGENTS.md) states a fact lives in ONE place and
 everywhere else there is a link, never a copy. A broken link silently turns "one source" back into
 "no source" — nothing renders an error, the reader just lands nowhere and stops following.
 

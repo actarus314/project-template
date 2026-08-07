@@ -21,6 +21,161 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A generated project's origin stamp now says what it was generated WITH, not only from which
+  version.** Assisted regeneration starts by reproducing the project (`RUNBOOK` §5), and the options
+  were **deduced from the tree** — `pages.yml` implies `--pages`, a `develop` branch implies
+  `--staging`. Deduction reads today's tree, not the answers given back then, so a shortcut whose
+  default moves later reproduces a *different* project in silence. The stamp carries every flag
+  explicitly, negatives included, plus the origin URL. This is the shape `cruft` and `copier` use —
+  they regenerate from recorded answers rather than patching, which is exactly what that file is for.
+  ⚠️ A project generated before this carries the version alone; the runbook says to deduce once and
+  write the options in, so the next comparison never guesses again.
+- **Making `configure-repo.sh` travel broke the generator's own placeholder net.** The net scans the
+  generated tree for `<owner>/<repo>`, `<image-name>` and friends — and the three files that now
+  travel *(the script, its note, `docs/server-config.md`)* are precisely the ones that **document**
+  those placeholders. Prose was reported as a bug, and the CI failed on all five toolchain
+  variants. The scan now skips what is copied **verbatim from the root**: those files are never
+  substituted, by construction. ⚠️ **The CI carried a second copy of that net, and the two had
+  already drifted** — the CI knew `<template-version>`, the script did not. Both now hold the same
+  list and the same exclusion.
+- **The pull-request instrument counted an opening that never happened.** It peels wrappers to find
+  the command position, and `VAR=value` is one of them — an environment prefix must not hide the
+  command behind it. Split on whitespace, a quoted assignment carrying the name falls apart:
+  `PKG="check.sh open-pr.sh checks"` leaves `PKG="check.sh` for the prefix rule to peel, and
+  promotes the rest to the command position. **One false reading out of the first two collected**,
+  on an instrument whose whole job is to decide a percentage over twenty openings. It tokenises with
+  `shlex` now, so quotes hold. Verified on five cases — three real openings still bite, the
+  assignment and a plain `grep` of the name stay silent.
+- **`verify-growth` says what it could NOT compare.** A document created since the last release has
+  no reference, so it cannot grow by any percentage — measured: a 402-line file added to `docs/`
+  passes unnoticed, at any size. That silence is what let 26 implementation notes be born at
+  whatever length. The verdict now reads `54 document(s) · 6 born since the tag, NOT comparable`.
+  *(The anchor itself does not move: growth needs the FAR one — measured, the tracking doc reads
+  +24 % against the tag and −0,2 % against `origin/main`, where every merge resets the accumulation.)*
+- **A generated project commits its `CLAUDE.md`, so cloning it is enough to read its rules.** It was
+  gitignored, and it is the only thing that loads `AGENTS.md` — measured on a clone: an agent started
+  there did not have that file in its context at all. It ships reduced to the `@AGENTS.md` import;
+  what it used to carry that was impersonal and useful (the `direnv exec` trap, the neighbouring
+  workspace) moved into `AGENTS.md`, where every agent reads it. **The rule no longer waits for the
+  flip**: what makes publishing safe is the content, not the timing — a file that cannot hold
+  anything personal needs no window during which it is kept out of sight. `RUNBOOK` §4 step 2b now
+  covers only an ADOPTED repository, whose `CLAUDE.md` already exists and must be read before it is
+  tracked.
+- **`configure-repo.sh` travels, with the documentation needed to run it — and nothing else.** A
+  generated project changes status on its own (it goes public, it gains a staging host), and that is
+  the one gesture requiring server configuration it could not reach. It ships with its implementation
+  note, a **pinned** link to the template's RUNBOOK (`init-project.sh` rewrites `main` into the exact
+  tag as it copies the file, so the link keeps describing the version that project was born from),
+  and a self-contained `docs/server-config.md` carrying the admin-PAT recipe, the replay-on-flip
+  reason, and the revocation. ⚠️ That guide is now a deliverable to keep up to date.
+- **A generated project's `AGENTS.md` states the rules its checks enforce.** It received 24 controls
+  and not one line saying why any of them refuses something — a gate whose verdicts read as
+  arbitrary. Six rules, worded for a project rather than copied from the method.
+- **A check now generates a project and plays its door on the spot** — `verify-generated-green.sh`.
+  `verify-travel.sh` already generated projects, but it asks whether a *path* still resolves there;
+  this one asks whether the *gate passes* there, and the gap between those two questions is where
+  three defects sat at once, all of them invisible here and fatal on landing. It generates the
+  richest variant, names it, and prints the exact command to replay a failure. It is deliberately
+  ONE variant where `verify-travel` covers four: a check is the same file whatever the toolchain.
+- **A live project can be brought forward to a newer template, and the runbook now says how.** The
+  question had been open and untested; it was measured instead. Applying the template's own
+  `git diff` to a project **works for 56 of its 85 files and silently misses the rest**: the
+  generator filters *(3 of 12 checks copied at `v1.2.0`)*, renames *(`templates/repo/X` lands as
+  `X`)* and substitutes *(year, holder, slug, version, image name)* — a project is **not** a subset
+  of the template. Three-way merge does behave correctly where it applies — clean where the project
+  never diverged, **conflict markers** where it did — but only with the template as a remote and a
+  patch scoped to what the project actually received.
+  🔴 **Half-updated is not half-right**: measured, a project whose checks moved forward while its
+  workflow stayed behind **turns red for a fault it does not have** — the fresh check reads the
+  stale file. Hence **assisted regeneration**: generate a reference project with the same options
+  into a scratch directory, diff the two trees, separate what the project never touched from what it
+  deliberately changed, and finish when `./check.sh --house` is green — not when the files are
+  copied.
+- **A private project name was published here for two days, and nothing could have seen it.**
+  `gitleaks` matches token SHAPES; a name has none. `verify-private-names.sh` reads a list that
+  lives **outside** this repository — publishing the names to hide would publish them — and refuses
+  any tracked file that carries one. **No list, no silent pass**: the verdict states which file it
+  read, or that it found none.
+  🔴 **It says out loud what it cannot do**: rewriting a file removes nothing from a history already
+  pushed. That decision belongs to the maintainer. ⚠️ Its failure mode is not a missed name but a
+  pattern broad enough to fire on ordinary prose — the list carries that warning beside the entries.
+- **`CLAUDE.md` is versioned, so that cloning this repository is enough to read its rules.** It was
+  ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
+  started there reported the file was **not in its context** — present on disk, invisible. The rules
+  of a public repository were reaching no one but the maintainer's own checkout.
+  🔴 **The rule is not "publish it", it is what it may CONTAIN**: on a repository that is public, or
+  meant to become public, `CLAUDE.md` is versioned **and carries nothing but the import**. A file
+  that cannot hold anything personal is one nobody has to remember not to fill. Anything personal
+  goes to `~/.claude/CLAUDE.md`; `.claude/` stays ignored — the one **documented** leak around AI
+  tooling is `settings.local.json` holding real credentials, never the text of `CLAUDE.md`.
+  **Measured before deciding**: of 25 public repositories examined one by one, **22 version the file
+  as it is**, 2 ship a template, 1 has none — and six of them, Next.js and Prisma among them, reduce
+  it to a pointer at `AGENTS.md`, which is this arrangement exactly.
+  ⚠️ **A generated project is created PRIVATE and keeps it ignored**: the step belongs to the flip
+  (runbook §4), not to the scaffolding.
+- **Two guards, so the rule does not rest on anyone remembering it.** `verify-do-not-break.sh` fails
+  when a versioned `CLAUDE.md` stops importing `@AGENTS.md` *(nothing would load the rules any more,
+  and nothing would say so)* or when it gains a machine path. And `verify-secret-blindspots.sh` now
+  refuses a `/Users/…` or `/home/…` path **anywhere in versioned content** — the shape a personal
+  line takes when it slips into a published file. **Measured before being enabled: zero occurrences
+  across the whole tree**, so it costs nothing today and speaks the day one appears.
+
+### Changed
+- **`METHODE.md` names the implementation notes among the roles.** The table said where a fact
+  lives — tracking doc, archives, actions, conventions, code, memories — and `docs/code/` was in
+  none of them: a level created without the one column that makes the others work, *what it NEVER
+  contains*. A level that refuses nothing absorbs its neighbours, and it did: 26 pairs of paragraphs
+  now state the same fact in a note and in the header of the script it documents.
+
+### Fixed
+- **Every project generated since 2026-08-05 got its structuring decisions filed under
+  `docs/docs/adr/`.** `cp -R src dst` copies *into* `dst` when `dst` already exists, and the notes
+  that now travel beside the checks had created `docs/` a few lines earlier. Nothing failed, nothing
+  was reported: the directory was there, one level too deep. **Found by generating a project and
+  looking at it** — no path was dead, so `verify-travel.sh` was right to stay quiet, and reading the
+  script would not have shown it either.
+- **A generated project no longer ships macOS index files.** `cp -R` copies from the disk, not from
+  git, so `.DS_Store` rode along with three of the copied directories. The generated `.gitignore`
+  ignores them, so they never reached a commit — but a project does not get to be born with someone
+  else's clutter in it.
+- **The delegation guard was blind to every subagent a workflow starts.** It hooks the `Agent` tool,
+  and a workflow's `agent()` calls never go through it — so the three instructions were enforced on
+  one path and merely *habitual* on the other. Measured on a 13-agent run: all of them ran on the
+  cheap model **because each call said so by hand**. The hook now also reads a workflow's script,
+  and states what it read — the number of `agent()` calls — because the claim it can make there is
+  script-wide, never per call *(a script builds its prompts from variables; tying one call to its
+  own text would need a JS parser and a guess)*.
+  🔴 **A workflow invoked by NAME is declared unread rather than passed**: its script is not in the
+  event, and silence would read as checked. **Both halves were then measured on real launches**: a
+  probe workflow with one bare `agent()` call was refused, a compliant one ran.
+  ⚠️ **And the probe found a hole in its own test**: the workflow was *described* as being about the
+  delegation hook, and that word — in a description, instructing nothing — satisfied the
+  re-delegation check. The `meta` block is stripped before the words are looked for, so what counts
+  is what the script instructs, never how it presents itself.
+- **The French half of the same guard listed three spellings of one verb and missed the ordinary
+  conjugated one**, so a prompt written in French — the way the maintainer writes them — matched
+  none of the three and was refused. The accents are a character class now, not a list.
+  *(The deeper defect stands, written down and not fixed: the test is for the PRESENCE of the words,
+  so a prompt granting itself permission to delegate satisfies it.)*
+- 🔴 **Every project generated since `v1.3.0` was born RED — its very first pull request blocked, in
+  a repository whose owner had not written a line of it.** A generated project's `ci.yml` plays
+  `check.sh --house`, and three separate defects made that gate fail on a freshly generated tree:
+  **33 dead links**, because 24 implementation notes open with a link to a charter that did not
+  travel; **`verify-private-names.sh` exiting non-zero with no output at all**, because the shipped
+  list is comments only and `grep -v` matching nothing exits 1, which `set -euo pipefail` turns into
+  a silent death before the script's own message; and **`verify-echo.sh` reporting a pair that
+  scores below the threshold here and above it there** — it scores with TF-IDF, whose weights depend
+  on corpus size, so a threshold calibrated on ~700 paragraphs does not transport to ~200.
+  The charter now travels, the notes point at `AGENTS.md` instead of documents that stay behind, and
+  the duplicated paragraph was removed at the source rather than the threshold moved.
+- **Two more checks died the same silent death, and one of them killed the message written to
+  prevent exactly that.** In `verify-travel.sh`, `✗ cannot read the capabilities from
+  init-project.sh — this check would pass by looking at nothing` was unreachable code: the pipeline
+  that feeds it exits 1 when it reads no capability, and `set -e` fired first. `verify-tone.sh` had
+  the same shape. `verify-version.sh` had already met this trap and written the reason in a comment;
+  nothing had carried it to its siblings.
+
 ## [1.4.0] - 2026-08-06
 
 ### Added

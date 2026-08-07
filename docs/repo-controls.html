@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:59e2dada804ea8d659c7585117ee1fd71973f447ecfe12b01224ce0ef403b695
+  checksum-source-md: sha256:298c063f7c97a363a7eb16aa02f6fc9f81a17b6c35c813b18c76d40cb9827222
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1703,7 +1703,7 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-do-not-break.sh</code></td>
-          <td>the four wirings whose breakage makes no sound</td>
+          <td>the wirings whose breakage makes no sound — <strong>including a versioned <code>CLAUDE.md</code> losing its import, or gaining a machine path</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
@@ -1723,12 +1723,22 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-secret-blindspots.sh</code></td>
-          <td>a file NAMED like a secret, a password inside a remote URL</td>
+          <td>a file NAMED like a secret, a password inside a remote URL, <strong>a machine path in versioned content</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
           <td class="t">0,09 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-private-names.sh</code></td>
+          <td>a <strong>private name</strong> <em>(project, host, person)</em> published in this repository</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — it reads a list that lives OUTSIDE the repo (<code>../workspace/private-names.txt</code>), and says so when there is none. A pattern too broad gets the guard worked around; the list carries that warning</td>
+          <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1802,6 +1812,16 @@
           <td>✅</td>
         </tr>
         <tr>
+          <td class="w"><code>checks/verify-generated-green.sh</code></td>
+          <td>a generated project born RED — its own <code>ci.yml</code> plays <code>check.sh --house</code>, so a gap shipped here blocks its very first pull request</td>
+          <td class="h">both</td>
+          <td><code>templates/</code>, <code>checks/</code>, <code>docs/code/</code> moved</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — it generates ONE variant (the richest), where <code>verify-travel</code> covers four: enough to answer "does the door pass on landing?", not enough to claim per-toolchain coverage. First run found <strong>three</strong> defects at once, two of them checks exiting non-zero without printing a line</td>
+          <td class="t">3,18 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
           <td class="w"><code>checks/verify-stage-closure.sh</code></td>
           <td>a stage that closed without leaving its archive, or a finished <code>RECHERCHE-*</code> left on the hot side</td>
           <td class="h">local</td>
@@ -1823,11 +1843,11 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-delegation.sh</code></td>
-          <td>a subagent launched without its three instructions</td>
+          <td>a subagent launched without its three instructions — <strong>from the <code>Agent</code> tool, and from a workflow's script</strong></td>
           <td class="h">local</td>
           <td>before the launch</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires</td>
+          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires. On a workflow it reads the SCRIPT, so the claim is script-wide, never per call <em>(and a workflow invoked by NAME is declared unread)</em></td>
           <td class="t">instant</td>
           <td>n/a — refuses the launch</td>
         </tr>

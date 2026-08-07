@@ -10,7 +10,6 @@
 /.env
 /.envrc
 /.claude/
-/CLAUDE.md
 
 .DS_Store
 *.log

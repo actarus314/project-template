@@ -127,7 +127,10 @@ jobs:
           # SCRIPT placeholders (init-project.sh's "filet 1") MUST be gone. HUMAN placeholders
           # (<contact>, <one line>, <web-dir>…) are expected — they are filled by hand, not the script.
           proj="$RUNNER_TEMP/proj/repo"
-          if grep -rn '<owner>/<repo>\|<repo>\|<image-name>\|<template-version>\|<!-- BRANCHING -->' "$proj"; then
+          # Same list AND same exclusion as init-project.sh's own net — the files copied verbatim
+          # from the root are never substituted, and they DOCUMENT these placeholders.
+          if grep -rn '<owner>/<repo>\|<repo>\|<image-name>\|<template-version>\|<!-- BRANCHING -->' "$proj" \
+             | grep -vE '/(check|open-pr|configure-repo)\.sh:|/checks/|/docs/(code|server-config\.md)'; then
             echo "::error::init-project.sh left a script placeholder unsubstituted"
             exit 1
           fi

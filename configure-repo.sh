@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Server config for a repo (AGENTS.md: run by the maintainer, ephemeral admin PAT — recipe:
-# docs/RUNBOOK.md step 7a; permission-to-endpoint map: docs/repo-controls.md, "Setup" table).
+# Server config for a repo. MAINTAINER-run, with an EPHEMERAL admin PAT — revoked right after.
+# How to run it: docs/server-config.md. Why the code is this way: docs/code/configure-repo.md.
+# Both travel with this file; the template's own RUNBOOK stays reachable at one PINNED link:
+#   https://github.com/actarus314/project-template/blob/main/docs/RUNBOOK.md
+
 # One-shot, idempotent. --dry-run: diagnostics stay real GETs, only mutations are intercepted.
 # Usage: ./configure-repo.sh <owner>/<repo> [homepage-url] [description] [topics-csv] [--dry-run]
 
@@ -66,7 +69,7 @@ command -v jq >/dev/null || { echo "✗ jq required"; exit 1; }
 if [ -n "${ADMIN_PAT:-}" ]; then
   GH_TOKEN="$ADMIN_PAT"
 else
-  printf 'Ephemeral admin PAT on %s — EXACT recipe: docs/RUNBOOK.md, step 7a\n' "$SLUG" >&2
+  printf 'Ephemeral admin PAT on %s — recipe: docs/server-config.md (template repo: RUNBOOK step 7a)\n' "$SLUG" >&2
   printf '  (a missing permission raises NO error: the missing check does not show)\n' >&2
   printf 'Masked input: ' >&2
   GH_TOKEN=""                        # clear BEFORE the read: a read without a tty would leave the env GH_TOKEN (the write PAT)
@@ -97,7 +100,7 @@ elif ! gh repo edit "$SLUG" \
   echo "✗ The token provided can see $SLUG but does NOT have Administration:write — write refused."
   echo "  → either this isn't the admin PAT (the write PAT may have been pasted by mistake),"
   echo "    or Administration was left on \"Read\" instead of \"Read and write\"."
-  echo "  Recreate the admin PAT (RUNBOOK §1 step 7a: Administration = Read and write) then rerun."
+  echo "  Recreate the admin PAT (Administration = Read and write — docs/server-config.md) then rerun."
   exit 1
 fi
 [ -n "$HOMEPAGE" ] && mutate gh repo edit "$SLUG" --homepage "$HOMEPAGE"
@@ -151,7 +154,7 @@ if [ "$SS_OK" -eq 0 ]; then
   echo "  ✓ secret scanning + push protection"
 else
   echo "  ⚠ secret scanning / push protection: NOT enabled."
-  echo "    Expected on a PRIVATE repo on the Free plan (unavailable — docs/repo-controls.md):"
+  echo "    Expected on a PRIVATE repo on the Free plan (unavailable — docs/server-config.md):"
   echo "    the gitleaks pre-commit hook is then the ONLY anti-secret safety net."
   echo "    → REPLAY this script when flipping to public."
 fi
@@ -428,10 +431,10 @@ fi
 
 RULESETS=$(gh api "repos/$SLUG/rulesets" 2>/dev/null || true)   # same stdout-JSON trap as gh_val() above
 if ! printf '%s' "$RULESETS" | jq -e 'type == "array"' >/dev/null 2>&1; then
-  echo "  ⚠ rulesets UNAVAILABLE on this repo — expected on a PRIVATE repo on the Free plan (docs/repo-controls.md)."
+  echo "  ⚠ rulesets UNAVAILABLE on this repo — expected on a PRIVATE repo on the Free plan (docs/server-config.md)."
   echo "    'main' is therefore NOT protected: no PR required, no required checks, force-push possible."
   echo "    TAGS aren't protected either → the prod version pin guarantees nothing."
-  echo "    → REPLAY this script on the flip to public (full procedure: docs/repo-controls.md)."
+  echo "    → REPLAY this script on the flip to public (full procedure: docs/server-config.md)."
   RULESETS=""
 fi
 
@@ -482,7 +485,7 @@ if [ "$WANTS_STAGING" -eq 1 ] && [ "$HAS_DEVELOP" -eq 0 ]; then
   echo "    Near-certain cause: 'delete-branch-on-merge' DELETED it on the merge of the develop → main PR."
   echo "    In PRIVATE, no ruleset protects it: putting into production DESTROYS staging."
   echo "    Without it: no 'develop' ruleset, and 'main' falls back to SQUASH-ONLY — so the"
-  echo "    next promotion becomes IMPOSSIBLE (squashing develop into main makes them diverge, docs/repo-controls.md)."
+  echo "    next promotion becomes IMPOSSIBLE (squashing develop into main makes them diverge, docs/code/configure-repo.md)."
   echo "    → RECREATE IT, THEN REPLAY THIS SCRIPT:"
   echo "        git switch -c develop main && git push -u origin develop"
   echo "      The 'develop' ruleset ('deletion' rule) will then prevent it from being deleted again."
@@ -509,7 +512,7 @@ if [ "$HAS_DEVELOP" -eq 1 ] || [ "$WANTS_STAGING" -eq 1 ]; then
     echo "    Its security PRs will target 'main', bypassing 'develop'. Cause and action:"
     if [ "$DASH_RC" -ne 0 ]; then
       echo "    → READ REFUSED (issues unreadable). The admin PAT is missing 'Issues: Read' — the"
-      echo "      full recipe is in docs/RUNBOOK.md. Fix it, then REPLAY."
+      echo "      full recipe is in docs/server-config.md. Fix it, then REPLAY."
     elif [ -z "$DASH_AT" ]; then
       echo "    → NO 'Dependency Dashboard': the Renovate app isn't installed on this repo."
       echo "      Install it (GitHub UI), wait for its 1st run, then REPLAY."
@@ -531,12 +534,12 @@ if [ "$HAS_DEVELOP" -eq 1 ]; then
   RULESET_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '(.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods) = ["squash","merge"]')
   mutate gh repo edit "$SLUG" --enable-merge-commit >/dev/null 2>&1 \
-    && echo "  ↳ 'develop' exists → 'main' ALSO accepts merge commits (staging → prod promotion, docs/repo-controls.md)."
+    && echo "  ↳ 'develop' exists → 'main' ALSO accepts merge commits (staging → prod promotion, docs/code/configure-repo.md)."
 fi
 
 upsert_ruleset "$RULESET_NAME" "$RULESET_JSON"
 
-# 6b. Ruleset 'develop' — ONLY if the branch exists (STAGING capability, docs/repo-controls.md).
+# 6b. Ruleset 'develop' — ONLY if the branch exists (STAGING capability, docs/code/configure-repo.md).
 if [ -n "$RULESETS" ] && [ "$HAS_DEVELOP" -eq 1 ]; then
   DEV_JSON=$(printf '%s' "$RULESET_JSON" | jq -c \
     '.name = "develop"

@@ -21,7 +21,7 @@ exempt=$(printf '%s' "$raw" | grep -cE "$ALLOW" || true)
 
 if [ -z "$hits" ]; then
   # A bare tick and a grep pointed at an empty tree read exactly alike.
-  n=$(git grep -lI '' -- . 2>/dev/null | wc -l | tr -d ' ')
+  n=$(git grep -lI '' -- . 2>/dev/null | wc -l | tr -d ' ' || true)   # `|| true`: a repo with no text file makes git grep exit 1, and pipefail would kill this silently
   echo "✓ no second person in versioned content — read: $n text file(s), repo/ only (workspace/ is deliberately French), $exempt line(s) exempted by an ALLOW marker"
   exit 0
 fi

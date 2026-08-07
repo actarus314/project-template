@@ -5,7 +5,7 @@
 ## The sixth place, and the one Git cannot see
 
 Memories are the sixth place a fact can live, alongside the tracking doc, the archives, the
-runbook, the conventions and the code ([`METHODE.md`](../METHODE.md)) — and the only one with no
+runbook, the conventions and the code ([`AGENTS.md`](../../AGENTS.md)) — and the only one with no
 Git structure. No diff shows them, no CI sees them, so they rot unnoticed unless something reads
 them on purpose. A memory absent from the index is never recalled — it exists and does nothing —
 and a broken `[[link]]` is reported by nothing at all.

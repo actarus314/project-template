@@ -69,6 +69,13 @@ chmod +x "$DEST/repo/check.sh"
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
+# configure-repo.sh travels: a generated project changes status on its own (private → public), and
+# that is the ONE gesture needing server config it cannot reach without this script. Its single link
+# to the RUNBOOK is PINNED on the way out — the version a project was born from stays true about it
+# forever, where `main` would silently start describing something the project never received.
+cp "$TPL/configure-repo.sh" "$DEST/repo/configure-repo.sh"
+chmod +x "$DEST/repo/configure-repo.sh"
+
 # Under checks/, exactly where they live here — check.sh looks for them THERE.
 #   (detail: docs/code/init-project.md)
 mkdir -p "$DEST/repo/checks"
@@ -77,9 +84,12 @@ chmod +x "$DEST/repo/checks/"verify-*.sh
 
 # Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
 # is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
-# 🔴 `verify-*.md` ONLY: the generator's own notes would land carrying dead pointers.
+# 🔴 `verify-*.md` ONLY, plus the charter they all link to: the generator's OWN notes describe
+# the tool that builds, which the built project has no use for (detail: docs/code/init-project.md).
 mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
+cp "$TPL/docs/code/README.md"          "$DEST/repo/docs/code/README.md"
+cp "$TPL/docs/code/configure-repo.md"  "$DEST/repo/docs/code/configure-repo.md"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -91,7 +101,10 @@ cp "$TPL/templates/repo/CODE_OF_CONDUCT.md"  "$DEST/repo/CODE_OF_CONDUCT.md"
 cp "$TPL/templates/repo/CONTRIBUTING.md"     "$DEST/repo/CONTRIBUTING.md"
 cp "$TPL/templates/repo/CHANGELOG.md"        "$DEST/repo/CHANGELOG.md"
 cp "$TPL/templates/repo/AGENTS.md"           "$DEST/repo/AGENTS.md"   # versioned: read by ALL agents
-cp -R "$TPL/templates/repo/docs"             "$DEST/repo/docs"        # docs/adr/ — structuring decisions
+# Trailing `/.`, and the two copy traps it avoids: docs/code/init-project.md.
+cp -R "$TPL/templates/repo/docs/."           "$DEST/repo/docs/"       # docs/adr/ — structuring decisions
+find "$DEST/repo" -name .DS_Store -delete 2>/dev/null || true   # cp -R reads the DISK, not git
+
 # <year> AND <copyright holder>: substituting only one leaves a legally shaky LICENSE.
 HOLDER="${SLUG%%/*}"; HOLDER="${HOLDER:-$PROJ}"   # without a fallback, LICENSE would ship with an EMPTY holder
 for l in LICENSE LICENSE-MIT; do
@@ -138,20 +151,32 @@ FRAG="$DEST/repo/.branching.frag"
   fi
 } > "$FRAG"
 
-# ONE file receives it, and that is the whole point. The block used to be injected into both
-# CONTRIBUTING.md and AGENTS.md, so every generated project was born with the same paragraph twice —
-# the duplication METHODE forbids, in the two files that TEACH its rules. AGENTS.md keeps it: it is
-# the authority, and the one an agent reads; CONTRIBUTING.md points at it.
+# ONE file receives it: AGENTS.md is the authority and the file an agent reads; CONTRIBUTING.md
+# points at it. Injecting into both is the trap (detail: docs/code/init-project.md).
 sed -e "/<!-- BRANCHING -->/r $FRAG" -e "/<!-- BRANCHING -->/d" "$DEST/repo/AGENTS.md" > "$DEST/repo/AGENTS.md.tmp"
 mv "$DEST/repo/AGENTS.md.tmp" "$DEST/repo/AGENTS.md"
 rm -f "$FRAG"
 
-# Stamp WHICH version of the template built this project. A generated project carries a FROZEN
-# COPY of the templates: without this line, nothing says which one, so nobody can tell whether a
-# later fix ever reached it. Read from the tag at generation time — it is a snapshot, and it
-# stays true about the past even after the template moves on.
+# Stamp WHICH version built this project: a generated project carries a FROZEN COPY, and without
+# this line nothing says whether a later fix ever reached it (detail: docs/code/init-project.md).
 TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unreleased)
-sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
+# EXPLICIT flags, negatives included — a default that moves must not silently reproduce another
+# project (detail: docs/code/init-project.md).
+TPL_OPTS="--type $TYPE"
+[ "$PAGES"    = 1 ] && TPL_OPTS="$TPL_OPTS --pages"    || TPL_OPTS="$TPL_OPTS --no-pages"
+[ "$ARTEFACT" = 1 ] && TPL_OPTS="$TPL_OPTS --artefact" || TPL_OPTS="$TPL_OPTS --no-artefact"
+[ "$STAGING"  = 1 ] && TPL_OPTS="$TPL_OPTS --staging"  || TPL_OPTS="$TPL_OPTS --no-staging"
+[ "$LIFECYCLE_DOCS" = 0 ] && TPL_OPTS="$TPL_OPTS --no-lifecycle-docs"
+sed -i.bak -e "s|<template-version>|$TPL_VERSION|g" \
+           -e "s|<template-options>|$TPL_OPTS|g" \
+           -e "s|<template-origin>|https://github.com/actarus314/project-template|g" \
+  "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
+# Same tag, same reason: the ONE link configure-repo.sh carries is pinned to it. Skipped when there
+# is no tag — `blob/unreleased/` would 404, and a dead link is worse than a moving one.
+if [ "$TPL_VERSION" != "unreleased" ]; then
+  sed -i.bak "s|project-template/blob/main/|project-template/blob/$TPL_VERSION/|g" \
+    "$DEST/repo/configure-repo.sh" && rm -f "$DEST/repo/configure-repo.sh.bak"
+fi
 
 # ⚠ The key is INJECTED HERE, never carried by the template.
 #   (detail: docs/code/init-project.md)
@@ -204,7 +229,9 @@ fi
 # ⚠ THE SAFETY NETS RUN HERE, AFTER the copy AND the workflow substitution.
 # Net 1/2 — placeholders the SCRIPT must substitute. One left behind = a dead link or broken
 # command shipped to the user. Without this check, every NEW placeholder replays the bug silently.
-LEFT=$(grep -rln '<owner>/<repo>\|<repo>\|<image-name>\|<!-- BRANCHING -->' "$DEST/repo" 2>/dev/null || true)
+# Skips what is copied verbatim from the root: never substituted, and it DOCUMENTS these markers.
+LEFT=$(grep -rln '<owner>/<repo>\|<repo>\|<image-name>\|<template-version>\|<!-- BRANCHING -->' "$DEST/repo" 2>/dev/null \
+       | grep -vE '/(check|open-pr|configure-repo)\.sh$|/checks/|/docs/(code|server-config\.md)' || true)
 if [ -n "$LEFT" ]; then
   echo "  ⚠ TEMPLATE BUG — unsubstituted placeholders (the script should have done it):"
   printf '     %s\n' $LEFT
@@ -223,13 +250,14 @@ if [ -n "$HUMAN" ]; then
   echo "     ⚠ '<contact>' in SECURITY.md: without it, no one can report a vulnerability."
 fi
 
-# No Dependabot block: Renovate (renovate.json) is the only update bot and AUTO-DETECTS
-# npm/docker/actions/pip from the manifests — no list of ecosystems to maintain per toolchain.
-# (Full-Renovate switch, 2026-07 — see workspace/archives/2026-07-autodetection/SYNTHESE.md.)
+# No dependabot.yml on purpose: docs/security-and-updates.md owns which bot updates what, and why.
 
 # workspace/ templates
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
+# The list verify-private-names.sh reads. It ships EMPTY and commented: the check travels with the
+# repo, so its list has to exist beside it, or the pointer in its note lands nowhere.
+cp "$TPL/templates/workspace/private-names.txt"   "$DEST/workspace/private-names.txt"
 
 # Lifecycle docs — default from the 1st commit (docs/METHODE.md).
 #   (detail: docs/code/init-project.md)
@@ -307,7 +335,8 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # EXPLICIT list (never `git add -A`: `.env` and `.envrc` carry secrets and are gitignored,
 # but that's not something to bet on). ⚠ Corollary: every file ADDED to the template must be added
 # HERE — otherwise it's created on disk and NEVER committed. The net below makes that loud.
-git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh \
+git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh configure-repo.sh \
+        CLAUDE.md \
         checks \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
 # requirements-ci.txt is gitignored ON PURPOSE (excluded from the osv scan, see .gitignore): a plain `git add`

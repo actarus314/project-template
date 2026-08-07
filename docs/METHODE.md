@@ -32,6 +32,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 | **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, the pitfalls. | the why *(→ conventions)* · the history *(→ archives)* |
 | **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |
 | **THE CODE** *(scripts, workflows)* | **what the code CANNOT say**: a non-obvious constraint, a pitfall that would recur. | **the historical narrative.** Never *"observed on 14/07 on test003…"* |
+| **THE IMPLEMENTATION NOTES** *(`docs/code/<file>.md`)* | **why this file is written this way**: the constraint behind a line, what would break if it were written otherwise, and **the measurement that set a value**. The ANNEX of a subject file — it exists so that no single document has to be long enough that nobody finishes it, and it **travels with the file it documents**. | the rule *(→ this file, `AGENTS.md`)* · the perimeter, the trigger, the threshold VALUE *(→ the subject file that owns them)* · the dated story *(→ archives)* |
 | **THE MEMORIES** *(`~/.claude/projects/<project>/memory/`)* | the **reflex** to wake up at startup: a constraint that gets broken **by default**, and the **short story** that says why it exists. | what a **versioned** document already carries *(→ a pointer is enough)* · a fact without the action that follows from it |
 
 ---

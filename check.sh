@@ -23,7 +23,7 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
 JOURNAL="$STATE_DIR/controls-log.tsv"
 JOURNAL_ON="$STATE_DIR/journal-on"
 # Which project a line came from. `basename` alone is useless here: every repository of this shape
-# is called `repo`, so the parent carries the name — `template/repo`, `decantfi/repo`.
+# is called `repo`, so the parent carries the name — `template/repo`, `<project>/repo`.
 root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PROJECT="$(basename "$(dirname "$root")")/$(basename "$root")"
 
@@ -370,6 +370,12 @@ if [ -x checks/verify-secret-blindspots.sh ]; then
   if reap verify-secret-blindspots; then ok "no secret in a blind spot"; else ko "secret in a blind spot"; fi
 fi
 
+# verify-private-names.sh — the other half of that blind spot: a NAME leaks nothing token-shaped.
+if [ -x checks/verify-private-names.sh ]; then
+  note "verify-private-names.sh — private names in a public repository"
+  if reap verify-private-names; then ok "no private name published"; else ko "private name published"; fi
+fi
+
 if [ -x checks/verify-echo.sh ]; then
   note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
   if touched '\.md$'; then
@@ -457,6 +463,14 @@ fi
 if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if timed ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
+fi
+
+# Same trigger, and it also generates — but it asks the other question: not "does this path
+# resolve there?", but "does the DOOR pass there?". Three defects hid behind that gap at once,
+# including two checks that exited non-zero without printing a single line.
+if [ -x checks/verify-generated-green.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
+  note "verify-generated-green.sh — a generated project's own door"
+  if timed ./checks/verify-generated-green.sh; then ok "generated project born green"; else ko "generated project born red"; fi
 fi
 
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.

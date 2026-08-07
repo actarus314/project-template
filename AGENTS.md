@@ -1,7 +1,7 @@
 # AGENTS.md — instructions for any code agent
 
 To be read before touching anything in this repo.
-This file follows the [AGENTS.md](https://agents.md) convention; Claude Code reads it via the `@AGENTS.md` import in `CLAUDE.md` (local, untracked).
+This file follows the [AGENTS.md](https://agents.md) convention; Claude Code reads it via the `@AGENTS.md` import in `CLAUDE.md` — **versioned since 2026-08-07, precisely so that a clone reads these rules**: measured the day before, an agent started in a clone did not have this file in its context at all.
 
 > **Language & tone**: this repo follows the standard's rule in full — see [`docs/claude-code-project-standard.md` §1](docs/claude-code-project-standard.md#1-basic-concepts) for what stays in French and why, and §15 for the bilingual `README.md` exception.
 

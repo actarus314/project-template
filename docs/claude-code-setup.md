@@ -1,25 +1,45 @@
 # Claude Code setup — configuring the assistant on a project
 
-> Reference. Extracted from `claude-code-project-standard.md` §6, §7, §8 and from `METHODE.md` (delegation).
+> Reference. Owns standard §6, §7, §8, and delegation (`METHODE.md`).
 
 ---
 
-## `CLAUDE.md` — local instructions for Claude Code
+## `CLAUDE.md` — the file that makes the rules readable at all
 
-File present at `repo/CLAUDE.md` but **ignored by Git**. Claude Code reads it automatically every session (it's in the cwd).
+Claude Code reads `CLAUDE.md` from the working directory at every session, and **it reads nothing
+else on its own**: `AGENTS.md` is loaded only because `CLAUDE.md` imports it. Measured on a clone —
+an agent started there reported `AGENTS.md` was **not** in its context. On disk, and invisible.
 
-**Typical content**:
-- Short project description (one line).
-- Useful commands (`docker compose up`, `npm run dev`, etc.).
-- Pointers into `workspace/`: where plans, docs, secrets live.
-- Project-specific code conventions.
-- What must absolutely not be touched (submodules, third-party code, etc.).
+### The rule
 
-**What `CLAUDE.md` NEVER contains**:
-- No secret, token, API key (even though it's ignored, zero-secret discipline applies to any file *named by convention* → if `.gitignore` is ever misconfigured, nothing leaks).
-- No volatile value that changes every week.
+> **`CLAUDE.md` is VERSIONED — and it carries nothing but the import.**
 
-A future cloner who doesn't have `workspace/` (because they only got the repo from GitHub) will work without `CLAUDE.md`, and that's intentional: the repo stays 100% impersonal.
+Both halves matter. Versioned, because a gitignored file reaches no one who clones: the rules would
+be read by their author alone. Nothing but the import, because everything else is what makes
+publishing it a risk — and a file that cannot hold anything personal does not depend on anyone
+remembering that it must not.
+
+**So it contains**: `@AGENTS.md`, and at most a few impersonal lines saying why.
+**It never contains**: a machine path, a personal preference, the name of a private repository, a
+secret of any kind, or a value that changes every week. Project commands, structure and conventions
+belong in `AGENTS.md` — where every agent reads them, not just Claude Code.
+
+Anything personal goes to `~/.claude/CLAUDE.md` (that machine, all projects) or to a local settings
+file. `.claude/` stays gitignored: the one **documented** leak around AI tooling is
+`settings.local.json` carrying real credentials, never the text of `CLAUDE.md`.
+
+This is what the ecosystem does, measured rather than assumed: of 25 public repositories examined
+one by one, 22 version the file, and six — Next.js and Prisma among them — reduce it to a pointer
+at `AGENTS.md`. *(A versioned `.example` only works where an installer performs the copy: a template
+nobody copies is a file nobody reads, silently.)*
+
+**It applies from the first commit, not from the flip.** Visibility was once the trigger, which made
+the rule wait on a gesture nobody performs on a private project — where the file is just as
+invisible to whoever clones. What makes publishing safe is the *content*, never the timing.
+
+⚠️ **A repository ADOPTED into the standard is the one case needing care**: its `CLAUDE.md` already
+exists, full of whatever its author put there. Read it before tracking it — machine paths, private
+repository names, preferences — because the history keeps whatever is pushed.
 
 ---
 
