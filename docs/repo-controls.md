@@ -123,8 +123,7 @@ feat/…   ●────┘
 > It records the damage on the branch we just declared "production".
 > With a PR, it runs **before** — that's the whole difference between **knowing** and **preventing**.
 >
-> **This has already happened**: a direct push to `main` removed a `user:` directive — the image
-> shipped as `:latest`, the prod host pulled it, and production went down, discovered only afterward.
+> **This has already happened**: a direct push to `main` removed a `user:` directive — the image shipped as `:latest`, the prod host pulled it, and production went down, discovered only afterward.
 
 ### Why `develop` is NOT the anti-pattern it gets accused of being — the nuance is structural
 
@@ -305,50 +304,22 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 
 ## Every control, in one table
 
-**One table, so a dissonance shows.** These used to be five — the development machine, two CI
-sections, the server, and the house checks — and the same control appeared in two of them with
-different wording. Anything that RUNS is below; what is merely *set* on the server, and so has
-neither a duration nor a trigger, is in the short table after it.
+**One table, so a dissonance shows.** These used to be five — the development machine, two CI sections, the server, and the house checks — and the same control appeared in two of them with different wording. Anything that RUNS is below; what is merely *set* on the server, and so has neither a duration nor a trigger, is in the short table after it.
 
-**Reading the columns.** *Looks for* is the defect, not the mechanism. *Where* is the machine that
-runs it. *Travels* says whether a generated project gets it. *Blocks* separates what stops a merge
-from what only draws a list. *Maturity* is the one thing no measurement gives: **settled** = its verdict
-rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
-a threshold or a wording chosen by hand, so it can be wrong in both directions.
+**Reading the columns.** *Looks for* is the defect, not the mechanism. *Where* is the machine that runs it. *Travels* says whether a generated project gets it. *Blocks* separates what stops a merge from what only draws a list. *Maturity* is the one thing no measurement gives: **settled** = its verdict rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
 ⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,95 s** *(re-measured 2026-08-07, 5 runs: 3,92 to 4,02)*. It cost **9,1 s** earlier that day: the two checks that GENERATE a project ran one after the other, outside the parallel lot, and dominated the wall clock on their own. They were moved into the lot — each works in its own `mktemp -d`, and the nested `check.sh` writes to the generated project's cache, so nothing is shared. **Verdicts compared before and after: identical**, a commit on a clean tree in 1,12 s, the full lot in 5,63 s. Anything under 0,4 s does not show at all.
 
-> **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
-> journal. `check.sh` writes every verdict it reaches to
-> `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`, and `--report` renders the
-> record into `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes
-> through, so no list of controls has to be kept anywhere.
+> **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control journal. `check.sh` writes every verdict it reaches to `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`, and `--report` renders the record into `workspace/docs/CONTROLES.md`. It is written at the single point every verdict passes through, so no list of controls has to be kept anywhere.
 >
-> 🔴 **It lives OUTSIDE every repository, and that is the point.** Telemetry is not repository
-> content, and a journal kept under `.ci-tools/` was per-project as well as per-machine: the one
-> question worth asking of it — *is this gate firing everywhere, or only here* — had nowhere to be
-> answered. Every project running these checks appends to the **same** file, each line carrying the
-> project it came from, and `--report` filters on the current one so a project's page still speaks
-> for that project alone. The path is deliberately not named after this repository: the journal
-> outlives the project that first wrote it.
+> 🔴 **It lives OUTSIDE every repository, and that is the point.** Telemetry is not repository content, and a journal kept under `.ci-tools/` was per-project as well as per-machine: the one question worth asking of it — *is this gate firing everywhere, or only here* — had nowhere to be answered. Every project running these checks appends to the **same** file, each line carrying the project it came from, and `--report` filters on the current one so a project's page still speaks for that project alone. The path is deliberately not named after this repository: the journal outlives the project that first wrote it.
 >
-> **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot
-> show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding
-> verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own
-> VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the
-> earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and
-> a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
-> when it looked and found nothing, and `skip` for a turn it never evaluated: a rate reads off
-> `bit / fired` without counting the turns nobody looked at.
+> **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
+> when it looked and found nothing, and `skip` for a turn it never evaluated: a rate reads off `bit / fired` without counting the turns nobody looked at.
 >
-> 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the
-> recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
+> 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
 >
-> ⚠️ **Its medians run about a fifth above the column above, and neither is wrong.** The column times
-> a check **alone**; the journal times it **inside the parallel lot**, where the checks contend for the
-> machine. *(Measured 2026-08-05: `verify-growth` 0,88 s alone against 1,10 s in the lot,
-> `verify-comment-drift` 0,83 s against 1,03 s.)* A duration quoted without its case is how a figure
-> once got read as wrong by a factor of 2,7 when it was simply measuring something else.
+> ⚠️ **Its medians run about a fifth above the column above, and neither is wrong.** The column times a check **alone**; the journal times it **inside the parallel lot**, where the checks contend for the machine. *(Measured 2026-08-05: `verify-growth` 0,88 s alone against 1,10 s in the lot, `verify-comment-drift` 0,83 s against 1,03 s.)* A duration quoted without its case is how a figure once got read as wrong by a factor of 2,7 when it was simply measuring something else.
 
 | Control | Looks for | Where | When | Travels | Maturity | Time | Blocks? |
 |---|---|---|---|---|---|---|---|
@@ -368,6 +339,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-tone.sh` | the second person (`you`/`your`, `tu`/`vous`) in published content | both | every commit | ✅ | settled | 0,08 s | ✅ |
 | `checks/verify-language.sh` | **accented** French left in published content — the language, which its neighbour above never looked at | repo/ *(English stops where publication stops)* | every commit | ✅ | needs watching — the accent is the cheap half of the signal: unaccented French passes, and the verdict says so rather than claiming the language is covered | 0,07 s | ✅ |
 | `checks/verify-narrative.sh` | a story told in a code comment — a DATE, or a reporting verb about the maintainer | both | every commit | ✅ | settled *(widened 2026-08-05: the date alone caught nothing, its only hits being the pointers the rule exempts)* | 0,09 s | ✅ |
+| `checks/verify-line-form.sh` | a sentence cut across two lines in a versioned `.md` | both | every commit | ✅ | **needs watching** — its sentence-end pattern is a wording chosen by hand, tuned until `CHANGELOG.md` read clean before being extended to a fence or a comment nested inside a blockquote | 0,08 s | ✅ |
 | `checks/verify-workspace.sh` | two tracking systems competing, or a secret tracked by git | both | every commit | ✅ | **needs watching** — the list of rival tools cannot be complete, and it names what it looked for | 0,11 s | ✅ |
 | `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,09 s | ✅ |
 | `checks/verify-checks-wiring.sh` | a control declared nowhere, or **the gate missing from a workflow** | both | every commit | ✅ | settled | 0,04 s | ✅ |
@@ -376,7 +348,7 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-checksums.sh` | an `.html` that stopped saying what its `.md` says | both | every commit | ✅ | **needs watching** — a matching checksum proves the file was touched, never that it says the same thing | 0,08 s | ✅ |
 | `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL, **a machine path in versioned content** | both | every commit | ✅ | settled | 0,09 s | ✅ |
 | `checks/verify-private-names.sh` | a **private name** *(project, host, person)* published in this repository | both | every commit | ✅ | **needs watching** — it reads a list that lives OUTSIDE the repo *(`../workspace/private-names.txt`)*, and says so when there is none. A pattern too broad gets the guard worked around; the list carries that warning | 0,10 s | ✅ |
-| `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,08 s | ✅ |
+| `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line, **a repeated `###` or an entry past 750 characters inside `Unreleased`, and a version heading with no inline Release link** *(the cap is the corpus's third quartile; the published versions are counted, never failed — a sealed entry is not rewritten)* | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,08 s | ✅ |
 | `checks/verify-growth.sh` | a curated document that only ever grows — **two halves**: `repo/` against the last release, `workspace/` against the **closure of a stage** *(an archive directory is born, the hot side must shrink)* | both | a `.md` moved, **here or in the workspace** | ✅ | **needs watching** — the 25 % threshold is a judgement call, and the `repo/` half is **measured weak** *(the reference moves at every release: +327 % went unseen)*. The `workspace/` half carries no threshold at all — and it is **answered LOCALLY only**: the CI has no workspace beside it, and says so rather than passing in silence | 0,20 s | ✅ *(made blocking 2026-08-05)* |
 | `checks/verify-comment-drift.sh` | a comment growing faster than its code, sitting above 25 %, or running past 6 lines | both | a `.sh` moved | ✅ | **needs watching** — drift compares PERCENTAGES, so it over-reports on a small file *(+134 % comment against +94 % code was 34 lines against 36)*. Level and block apply to TOUCHED files only | 0,53 s | ✅ |
 | `checks/verify-dropped-comment.sh` | a comment block of 5+ lines deleted while neither its `docs/code/` note nor a `drop:` declaration **naming that file** says where it went | both | a `.sh` moved | ✅ | **settled** — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8. A `drop:` covers only the files it names *(the blanket form was caught by the exception sweep, on this check's own first commit)*. ⚠️ It compares `<reference>...HEAD`, so at `pre-commit` it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI *(deliberate: the `drop:` lives in a commit message the hook cannot read — `verify-dropped-comment.md`)* | 0,10 s | ✅ |
@@ -393,32 +365,20 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-turn-claims.sh` | what the assistant ASSERTS as a turn ends, against what the turn ran | local | end of turn | ✅ | **needs watching** — its three signals were tuned on 4463 real turns; each fires on under 1 %, and a rewording moves that. Blocking since 2026-08-05, capped at ONE relaunch per turn by `stop_hook_active` | instant | n/a — refuses the end of the turn |
 
 > 🔴 **What a check does with a verdict is DECLARED, and the declaration is confronted twice.**
-> Every check carries `# blocking: yes|no` in its header, next to `# hook:` — and *advisory* is a
-> claim about the **exit code**, never about the wording: `check.sh` turns any non-zero into a `ko`,
-> which fails the gate and stops the commit. **Three checks contradicted themselves before anything
-> looked**, in both directions: one called itself advisory in its header *and* in this table while
-> exiting 1, and two announced `ADVISORY` for a day after being made blocking. A human found it by
-> reading this table.
-> The two readings do not replace each other: **`verify-checks-wiring` compares the declaration to
-> this table** *(it catches a pair that disagree, at no cost, at every commit)*, and **`check.sh`
-> compares it to the REAL exit code** the moment that code exists *(it catches the case where the
-> code contradicts both — the only one a comparison of declarations cannot see)*. The price of the
-> second is that it speaks only when the check actually bites; fabricating a biting case for all 21
-> was weighed and left out.
+> Every check carries `# blocking: yes|no` in its header, next to `# hook:` — and *advisory* is a claim about the **exit code**, never about the wording: `check.sh` turns any non-zero into a `ko`, which fails the gate and stops the commit. **Three checks contradicted themselves before anything looked**, in both directions: one called itself advisory in its header *and* in this table while exiting 1, and two announced `ADVISORY` for a day after being made blocking. A human found it by reading this table.
+> The two readings do not replace each other: **`verify-checks-wiring` compares the declaration to this table** *(it catches a pair that disagree, at no cost, at every commit)*, and **`check.sh`
+> compares it to the REAL exit code** the moment that code exists *(it catches the case where the code contradicts both — the only one a comparison of declarations cannot see)*. The price of the second is that it speaks only when the check actually bites; fabricating a biting case for all 21 was weighed and left out.
 
-> **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and
-> a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.
+> **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.
 > The three hooks travel too; a project that wants them has to declare them in its own settings.
 > The external tools travel through the workflow templates, at the versions those files pin.
 >
 > ⚠️ **`local`, `GitHub` or `both`** describes where the control RUNS, never what it may look at.
-> `verify-memories.sh` runs at the gate like the others — it reports there that it found no memories
-> to read, which is a verdict where silence was not one.
+> `verify-memories.sh` runs at the gate like the others — it reports there that it found no memories to read, which is a verdict where silence was not one.
 
 ### What is merely SET on the server
 
-These are not run, they are **in force**. All of them require a **public** repository *(rulesets, secret
-scanning and CodeQL are unavailable on private/Free — the visibility gate)*.
+These are not run, they are **in force**. All of them require a **public** repository *(rulesets, secret scanning and CodeQL are unavailable on private/Free — the visibility gate)*.
 
 | Control | What it prevents | Set by |
 |---|---|---|

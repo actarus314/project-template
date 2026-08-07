@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:091d28886fd44dde9f6fe33a5f2f035c8cf4e07c313cbb10adedc7ecea2193d0
+  checksum-source-md: sha256:1bbf8344c3ad22e9c38340d95c8cdc953023abb672261bc2abcb5e0903fcab15
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1662,6 +1662,16 @@
           <td>✅</td>
         </tr>
         <tr>
+          <td class="w"><code>checks/verify-line-form.sh</code></td>
+          <td>a sentence cut across two lines in a versioned <code>.md</code></td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — its sentence-end pattern is a wording chosen by hand, tuned until <code>CHANGELOG.md</code> read clean before being extended to a fence or a comment nested inside a blockquote</td>
+          <td class="t">0,08 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
           <td class="w"><code>checks/verify-workspace.sh</code></td>
           <td>two tracking systems competing, or a secret tracked by git</td>
           <td class="h">both</td>
@@ -1743,7 +1753,7 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-changelog.sh</code></td>
-          <td>a user-visible change with no <code>CHANGELOG</code> line</td>
+          <td>a user-visible change with no <code>CHANGELOG</code> line, <strong>a repeated <code>###</code> or an entry past 750 characters inside <code>Unreleased</code>, and a version heading with no inline Release link</strong> (the cap is the corpus's third quartile; the published versions are counted, never failed — a sealed entry is not rewritten)</td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>

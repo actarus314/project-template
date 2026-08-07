@@ -72,7 +72,7 @@ except Exception: sys.exit(0)
 META = {"hook_event_name", "session_id", "transcript_path", "cwd", "trigger", "permission_mode"}
 txt = " ".join(v for k, v in ev.items() if k not in META and isinstance(v, str))
 PAT = [
-    r"passe[s]? de fin de chantier|fais (?:la|une) fin de chantier",   # fr-pattern
+    r"passe[s]? de fin de (?:chantier|travail)|fais (?:la|une) fin de (?:chantier|travail)",   # fr-pattern
     r"je vais /?clear|que je puisse /?clear|(?:pour|avant)\s+(?:un\s+|le\s+|de\s+)?/?clear\b|/?clear pour repartir",   # fr-pattern
     r"(?:suivis?|repos locaux|docs et archives|tout)\s*(?:sont|est)?\s*(?:bien )?à jour\s*\?",   # fr-pattern
 ]
@@ -158,7 +158,9 @@ if missing:
   used=$((used + 1))
   printf '%s %s\n' "$armed_at" "$used" > "$ARMED"
   if [ "$used" -ge "$CYCLES" ]; then
-    rm -f "$ARMED"
+    # BOTH, never just the flag: released at the ceiling, a surviving artefact is read by the NEXT
+    # pass as its own enumeration — and nothing reads it for state, so nothing would say otherwise.
+    rm -f "$ARMED" "$PASS"
     record 1 "ceiling of $CYCLES reached — released, gap published"
     printf '{"systemMessage":"⚠ housekeeping: %s cycles reached, the turn is released. STILL UNCOVERED: %s"}\n' \
       "$CYCLES" "$(printf '%s' "$gap" | tr '\n' ' ' | sed 's/"/\\"/g')"

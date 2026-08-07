@@ -38,12 +38,9 @@ Three things to distinguish clearly:
 
 **Language & tone rule**:
 > All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`) can stay in French. ⚠️ **`CLAUDE.md` is versioned** *(§6)*, so it follows the English rule too.
->
 > **Remaining exceptions**: the local file templates stay in French — `templates/repo/.envrc`, `templates/workspace/*`. *(`templates/repo/CLAUDE.md` left that list the day it stopped being a local file: it is committed in every generated project.)*
 > They are gitignored in the generated project and never reach GitHub.
->
 > **The bilingual `README.md` is a different kind of exception — deliberate, not a leftover**: it is the one **versioned** file allowed to carry French, in every project *(`README.md` here, `templates/repo/README.md` in each one generated)* — detail in §15.
->
 > **Tone**: never **2nd person** (`you/your`, `vous/tu/ton`) in versioned content **or in the app UI** — write "the user" / "l'utilisateur" or impersonal phrasing.
 
 ---
@@ -288,7 +285,7 @@ Model: `templates/repo/README.md`.
 | File | Role | Why it's versioned |
 |---|---|---|
 | **`AGENTS.md`** | Project instructions **for any agent**: commands, structure, branches, conventions, controls, do-not-touch | **A real standard** ([agents.md](https://agents.md), handed to the Linux Foundation in late 2025, read by 30+ agents: Cursor, Copilot, Gemini CLI…). **`CLAUDE.md` imports it via `@AGENTS.md`** and carries **nothing else** — a file that cannot hold anything personal is one nobody has to remember not to fill (§6) → **a single source, zero drift**. |
-| **`CHANGELOG.md`** | What changed **for a user** — [Keep a Changelog](https://keepachangelog.com) format, **inline link** per version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | The GitHub Release carries the **auto-generated PR list**; the CHANGELOG carries the **meaning**. *(Sources call this duplication superfluous solo — kept anyway, for the meaning it adds beyond the PR list.)* |
+| **`CHANGELOG.md`** | What changed **for a user** — [Keep a Changelog](https://keepachangelog.com) format, [Semantic Versioning](https://semver.org/spec/v2.0.0.html), an **inline Release link** per version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`), and **one `###` of each type per version** — the format implies that last one without stating it, which is how six versions came to repeat one. **An entry starts with a present-tense verb, opens on the EFFECT and never on the file that changed, holds 300 characters, and ends with the pull request that delivered it** *(that reference is not counted in the 300)*. What must survive the cut is any **limit** of the new behaviour; the demonstration belongs to the pull request | The GitHub Release carries the **auto-generated PR list**; the CHANGELOG carries the **meaning**. The writing rules are not house style: the imperative and the single parenthesis of references are [Common Changelog](https://common-changelog.org/), the effect-first rule is Keep a Changelog's first principle — *"changelogs are for humans, not machines"* — since a reader may never have opened the source. ⚠️ **The earlier ceiling of 750 was calibrated on the corpus it was meant to reform**, which endorses the drift: a threshold comes from a reference or an objective, never from the average of what is being corrected. |
 | **`docs/adr/`** | One entry per **structural** decision (stack, schema, boundary) — [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) format | Preserves the **why**, which the code never states. Worth it even solo (near-zero cost). **Immutable**: an outdated decision isn't edited, it's *superseded*. |
 
 **Present from the FIRST commit** *(all created by `init-project.sh`)*: `LICENSE` · `README` *(dual target, §15)* · `SECURITY.md` *(private advisories)* · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` *(CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template)* · `.gitattributes` if a vendored library.

@@ -2,12 +2,10 @@
 
 ## Reporting a vulnerability
 
-Preferred: use GitHub's **private vulnerability reporting** —
-[Security tab → Report a vulnerability](https://github.com/<owner>/<repo>/security/advisories/new)
+Preferred: use GitHub's **private vulnerability reporting** — [Security tab → Report a vulnerability](https://github.com/<owner>/<repo>/security/advisories/new)
 on this repo. This keeps the report private until a fix is out.
 
-Do not open a public issue for a security concern. If private reporting
-isn't available, reach out to `<contact>` directly.
+Do not open a public issue for a security concern. If private reporting isn't available, reach out to `<contact>` directly.
 
 ## Scope
 
@@ -19,5 +17,4 @@ Out of scope:
 
 ## Response
 
-This is maintained solo, best-effort, no SLA — but security reports get
-priority over everything else in the backlog.
+This is maintained solo, best-effort, no SLA — but security reports get priority over everything else in the backlog.

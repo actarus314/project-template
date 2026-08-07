@@ -1,9 +1,5 @@
 ---
-name: Bug report
-about: Report a defect so it can be fixed
-title: ''
-labels: ''
-assignees: ''
+name: Bug report about: Report a defect so it can be fixed title: '' labels: '' assignees: ''
 
 ---
 

@@ -4,40 +4,36 @@
 
 ## A user-visible change with no CHANGELOG line
 
-The rule ([`AGENTS.md`](../../AGENTS.md)): a line goes into `Unreleased` as soon as a change is
-visible **to whoever uses the repo** — "a template that changes, a RUNBOOK step that moves, a
-script's behaviour".
+The rule is [`AGENTS.md`](../../AGENTS.md)'s: two of its three examples are **paths**, so two thirds are mechanical. 🔴 It catches what happened: four checks shipped, `CHANGELOG` untouched.
 
-Two of those three are **paths**, so two thirds of the rule are mechanical. Only the third is a
-judgement, and this check deliberately leaves it alone: an internal refactor stays out.
+**What counts as visible is DETECTED, never listed.** This check travels into generated projects where none of its paths exist: a hand-kept list would list **absent things**, still read as a verdict.
 
-🔴 What it catches is the case that actually happened: four checks shipped, `CHANGELOG` untouched.
-Nobody notices a missing line — the file simply stays plausible.
+**The unit compared is the BRANCH**, the merge base with the default branch. With nothing to compare it **says so**: a run that read nothing must not look green.
 
-## What counts as visible is DETECTED, never listed
+🔴 **Three sources: committed, staged, and neither.** Committed history alone made the guard block *the very commit carrying the line it demanded* — a guard whose remedy is unreachable teaches the bypass it prevents.
 
-This check travels into every generated project, where none of the paths it looks for exist. A
-hand-kept list would then be a list of **absent things**, and would go on being read as a verdict.
-The paths are taken from what the repository actually holds, so the perimeter is whatever the place
-publishes — and nothing where it publishes nothing. A list of three shipped scripts sat here while
-ten travelled.
+⚠️ **Rejected: the branch name as a trigger.** 11 of 40 pull requests carry no CHANGELOG line and are **right** not to.
 
-Empty is a legitimate answer, and the one every generated project gives.
+## The form — the rule is standard §16, this is why the code counts as it does
 
-## The unit compared is the BRANCH
+The ceiling is **300 characters**, once 750. ⚠️ **That 750 was the corpus's own third quartile: a threshold taken from what it must reform endorses the drift.** Sealed versions are judged now, not merely counted.
 
-Compared against the merge base with the default branch, because that is the unit a pull request
-reviews. When there is nothing to compare — on the default branch itself, or in a fresh project with
-no remote — it **says so**: a run that read nothing must not look like a run that found nothing.
+🔴 **Three ways the counting goes wrong if written naively**, each measured here:
 
-🔴 **Three sources, not one: committed, staged, and neither.** Reading committed history alone made
-the guard block *the very commit carrying the line it demanded* — the pre-commit hook runs before
-that commit exists, so the fix and its verdict could never meet, and the only ways through were an
-empty commit or `--no-verify`. A guard whose own remedy is unreachable teaches the bypass it exists
-to prevent. In CI the last two sources are empty, so nothing there changes.
+| Trap | Cost |
+|---|---|
+| An entry is **any** bullet, not `^- \*\*` | 10 of 195 opened on an emoji or plain text |
+| The reference is **not** counted | counting it fails 13 of 34 compliant entries |
+| Stripping it leaves its **indentation** | those 2 spaces put 5 compliant entries at 301 |
 
-## What was measured and rejected
+**`Unreleased` is exempt from the pull-request refusal, by design**: the branch writing that line has no pull request yet, so demanding one would refuse the very commit the rule asks for.
 
-The branch **name** as a trigger: 11 of this repository's last 40 pull requests carry no CHANGELOG
-line and are **right** not to (docs, README, i18n, dependency bumps). A guard firing on better than
-one pull request in four is a guard overridden by reflex.
+## What is ARMED, and what is left to judgement
+
+Six faulty entries were injected; **four are refused**: an opening that is not a present-tense verb, an opening on a code span, a reference whose label and URL disagree, and a sealed entry citing a pull request newer than any merged. **Two get through and stay that way**: the section it belongs to, and whether it is TRUE.
+
+🔴 **The section was measured as armable and it is NOT.** Mapping the opening verb to a section misreads it: the verb names the action the software performs, not the nature of the change. *"Delete a dead local branch…"* sits under **Added**, correctly. The rule would refuse 4 legitimate entries of 40, and a check crying on the legitimate is overridden by reflex.
+
+⚠️ **Truth is unreachable**: a well-formed entry announcing a feature that does not exist passes every refusal.
+
+The braces in `${dup}` are load-bearing: a bare `$name` before a multi-byte dash is read as part of the name, and under `set -u` the check dies before its message.

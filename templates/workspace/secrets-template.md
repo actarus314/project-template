@@ -35,8 +35,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
 
 **Token**: fine-grained, **restricted to THIS SINGLE repo** (owner = repo's account or org).
 **Value**: in `repo/.envrc` as `GITHUB_PAT` — nowhere else, **never in the remote URL**.
-**Regeneration**: https://github.com/settings/personal-access-tokens
-**Repository access**: Only select repositories → this repo only.
+**Regeneration**: https://github.com/settings/personal-access-tokens **Repository access**: Only select repositories → this repo only.
 **Permissions (uniform standard — full matrix: `docs/secrets-and-auth.md`)**:
   - Contents: Read & Write
   - Metadata: Read (mandatory / automatic)
@@ -51,8 +50,7 @@ gh api repos/<owner>/<a-private-repo>   # should return 404 (private inaccessibl
   - **Everything else: No access** — `Administration: WRITE` reserved for the maintainer's ephemeral admin PAT
 
 **Duration**: **90 days** (`docs/secrets-and-auth.md` — every new PAT).
-**Last generated**: YYYY-MM-DD
-**Expires on**: YYYY-MM-DD
+**Last generated**: YYYY-MM-DD **Expires on**: YYYY-MM-DD
 
 > **Automatic alert**: `.envrc` warns in the terminal **14 days before** expiration (it reads the `GitHub-Authentication-Token-Expiration` header, 1 call/day max).
 > Expiration is therefore never hit mid-session — but **remember to update the new date here** after each rotation.

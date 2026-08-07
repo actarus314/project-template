@@ -1,5 +1,4 @@
-<!--
-  README template — TWO AUDIENCES, without picking one:
+<!-- README template — TWO AUDIENCES, without picking one:
     (1) a developer who clones, forks or contributes -> install, run, structure, contributing;
     (2) an honest shop window, appealing without overselling.
   Polished, short, ZERO filler. Bilingual: English first (the default), French after, split by `---`.
@@ -20,8 +19,7 @@
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-dark.png">
   <img src="docs/img/hero-light.png" width="700" alt="<project>">
-</picture></p>
--->
+</picture></p> -->
 
 ## Why this exists
 <The problem, and why this solves it better than the obvious alternative. The "why" before the "how".>
@@ -39,10 +37,7 @@ cd <repo>
 ## Development
 <Branches, tests, contributing — or point to CONTRIBUTING.md.>
 
-<!--
-  Limitations / Non-goals — REPLACES a ROADMAP file. State what the tool does NOT do, and
-  what it will never do. Two payoffs: it stops the wrong user from adopting it, and it closes
-  feature requests before they are opened. A roadmap ages badly and reads as a promise;
+<!-- Limitations / Non-goals — REPLACES a ROADMAP file. State what the tool does NOT do, and what it will never do. Two payoffs: it stops the wrong user from adopting it, and it closes feature requests before they are opened. A roadmap ages badly and reads as a promise;
   a non-goal is a decision, and it stays true.
   Be concrete: "no write access, ever" beats "security-focused".
 -->
@@ -50,8 +45,7 @@ cd <repo>
 - **<Limitation>** — <the honest consequence for the user, not a euphemism.>
 - **Not a goal: <thing it will never do>** — <why. A deliberate boundary, not a missing feature.>
 
-## License
-[MIT](LICENSE)
+## License [MIT](LICENSE)
 
 ---
 
@@ -79,5 +73,4 @@ cd <repo>
 - **<Limite>** — <la conséquence réelle pour l'utilisateur, sans euphémisme.>
 - **Hors périmètre : <ce que l'outil ne fera jamais>** — <pourquoi. Une frontière assumée, pas un manque.>
 
-## Licence
-[MIT](LICENSE)
+## Licence [MIT](LICENSE)

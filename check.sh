@@ -505,6 +505,11 @@ if [ -x checks/verify-language.sh ]; then
   if reap verify-language; then ok "no French in published content"; else ko "French in published content"; fi
 fi
 
+if [ -x checks/verify-line-form.sh ]; then
+  note "verify-line-form.sh — a sentence cut across two lines"
+  if reap verify-line-form; then ok "no sentence cut across two lines"; else ko "a sentence is cut across two lines"; fi
+fi
+
 echo
 if [ "$fail" = 0 ]; then
   printf '\033[32m✓ local == github: all pass.\033[0m\n'
