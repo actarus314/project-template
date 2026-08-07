@@ -17,6 +17,22 @@ exact sensation of having read them, produced without a single read. Which is wh
 re-arms this check on **every** source, compaction included: the state is wiped, and the documents
 have to be opened again.
 
+## Two tiers — and loading the runbook up front is WORSE than not requiring it
+
+The method and the standard are owed by **every write**: they say how a thing is written and where it
+goes, so a write that has not seen them is a write made from memory.
+
+The runbook is a different kind of document — it holds **gestures**, with their URLs, their exact
+permissions and their traps. Reading it two hours before posting one of those gestures does not make
+the gesture right: it produces the exact feeling of having it at hand, which is the failure this
+check exists to stop. So it is required **at the gesture**, and only there — when a command about to
+run names one (`configure-repo.sh`, `init-project.sh`, `open-pr.sh`, `git tag`, `gh pr merge`,
+`gh release`). Any other command leaves without a word.
+
+Each tier carries **its own marker**, so satisfying one never satisfies the other. Measured on
+2026-08-07: the three documents together cost ~16 100 tokens per arming, of which the runbook alone
+is ~8 100 — but the argument is the one above, and the halved cost is a consequence, not the reason.
+
 ## Why the transcript, and not a marker the assistant sets
 
 A guard the guarded party can satisfy by declaring itself satisfied is not a guard. The session

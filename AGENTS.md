@@ -71,7 +71,7 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
 
 ## Conventions
 
-- **Docs**: one idea per sentence, one sentence per line. A fact lives in **a single place** — everywhere else, a link *(see `docs/METHODE.md`)*.
+- **Writing** — concise and plain, in **everything** written *(documents, comments, terminal output, commit messages)*, and a fact lives in **a single place**: both rules belong to [`docs/METHODE.md`](docs/METHODE.md), which states them and says what is measured.
 - **`CHANGELOG.md`**: a line in `Unreleased` as soon as a change is visible **to whoever uses the repo** *(a template that changes, a RUNBOOK step that moves, a script's behavior)*. An internal refactor or a typo fix does not go there.
 - **Version**: the **git tag** is the single source — `./init-project.sh --version` reads it, never a stored literal. `verify-version.sh` *(run by `check.sh` and by the CI)* fails the build if the tag, the CHANGELOG and the scripts disagree. Releasing is a deliberate action: **RUNBOOK §3**.
   🔴 **A BOT's pull request gets that line committed ONTO ITS BRANCH, before the merge** — never in a later one. Renovate rebases only on a conflict or on request, so the commit survives; and where it does not, the check goes red again, which is the point. A line written afterwards is a discipline, not a guard.

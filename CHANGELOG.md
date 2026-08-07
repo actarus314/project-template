@@ -21,6 +21,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **The commit gate runs in 3,95 s instead of 9,1 s, and returns the same verdicts.** The two checks
+  that generate a whole project ran one after the other, outside the parallel lot, and dominated its
+  wall clock by themselves. Nothing required that: each works inside its own `mktemp -d`, and the
+  `check.sh` a generated project runs writes to *its* cache, since that path is relative. The reason
+  they had been kept out — that they generate a project — was never measured; the rule the loop
+  really enforces is about hooks, which read their payload from stdin and would compete for it.
+  Verdicts were captured before and after the change and compared: identical.
+
+### Fixed
+- **A French thousands separator was turning every large number into a false alarm.** The end-of-turn
+  check reads numbers announced as a total and asks whether they appear in the turn's output; written
+  `5 300`, the number was matched as `300` — the tail announced as the whole, and unbacked by
+  construction since tool output prints `5302`. Groups of three are now read as one number, and the
+  separators come off before the comparison.
+- **The closing pass was being asked for again while it was already running, and it now says so
+  instead.** The word-routing branch armed the sequencer without ever checking whether a pass was
+  already armed, so a second request restarted a checklist that was half-done. It now points at the
+  pass under way and leaves.
+- **The pass's inventory ignored local branches whose remote is gone** — the branches that have
+  finished their life, as opposed to the never-pushed ones it already listed. 🔴 The obvious test
+  does not work here: this repository merges by squash, so a merged branch is never an ancestor of
+  `main` and `git branch --merged main` returns nothing. Measured twice, at the merges of `#117` and
+  `#119`: 0 against 1 both times. The inventory reads `git fetch --prune` then
+  `git branch -vv | grep ': gone]'`.
+
+### Changed
+- **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
+  cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
+  it two hours before posting one does not make the gesture right, it produces the exact feeling of
+  having it at hand, which is the failure this check exists to stop. Requiring it at session start
+  therefore turned the guard against its own purpose. The method and the standard stay owed by every
+  write — they say how a thing is written and where it goes. The runbook is owed only by a command
+  about to post one of those gestures, each tier carrying its own marker so satisfying one never
+  satisfies the other. Measured: ~16 100 tokens per arming became ~7 900, and the halved cost is a
+  consequence rather than the reason.
+
 ### Added
 - **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
   The rules are named in a file the assistant receives on *every* turn, which is exactly why they get

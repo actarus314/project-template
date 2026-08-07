@@ -47,6 +47,14 @@ case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; e
 # prompt, so it must be quiet and quick: everything that does not match leaves without a word.
 if [ "$EVENT" = UserPromptSubmit ]; then
   JOURNAL_NAME="housekeeping (asked in words)"
+  # A pass ALREADY under way is not re-announced: routing again restarts a checklist that is
+  # half-done, and the sequencer below is what finishes it (verify-housekeeping.md).
+  if [ -f "$ARMED" ]; then
+    echo "[housekeeping] The closing pass is already under way — continue it rather than starting" \
+         "over. The end-of-turn check states what its artefact still has to cover."
+    record 0 "already under way — not re-routed"
+    exit 0
+  fi
   field=$(printf '%s' "$payload" | python3 -c '
 import json, sys
 try: ev = json.load(sys.stdin)

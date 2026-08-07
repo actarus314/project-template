@@ -87,6 +87,26 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 
 ---
 
+## Concision and plainness — in EVERY piece of writing, not just the documents
+
+**Rule set by the maintainer on 2026-08-07.** It covers **everything written**: documents, code
+comments, commit messages, a check's terminal output, a reply.
+
+- **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that
+  survives only because deleting it would take a decision.
+- **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who
+  knows the subject and a reader who does not must reach the same understanding.
+
+> 🔴 **A size CEILING was considered and RULED OUT**, and the reason matters: capping a file pushes
+> the overflow into sub-files, which moves the problem and risks losing what gets moved. **Concision
+> is written in, never enforced by a wall.**
+
+**What can be measured is measured — the rest is not automated.** Characters per line, sentences
+crammed onto one line, markup density: countable, and a threshold for them is set from the corpus
+*(measured 2026-08-07: median 92 characters per line across 57 files)*. Jargon and clarity are
+judgements — no script reads them, and a model that blocks on them is worse than nothing, since a
+green light given wrongly has no second line of defence.
+
 ## The main documents stay SHORT
 
 **If they grow, the detail MOVES TO THE ARCHIVE — it does not get crammed in.**

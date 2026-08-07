@@ -277,13 +277,16 @@ fi
 rm -rf "$PAR"; mkdir -p "$PAR"
 for s in checks/verify-*.sh; do
   grep -qE '^# hook: ' "$s" && continue
-  # verify-travel is NOT a hook — it generates a whole project, so it runs alone, further down.
-  # Named here because it is recalled by name there too: the two lines fall together or not at all.
-  case "$s" in *verify-travel.sh) continue;; esac
+  # The two that GENERATE a project run in the lot like the others: each works inside its own
+  # `mktemp -d`, and the nested `check.sh` writes to the generated project's own `.ci-tools/`
+  # (CACHE is relative), so nothing is shared. Run one after the other they dominate the gate's
+  # wall clock, which is the only reason they belong in the lot (durations: repo-controls.md).
   case "$s" in
     *verify-echo.sh)          touched '\.md$' || continue;;
     *verify-growth.sh)        touched '\.md$' || continue;;
     *verify-comment-drift.sh) touched '\.sh$' || continue;;
+    *verify-travel.sh)          touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$' || continue;;
+    *verify-generated-green.sh) touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/' || continue;;
   esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
@@ -462,7 +465,7 @@ fi
 
 if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
-  if timed ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
+  if reap verify-travel; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
 
 # Same trigger, and it also generates — but it asks the other question: not "does this path
@@ -470,7 +473,7 @@ fi
 # including two checks that exited non-zero without printing a single line.
 if [ -x checks/verify-generated-green.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
   note "verify-generated-green.sh — a generated project's own door"
-  if timed ./checks/verify-generated-green.sh; then ok "generated project born green"; else ko "generated project born red"; fi
+  if reap verify-generated-green; then ok "generated project born green"; else ko "generated project born red"; fi
 fi
 
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
