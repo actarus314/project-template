@@ -291,34 +291,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the commit being made *(verified — `COMMIT_EDITMSG` does not exist yet at that point)*, so reading
   the working tree would refuse a declaration that was correctly written.
 
-### Fixed
-- **Four facts the documentation stated and that were no longer true**, each re-measured rather than
-  reasoned about: `AGENTS.md` described the repo as **private** while it has been public since
-  2026-07-31, with two active rulesets · `README.md` listed `verify-version.sh` among the root tools
-  although it moved under `checks/` on 2026-08-04 · `repo-controls.md` announced a gate at **2,82 s**
-  where three consecutive runs give **3,65 s**, and *"sixteen"* timed checks where the table above it
-  lists more — that count is now stated as belonging to the table, so it cannot drift again ·
-  `README.md` showed `init-project.sh <owner>/<repo>` without saying the **GitHub repo must already
-  exist**, created by hand and PRIVATE, which the command alone suggested otherwise.
-- **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
-  unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
-  dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
-  tracking doc records for a real repository. What was missing was its entry in the RUNBOOK, not the
-  file. *(A mechanically correct "orphan" verdict, with the wrong conclusion.)*
-
-- **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
-  `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
-  `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact
-  silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
-  reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
-  requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
-- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A `# tone-self` or
-  `# fr-pattern` marker exempts its line **anywhere in the tree** — bound to no file and no line,
-  which is what makes it precise enough to mark a single line, and invisible enough to spread. The
-  verdict now counts them out loud, as `verify-language.sh` already did for its own skipped lines.
-  **10 lines are exempted today**; a number that grows can be noticed, an unwritten one cannot.
-
-### Added
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
   is not, and this answers it instead of assuming. It records every opening as *with* or *WITHOUT* an
@@ -353,80 +325,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   rule it enforces stays in `METHODE.md`. The notes **travel with the checks** *(`verify-*.md`
   only: the generator's own notes describe files a generated project does not have)*.
 
-### Fixed
-- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table assigned
-  "PR `develop → main`, green CI, merge" to Claude, and the sealing step said "through a pull
-  request" — both read as a standing authorisation to OPEN one. A fresh-context agent asked to read
-  this repository's rules answered **yes** to all three of "may an assistant open a pull request on
-  its own initiative / open then merge / merge an existing one", and quoted those lines. Opening now
-  says, in both documents, that it happens **on the maintainer's instruction**; merging is unchanged.
-  ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
-  opening with `open-pr.sh` as an ordinary step. That one now states it describes **how**, never
-  **whether**.
-- **The closing pass's word-routing named a payload field that is not documented, and said nothing
-  when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
-  was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
-  fired"* — which left a real gap unexplainable. It now records what it read. And it no longer names
-  a field at all: it reads **every text value** of the payload except the known technical keys, so it
-  routes whether the prompt arrives as `user_input`, `prompt`, `message` or `text`. The official docs
-  do not specify that field for `UserPromptSubmit`; naming one was a guess.
-  ⚠️ What the same reading settled: hooks are **reloaded by a file watcher**, so "the session had not
-  picked them up" is ruled out as an explanation.
-- **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
-  committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
-  adding the entry in the right commit was refused anyway, and the only ways through were an empty
-  commit or `--no-verify`. It now reads the same **three sources** its neighbour already did: what is
-  committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
-- **`verify-comment-drift` justified its reference point with a reason that is false in this very
-  repository.** It said releases are rare; there were four tags in five days. The reason that holds
-  at any release cadence — and therefore in every generated project — is that a release-anchored
-  reference puts **already-merged, already-green work back on trial**: measured here, the touched-file
-  input goes from 1 file to 41 the moment the anchor moves back to the tag. The symmetric half is why
-  `verify-growth` keeps the far anchor: `origin/main` advances at every merge, so accumulation resets
-  to zero by construction and that guard would go permanently silent *(same document, same instant:
-  **+24 %** against the tag, **−0,2 %** against `origin/main`)*. Both halves are now tabulated in
-  `docs/code/verify-comment-drift.md`, which also carried two claims the move had left stale.
-  ⚠️ Its two variables said the opposite of what they held — `tag` contained the string `origin/main`,
-  `released_at` a merge timestamp — in the one place a reader goes to ask which anchor is in force.
-- **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
-  its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
-  ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
-  a constraint far more often than a story), and the sixth needed narrowing from the noun to the
-  VERB: naming the maintainer is usually a constraint ("run by THE MAINTAINER, never by the
-  assistant"), what tells a story is "the maintainer said". 14 lines flagged became 4, all four
-  narrative. Recall is traded for precision, deliberately, because this one blocks.
-- **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
-  tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
-  list was short. Three candidates were measured over **1683 real messages** before one was picked:
-  `(pour|avant) [un|le|de] clear` → **2 new matches, zero false positives** *(kept)*; a
-  *clean/propre* variant → the same two but narrower; and the **bare word `clear` → 41 new matches**,
-  nearly all noise *(skill loads, session summaries)* — the original 82 all over again.
-  🔴 **It stops there**: *"Affiche l'état du suivi"* does not match, and must not — asking to SEE the
-  state is not asking for the pass.
-- **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
-  `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
-  writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a
-  commit that had not touched it. The rule the check enforces — a curated document **shrinks** when
-  a stage closes — has no meaning for a page no human writes, which is why it joins the CHANGELOG
-  and the archives among what accumulates by nature.
-
-### Changed
-- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping at
-  that list leaves every other section to rot, and the rot was measured: a pass did exactly that,
-  and the maintainer then found by hand, in one reading, an entry point stating the finished stage
-  instead of the next gesture, **two sections restating the same completed work**, a table broken by
-  block quotes cutting its header from its rows, and **three false facts**. The skill now asks four
-  questions of every section — does the entry point say where to RESUME · is this fact stated twice
-  · does it still hold *(re-measured, and **from the server** rather than a local cache — a stale
-  remote ref made one pass report 19 branches where the forge held 2)* · do the tables still render.
-  It also has to state what could **not** be verified: silence reads as verified.
-- **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
-  *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
-  directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
-  Delegation is now framed as a cost question, with the three opt-ins still required when it does
-  happen.
-
-### Added
 - **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
   forms were tried and each ruled out: **blocking** by measurement *(the signal cannot separate a
   fault from a legitimate stage — the three highest-scoring pairs are steps of one undertaking)*,
@@ -500,6 +398,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is the reference point, never the rhythm — the check runs at every commit like its siblings.
 
 ### Changed
+- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping at
+  that list leaves every other section to rot, and the rot was measured: a pass did exactly that,
+  and the maintainer then found by hand, in one reading, an entry point stating the finished stage
+  instead of the next gesture, **two sections restating the same completed work**, a table broken by
+  block quotes cutting its header from its rows, and **three false facts**. The skill now asks four
+  questions of every section — does the entry point say where to RESUME · is this fact stated twice
+  · does it still hold *(re-measured, and **from the server** rather than a local cache — a stale
+  remote ref made one pass report 19 branches where the forge held 2)* · do the tables still render.
+  It also has to state what could **not** be verified: silence reads as verified.
+- **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
+  *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
+  directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
+  Delegation is now framed as a cost question, with the three opt-ins still required when it does
+  happen.
+
 - **The end-of-turn check now BLOCKS.** `checks/verify-turn-claims.sh` ends a turn with
   `decision: block` instead of a remark: the reason reaches the model, which settles it or states why
   the signal does not apply. `stop_hook_active` caps that at **one relaunch per turn**, so a false
@@ -545,6 +458,88 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   merges, for the bumps that actually reach a user. `zizmor` does: it travels in a template.
 
 ### Fixed
+- **Four facts the documentation stated and that were no longer true**, each re-measured rather than
+  reasoned about: `AGENTS.md` described the repo as **private** while it has been public since
+  2026-07-31, with two active rulesets · `README.md` listed `verify-version.sh` among the root tools
+  although it moved under `checks/` on 2026-08-04 · `repo-controls.md` announced a gate at **2,82 s**
+  where three consecutive runs give **3,65 s**, and *"sixteen"* timed checks where the table above it
+  lists more — that count is now stated as belonging to the table, so it cannot drift again ·
+  `README.md` showed `init-project.sh <owner>/<repo>` without saying the **GitHub repo must already
+  exist**, created by hand and PRIVATE, which the command alone suggested otherwise.
+- **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
+  unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
+  dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
+  tracking doc records for a real repository. What was missing was its entry in the RUNBOOK, not the
+  file. *(A mechanically correct "orphan" verdict, with the wrong conclusion.)*
+
+- **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
+  `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
+  `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact
+  silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
+  reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
+  requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
+- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A `# tone-self` or
+  `# fr-pattern` marker exempts its line **anywhere in the tree** — bound to no file and no line,
+  which is what makes it precise enough to mark a single line, and invisible enough to spread. The
+  verdict now counts them out loud, as `verify-language.sh` already did for its own skipped lines.
+  **10 lines are exempted today**; a number that grows can be noticed, an unwritten one cannot.
+
+- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table assigned
+  "PR `develop → main`, green CI, merge" to Claude, and the sealing step said "through a pull
+  request" — both read as a standing authorisation to OPEN one. A fresh-context agent asked to read
+  this repository's rules answered **yes** to all three of "may an assistant open a pull request on
+  its own initiative / open then merge / merge an existing one", and quoted those lines. Opening now
+  says, in both documents, that it happens **on the maintainer's instruction**; merging is unchanged.
+  ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
+  opening with `open-pr.sh` as an ordinary step. That one now states it describes **how**, never
+  **whether**.
+- **The closing pass's word-routing named a payload field that is not documented, and said nothing
+  when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
+  was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
+  fired"* — which left a real gap unexplainable. It now records what it read. And it no longer names
+  a field at all: it reads **every text value** of the payload except the known technical keys, so it
+  routes whether the prompt arrives as `user_input`, `prompt`, `message` or `text`. The official docs
+  do not specify that field for `UserPromptSubmit`; naming one was a guess.
+  ⚠️ What the same reading settled: hooks are **reloaded by a file watcher**, so "the session had not
+  picked them up" is ruled out as an explanation.
+- **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
+  committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
+  adding the entry in the right commit was refused anyway, and the only ways through were an empty
+  commit or `--no-verify`. It now reads the same **three sources** its neighbour already did: what is
+  committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
+- **`verify-comment-drift` justified its reference point with a reason that is false in this very
+  repository.** It said releases are rare; there were four tags in five days. The reason that holds
+  at any release cadence — and therefore in every generated project — is that a release-anchored
+  reference puts **already-merged, already-green work back on trial**: measured here, the touched-file
+  input goes from 1 file to 41 the moment the anchor moves back to the tag. The symmetric half is why
+  `verify-growth` keeps the far anchor: `origin/main` advances at every merge, so accumulation resets
+  to zero by construction and that guard would go permanently silent *(same document, same instant:
+  **+24 %** against the tag, **−0,2 %** against `origin/main`)*. Both halves are now tabulated in
+  `docs/code/verify-comment-drift.md`, which also carried two claims the move had left stale.
+  ⚠️ Its two variables said the opposite of what they held — `tag` contained the string `origin/main`,
+  `released_at` a merge timestamp — in the one place a reader goes to ask which anchor is in force.
+- **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
+  its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
+  ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
+  a constraint far more often than a story), and the sixth needed narrowing from the noun to the
+  VERB: naming the maintainer is usually a constraint ("run by THE MAINTAINER, never by the
+  assistant"), what tells a story is "the maintainer said". 14 lines flagged became 4, all four
+  narrative. Recall is traded for precision, deliberately, because this one blocks.
+- **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
+  tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
+  list was short. Three candidates were measured over **1683 real messages** before one was picked:
+  `(pour|avant) [un|le|de] clear` → **2 new matches, zero false positives** *(kept)*; a
+  *clean/propre* variant → the same two but narrower; and the **bare word `clear` → 41 new matches**,
+  nearly all noise *(skill loads, session summaries)* — the original 82 all over again.
+  🔴 **It stops there**: *"Affiche l'état du suivi"* does not match, and must not — asking to SEE the
+  state is not asking for the pass.
+- **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
+  `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
+  writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a
+  commit that had not touched it. The rule the check enforces — a curated document **shrinks** when
+  a stage closes — has no meaning for a page no human writes, which is why it joins the CHANGELOG
+  and the archives among what accumulates by nature.
+
 - 🔴 **The bot exemption is REVERTED, one day old.** It made the control silent on exactly the
   changes that need it most: `zizmor` and `trivy` are pinned **inside `templates/`**, so a bump
   **travels into every generated project** — user-visible by the convention's own definition. What
@@ -565,24 +560,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.3.0](https://github.com/actarus314/project-template/releases/tag/v1.3.0) - 2026-08-05
 
-### Changed
-- **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
-  across sixteen threshold combinations** *(up to 13 documents reported; a green-equals-green
-  comparison at the shipped settings would have proved nothing)*. Four forks per file became three
-  bulk `git grep` calls per marker family per side, expressed as the three counts the awk produced:
-  non-empty lines, leading-comment lines, and lines holding the marker — comments are the third,
-  code is the first minus the second.
-  ⚠️ **Written once wrong**: the first join keyed off argument ORDER, which breaks twice over —
-  several marker families produce several files per kind, and a family with no match produces an
-  empty one awk never opens. Every count lands tagged now.
-- **The control table's durations were re-measured, all sixteen** *(medians of three, standalone)*.
-  Their sum falls from **5,24 s to 3,89 s** while gaining a check, and the ordering changed:
-  `verify-echo` and `verify-growth` are no longer where the prose said they were.
-- **The git hooks stop being duplicated under `templates/`.** `init-project.sh` copies `.githooks/`
-  **from the root**, like `check.sh`, `open-pr.sh` and `checks/`. The second copy had already
-  drifted: `pre-push` was byte-identical to its twin while `pre-commit` carried the same code under
-  two different wordings.
-
 ### Added
 - **Every tracked executable answers `--version` — 18, then 25.** Seven did not, so
   `verify-version.sh` never compared them: `verify-tone.sh`, **`verify-version.sh` itself**,
@@ -597,7 +574,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   still on the floor — the same false negative as the `[ -x … ]` form, one layer down. Code lines
   only now.
 
-### Added
 - **A check for FRENCH left in published content** *(`checks/verify-language.sh`)*. Nothing looked
   for it: `verify-tone.sh` hunts the second person, never the language, so a paragraph written
   entirely in French passed it without a murmur — and two words shipped into published documents
@@ -627,7 +603,94 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `if [ -x checks/foo.sh ]` — the *existence test* that opens the block — as proof the verdict was
   read. It passed on the exact case it was written for.
 
+- **`./check.sh --report` — a control journal, and a DEVELOPMENT instrument.** It answers two
+  questions a green tick never does: **how long each control costs**, and **whether its gate ever
+  fires**. A control that is only ever skipped is the failure this repository knows best — shipped,
+  executable, never run — and a journal recording only verdicts cannot show it, because the line
+  simply is not there. Skips are therefore recorded too, with the gate that decided.
+  🔴 **OFF by default**: nothing is written until `--report --on`, and the cost when off is one file
+  test per verdict. `--off` stops it, `--reset` clears it. The record lands under `.ci-tools/`
+  (gitignored) — local telemetry, never repository content — and the view is written to
+  `workspace/docs/CONTROLES.md`. Written by `check.sh` at the single point every verdict passes
+  through, so no list of controls has to be kept anywhere.
+- **Every check now travels into a generated project, and every check has a gate there.** A project
+  received three of the eighteen, and **no generated workflow called any of them**: the checks
+  shipped, ran locally at best, and gated nothing. `init-project.sh` copies `checks/` whole, and
+  each project's `ci.yml` carries one line — **`./check.sh --house`** — behind which everything
+  under `checks/` runs. Adding a check is dropping a file in: no list to update, no workflow to
+  edit, in any project.
+- **`./check.sh --house`** — the house checks and nothing else. The external tools *(gitleaks,
+  semgrep, osv-scanner, actionlint, zizmor)* stay the CI's own steps, at the versions it pins and
+  checksums; replaying them inside the same job would download and rerun the lot for one verdict.
+- **`verify-checks-wiring.sh` guards the gate itself**: the line missing from any gating workflow
+  — this repo's `ci.yml` or the three shipped templates — fails the build. It also compares the
+  hooks the table calls `n/a` against the ones the runner actually keeps out, closing the gap it
+  used to state about itself.
+
+- **A check for the invariants whose breakage is silent** *(`checks/verify-do-not-break.sh`)*: the
+  skill reached through a symlink rather than a drifting copy, the three files kept tracked against
+  the neighbouring template `.gitignore`, and the absolute paths the assistant's own instructions
+  read at every session start. Nothing reported any of the three, in either direction — and none of
+  them raises an error when it breaks: the skill just vanishes from the list, a session quietly
+  loses the documents it reasons from, a generated project quietly ships without three files.
+
+- **A check that the checks are wired as declared** *(`checks/verify-checks-wiring.sh`)*. Three
+  hand-written lists name them one by one — the CI steps, what `init-project.sh` copies into a
+  generated project, and the table in `METHODE.md` — and a check added, renamed or moved has to
+  reach all three by hand. Every way of missing one is silent: absent from the CI it passes no
+  gate, absent from `init-project.sh` it ships nowhere, absent from the table it is armed and
+  undocumented. Auto-detecting the CI list would be wrong, since four checks have no business
+  there; that exception was already written down in the table, so the table is now the source and
+  the lists are compared against it.
+
+- **A check on what the assistant ASSERTS as a turn ends** *(`checks/verify-turn-claims.sh`, a `Stop`
+  hook, advisory)*. Every other check watches files; none watched the claims. Two failures kept
+  recurring: a defect named while the turn ends untouched, and a counted total appearing in no tool
+  output. Both are counted, never judged — a model reviewing a turn gives a false green often
+  enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
+  turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
+  unreadable; these fire on under 1 %.
+- **`verify-turn-claims.sh` watches a third failure: a measurement taken and never recorded.** The
+  maintainer pointed it out after it happened — every check was timed, the numbers were shown, and
+  they landed in no document, dying with the conversation. Measuring is cheap; forgetting to write
+  it down is invisible. Sized the same way as the other two, against the same 4500 real turns:
+  measurement vocabulary alone fired on 6 % of turns and a table alone on 3.75 %, so the signal
+  requires BOTH plus at least three numeric rows — 0.77 %.
+- **A guard on the commands this repo forbids** *(`checks/verify-forbidden-command.sh`, a
+  `PreToolUse` hook on Bash)*. Three are refused outright because their verdict is a literal string,
+  present or absent: `git rm --cached` on a force-added template file, `gh pr merge --admin`, and
+  `gh pr checks`. A fourth — opening a pull request — is only WARNED about, since a second one is
+  sometimes right and a guard wrong one time in three teaches its own bypass. Heredoc bodies are
+  stripped before matching: the very measurements that sized these rules were commands containing
+  those strings, and a naive match would have blocked the work that justified it.
+- **A check for the same fact stated twice in different words** *(`checks/verify-echo.sh`, advisory)*.
+  Verbatim copying was already covered; restatement was not. Sentence embeddings were tried first
+  and **rejected on measurement** — a static model flagged 1840 pairs against this check's 45, and
+  the ones it alone reported were noise, the shared domain vocabulary drowning the signal. Weighing
+  words by rarity is both cheaper and sharper here. It draws a list and blocks nothing.
+- **`verify-growth.sh` also watches the comment outgrowing its code.** An absolute ratio would say
+  nothing — these scripts sit at 28–56 % comment, deliberately, since a comment carries the WHY.
+  What is observable is the DIFFERENCE between the two growth rates: measured across this repo's
+  releases it has a median of 0 and a 95th percentile of +6, with a single real outlier at +149.
+
 ### Changed
+- **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
+  across sixteen threshold combinations** *(up to 13 documents reported; a green-equals-green
+  comparison at the shipped settings would have proved nothing)*. Four forks per file became three
+  bulk `git grep` calls per marker family per side, expressed as the three counts the awk produced:
+  non-empty lines, leading-comment lines, and lines holding the marker — comments are the third,
+  code is the first minus the second.
+  ⚠️ **Written once wrong**: the first join keyed off argument ORDER, which breaks twice over —
+  several marker families produce several files per kind, and a family with no match produces an
+  empty one awk never opens. Every count lands tagged now.
+- **The control table's durations were re-measured, all sixteen** *(medians of three, standalone)*.
+  Their sum falls from **5,24 s to 3,89 s** while gaining a check, and the ordering changed:
+  `verify-echo` and `verify-growth` are no longer where the prose said they were.
+- **The git hooks stop being duplicated under `templates/`.** `init-project.sh` copies `.githooks/`
+  **from the root**, like `check.sh`, `open-pr.sh` and `checks/`. The second copy had already
+  drifted: `pre-push` was byte-identical to its twin while `pre-commit` carried the same code under
+  two different wordings.
+
 - **`verify-growth.sh` reads its two revisions in four calls instead of two per file** — 0,88 s →
   0,17 s, **5,1× faster**, and the verdict is identical at four thresholds *(8, 5, 3 and 0
   documents reported)*. It forked `git show` **and** `git cat-file -s` once per document: 585 ms of
@@ -639,6 +702,64 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`verify-version.sh` asks its eighteen scripts in parallel** — 0,52 s → 0,27 s. The answers land
   in files, never on a shared pipe: interleaved writes are what makes a parallel loop attribute one
   script's version to another.
+
+- **`verify-echo.sh` stopped reporting the very shape the rule prescribes.** A paragraph that LINKS
+  to another document is the pointer METHODE asks for, not a copy — and a good pointer names what it
+  points at, so it shares that document's vocabulary by construction. Three of the four last pairs
+  were exactly that. Pointers are now excluded, and the French detector recognises short technical
+  prose *(a bilingual README's French half was reading as English and being compared with its own
+  English half)*. **34 pairs → 0**, and a planted copy still scores 1.00.
+- **The three advisory checks now BLOCK** — a warning nobody must act on is a warning nobody reads.
+  Two tunings came with it, each measured: `verify-comment-drift` gained a **floor in lines** beside
+  its percentage gap *(percentages alone over-report a small file: +134 % of comment against +94 %
+  of code was 34 added lines against 36)*, and `verify-echo` excludes `CODE_OF_CONDUCT.md`,
+  third-party text whose graduated sanctions restate each other by design.
+- **`verify-echo.sh` is 7× faster** — 1,78 s → 0,25 s, verdict strictly identical. It computed the
+  language of a paragraph once per PAIR inside a quadratic loop; it is computed once per paragraph.
+  That check was the floor of the CI gate, which now runs in **3,05 s**.
+- **The control table's durations were wrong by 1,7× to 4,1×.** They were single cold runs on a busy
+  machine. They are medians of three now, and the note says so.
+- **A hook declares itself** — `# hook: <event>` in its own header — and `check.sh` detects that
+  line instead of naming the three. That was the **last hand-written list left in the runner**, and
+  the one that travelled into every project with nothing to guard it: a fifth hook dropped into
+  `checks/` would have joined the parallel lot and **hung on STDIN, with no output at all**.
+- **A check is universal: it detects whether its subject exists where it lands.** Present, it
+  bites; absent, it **says so** and returns 0. This is what made the travel possible at all — and
+  what a *"which ones deserve to travel?"* list could never answer, since only the check, at the
+  place, knows.
+- **This repository's `ci.yml` calls the same one line**, in place of twelve hand-written steps.
+  That list was one of the three that had to be kept in agreement by hand, and a check missing from
+  it passed no gate at all.
+- **`CONTRIBUTING.md` and `AGENTS.md` stop restating each other in generated projects.** The
+  `## Branching` block was injected into **both**, and the merge-verification procedure was written
+  out twice — so every project was born with the duplication METHODE forbids, in the two files that
+  teach its rules. `AGENTS.md` keeps both *(it is the authority, and what an agent reads)*;
+  `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
+
+- **The list of checks, their perimeter, their rhythm and their gate moved from `METHODE.md` to
+  [`repo-controls.md`](docs/repo-controls.md)** — the document the standard names as the owner of
+  the control matrix. `METHODE.md` keeps what is a question of *writing*: the discriminator that
+  decides a perimeter *(a rule of method follows the method everywhere; a rule of published style
+  stops where publication stops)*. **What a commit costs is published with it**, by what it touches
+  rather than per check — the same `--commit` spans 0,8 s to 2,6 s, and a duration without its case
+  says nothing.
+
+- 🔴 **`verify-narrative.sh` was blind in every generated project that is not shell.** It TRAVELS
+  into all of them, and scanned `*.sh *.yml *.yaml` only — so in a Python, TypeScript or Go project
+  it read nothing and reported "no dated narrative" over a repository it had never opened. It now
+  reads every tracked text file and knows the comment marker per language (`#`, `//`, `--`, `;`),
+  and no longer anchors to the start of a line, so a trailing comment carrying a date is caught too.
+- **The comment-drift half of `verify-growth.sh` became its own check** *(`verify-comment-drift.sh`)*.
+  Two targets, two rhythms, two conditions: pairing them under one gate blinded the script half on
+  a commit touching only scripts, within an hour of being written. It is language-aware for the same
+  reason as above, and NAMES the extensions it found no marker for rather than skipping them quietly.
+- **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
+  place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
+  gitleaks reads it neither on staged files nor over the full history — a
+  `https://<token>@github.com/…` remote therefore sits in plain text where nothing in the
+  repository looks, and survives every clone of the working copy. The credential helper is checked
+  with it: it must name a variable, never carry a literal. The offending value is never printed —
+  reporting a leak by repeating it moves it into a terminal, a log and a CI transcript.
 
 ### Fixed
 - **The control journal's page never said whether the journal was still running.** The state was
@@ -679,66 +800,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **the table times a check alone, the journal times it inside the parallel lot** *(measured:
   `verify-growth` 0,88 s against 1,10 s)*.
 
-### Added
-- **`./check.sh --report` — a control journal, and a DEVELOPMENT instrument.** It answers two
-  questions a green tick never does: **how long each control costs**, and **whether its gate ever
-  fires**. A control that is only ever skipped is the failure this repository knows best — shipped,
-  executable, never run — and a journal recording only verdicts cannot show it, because the line
-  simply is not there. Skips are therefore recorded too, with the gate that decided.
-  🔴 **OFF by default**: nothing is written until `--report --on`, and the cost when off is one file
-  test per verdict. `--off` stops it, `--reset` clears it. The record lands under `.ci-tools/`
-  (gitignored) — local telemetry, never repository content — and the view is written to
-  `workspace/docs/CONTROLES.md`. Written by `check.sh` at the single point every verdict passes
-  through, so no list of controls has to be kept anywhere.
-- **Every check now travels into a generated project, and every check has a gate there.** A project
-  received three of the eighteen, and **no generated workflow called any of them**: the checks
-  shipped, ran locally at best, and gated nothing. `init-project.sh` copies `checks/` whole, and
-  each project's `ci.yml` carries one line — **`./check.sh --house`** — behind which everything
-  under `checks/` runs. Adding a check is dropping a file in: no list to update, no workflow to
-  edit, in any project.
-- **`./check.sh --house`** — the house checks and nothing else. The external tools *(gitleaks,
-  semgrep, osv-scanner, actionlint, zizmor)* stay the CI's own steps, at the versions it pins and
-  checksums; replaying them inside the same job would download and rerun the lot for one verdict.
-- **`verify-checks-wiring.sh` guards the gate itself**: the line missing from any gating workflow
-  — this repo's `ci.yml` or the three shipped templates — fails the build. It also compares the
-  hooks the table calls `n/a` against the ones the runner actually keeps out, closing the gap it
-  used to state about itself.
-
-### Changed
-- **`verify-echo.sh` stopped reporting the very shape the rule prescribes.** A paragraph that LINKS
-  to another document is the pointer METHODE asks for, not a copy — and a good pointer names what it
-  points at, so it shares that document's vocabulary by construction. Three of the four last pairs
-  were exactly that. Pointers are now excluded, and the French detector recognises short technical
-  prose *(a bilingual README's French half was reading as English and being compared with its own
-  English half)*. **34 pairs → 0**, and a planted copy still scores 1.00.
-- **The three advisory checks now BLOCK** — a warning nobody must act on is a warning nobody reads.
-  Two tunings came with it, each measured: `verify-comment-drift` gained a **floor in lines** beside
-  its percentage gap *(percentages alone over-report a small file: +134 % of comment against +94 %
-  of code was 34 added lines against 36)*, and `verify-echo` excludes `CODE_OF_CONDUCT.md`,
-  third-party text whose graduated sanctions restate each other by design.
-- **`verify-echo.sh` is 7× faster** — 1,78 s → 0,25 s, verdict strictly identical. It computed the
-  language of a paragraph once per PAIR inside a quadratic loop; it is computed once per paragraph.
-  That check was the floor of the CI gate, which now runs in **3,05 s**.
-- **The control table's durations were wrong by 1,7× to 4,1×.** They were single cold runs on a busy
-  machine. They are medians of three now, and the note says so.
-- **A hook declares itself** — `# hook: <event>` in its own header — and `check.sh` detects that
-  line instead of naming the three. That was the **last hand-written list left in the runner**, and
-  the one that travelled into every project with nothing to guard it: a fifth hook dropped into
-  `checks/` would have joined the parallel lot and **hung on STDIN, with no output at all**.
-- **A check is universal: it detects whether its subject exists where it lands.** Present, it
-  bites; absent, it **says so** and returns 0. This is what made the travel possible at all — and
-  what a *"which ones deserve to travel?"* list could never answer, since only the check, at the
-  place, knows.
-- **This repository's `ci.yml` calls the same one line**, in place of twelve hand-written steps.
-  That list was one of the three that had to be kept in agreement by hand, and a check missing from
-  it passed no gate at all.
-- **`CONTRIBUTING.md` and `AGENTS.md` stop restating each other in generated projects.** The
-  `## Branching` block was injected into **both**, and the merge-verification procedure was written
-  out twice — so every project was born with the duplication METHODE forbids, in the two files that
-  teach its rules. `AGENTS.md` keeps both *(it is the authority, and what an agent reads)*;
-  `CONTRIBUTING.md` points at it. Measured on a generated project: **5 restated pairs → 0**.
-
-### Fixed
 - **`shellcheck` reached no generated project — neither locally nor in CI.** It was the only control
   this template ran on itself and shipped to nobody: a shell bug was blocked here and went through
   in silence over there, on both sides. One step in the three workflow templates covers both, since
@@ -847,81 +908,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   reader to run `docs/verify-checksums.sh --update`, moved to `checks/` some time ago. Following the
   instruction failed.
 
-### Changed
-- **The list of checks, their perimeter, their rhythm and their gate moved from `METHODE.md` to
-  [`repo-controls.md`](docs/repo-controls.md)** — the document the standard names as the owner of
-  the control matrix. `METHODE.md` keeps what is a question of *writing*: the discriminator that
-  decides a perimeter *(a rule of method follows the method everywhere; a rule of published style
-  stops where publication stops)*. **What a commit costs is published with it**, by what it touches
-  rather than per check — the same `--commit` spans 0,8 s to 2,6 s, and a duration without its case
-  says nothing.
-
-### Added
-- **A check for the invariants whose breakage is silent** *(`checks/verify-do-not-break.sh`)*: the
-  skill reached through a symlink rather than a drifting copy, the three files kept tracked against
-  the neighbouring template `.gitignore`, and the absolute paths the assistant's own instructions
-  read at every session start. Nothing reported any of the three, in either direction — and none of
-  them raises an error when it breaks: the skill just vanishes from the list, a session quietly
-  loses the documents it reasons from, a generated project quietly ships without three files.
-
-- **A check that the checks are wired as declared** *(`checks/verify-checks-wiring.sh`)*. Three
-  hand-written lists name them one by one — the CI steps, what `init-project.sh` copies into a
-  generated project, and the table in `METHODE.md` — and a check added, renamed or moved has to
-  reach all three by hand. Every way of missing one is silent: absent from the CI it passes no
-  gate, absent from `init-project.sh` it ships nowhere, absent from the table it is armed and
-  undocumented. Auto-detecting the CI list would be wrong, since four checks have no business
-  there; that exception was already written down in the table, so the table is now the source and
-  the lists are compared against it.
-
-- **A check on what the assistant ASSERTS as a turn ends** *(`checks/verify-turn-claims.sh`, a `Stop`
-  hook, advisory)*. Every other check watches files; none watched the claims. Two failures kept
-  recurring: a defect named while the turn ends untouched, and a counted total appearing in no tool
-  output. Both are counted, never judged — a model reviewing a turn gives a false green often
-  enough to matter, and stacking several does not help. **The patterns were tuned against 4463 real
-  turns of this project's transcripts**: the obvious wordings fired on ~15 % of turns, which is
-  unreadable; these fire on under 1 %.
-- **`verify-turn-claims.sh` watches a third failure: a measurement taken and never recorded.** The
-  maintainer pointed it out after it happened — every check was timed, the numbers were shown, and
-  they landed in no document, dying with the conversation. Measuring is cheap; forgetting to write
-  it down is invisible. Sized the same way as the other two, against the same 4500 real turns:
-  measurement vocabulary alone fired on 6 % of turns and a table alone on 3.75 %, so the signal
-  requires BOTH plus at least three numeric rows — 0.77 %.
-- **A guard on the commands this repo forbids** *(`checks/verify-forbidden-command.sh`, a
-  `PreToolUse` hook on Bash)*. Three are refused outright because their verdict is a literal string,
-  present or absent: `git rm --cached` on a force-added template file, `gh pr merge --admin`, and
-  `gh pr checks`. A fourth — opening a pull request — is only WARNED about, since a second one is
-  sometimes right and a guard wrong one time in three teaches its own bypass. Heredoc bodies are
-  stripped before matching: the very measurements that sized these rules were commands containing
-  those strings, and a naive match would have blocked the work that justified it.
-- **A check for the same fact stated twice in different words** *(`checks/verify-echo.sh`, advisory)*.
-  Verbatim copying was already covered; restatement was not. Sentence embeddings were tried first
-  and **rejected on measurement** — a static model flagged 1840 pairs against this check's 45, and
-  the ones it alone reported were noise, the shared domain vocabulary drowning the signal. Weighing
-  words by rarity is both cheaper and sharper here. It draws a list and blocks nothing.
-- **`verify-growth.sh` also watches the comment outgrowing its code.** An absolute ratio would say
-  nothing — these scripts sit at 28–56 % comment, deliberately, since a comment carries the WHY.
-  What is observable is the DIFFERENCE between the two growth rates: measured across this repo's
-  releases it has a median of 0 and a 95th percentile of +6, with a single real outlier at +149.
-
-### Changed
-- 🔴 **`verify-narrative.sh` was blind in every generated project that is not shell.** It TRAVELS
-  into all of them, and scanned `*.sh *.yml *.yaml` only — so in a Python, TypeScript or Go project
-  it read nothing and reported "no dated narrative" over a repository it had never opened. It now
-  reads every tracked text file and knows the comment marker per language (`#`, `//`, `--`, `;`),
-  and no longer anchors to the start of a line, so a trailing comment carrying a date is caught too.
-- **The comment-drift half of `verify-growth.sh` became its own check** *(`verify-comment-drift.sh`)*.
-  Two targets, two rhythms, two conditions: pairing them under one gate blinded the script half on
-  a commit touching only scripts, within an hour of being written. It is language-aware for the same
-  reason as above, and NAMES the extensions it found no marker for rather than skipping them quietly.
-- **`verify-no-secret-tracked.sh` becomes `verify-secret-blindspots.sh`**, and covers the second
-  place a secret hides from gitleaks: **the remote URL**. `.git/config` is never tracked, so
-  gitleaks reads it neither on staged files nor over the full history — a
-  `https://<token>@github.com/…` remote therefore sits in plain text where nothing in the
-  repository looks, and survives every clone of the working copy. The credential helper is checked
-  with it: it must name a variable, never carry a literal. The offending value is never printed —
-  reporting a leak by repeating it moves it into a terminal, a log and a CI transcript.
-
-### Fixed
 - **The concision check was blind where it mattered most** *(`checks/verify-growth.sh`)*. Concision
   is a rule of method, so it follows the method into the neighbouring workspace — where the very
   document the method names as the one that must shrink lives. It now reads both repositories,
@@ -932,7 +918,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.2.0](https://github.com/actarus314/project-template/releases/tag/v1.2.0) - 2026-08-04
 
 ### Added
-
 - **Every generated `AGENTS.md` now carries the two structural exceptions to "a missing workflow is
   not a green".** What is *expected* depends on the **event** and on the **base**, not on the
   repository: `Publish image` listens on `push: tags`, so it is absent from a push to `main` by
@@ -1001,8 +986,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **Advisory, never blocking**: a styled page renders placeholders its own way, and a guard that
   cries on every run is a guard nobody reads.
 
-### Changed
 
+- **A minimal `.claude-plugin/plugin.json`**, so the repo can be loaded as a Claude Code plugin.
+  Nothing is published yet: it exists to make the packaging testable rather than assumed.
+
+### Changed
 - **The sub-checks moved to `checks/`; the root keeps the four commands.** Two natures were mixed
   at the root: what the maintainer *runs* (`init-project.sh`, `configure-repo.sh`, `check.sh`,
   `open-pr.sh`) and what `check.sh` *calls*. `verify-checksums.sh` already sat apart in `docs/`
@@ -1052,8 +1040,52 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   leaves every absolute shebang under `.ci-tools/venv/` pointing nowhere, `pip` included — so
   nothing could repair it in place, and the cure was knowing to run `rm -rf .ci-tools/venv` by hand.
 
-### Fixed
 
+- **The standard is being split by SUBJECT — one subject, one file, one owner.** It had grown to
+  1012 lines and covered ten subjects it shared with three satellite documents, none of which owned
+  a subject of its own: they restated §5, §12, §17 and §18. Competing sources is exactly what
+  `METHODE.md` forbids, and the standard was the largest instance of it in the repo.
+  **This batch moves the first three families out**: `secrets-and-auth.md` *(§4, §5 and the PAT
+  permission matrix from `github-repo-config.md` §2)*, `claude-code-setup.md` *(§6, §7, §8 and the
+  delegation rule from `METHODE.md`)*, and `docker-hardening.md` *(§14)*.
+  🔴 **The section NUMBERS are unchanged**: every section that moved is kept in the standard as a
+  one-line pointer, so a reference to "standard §5" written in an archive, a memory or a past pull
+  request still resolves. The standard becomes the index of what it no longer carries.
+
+- **`repo-controls.md` and `security-and-updates.md` stop being summaries and become owners.** Both
+  used to open by deferring to the standard — *"complements §18"*, *"introduces no new rule"* — which
+  is the definition of a competing source: two documents on one subject, and a reader with no way to
+  know which one is stale. `repo-controls.md` now owns the branch policy, the version pin, the repo
+  configuration and the control matrix *(standard §12, §13, §17, §18 + `github-repo-config.md` §1, §3,
+  §4)*; `security-and-updates.md` owns who updates dependencies and pinned tools *(the Renovate half
+  of §17)*. The standard keeps a one-line pointer at each number, as above.
+  🔴 **A broken cross-reference was found and fixed on the way**: the version-pin section sent the
+  reader to `github-repo-config.md` **§2** *(PAT permissions)* for the ghcr package UI path, which
+  lives in **§4**. It had never resolved.
+  Two passages that had drifted apart are now reconciled: adopting some of OpenSSF Scorecard's
+  **practices** and rejecting the **tool** were stated in two files that never met, and read as a
+  contradiction.
+
+- **The standard becomes the index of what it no longer carries — 1012 lines down to ~320.** It now
+  answers a single question, *where does this go?*, and opens with a table routing every other
+  question to its owner. `docs/` holds **eight files, eight subjects, eight owners**.
+  **`github-repo-config.md` is removed.** It owned nothing: four of its five sections had already
+  moved, and the fifth was a checklist restating the RUNBOOK. Its three genuinely unique facts were
+  relocated first — the list of files present from the first commit and the LICENSE decision to the
+  standard, and the reason an org repo caps at 87 % *(its checklist counts 8 items, a personal
+  account's 7 — so comparing the two scores means nothing)* to the RUNBOOK, next to the click it
+  qualifies.
+  **Standard §11 is removed**: thirteen of its entries restated §4-§8, two are held elsewhere.
+  🔴 **Its last entry was not an orphan but a CONTRADICTION**: §11 said a stale `.gitignore` entry
+  should be pruned periodically, §9 said leaving it in is defensive. Both are now stated once, and
+  reconciled — an entry covering a path generated only inside a container stays; one that matches
+  nothing at all goes.
+  **The circular reference is broken.** The tracking doc was owned by nobody: `METHODE.md` named the
+  standard §16 as its source, and §16 named `METHODE.md` as its source. `METHODE.md` owns it now.
+  Section numbers remain stable throughout: a removed section keeps its number as a one-line pointer,
+  so `standard §11` or `standard §16` written anywhere still resolves.
+
+### Fixed
 - **🔴 The three checks shipped into every generated project were never run there.**
   `init-project.sh` copied `verify-tone.sh`, `verify-narrative.sh` and `verify-memories.sh` to the
   project's **root**, while the `check.sh` travelling beside them — the same file, unmodified —
@@ -1102,70 +1134,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `${CLAUDE_PLUGIN_ROOT}` is empty — the runtime substitutes it in configuration *(hooks, MCP,
   monitors)*, never in a skill's text.
 
-### Added
-
-- **A minimal `.claude-plugin/plugin.json`**, so the repo can be loaded as a Claude Code plugin.
-  Nothing is published yet: it exists to make the packaging testable rather than assumed.
-
-### Changed
-
-- **The standard is being split by SUBJECT — one subject, one file, one owner.** It had grown to
-  1012 lines and covered ten subjects it shared with three satellite documents, none of which owned
-  a subject of its own: they restated §5, §12, §17 and §18. Competing sources is exactly what
-  `METHODE.md` forbids, and the standard was the largest instance of it in the repo.
-  **This batch moves the first three families out**: `secrets-and-auth.md` *(§4, §5 and the PAT
-  permission matrix from `github-repo-config.md` §2)*, `claude-code-setup.md` *(§6, §7, §8 and the
-  delegation rule from `METHODE.md`)*, and `docker-hardening.md` *(§14)*.
-  🔴 **The section NUMBERS are unchanged**: every section that moved is kept in the standard as a
-  one-line pointer, so a reference to "standard §5" written in an archive, a memory or a past pull
-  request still resolves. The standard becomes the index of what it no longer carries.
-
-- **`repo-controls.md` and `security-and-updates.md` stop being summaries and become owners.** Both
-  used to open by deferring to the standard — *"complements §18"*, *"introduces no new rule"* — which
-  is the definition of a competing source: two documents on one subject, and a reader with no way to
-  know which one is stale. `repo-controls.md` now owns the branch policy, the version pin, the repo
-  configuration and the control matrix *(standard §12, §13, §17, §18 + `github-repo-config.md` §1, §3,
-  §4)*; `security-and-updates.md` owns who updates dependencies and pinned tools *(the Renovate half
-  of §17)*. The standard keeps a one-line pointer at each number, as above.
-  🔴 **A broken cross-reference was found and fixed on the way**: the version-pin section sent the
-  reader to `github-repo-config.md` **§2** *(PAT permissions)* for the ghcr package UI path, which
-  lives in **§4**. It had never resolved.
-  Two passages that had drifted apart are now reconciled: adopting some of OpenSSF Scorecard's
-  **practices** and rejecting the **tool** were stated in two files that never met, and read as a
-  contradiction.
-
-- **The standard becomes the index of what it no longer carries — 1012 lines down to ~320.** It now
-  answers a single question, *where does this go?*, and opens with a table routing every other
-  question to its owner. `docs/` holds **eight files, eight subjects, eight owners**.
-  **`github-repo-config.md` is removed.** It owned nothing: four of its five sections had already
-  moved, and the fifth was a checklist restating the RUNBOOK. Its three genuinely unique facts were
-  relocated first — the list of files present from the first commit and the LICENSE decision to the
-  standard, and the reason an org repo caps at 87 % *(its checklist counts 8 items, a personal
-  account's 7 — so comparing the two scores means nothing)* to the RUNBOOK, next to the click it
-  qualifies.
-  **Standard §11 is removed**: thirteen of its entries restated §4-§8, two are held elsewhere.
-  🔴 **Its last entry was not an orphan but a CONTRADICTION**: §11 said a stale `.gitignore` entry
-  should be pruned periodically, §9 said leaving it in is defensive. Both are now stated once, and
-  reconciled — an entry covering a path generated only inside a container stays; one that matches
-  nothing at all goes.
-  **The circular reference is broken.** The tracking doc was owned by nobody: `METHODE.md` named the
-  standard §16 as its source, and §16 named `METHODE.md` as its source. `METHODE.md` owns it now.
-  Section numbers remain stable throughout: a removed section keeps its number as a one-line pointer,
-  so `standard §11` or `standard §16` written anywhere still resolves.
-
 ## [1.1.0](https://github.com/actarus314/project-template/releases/tag/v1.1.0) - 2026-08-02
 
-### Documentation
-
-- **Standard §12 now states that `develop` reading as "N commits behind `main`" is structural and
-  correct.** The promotion's merge commit lands on `main` only, so the gap grows by one every cycle
-  and `0 0` is unreachable — GitHub's banner measures graph topology, not content. The section gives
-  the one measure that decides (`git diff origin/main origin/develop`) and says why every way of
-  "fixing" the count is worse than the gap. Nothing said so, and the silence cost a needless
-  realignment on a live repository before the measurement corrected it.
-
 ### Added
-
 - **`verify-tone.sh` — the second person is now checked, and blocks.** The standard forbids it in
   versioned content (§1) and nothing verified it: the rule held by discipline alone until it was
   found in nine files, four of them templates shipped into every generated project. The check reads
@@ -1176,7 +1147,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   copied into every generated project, where the same rule applies.
 
 ### Changed
-
 - **The last four French documents are now in English, and renamed with them**:
   `docs/controles-repo.{md,html}` → `docs/repo-controls.{md,html}`,
   `docs/securite-mises-a-jour.{md,html}` → `docs/security-and-updates.{md,html}`, and
@@ -1190,7 +1160,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   update path for already-generated projects, build/test still per-language).
 
 ### Fixed
-
 - **The second person, which the standard forbids in versioned content (§1), was in it anyway** —
   both doc pairs, `SECURITY.md`, and four files that ship into **every generated project**:
   `templates/repo/SECURITY.md`, `templates/repo/.gitattributes`,
@@ -1206,33 +1175,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   required something nothing produces and **every PR blocked forever**. The script now refuses
   before writing the ruleset, and `--dry-run` reports it without writing.
 
+### Documentation
+- **Standard §12 now states that `develop` reading as "N commits behind `main`" is structural and
+  correct.** The promotion's merge commit lands on `main` only, so the gap grows by one every cycle
+  and `0 0` is unreachable — GitHub's banner measures graph topology, not content. The section gives
+  the one measure that decides (`git diff origin/main origin/develop`) and says why every way of
+  "fixing" the count is worse than the gap. Nothing said so, and the silence cost a needless
+  realignment on a live repository before the measurement corrected it.
+
 ## [1.0.0](https://github.com/actarus314/project-template/releases/tag/v1.0.0) - 2026-07-31
 
 First tagged version. The repository went public on this date: everything below had landed
 before the flip, and is sealed here rather than reconstructed.
 
-### Changed
-
-- **The repo switches to ENGLISH, and the standard's §1 language exemption FALLS.** That exemption
-  rested on three legs — a **private** repo, no contributor sought, and English buying nothing but a
-  translation to maintain. Going public removes one of them, and the call was made to align the repo
-  with what it already imposes on every project it generates. **What it teaches does not change**:
-  every lived example was rewritten without the real repo name, the lesson kept.
-  Landed in batches: the conventions *(`claude-code-project-standard.md`, `METHODE.md`,
-  `github-repo-config.md`, `AGENTS.md`)*, then the RUNBOOK and the `new-project` skill, then the root,
-  the scripts and the workflows. **The `.md`/`.html` pairs are still to come, so the repo stays mixed
-  until they land.**
-  🔴 **The templates of LOCAL files were first excluded, wrongly.** The reasoning — *"they are
-  gitignored in the generated project, so they never reach GitHub"* — is true **of the generated
-  project** and false **here**: `templates/repo/CLAUDE.md`, `templates/repo/.envrc` and
-  `templates/workspace/*` are versioned in this repo *(`git add -f`)*, so they were about to go
-  public in French inside an all-English repo. They are translated too.
-  The **template** `README.md` is the one real exception, and it stays **bilingual by design** — its
-  French half *is* the product. This repo's own `README.md` is **English only**: a French half would
-  be a second copy to maintain alongside docs that are now entirely English.
-
 ### Added
-
 - **The community health files the repo prescribes but never had** — `SECURITY.md`,
   `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md` and
   `.github/ISSUE_TEMPLATE/config.yml`. The template **posts these into every generated project**
@@ -1312,8 +1268,46 @@ before the flip, and is sealed here rather than reconstructed.
   repo: neither versioned, nor run through CI, nor diffable. It is at the **root**, never under
   `templates/`: nothing here duplicates into the generated projects.
 
-### Fixed
 
+- **This file.** The standard requires a `CHANGELOG.md` for every generated project, and this repo did not
+  have one — a gap from its own rule, found while catching up another project's.
+
+### Changed
+- **The repo switches to ENGLISH, and the standard's §1 language exemption FALLS.** That exemption
+  rested on three legs — a **private** repo, no contributor sought, and English buying nothing but a
+  translation to maintain. Going public removes one of them, and the call was made to align the repo
+  with what it already imposes on every project it generates. **What it teaches does not change**:
+  every lived example was rewritten without the real repo name, the lesson kept.
+  Landed in batches: the conventions *(`claude-code-project-standard.md`, `METHODE.md`,
+  `github-repo-config.md`, `AGENTS.md`)*, then the RUNBOOK and the `new-project` skill, then the root,
+  the scripts and the workflows. **The `.md`/`.html` pairs are still to come, so the repo stays mixed
+  until they land.**
+  🔴 **The templates of LOCAL files were first excluded, wrongly.** The reasoning — *"they are
+  gitignored in the generated project, so they never reach GitHub"* — is true **of the generated
+  project** and false **here**: `templates/repo/CLAUDE.md`, `templates/repo/.envrc` and
+  `templates/workspace/*` are versioned in this repo *(`git add -f`)*, so they were about to go
+  public in French inside an all-English repo. They are translated too.
+  The **template** `README.md` is the one real exception, and it stays **bilingual by design** — its
+  French half *is* the product. This repo's own `README.md` is **English only**: a French half would
+  be a second copy to maintain alongside docs that are now entirely English.
+
+
+- **`configure-repo.sh` no longer sets `delete-branch-on-merge` on a PRIVATE 3-stage repo.**
+  The setting targets the **source** branch of any merged PR — so `develop` itself, when a
+  promotion merges. In public the `develop` ruleset (the `deletion` rule) prevents it; in private on
+  a Free plan no ruleset exists, and the branch disappeared without a word. What is lost:
+  the automatic cleanup of `feat/*` — one click. Switching to public restores the setting on
+  the next replay of the script. *(PR #42.)*
+- **The `ci-node.yml` and `docker-publish.yml` templates now apply to a repo whose
+  manifests are not at the root, and to images a third party deploys.** `ci-node.yml` refuses
+  to turn green when its npm steps have been silently skipped; `docker-publish.yml` attaches
+  an SBOM and SLSA provenance, and signs the image with cosign **by digest**. `configure-repo.sh`
+  opens Discussions, without which the issue template link is a 404. Both templates
+  warn that a `strategy.matrix` renames a REQUIRED check and blocks the PR forever.
+  *(PR #41.)*
+- Pinned CI tools: `zizmor` 1.28.0, `semgrep` 1.171.0, `docker/login-action` v4.5.2. *(PR #40.)*
+
+### Fixed
 - **The incident justifying PR-even-when-solo lived only in `docs/controles-repo.html`** — the
   `.md` carried only a cross-reference ("standard §12"), the story itself only existed in the copy.
   Brought back into the `.md`, in anonymized form: no more project name or host name.
@@ -1385,24 +1379,3 @@ before the flip, and is sealed here rather than reconstructed.
   why the key is injected rather than carried by the template: the `description` block of
   `templates/repo/.github/renovate.json`.
 
-### Changed
-
-- **`configure-repo.sh` no longer sets `delete-branch-on-merge` on a PRIVATE 3-stage repo.**
-  The setting targets the **source** branch of any merged PR — so `develop` itself, when a
-  promotion merges. In public the `develop` ruleset (the `deletion` rule) prevents it; in private on
-  a Free plan no ruleset exists, and the branch disappeared without a word. What is lost:
-  the automatic cleanup of `feat/*` — one click. Switching to public restores the setting on
-  the next replay of the script. *(PR #42.)*
-- **The `ci-node.yml` and `docker-publish.yml` templates now apply to a repo whose
-  manifests are not at the root, and to images a third party deploys.** `ci-node.yml` refuses
-  to turn green when its npm steps have been silently skipped; `docker-publish.yml` attaches
-  an SBOM and SLSA provenance, and signs the image with cosign **by digest**. `configure-repo.sh`
-  opens Discussions, without which the issue template link is a 404. Both templates
-  warn that a `strategy.matrix` renames a REQUIRED check and blocks the PR forever.
-  *(PR #41.)*
-- Pinned CI tools: `zizmor` 1.28.0, `semgrep` 1.171.0, `docker/login-action` v4.5.2. *(PR #40.)*
-
-### Added
-
-- **This file.** The standard requires a `CHANGELOG.md` for every generated project, and this repo did not
-  have one — a gap from its own rule, found while catching up another project's.
