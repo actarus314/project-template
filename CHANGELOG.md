@@ -41,9 +41,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
   on every source, compaction included.
   The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
-  can satisfy by declaring itself satisfied is not a guard. 🔴 **A read carrying `offset`/`limit` does
+  can satisfy by declaring itself satisfied is not a guard.
+  🔴 **A read carrying `offset`/`limit` does
   not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
-  quotation attached. Documents are DETECTED, so a generated project holding none stands down, and it
+  quotation attached.
+  Documents are DETECTED, so a generated project holding none stands down, and it
   never blocks when half-wired, when the target sits outside the repository, or when no transcript is
   in the payload. Verified on six situations.
 - **The same instrument was counting its own documentation, and that inverted its verdict.** Two
@@ -161,7 +163,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   tracked.
 - **`configure-repo.sh` travels, with the documentation needed to run it — and nothing else.** A
   generated project changes status on its own (it goes public, it gains a staging host), and that is
-  the one gesture requiring server configuration it could not reach. It ships with its implementation
+  the one gesture requiring server configuration it could not reach.
+  It ships with its implementation
   note, a **pinned** link to the template's RUNBOOK (`init-project.sh` rewrites `main` into the exact
   tag as it copies the file, so the link keeps describing the version that project was born from),
   and a self-contained `docs/server-config.md` carrying the admin-PAT recipe, the replay-on-flip
@@ -293,12 +296,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
-  is not, and this answers it instead of assuming. It records every opening as *with* or *WITHOUT* an
+  is not, and this answers it instead of assuming.
+  It records every opening as *with* or *WITHOUT* an
   instruction and **returns** — it never refuses a tool and cannot wedge a session. It watches the
   **gesture**, not one script: `gh pr create` appears 84 times in this repository's own history, so a
   guard on `open-pr.sh` alone would leave the door beside it open.
   🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
-  **20** openings, the gate does not get built. And the token is **consumed, never dated** — an order
+  **20** openings, the gate does not get built.
+  And the token is **consumed, never dated** — an order
   and its opening were measured up to **31 turns** apart, so any expiry short enough to restrict would
   refuse real orders.
 - **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
@@ -306,7 +311,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
   A skill is text, so a step skips itself and nothing sees it *(lived: the line-by-line enumeration
   skipped, 5 facts re-measured out of 40, a result that would have passed any "the file is not empty"
-  check)*. **Coverage, never presence** — and the total is read from the tracking doc itself, so it is
+  check)*.
+  **Coverage, never presence** — and the total is read from the tracking doc itself, so it is
   not a figure anyone picked. Naming an entry without a verdict does not count it.
   🔴 **Ceiling of three send-backs, then the turn is released with the gap published**: `Stop` has no
   native loop protection, so a guard that can wedge the session is worse than the gap it watches.
@@ -387,7 +393,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   that motivated the guard. Work left
   uncommitted and a branch never pushed are **reported** when it speaks, and never trigger it —
   an uncommitted tree mid-session is the normal state, and a guard firing on the normal state gets
-  bypassed within a day. **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it. There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**. An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches. **It ships inactive**, like its two siblings: a hook only acts once declared.
+  bypassed within a day.
+  **It also runs on `PreCompact`**, the other moment the record is lost: compaction drops the conversation, and everything decided in it that was never written down goes with it.
+  There it asks again even if the turn-by-turn guard was already answered — but it blocks only on a compaction asked for **by hand**.
+  An automatic one means the context window is full, and a guard that can wedge the tool it protects is worse than the drift it watches.
+  **It ships inactive**, like its two siblings: a hook only acts once declared.
 - **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
   recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
   hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
@@ -422,7 +432,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a `0` before analysing anything, which answered *did the gate fire* and never *did it bite* — and
   the second question is the one a threshold is set on. Each now writes `1` with the **tag of the
   signal that caught**, `0` when it looked and found nothing, and `skip` for an event it never
-  evaluated, so a rate reads off `bit / fired`. The journal is also **anchored to the script** rather
+  evaluated, so a rate reads off `bit / fired`.
+  The journal is also **anchored to the script** rather
   than to the working directory: a hook fires wherever the session sits, and a relative path silently
   dropped every firing from elsewhere — the denominator of that rate, lost without a trace.
   `--report` gains nothing to configure: the columns already existed, and one of them stopped being
@@ -498,20 +509,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
   fired"* — which left a real gap unexplainable. It now records what it read. And it no longer names
   a field at all: it reads **every text value** of the payload except the known technical keys, so it
-  routes whether the prompt arrives as `user_input`, `prompt`, `message` or `text`. The official docs
+  routes whether the prompt arrives as `user_input`, `prompt`, `message` or `text`.
+  The official docs
   do not specify that field for `UserPromptSubmit`; naming one was a guess.
   ⚠️ What the same reading settled: hooks are **reloaded by a file watcher**, so "the session had not
   picked them up" is ruled out as an explanation.
 - **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
   committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
   adding the entry in the right commit was refused anyway, and the only ways through were an empty
-  commit or `--no-verify`. It now reads the same **three sources** its neighbour already did: what is
+  commit or `--no-verify`.
+  It now reads the same **three sources** its neighbour already did: what is
   committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
 - **`verify-comment-drift` justified its reference point with a reason that is false in this very
   repository.** It said releases are rare; there were four tags in five days. The reason that holds
   at any release cadence — and therefore in every generated project — is that a release-anchored
   reference puts **already-merged, already-green work back on trial**: measured here, the touched-file
-  input goes from 1 file to 41 the moment the anchor moves back to the tag. The symmetric half is why
+  input goes from 1 file to 41 the moment the anchor moves back to the tag.
+  The symmetric half is why
   `verify-growth` keeps the far anchor: `origin/main` advances at every merge, so accumulation resets
   to zero by construction and that guard would go permanently silent *(same document, same instant:
   **+24 %** against the tag, **−0,2 %** against `origin/main`)*. Both halves are now tabulated in
@@ -877,7 +891,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   contents safe to write.
 - **`verify-travel.sh` looked at one project shape out of five.** It generated a single `--type node`
   project, so `ci-static.yml`, `ci-generic.yml` and `pages.yml` — files that never land in a `node`
-  project — were read by nobody. It now generates **one project per toolchain plus one carrying every
+  project — were read by nobody.
+  It now generates **one project per toolchain plus one carrying every
   capability**, and the toolchains are **read from `init-project.sh`** rather than listed, so one
   added there is covered the day it is accepted. **It found a real dead path on its first run**: the
   `generic` CI template pointed twice at `docs/repo-controls.md`, which exists in the template and in
@@ -1124,7 +1139,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **The `new-project` skill read its own documents from the wrong place once installed as a plugin.**
   It stated they sat *"two levels above it"*, which held only because it is reached through a symlink
-  into the template clone. Packaged as a plugin, every `docs/…` path resolved against **the session's
+  into the template clone.
+  Packaged as a plugin, every `docs/…` path resolved against **the session's
   working directory** — the project being created — so the runbook and the standard were read from
   there, or not at all, with no error worth noticing.
   A `Step 0` now builds the template root from the **absolute skill directory the runtime states at
@@ -1208,7 +1224,8 @@ before the flip, and is sealed here rather than reconstructed.
   🔴 **A public repo with no license is "all rights reserved"**: nobody may legally use it. This was
   therefore a **prerequisite** for going public, not cosmetic community health.
   ⚠️ PolyForm Noncommercial is **not open source** *(the OSI definition forbids restricting the field
-  of use)* and GitHub displays it as **"Other"** — measured on a real repo, not assumed. The community
+  of use)* and GitHub displays it as **"Other"** — measured on a real repo, not assumed.
+  The community
   profile still counts the file, so the score is not penalised.
   **Generated projects default to PolyForm too**, and `init-project.sh` now says so plainly at the end
   of a run: the default forbids commercial use, and swapping `LICENSE` is a one-file decision best
@@ -1241,8 +1258,10 @@ before the flip, and is sealed here rather than reconstructed.
   no impact on a generated project)* and into a dedicated job in `ci.yml`.
 
 - **A WEEKLY Trivy scan of the published image** *(`artefact` capability)* — `docker-publish.yml` gains a
-  `scheduled-scan` job. Until now the image was only looked at **on the pull request**: after the merge, nothing
-  more. Renovate only catches up if the base image **moves** — but a line of images that **stops being
+  `scheduled-scan` job.
+  Until now the image was only looked at **on the pull request**: after the merge, nothing
+  more.
+  Renovate only catches up if the base image **moves** — but a line of images that **stops being
   rebuilt** produces no bump, no PR, no scan, and the image in prod keeps serving the CVE *(this is
   what left a frozen `debian12` base publishing a CRITICAL openssl for months)*. Same flags as
   `build-check`: **a single criterion of "clean" per file**. ⚠️ **A `schedule` only runs from the
@@ -1258,13 +1277,15 @@ before the flip, and is sealed here rather than reconstructed.
 - **The working PAT gains `Administration: read`** *(never `write`)* — without it, the assistant cannot
   **verify** the settings a script claims to have applied: neither the security toggles, nor the
   **classic** branch protection *(invisible in the `rulesets` API, and able to lock `main` forever)*.
-  Two outages already experienced, structurally undetectable without this read access. It doesn't mutate
+  Two outages already experienced, structurally undetectable without this read access.
+  It doesn't mutate
   anything. ➡️ Derivation and endpoints: **`docs/github-repo-config.md §2`**; checkbox:
   **`docs/RUNBOOK.md §1`**. **On an existing PAT, no rotation is necessary** — the UI edits the
   permissions in place.
 
 - **The `new-project` skill enters the repo**, as the **canonical** version — `skills/new-project/`, with
-  `~/.claude/skills/new-project` reduced to a **symlink**. It runs through the RUNBOOK but used to live outside any
+  `~/.claude/skills/new-project` reduced to a **symlink**.
+  It runs through the RUNBOOK but used to live outside any
   repo: neither versioned, nor run through CI, nor diffable. It is at the **root**, never under
   `templates/`: nothing here duplicates into the generated projects.
 
@@ -1280,7 +1301,8 @@ before the flip, and is sealed here rather than reconstructed.
   every lived example was rewritten without the real repo name, the lesson kept.
   Landed in batches: the conventions *(`claude-code-project-standard.md`, `METHODE.md`,
   `github-repo-config.md`, `AGENTS.md`)*, then the RUNBOOK and the `new-project` skill, then the root,
-  the scripts and the workflows. **The `.md`/`.html` pairs are still to come, so the repo stays mixed
+  the scripts and the workflows.
+  **The `.md`/`.html` pairs are still to come, so the repo stays mixed
   until they land.**
   🔴 **The templates of LOCAL files were first excluded, wrongly.** The reasoning — *"they are
   gitignored in the generated project, so they never reach GitHub"* — is true **of the generated
@@ -1316,8 +1338,10 @@ before the flip, and is sealed here rather than reconstructed.
 
 - 🔴 **Two templates named PRIVATE repos, and kept copying themselves into every generated project** —
   `ci-node.yml` referred to a real repo *"for a worked example"*, `templates/repo/README.md`
-  cited another one. A template is not internal prose: it **goes out** into the projects, **including
-  public ones**. The name of a private repo was therefore readable by anyone on a public generated project,
+  cited another one.
+  A template is not internal prose: it **goes out** into the projects, **including
+  public ones**.
+  The name of a private repo was therefore readable by anyone on a public generated project,
   with nothing flagging it. Both references are replaced by what they **taught**
   *(an `npm ci --prefix <dir>` per workspace)* or removed. ➡️ **A project generated before this fix
   carries a frozen COPY: the propagation is part of the fix.**
@@ -1325,22 +1349,29 @@ before the flip, and is sealed here rather than reconstructed.
 - **`configure-repo.sh` announced "✓ Discussions open" without ever checking that they were.**
   It tested the **exit code** of the `PATCH /repos` call — but `has_discussions` is not a documented
   body parameter of that endpoint, and REST **silently ignores an unknown field**: the PATCH returns 200 while
-  activating nothing, and the ✓ shows up for a setting that was never applied. It now **re-reads** the repo and
-  says "⚠ Discussions STILL closed" with the settings URL when that's the case. *(Same discipline as everywhere
+  activating nothing, and the ✓ shows up for a setting that was never applied.
+  It now **re-reads** the repo and
+  says "⚠ Discussions STILL closed" with the settings URL when that's the case.
+  *(Same discipline as everywhere
   else in this script: a displayed ✓ is not an applied setting.)*
   ➡️ **Consequence to know**: `project-template` itself has `has_discussions: false` — so
   its "Question / Discussion" link is a 404 until the script is replayed there.
 
 - 🔴 **The RUNBOOK prescribed CLOSING a Renovate onboarding PR** — but closing is the bot's
-  **documented opt-out**. It asserted two facts that reality disproved: "Renovate restarts on its own
-  as soon as it sees the file" and "reversible both ways". **The `disabled` status lives on Mend's side**,
+  **documented opt-out**.
+  It asserted two facts that reality disproved: "Renovate restarts on its own
+  as soon as it sees the file" and "reversible both ways".
+  **The `disabled` status lives on Mend's side**,
   committing `renovate.json` afterward reactivates nothing, and the fix requires a **manual scan on the portal**.
-  This is the instruction that left **4 repos with no update bot for 6 days** on 2026-07-14. Fixed to
-  "leave it open and ask", along with the fix. *(The fact had already been corrected elsewhere — not here.)*
+  This is the instruction that left **4 repos with no update bot for 6 days** on 2026-07-14.
+  Fixed to
+  "leave it open and ask", along with the fix.
+  *(The fact had already been corrected elsewhere — not here.)*
 
 - **The `new-project` skill recommended `gh pr checks`**, formally forbidden in this repo *(the
   `Checks` permission does not exist in the fine-grained PAT UI)*, and still set up a **`BACKLOG.md`** that the
-  template no longer generates. Plus 3 drifts: `--type generic` missing, "never `Administration`" without
+  template no longer generates.
+  Plus 3 drifts: `--type generic` missing, "never `Administration`" without
   `write`, and the ghcr package presented as a systematic action instead of a conditional check.
 
 - **The PAT recipes announced STALE permissions — in 4 places, 2 of which are read at the moment of
@@ -1363,7 +1394,8 @@ before the flip, and is sealed here rather than reconstructed.
   by skipping staging. `configure-repo.sh` no longer **sets it up** on a 3-stage flow, and **removes**
   the one already in place — but **only if Renovate is proven alive** *(Dependency Dashboard updated
   less than 14 days ago)*. Without the proof it **keeps** the safety net and **names the cause**:
-  missing permission, app not installed, or bot stopped. Removing the net while betting on a dead bot
+  missing permission, app not installed, or bot stopped.
+  Removing the net while betting on a dead bot
   is the July outage; a dashboard that **exists** proves nothing, a `disabled` repo keeps its
   own. ➡️ The why and the threshold: **standard**, "Who updates dependencies and pinned tools".
 
