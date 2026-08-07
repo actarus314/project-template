@@ -216,8 +216,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   script-wide and never per call.
   🔴 **A workflow invoked by NAME is declared unread rather than passed**: its script is not in the
   event, and silence would read as checked.
-  ⚠️ **The probe found a hole in its own test** — the workflow was *described* as being about the
-  delegation hook, and that word satisfied the check. The `meta` block is stripped now.
+  ⚠️ **The probe found a hole in its own test** — a word in the workflow's *description* satisfied
+  the check, so the `meta` block is stripped now.
 - **The French half of the same guard listed three spellings of one verb and missed the ordinary
   conjugated one**, so a prompt written in French — the way the maintainer writes them — matched
   none of the three and was refused. The accents are a character class now, not a list.
@@ -258,8 +258,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
   is not, and this answers it instead of assuming.
   It records every opening as *with* or *WITHOUT* an instruction and **returns**: it never refuses a
-  tool. It watches the **gesture**, not one script — `gh pr create` appears 84 times here, so a guard
-  on `open-pr.sh` alone leaves the door beside it open.
+  tool. It watches the **gesture**, not one script — a guard on `open-pr.sh` alone leaves the door
+  beside it open.
   🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
   **20** openings, the gate does not get built.
   The token is **consumed, never dated** — an order and its opening were measured up to **31 turns**
@@ -298,10 +298,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   full day. It now states open or closed for **each** line, and a closed one leaves the section
   rather than being marked and left in place. This enumeration is the only thing that catches a
   closed item nobody marked: the check guarding that section matches a **marker**, so it is blind to
-  the rest. Two mechanical substitutes were ruled out — **staleness by measurement** *(all 11 items
-  read as under 0,2 days old, the document being rewritten too often for `git blame` to tell a
-  reviewed line from a displaced one)*, and **cross-referencing the CHANGELOG by structure** *(its
-  entries carry no item identifier, so no measurement can create that link)*.
+  the rest. Two mechanical substitutes were ruled out — **staleness by measurement** *(the document
+  is rewritten too often for `git blame` to tell a reviewed line from a displaced one)* and
+  **cross-referencing the CHANGELOG** *(its entries carry no item identifier)*.
 - **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
   `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
   few an assistant actually *sees*, so a request for the pass reaches the model as an instruction
@@ -340,9 +339,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
   two controls answering one question end up disagreeing. **The trigger was measured, and the
   obvious one lost**: a merged pull request is followed by a write to the tracking doc 99 % of the
-  time — against 88 % for an instant drawn at random, an 11 point edge that would bite on 1 pull
-  request out of 107. A release is a closure; a fix's pull request is not. What the release decides
-  is the reference point, never the rhythm — the check runs at every commit like its siblings.
+  time, against 88 % for a random instant — an 11 point edge, biting on 1 pull request in 107. A
+  release is a closure; a fix's pull request is not.
 
 ### Changed
 - **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping there
@@ -402,13 +400,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - **Four facts the documentation stated and that were no longer true**, each re-measured rather than
-  reasoned about: `AGENTS.md` described the repo as **private** while it has been public since
-  2026-07-31, with two active rulesets · `README.md` listed `verify-version.sh` among the root tools
-  although it moved under `checks/` on 2026-08-04 · `repo-controls.md` announced a gate at **2,82 s**
-  where three consecutive runs give **3,65 s**, and *"sixteen"* timed checks where the table above it
-  lists more — that count is now stated as belonging to the table, so it cannot drift again ·
-  `README.md` showed `init-project.sh <owner>/<repo>` without saying the **GitHub repo must already
-  exist**, created by hand and PRIVATE, which the command alone suggested otherwise.
+  reasoned about: the repo described as **private** while it has been public since 2026-07-31 · a
+  tool listed at the root after it moved under `checks/` · a gate announced at **2,82 s** where three
+  runs give **3,65 s**, and a count of timed checks that no longer matched its own table · the
+  scaffolding command shown without saying the **GitHub repo must already exist**, created by hand
+  and PRIVATE.
 - **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
   unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
   dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
@@ -431,11 +427,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   "PR `develop → main`, green CI, merge" to Claude, and the sealing step said "through a pull
   request" — both read as a standing authorisation to OPEN one. A fresh-context agent asked to read
   this repository's rules answered **yes** to all three of "may an assistant open a pull request on
-  its own initiative / open then merge / merge an existing one", and quoted those lines. Opening now
-  says, in both documents, that it happens **on the maintainer's instruction**; merging is unchanged.
+  its own initiative / open then merge / merge an existing one", quoting the lines. Opening now says,
+  in both documents, that it happens **on the maintainer's instruction**.
   ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
-  opening with `open-pr.sh` as an ordinary step. That one now states it describes **how**, never
-  **whether**.
+  opening as an ordinary step. That one now states it describes **how**, never **whether**.
 - **The closing pass's word-routing named a payload field that is not documented, and said nothing
   when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
   was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
