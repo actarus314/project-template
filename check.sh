@@ -23,7 +23,7 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
 JOURNAL="$STATE_DIR/controls-log.tsv"
 JOURNAL_ON="$STATE_DIR/journal-on"
 # Which project a line came from. `basename` alone is useless here: every repository of this shape
-# is called `repo`, so the parent carries the name — `template/repo`, `decantfi/repo`.
+# is called `repo`, so the parent carries the name — `template/repo`, `<project>/repo`.
 root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PROJECT="$(basename "$(dirname "$root")")/$(basename "$root")"
 
@@ -368,6 +368,12 @@ fi
 if [ -x checks/verify-secret-blindspots.sh ]; then
   note "verify-secret-blindspots.sh — where a secret sits that gitleaks never reads"
   if reap verify-secret-blindspots; then ok "no secret in a blind spot"; else ko "secret in a blind spot"; fi
+fi
+
+# verify-private-names.sh — the other half of that blind spot: a NAME leaks nothing token-shaped.
+if [ -x checks/verify-private-names.sh ]; then
+  note "verify-private-names.sh — private names in a public repository"
+  if reap verify-private-names; then ok "no private name published"; else ko "private name published"; fi
 fi
 
 if [ -x checks/verify-echo.sh ]; then

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:ddf7cf9444d291672a24e9142f7f62687805d0bce962fab641c53b95c5b90370
+  checksum-source-md: sha256:eaf9d343b6d46182a3d17c91e2d52c02e6bf0554c4b336d0be3b6f51cb31b65f
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1729,6 +1729,16 @@
           <td class="p">✅</td>
           <td>settled</td>
           <td class="t">0,09 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-private-names.sh</code></td>
+          <td>a <strong>private name</strong> <em>(project, host, person)</em> published in this repository</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — it reads a list that lives OUTSIDE the repo (<code>../workspace/private-names.txt</code>), and says so when there is none. A pattern too broad gets the guard worked around; the list carries that warning</td>
+          <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
         <tr>

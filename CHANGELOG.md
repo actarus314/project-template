@@ -22,6 +22,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A private project name was published here for two days, and nothing could have seen it.**
+  `gitleaks` matches token SHAPES; a name has none. `verify-private-names.sh` reads a list that
+  lives **outside** this repository — publishing the names to hide would publish them — and refuses
+  any tracked file that carries one. **No list, no silent pass**: the verdict states which file it
+  read, or that it found none.
+  🔴 **It says out loud what it cannot do**: rewriting a file removes nothing from a history already
+  pushed. That decision belongs to the maintainer. ⚠️ Its failure mode is not a missed name but a
+  pattern broad enough to fire on ordinary prose — the list carries that warning beside the entries.
 - **`CLAUDE.md` is versioned, so that cloning this repository is enough to read its rules.** It was
   ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
   started there reported the file was **not in its context** — present on disk, invisible. The rules

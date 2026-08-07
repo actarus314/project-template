@@ -1,0 +1,12 @@
+# Names that must NOT appear in the repository next door, once it is public.
+# One pattern per line, extended regular expression (ERE), matched case-insensitively.
+# This file stays HERE, in the workspace: publishing the list of names to hide would publish them.
+# The check that reads it: ../repo/checks/verify-private-names.sh
+#
+# 🔴 WRITE PRECISE PATTERNS. A common word produces false positives by the dozen, and a guard that
+# cries on ordinary prose gets worked around. Prefer the full `owner/repo` slug, or a name framed
+# by \b. A project named after an ordinary English word is the case that breaks this.
+#
+# Examples of the right shape — delete them and write the real ones:
+#   \bmy-private-project\b
+#   some-org/[a-z-]+

@@ -231,6 +231,9 @@ fi
 # workspace/ templates
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
+# The list verify-private-names.sh reads. It ships EMPTY and commented: the check travels with the
+# repo, so its list has to exist beside it, or the pointer in its note lands nowhere.
+cp "$TPL/templates/workspace/private-names.txt"   "$DEST/workspace/private-names.txt"
 
 # Lifecycle docs — default from the 1st commit (docs/METHODE.md).
 #   (detail: docs/code/init-project.md)
