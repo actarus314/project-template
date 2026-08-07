@@ -71,14 +71,12 @@ Accepted corollary: from a terminal, Claude **sees neither organizations nor pri
 > ⚠️ **Pitfall — an org CAN reject `claude-ro`, even for public reads.**
 > An organization can impose a **maximum lifetime** on fine-grained PATs *(org Settings → Personal access tokens → "Require tokens to expire")*.
 > If this limit exists, `claude-ro` — **no expiration** — is rejected with a **403** on **every** repo in the org, **including public ones**:
-> *"The '<org>' organization forbids access via a fine-grained personal access tokens if the token's lifetime is greater than 90 days."*
-> **Confusing symptom**: the same `gh api` call **succeeds from `repo/`** (direnv exposes the 1-repo, 90-day PAT there) and **fails from elsewhere** (`gh` falls back to `claude-ro`). The token at fault is not the one assumed.
+> *"The '<org>' organization forbids access via a fine-grained personal access tokens if the token's lifetime is greater than 90 days."* **Confusing symptom**: the same `gh api` call **succeeds from `repo/`** (direnv exposes the 1-repo, 90-day PAT there) and **fails from elsewhere** (`gh` falls back to `claude-ro`). The token at fault is not the one assumed.
 > The pitfall applies to any org that enables this — and the limit can also be lifted afterward, org-side.
 
 > **`claude-ro` is deliberately WITHOUT EXPIRATION.** This is not an oversight.
 > A short lifetime only protects against **persistence after the secret is stolen** — and this token is read-only on **public** data: an attacker who steals it only gets what is already public. Forcing rotation on it would be a recurring chore for zero gain.
-> *(GitHub's only safeguard here: automatic revocation after 1 year of inactivity.)*
-> **The opposite reasoning applies to write PATs** — they touch private code and publish: 90 days, with a J-14 alert.
+> *(GitHub's only safeguard here: automatic revocation after 1 year of inactivity.)* **The opposite reasoning applies to write PATs** — they touch private code and publish: 90 days, with a J-14 alert.
 
 ### Writing (push, PR, issues) → 1-repo fine-grained PAT exposed by direnv
 
@@ -86,8 +84,7 @@ Accepted corollary: from a terminal, Claude **sees neither organizations nor pri
 - **Consistent standard permissions**: `Contents R/W`, `Metadata R`, `Pull requests R/W`, `Issues R/W`, `Workflows R/W`, `Actions R/W`.
   **+ alert permissions**, for autonomous security maintenance: Dependabot & Code scanning `R/W`, Secret scanning `R`.
   **+ `Administration: read`** *(never write)*.
-  *(Detailed matrix, derivation of `Administration: read`: "PAT permissions — two tiers", below.)*
-  **Everything else: No access** — and **never** `Administration: write`.
+  *(Detailed matrix, derivation of `Administration: read`: "PAT permissions — two tiers", below.)* **Everything else: No access** — and **never** `Administration: write`.
 - Stored in `repo/.envrc` as `GITHUB_PAT`. **Remote as a bare URL** (never a PAT in the URL).
 - Exposed to git/gh **only inside the folder** via direnv. `repo/.envrc` (gitignored) holds the PAT and stays **sourceable in bash** *(no `dotenv` builtin — a safety net if a `source` ever replaces `direnv exec`, cf. "Non-interactive shell", below)*:
   ```
@@ -186,11 +183,9 @@ direnv exec . gh pr create / gh pr merge   # gh via GH_TOKEN
 
 ## PAT permissions — two tiers
 
-> 🎯 **To EXECUTE** (create the token, check the boxes) → **`RUNBOOK.md` §1**, which carries the ready-to-use tables
-> and **is authoritative**. **This section explains WHY** each permission is there:
+> 🎯 **To EXECUTE** (create the token, check the boxes) → **`RUNBOOK.md` §1**, which carries the ready-to-use tables and **is authoritative**. **This section explains WHY** each permission is there:
 > it is **derived from the endpoints called**, never discovered by trial and error.
-> **It must never be discovered by trial and error**: every missing permission
-> **fails SILENTLY** — everything else passes, and the missing control doesn't show.
+> **It must never be discovered by trial and error**: every missing permission **fails SILENTLY** — everything else passes, and the missing control doesn't show.
 
 Mirror of one-shot/recurring: **the assistant handles all the recurring work autonomously; the one-shot admin stays manual (the maintainer)**.
 

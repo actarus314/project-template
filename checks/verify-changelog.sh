@@ -36,6 +36,25 @@ if [ -f CHANGELOG.md ]; then
       END {if (cur != "" && !seen) printf "%s ", cur}' CHANGELOG.md || true)
   no_link=$(awk '/^## \[[0-9]/ && $0 !~ /\]\(http/ {n=$2; gsub(/[][]/,"",n); printf "%s ", n}' CHANGELOG.md || true)
   n_entries=$(grep -c '^- ' CHANGELOG.md || true)
+  # Only the mechanical half of each rule is read; the meaning stays a judgement.
+  not_imper=$(awk '
+      /^- / {e=$0; sub(/^- /,"",e); sub(/^\*\*(~~)?/,"",e)
+             w=tolower(e); sub(/[^a-z`].*$/,"",w)
+             if (w ~ /^(the|a|an|this|that|its|it|their|there|every|no|nothing|when|after)$/)
+               printf "%s ", substr(e,1,26)}' CHANGELOG.md || true)
+  opens_code=$(awk '/^- \*\*`/ {e=$0; sub(/^- \*\*/,"",e); printf "%s ", substr(e,1,26)}' CHANGELOG.md || true)
+  # A reference points where it says, and a sealed entry cannot cite an unmerged pull request.
+  ref_mismatch=$(awk '{line=$0
+      while (match(line, /\[#[0-9]+\]\(https:\/\/[^)]*\/pull\/[0-9]+\)/)) {
+        s=substr(line,RSTART,RLENGTH); line=substr(line,RSTART+RLENGTH)
+        match(s, /#[0-9]+/);      lab=substr(s,RSTART+1,RLENGTH-1)
+        match(s, /\/pull\/[0-9]+/); url=substr(s,RSTART+6,RLENGTH-6)
+        if (lab != url) printf "#%s→/pull/%s ", lab, url}}' CHANGELOG.md || true)
+  newest_pr=$(git log --oneline main 2>/dev/null | grep -oE '\(#[0-9]+\)' | tr -d '()#' | sort -n | tail -1 || true)
+  ahead=$(awk -v mx="${newest_pr:-0}" '
+      /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0} o {next}
+      mx > 0 {while (match($0, /\[#[0-9]+\]/)) {n=substr($0,RSTART+2,RLENGTH-3)
+              if (n+0 > mx+0) printf "#%s ", n; $0=substr($0,RSTART+RLENGTH)}}' CHANGELOG.md || true)
   if [ -n "$no_link" ]; then
     echo "✗ CHANGELOG heading without its inline Release link: ${no_link}" >&2
     echo "  Seal it as: ## [X.Y.Z](<repo-url>/releases/tag/vX.Y.Z) - <date>" >&2
@@ -53,13 +72,33 @@ if [ -f CHANGELOG.md ]; then
     echo "  End it with: ([#N](<repo-url>/pull/N)) — several go in ONE parenthesis, comma-separated." >&2
     exit 1
   fi
+  if [ -n "$ref_mismatch" ]; then
+    echo "✗ CHANGELOG reference points elsewhere than it says: ${ref_mismatch}" >&2
+    echo "  The label and the URL must carry the same number." >&2
+    exit 1
+  fi
+  if [ -n "$ahead" ]; then
+    echo "✗ CHANGELOG sealed entry cites a pull request newer than any merged (#${newest_pr}): ${ahead}" >&2
+    echo "  A sealed entry names the pull request that DELIVERED the change, and it is already merged." >&2
+    exit 1
+  fi
+  if [ -n "$not_imper" ]; then
+    echo "✗ CHANGELOG entry does not open on a present-tense verb: ${not_imper}" >&2
+    echo "  Write 'Add…', 'Fix…', 'Stop…' — it says what upgrading does (standard §16)." >&2
+    exit 1
+  fi
+  if [ -n "$opens_code" ]; then
+    echo "✗ CHANGELOG entry opens on the file that changed, not on the effect: ${opens_code}" >&2
+    echo "  A reader may never have opened this repository. Name what changes for them first." >&2
+    exit 1
+  fi
   if [ -n "$dup" ]; then
     # Braces are load-bearing: a bare $name followed by a multi-byte dash is read as part of the name.
     echo "✗ CHANGELOG repeats a section: ${dup}— Keep a Changelog wants one of each per version" >&2
     echo "  Merge them: one ### per type, in the order Added / Changed / Deprecated / Removed / Fixed / Security." >&2
     exit 1
   fi
-  echo "  (CHANGELOG: ${n_entries} entr(y|ies) read, every version — one section per type, none past ${cap} char. excluding its reference, every sealed one carries its pull request)"
+  echo "  (CHANGELOG: ${n_entries} entr(y|ies) read, every version — one section per type, none past ${cap} char. excluding its reference, each opening on a verb and on the effect, every sealed one citing a merged pull request whose label matches its URL. Which section an entry belongs to, and whether it is TRUE, are judgements no check reads.)"
 fi
 
 published=()

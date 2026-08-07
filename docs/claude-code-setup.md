@@ -6,40 +6,24 @@
 
 ## `CLAUDE.md` — the file that makes the rules readable at all
 
-Claude Code reads `CLAUDE.md` from the working directory at every session, and **it reads nothing
-else on its own**: `AGENTS.md` is loaded only because `CLAUDE.md` imports it. Measured on a clone —
-an agent started there reported `AGENTS.md` was **not** in its context. On disk, and invisible.
+Claude Code reads `CLAUDE.md` from the working directory at every session, and **it reads nothing else on its own**: `AGENTS.md` is loaded only because `CLAUDE.md` imports it. Measured on a clone — an agent started there reported `AGENTS.md` was **not** in its context. On disk, and invisible.
 
 ### The rule
 
 > **`CLAUDE.md` is VERSIONED — and it carries nothing but the import.**
 
-Both halves matter. Versioned, because a gitignored file reaches no one who clones: the rules would
-be read by their author alone. Nothing but the import, because everything else is what makes
-publishing it a risk — and a file that cannot hold anything personal does not depend on anyone
-remembering that it must not.
+Both halves matter. Versioned, because a gitignored file reaches no one who clones: the rules would be read by their author alone. Nothing but the import, because everything else is what makes publishing it a risk — and a file that cannot hold anything personal does not depend on anyone remembering that it must not.
 
 **So it contains**: `@AGENTS.md`, and at most a few impersonal lines saying why.
-**It never contains**: a machine path, a personal preference, the name of a private repository, a
-secret of any kind, or a value that changes every week. Project commands, structure and conventions
-belong in `AGENTS.md` — where every agent reads them, not just Claude Code.
+**It never contains**: a machine path, a personal preference, the name of a private repository, a secret of any kind, or a value that changes every week. Project commands, structure and conventions belong in `AGENTS.md` — where every agent reads them, not just Claude Code.
 
-Anything personal goes to `~/.claude/CLAUDE.md` (that machine, all projects) or to a local settings
-file. `.claude/` stays gitignored: the one **documented** leak around AI tooling is
-`settings.local.json` carrying real credentials, never the text of `CLAUDE.md`.
+Anything personal goes to `~/.claude/CLAUDE.md` (that machine, all projects) or to a local settings file. `.claude/` stays gitignored: the one **documented** leak around AI tooling is `settings.local.json` carrying real credentials, never the text of `CLAUDE.md`.
 
-This is what the ecosystem does, measured rather than assumed: of 25 public repositories examined
-one by one, 22 version the file, and six — Next.js and Prisma among them — reduce it to a pointer
-at `AGENTS.md`. *(A versioned `.example` only works where an installer performs the copy: a template
-nobody copies is a file nobody reads, silently.)*
+This is what the ecosystem does, measured rather than assumed: of 25 public repositories examined one by one, 22 version the file, and six — Next.js and Prisma among them — reduce it to a pointer at `AGENTS.md`. *(A versioned `.example` only works where an installer performs the copy: a template nobody copies is a file nobody reads, silently.)*
 
-**It applies from the first commit, not from the flip.** Visibility was once the trigger, which made
-the rule wait on a gesture nobody performs on a private project — where the file is just as
-invisible to whoever clones. What makes publishing safe is the *content*, never the timing.
+**It applies from the first commit, not from the flip.** Visibility was once the trigger, which made the rule wait on a gesture nobody performs on a private project — where the file is just as invisible to whoever clones. What makes publishing safe is the *content*, never the timing.
 
-⚠️ **A repository ADOPTED into the standard is the one case needing care**: its `CLAUDE.md` already
-exists, full of whatever its author put there. Read it before tracking it — machine paths, private
-repository names, preferences — because the history keeps whatever is pushed.
+⚠️ **A repository ADOPTED into the standard is the one case needing care**: its `CLAUDE.md` already exists, full of whatever its author put there. Read it before tracking it — machine paths, private repository names, preferences — because the history keeps whatever is pushed.
 
 ---
 

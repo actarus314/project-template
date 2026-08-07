@@ -21,6 +21,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Stop quoted text from being read as a command that was actually run.**
   Neither of the check's two text splits respected quotes, so a false match consumed the instruction token and filed the next real opening as unauthorized.
   Both now use `shlex`. ([#119](https://github.com/actarus314/project-template/pull/119))
+- **Refuse a sentence hard-wrapped across two lines in a versioned `.md`.**
+  Structure — headings, tables, bullets, quote markers, HTML comments and fenced code, including either nested inside a blockquote — is left alone; only a genuinely cut sentence gets joined.
 
 ### Changed
 - **Verify that closing a stage shrank the live tracking doc, instead of checking it against a date.**

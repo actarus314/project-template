@@ -20,10 +20,7 @@ When the same fact is written in the script, the runbook, the conventions *and* 
 
 The roles below are **stable**; the files that carry them are not *(see "The tracking tool is a default")*.
 
-> **This table states the NATURE of a document. Which SUBJECT belongs to which file, and who owns it,
-> is [`claude-code-project-standard.md`](claude-code-project-standard.md)** — *"one subject, one owner"*,
-> and it is the index. A fact's owner must be **identifiable without searching**: that is the whole
-> reason `docs/` holds several files rather than one.
+> **This table states the NATURE of a document. Which SUBJECT belongs to which file, and who owns it, is [`claude-code-project-standard.md`](claude-code-project-standard.md)** — *"one subject, one owner"*, and it is the index. A fact's owner must be **identifiable without searching**: that is the whole reason `docs/` holds several files rather than one.
 
 | Role | Contains | **NEVER contains** |
 |---|---|---|
@@ -50,8 +47,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 > | **an implementation constraint** *("`gh api` writes its errors to STDOUT")* | **exists nowhere else, and has no business in the doc → KEEP.** |
 >
 > 🔴 **And the constraint works in the OTHER DIRECTION too — that's where its value is.**
-> **Everything the script LEARNS must FLOW BACK to the doc.** A fact discovered while running it *(the personal/org ghcr behavior, discovered through testing)* has no right to live **only** in the script: the doc would stop being enough to do it **by hand**, and it would become wrong by omission.
->
+> **Everything the script LEARNS must FLOW BACK to the doc.** A fact living **only** in the script leaves the doc no longer enough to do the work by hand — wrong by omission.
 > ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
 
 ✅ **Keep** — a constraint that would recur if ignored:
@@ -61,13 +57,9 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 
 ❌ **Delete** — the narrative, the evidence, the date, the incident:
 ```bash
-# This pitfall struck FOUR times in this file, twice of them after being documented:
-#   · the run_id of the PATCH → the script announced "✓ CodeQL ENABLED" on a PRIVATE repo…
-#   (Observed on test005, 2026-07-14.)
+# This pitfall struck FOUR times… (Observed on test005, 2026-07-14.)
 ```
-→ **That goes to the archive.** One line in the code, the full narrative in the archives.
-
-**Deleting a comment is NOT losing the information**: it lives in the archive, dated, with its evidence. **It is simply in the right place.**
+→ **That goes to the archive**, dated and with its evidence: one line in the code, the narrative there. **Deleting such a comment loses nothing — it puts it in the right place.**
 
 ---
 
@@ -82,36 +74,45 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 
 `SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state *(state, environments, history, decisions, pitfalls)* **and "what's left to do"** *(brief)*. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
-> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`…)*, plugins, marketplace, native features. *(`find-skills` exists exactly for this.)*
-> **Only build custom as a last resort** — and say so.
+> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, context resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, including all of **GSD**: `gsd-progress`, `gsd-resume-work`, `gsd-pause-work`…)*, plugins, marketplace, native features. *(`find-skills` exists exactly for this.)* **Only build custom as a last resort** — and say so.
 
 ---
 
 ## Concision and plainness — in EVERY piece of writing, not just the documents
 
-**Rule set by the maintainer on 2026-08-07.** It covers **everything written**: documents, code
-comments, commit messages, a check's terminal output, a reply.
+**Rule set by the maintainer on 2026-08-07**, covering **everything written**: documents, code comments, commit messages, a check's output, a reply.
 
-- **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that
-  survives only because deleting it would take a decision.
-- **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who
-  knows the subject and a reader who does not must reach the same understanding.
+- **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that survives only because deleting it would take a decision.
+- **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who knows the subject and a reader who does not must reach the same understanding.
 
-> 🔴 **A size CEILING was considered and RULED OUT**, and the reason matters: capping a file pushes
-> the overflow into sub-files, which moves the problem and risks losing what gets moved. **Concision
-> is written in, never enforced by a wall.**
+> 🔴 **A size CEILING was considered and RULED OUT**, and the reason matters: capping a file pushes the overflow into sub-files, which moves the problem and risks losing what gets moved. **Concision is written in, never enforced by a wall.**
 
-**What can be measured is measured — the rest is not automated.** Characters per line, sentences
-crammed onto one line, markup density: countable, and a threshold for them is set from the corpus
-*(measured 2026-08-07: median 92 characters per line across 57 files)*. Jargon and clarity are
-judgements — no script reads them, and a model that blocks on them is worse than nothing, since a
-green light given wrongly has no second line of defence.
+**One sentence, one line — and no width imposed on top of it.** The break follows the meaning, so a diff shows the sentence that changed rather than the paragraph around it. 🔴 **Wrapping at a column is a layout frozen into the file**: the renderer rejoins those lines anyway, so the break decides nothing but the width of the source. `verify-line-form.sh` refuses a sentence cut across two lines; third-party texts keep the upstream's own layout.
+
+⚠️ **A width THRESHOLD was measured and then rejected**, and the reason outlives this rule: *"median 92 characters per line across 57 files"* was taken from a corpus that was itself hard-wrapped — calibrated on exactly what it was meant to reform, the same defect as the changelog's old 750-character cap. **A threshold comes from a reference or an objective, never from the average of what is being corrected.** One sentence per line is binary, so it can be armed at all.
+
+**What can be measured is measured; the rest is not.** Jargon and clarity are judgements: no script reads them, and a model blocking on them is worse than nothing — a green light given wrongly has no second line of defence.
+
+## The four places a change is written — and what each OWNS
+
+**One change is written four times, and the copies diverge unless each owns what the others do not.**
+
+| Where | Owns | Never carries |
+|---|---|---|
+| **The commit** | the intention — what was broken, why this solution | the *how* *(the diff shows it)* · the story of the search |
+| **The pull request** | the **demonstration** — what was measured, what was ruled out, how to verify | a retelling of the diff |
+| **`CHANGELOG.md`** | the **effect** for whoever uses the repo, capped, ending on the pull request that delivered it *(standard §16)* | the demonstration |
+| **The GitHub Release** | **nothing of its own** — the auto-generated pull-request list, plus the version's CHANGELOG block, copied | prose written for the occasion |
+
+**A commit subject is an imperative sentence of at most 72 characters**, capitalised, no final full stop, then a blank line. Same mood as the CHANGELOG, for the same reason: it says what applying the change does. *([Chris Beams](https://cbea.ms/git-commit/) targets 50; 72 is where GitHub truncates, so that is the wall.)*
+
+🔴 **The Release was the one drifting**: written by hand, it re-told the CHANGELOG in other words — a third rendering nothing could check. Copied, it becomes mechanical, so a script can generate and verify it. *([Common Changelog](https://common-changelog.org/): a release "should contain the same content as the changelog entry", and "long descriptions should be in commits or other references".)*
 
 ## The main documents stay SHORT
 
 **If they grow, the detail MOVES TO THE ARCHIVE — it does not get crammed in.**
 
-A document no one rereads is no longer of any use. The runbook is read **while doing** the work: if it is unreadable, it goes unread, and the action gets done from memory — **and an action recited from memory is a wrong action**.
+A document no one rereads is of no use. The runbook is read **while doing** the work: unreadable, it goes unread and the action gets done from memory — **and an action recited from memory is a wrong action**.
 
 **Too many archive files is NOT a problem** — as long as the links are there and honored.
 **A light directory structure** is better than 25 `.md` files at the same level mixing living documents with archives.
@@ -147,10 +148,7 @@ A document no one rereads is no longer of any use. The runbook is read **while d
 
 **A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** These rules are armed: `check.sh` runs them.
 
-**The list of checks, their perimeter, their rhythm, their gate and what they cost live in
-[`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere
-else.** Three partial copies of that list once coexisted, and the three disagreed on how many there
-were.
+**The list of checks, their perimeter, their rhythm, their gate and what they cost live in [`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere else.** Three partial copies of that list once coexisted, and the three disagreed on how many there were.
 
 **What belongs HERE is the question that decides a perimeter**, because it is a question of writing:
 

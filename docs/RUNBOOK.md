@@ -3,10 +3,7 @@
 > **This document states the ORDER OF ACTIONS and WHO performs them. The standard states the WHY.**
 > Each step refers to the section that explains it — the reasoning is not copied here.
 >
-> 🔴 **SOURCE OF TRUTH — the PAT permission tables (§1) ARE AUTHORITATIVE.** They are *also* in
-> `secrets-and-auth.md`, which explains **where each permission is derived from** (a called endpoint
-> = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** —
-> two copies always diverge, and a missing permission **fails SILENTLY**.
+> 🔴 **SOURCE OF TRUTH — the PAT permission tables (§1) ARE AUTHORITATIVE.** They are *also* in `secrets-and-auth.md`, which explains **where each permission is derived from** (a called endpoint = a permission). **In case of discrepancy: this document wins, and the discrepancy is a DEFECT to fix** — two copies always diverge, and a missing permission **fails SILENTLY**.
 > Standard: `claude-code-project-standard.md` · Secrets & auth: `secrets-and-auth.md` · Controls, branches & repo config: `repo-controls.md` · Updates: `security-and-updates.md`
 
 **Two rules that run through the entire document:**
@@ -146,10 +143,8 @@ cd ~/Documents/Claude/template/repo
 
 The script **requests the PAT as masked input** *(it appears neither on screen, nor in history, nor in `ps`)*.
 
-> 🔴 **A successful run does NOT end the step.** The admin PAT is still alive, and it can delete the
-> repo and change its visibility — **step 7c below revokes it, and it is never optional.**
-> *(Measured 2026-08-06: read alone, this block led to the conclusion that configuration was over
-> once the script had run.)*
+> 🔴 **A successful run does NOT end the step.** The admin PAT is still alive, and it can delete the repo and change its visibility — **step 7c below revokes it, and it is never optional.**
+> *(Measured 2026-08-06: read alone, this block led to the conclusion that configuration was over once the script had run.)*
 
 - **On a PRIVATE/Free repo, it sets what it can**: **Dependabot alerts** *(everywhere — Renovate reads them)*, **security updates** *(safety net — **2 tiers only**)*, description, merge method, `default_workflow_permissions`.
 - 🔴 **On a 3-TIER flow, RE-RUN it once the Renovate app is installed.** The script only removes the Dependabot safety net *(whose security PRs target `main`, short-circuiting staging)* on seeing Renovate **alive** — its *Dependency Dashboard* dated less than 14 days old. Run **before** onboarding, it finds no dashboard, **keeps** the safety net and **says so**: this message is an invitation to re-run it, not a failure.
@@ -236,13 +231,8 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 
 > 🔴 **THE TAG COMES FIRST, THE SEALING SECOND. Doing it the other way round cannot be merged.**
 > `verify-version.sh` compares the CHANGELOG's newest **versioned** heading to the newest **tag**
-> *(`Unreleased` is skipped — it is the open section)*. Sealing first creates a heading `X.Y.Z` while
-> the newest tag is still the previous one: the check fails, so the sealing pull request is red and
-> **cannot be merged**. Tagging first inverts it — the tag exists, the sealing PR makes the two agree,
-> and it goes green. *(Verified on `v1.1.0`: the tagged commit still carried `## [1.0.0]` as its newest
-> heading. At `v1.0.0` the mistake was invisible — no tag existed yet, so the guard was a silent no-op.)*
-> ⚠️ **Between the tag and the merge of the sealing PR, `main` is red on that one check.** That window
-> is structural, it is expected, and it closes with the sealing.
+> *(`Unreleased` is skipped — it is the open section)*. Sealing first creates a heading `X.Y.Z` while the newest tag is still the previous one: the check fails, so the sealing pull request is red and **cannot be merged**. Tagging first inverts it — the tag exists, the sealing PR makes the two agree, and it goes green. *(Verified on `v1.1.0`: the tagged commit still carried `## [1.0.0]` as its newest heading. At `v1.0.0` the mistake was invisible — no tag existed yet, so the guard was a silent no-op.)*
+> ⚠️ **Between the tag and the merge of the sealing PR, `main` is red on that one check.** That window is structural, it is expected, and it closes with the sealing.
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 
@@ -281,9 +271,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 ## 5 · Evolving a live project
 
 **The archetype does not change — a capability is ACQUIRED.** *(`repo-controls.md`, detailed checklists)*
-🔴 **"Capability" is a CLOSED list of three: Pages · published image · staging host.** Adding a tool
-— a task tracker, a linter, a library — is **not** one, follows none of this section, and starts by
-checking what already exists *(`METHODE.md`)*.
+🔴 **"Capability" is a CLOSED list of three: Pages · published image · staging host.** Adding a tool — a task tracker, a linter, a library — is **not** one, follows none of this section, and starts by checking what already exists *(`METHODE.md`)*.
 
 | Need | Capability | ⚠️ The trap |
 |---|---|---|
@@ -296,13 +284,7 @@ checking what already exists *(`METHODE.md`)*.
 
 ### Bringing a project back in line with a newer template — **assisted regeneration**
 
-The project carries the version it was born from *(the stamp in its `AGENTS.md`)*. Bringing it
-forward is **regenerate, then compare** — never a patch applied blind. Measured on 2026-08-07, and
-the reason is not a preference: **a generated project is not a subset of the template**. The
-generator filters *(it copied 3 of 12 checks at `v1.2.0`)*, renames *(`templates/repo/X` lands as
-`X`)* and **substitutes** *(year, holder, slug, version, image name)* — so a `git diff` of the
-template applies to **56 of the 85 files today** — a share that moves with every check added — and leaves the rest silently stale. Half-updated is not
-half-right: a fresh check reading a stale file turns the project red for a fault it does not have.
+The project carries the version it was born from *(the stamp in its `AGENTS.md`)*. Bringing it forward is **regenerate, then compare** — never a patch applied blind. Measured on 2026-08-07, and the reason is not a preference: **a generated project is not a subset of the template**. The generator filters *(it copied 3 of 12 checks at `v1.2.0`)*, renames *(`templates/repo/X` lands as `X`)* and **substitutes** *(year, holder, slug, version, image name)* — so a `git diff` of the template applies to **56 of the 85 files today** — a share that moves with every check added — and leaves the rest silently stale. Half-updated is not half-right: a fresh check reading a stale file turns the project red for a fault it does not have.
 
 | # | Who | Action |
 |---|---|---|

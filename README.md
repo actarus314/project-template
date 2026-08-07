@@ -37,7 +37,7 @@ The other structuring rule: **what SERVES to create a project** and **what TELLS
 
 > **`develop` follows from `staging` alone** — never from Docker, never from the language: full rule in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
-**Shortcuts** cover the common cases (`--type static`, `--type node`, `--type generic`) — full mapping and composition rules in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
+**Shortcuts** cover the common cases (`--type static`, `--type node`, `--type generic`) — how each maps onto the three flags above, and how they compose, is in [`repo-controls.md`](docs/repo-controls.md#the-3-capabilities-independent-composable).
 
 ## Configure the repo server-side
 

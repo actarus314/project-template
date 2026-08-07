@@ -33,6 +33,4 @@ Don't open a public issue for a security concern — see [SECURITY.md](SECURITY.
 
 ## License
 
-By contributing, you agree your contributions are licensed under this repository's terms — see
-[LICENSE](LICENSE), and [LICENSE-MIT](LICENSE-MIT) for the files this tool copies into the projects
-it generates.
+By contributing, you agree your contributions are licensed under this repository's terms — see [LICENSE](LICENSE), and [LICENSE-MIT](LICENSE-MIT) for the files this tool copies into the projects it generates.

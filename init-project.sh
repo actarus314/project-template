@@ -124,8 +124,7 @@ FRAG="$DEST/repo/.branching.frag"
     echo "- Branch off \`main\`: \`feat/…\` or \`fix/…\`."
     echo "- Open the pull request against \`main\`. The CI must be green before it is merged."
     echo "- **There is no staging branch, on purpose**: there is no host to validate against here."
-    echo "  A \`develop\` branch with nothing to stage is an empty ritual, and a long-lived branch"
-    echo "  that no one needs drifts until the merge stops happening."
+    echo "  A \`develop\` branch with nothing to stage is an empty ritual, and a long-lived branch that no one needs drifts until the merge stops happening."
   else
     echo "Three stages, because there is a real host to validate against before production."
     echo
@@ -133,9 +132,8 @@ FRAG="$DEST/repo/.branching.frag"
     echo "- \`develop\` — staging. Merged here first, deployed to the staging host, validated there."
     echo "- \`main\` — production. \`develop\` reaches it through a pull request."
     echo
-    echo "**Keep \`develop\` short-lived** — merge in days, not weeks. A staging branch that lingers"
-    echo "drifts from \`main\`, and that is precisely how an environment branch turns into the"
-    echo "anti-pattern it is often accused of being."
+    echo "**Keep \`develop\` short-lived** — merge in days, not weeks."
+    echo "A staging branch that lingers drifts from \`main\`, and that is precisely how an environment branch turns into the anti-pattern it is often accused of being."
   fi
   # What follows depends on CAPABILITIES, not the flow: each line is written only if it's TRUE.
   if [ "$PAGES" = 1 ]; then
@@ -144,10 +142,9 @@ FRAG="$DEST/repo/.branching.frag"
   fi
   if [ "$ARTEFACT" = 1 ]; then
     echo
-    echo "A \`v*\` tag publishes the image to ghcr. Whoever deploys it runs a **pinned tag**"
-    echo "(\`X.Y.Z\`), never \`:latest\` and never a branch: what gets promoted is the **artifact**,"
-    echo "not the branch. The tag is immutable (a ruleset enforces it), so a pinned deployment"
-    echo "cannot silently change under the host."
+    echo "A \`v*\` tag publishes the image to ghcr."
+    echo "Whoever deploys it runs a **pinned tag** (\`X.Y.Z\`), never \`:latest\` and never a branch: what gets promoted is the **artifact**, not the branch."
+    echo "The tag is immutable (a ruleset enforces it), so a pinned deployment cannot silently change under the host."
   fi
 } > "$FRAG"
 
@@ -209,20 +206,14 @@ cp "$WT/ci-$TYPE.yml" "$DEST/repo/.github/workflows/ci.yml"
 if [ "$PAGES" = 1 ]; then cp "$WT/pages.yml" "$DEST/repo/.github/workflows/pages.yml"; fi
 if [ "$ARTEFACT" = 1 ]; then
   cp "$WT/docker-publish.yml" "$DEST/repo/.github/workflows/docker-publish.yml"
-  # ghcr rejects a non-lowercase image reference; the repo name itself can carry
-  # uppercase (e.g. `MyRepo`). metadata-action lowercases the PUSHED image, but not the reference
-  # written in plain text in the release notes (`image:` block) — without this, it announces a `docker
-  # pull` that can't be pulled. configure-repo.sh already lowercases it on its side; this aligns with it at the source.
+  # ghcr rejects an uppercase image reference; why lowercasing it here, at the source, and not
+  # only in metadata-action: docs/code/init-project.md.
   IMG="$(printf '%s' "${SLUG##*/}" | tr '[:upper:]' '[:lower:]')"; IMG="${IMG:-$PROJ}"
   DP="$DEST/repo/.github/workflows/docker-publish.yml"
-  # `<owner>/<repo>` TOO, and not just `<image-name>`: this file is copied AFTER the global
-  # substitution pass above, so it doesn't see it. The `cosign verify` carried by its
-  # comment cites the slug — unsubstituted, it would teach verifying an identity that doesn't exist.
+  # This file needs its OWN <owner>/<repo> substitution, copied as it is after the global pass:
+  # docs/code/init-project.md.
   sed -e "s|<image-name>|$IMG|g" ${SLUG:+-e "s|<owner>/<repo>|$SLUG|g"} "$DP" > "$DP.tmp" && mv "$DP.tmp" "$DP"
-  # `docker-publish.yml` carries ITS OWN `release` job (`needs: build-push`): the release announces
-  # an image, it must not exist if the publish failed — and `needs` doesn't cross
-  # workflows. Keeping both files would NOT resolve this: they'd start together on the tag
-  # and whichever is faster wins. A single home for the release.
+  # One home for the release job, never two racing on the same tag: docs/code/init-project.md.
   rm -f "$DEST/repo/.github/workflows/release.yml"
 fi
 

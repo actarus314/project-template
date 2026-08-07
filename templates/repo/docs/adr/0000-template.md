@@ -14,10 +14,8 @@ What was decided, in the active voice: "The project uses X."
 
 ## Consequences
 
-What becomes easier, and what becomes harder — both, honestly. Including what this rules out,
-and the cost of reversing it later. A record with only upsides is a record that hides something.
+What becomes easier, and what becomes harder — both, honestly. Including what this rules out, and the cost of reversing it later. A record with only upsides is a record that hides something.
 
 ## Alternatives considered
 
-- **<option>** — why it was rejected. An alternative dismissed without a reason will be
-  re-proposed in six months, by a human or an agent that has no memory of this discussion.
+- **<option>** — why it was rejected. An alternative dismissed without a reason will be re-proposed in six months, by a human or an agent that has no memory of this discussion.
