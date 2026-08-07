@@ -12,50 +12,54 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# ── One `###` of each type per version, and the open section is the one that can still be fixed ──
-# Keep a Changelog implies it without ever saying it, so it was drifting unwatched. Only
-# `Unreleased` is judged: a published heading is not rewritten (why: docs/code/verify-changelog.md).
-# The published ones are COUNTED and said out loud — a silent zero would read like a clean file.
+# ── The FORM: one `###` of each type, a capped entry, a Release link, and the pull request ──
+# Rule and sources: standard §16. Why an entry is ANY bullet, why the reference is not counted, and
+# why `Unreleased` is exempt from the last refusal: docs/code/verify-changelog.md.
 if [ -f CHANGELOG.md ]; then
-  dup_open=$(awk '/^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0} o && /^### / {c[$2]++}
-                  END {for (k in c) if (c[k] > 1) printf "%s x%d ", k, c[k]}' CHANGELOG.md || true)
-  dup_pub=$(awk '/^## \[/ {v=($0 ~ /Unreleased/) ? "" : $0} v && /^### / {c[v FS $2]++}
-                 END {n=0; for (k in c) if (c[k] > 1) n++; print n+0}' CHANGELOG.md || true)
-  # Size: the ceiling is the corpus's own third quartile, never a picked number (verify-changelog.md).
-  # Only the open section again — and `awk` counts what a heading OWNS, blank line to blank line.
-  long_open=$(awk -v cap="${CHANGELOG_ENTRY_CAP:-750}" '
+  cap="${CHANGELOG_ENTRY_CAP:-300}"
+  dup=$(awk '/^## \[/ {v=$0; sub(/^## \[/,"",v); sub(/\].*/,"",v)} v && /^### / {c[v FS $2]++}
+             END {for (k in c) if (c[k] > 1) {split(k,a,FS); printf "%s/%s ", a[1], a[2]}}' CHANGELOG.md || true)
+  long=$(awk -v cap="$cap" '
+      /^## \[/ {ver=$0; sub(/^## \[/,"",ver); sub(/\].*/,"",ver)}
+      # A reference alone on its line leaves its indentation behind: 2 spaces over the cap.
+      {l=$0; gsub(/\(?\[#[0-9]+\]\(https:\/\/[^)]*\)[,)]?/,"",l); if (l ~ /^[[:space:]]*$/) l=""}
+      /^- / {if (n > cap) printf "%s %s (%d) ", w, lbl, n; w=ver; lbl=substr($0,3,36); n=length(l); next}
+      n && /^[[:space:]]*$/ {if (n > cap) printf "%s %s (%d) ", w, lbl, n; n=0; next}
+      n && /^[[:space:]]/ {n += length(l); next}
+      n {if (n > cap) printf "%s %s (%d) ", w, lbl, n; n=0}
+      END {if (n > cap) printf "%s %s (%d) ", w, lbl, n}' CHANGELOG.md || true)
+  no_ref=$(awk '
       /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0}
-      o && /^- \*\*/ {if (n > cap) print label " (" n ")"; label=substr($0,5,44); n=length($0); next}
-      o && n && /^[[:space:]]/ {n += length($0); next}
-      o && n && !/^[[:space:]]*$/ {if (n > cap) print label " (" n ")"; n=0}
-      END {if (n > cap) print label " (" n ")"}' CHANGELOG.md || true)
-  # Every versioned heading links its Release (standard §16). Held by nothing until now, which is
-  # how five of six releases shipped without it — the sealing is a manual gesture.
+      o {next}
+      /^- / {if (cur != "" && !seen) printf "%s ", cur; cur=substr($0,3,30); seen=0}
+      /\[#[0-9]+\]\(https:\/\/[^)]*\/pull\/[0-9]+\)/ {seen=1}
+      END {if (cur != "" && !seen) printf "%s ", cur}' CHANGELOG.md || true)
   no_link=$(awk '/^## \[[0-9]/ && $0 !~ /\]\(http/ {n=$2; gsub(/[][]/,"",n); printf "%s ", n}' CHANGELOG.md || true)
+  n_entries=$(grep -c '^- ' CHANGELOG.md || true)
   if [ -n "$no_link" ]; then
     echo "✗ CHANGELOG heading without its inline Release link: ${no_link}" >&2
     echo "  Seal it as: ## [X.Y.Z](<repo-url>/releases/tag/vX.Y.Z) - <date>" >&2
     exit 1
   fi
-  if [ -n "$long_open" ]; then
-    echo "✗ CHANGELOG 'Unreleased' has an entry past ${CHANGELOG_ENTRY_CAP:-750} characters:" >&2
-    printf '    %s\n' "$long_open" >&2
-    echo "  Say what changed and what it means. The story belongs to the pull request and to archives/." >&2
+  if [ -n "$long" ]; then
+    echo "✗ CHANGELOG entry past ${cap} characters, reference excluded:" >&2
+    printf '    %s\n' "$long" >&2
+    echo "  Say what changed and what it means for whoever uses the repo." >&2
+    echo "  The demonstration belongs to the pull request; a LIMIT of the new behaviour stays." >&2
     exit 1
   fi
-  if [ -n "$dup_open" ]; then
+  if [ -n "$no_ref" ]; then
+    echo "✗ CHANGELOG sealed entry with no pull request: ${no_ref}" >&2
+    echo "  End it with: ([#N](<repo-url>/pull/N)) — several go in ONE parenthesis, comma-separated." >&2
+    exit 1
+  fi
+  if [ -n "$dup" ]; then
     # Braces are load-bearing: a bare $name followed by a multi-byte dash is read as part of the name.
-    echo "✗ CHANGELOG 'Unreleased' repeats a section: ${dup_open}— Keep a Changelog wants one of each" >&2
+    echo "✗ CHANGELOG repeats a section: ${dup}— Keep a Changelog wants one of each per version" >&2
     echo "  Merge them: one ### per type, in the order Added / Changed / Deprecated / Removed / Fixed / Security." >&2
     exit 1
   fi
-  long_pub=$(awk -v cap="${CHANGELOG_ENTRY_CAP:-750}" '
-      /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0}
-      !o && /^- \*\*/ {if (n > cap) c++; n=length($0); next}
-      !o && n && /^[[:space:]]/ {n += length($0); next}
-      !o && n {if (n > cap) c++; n=0}
-      END {if (n > cap) c++; print c+0}' CHANGELOG.md || true)
-  echo "  (Unreleased: one section per type, no entry past ${CHANGELOG_ENTRY_CAP:-750} char. · sealed versions: ${dup_pub} repeat a section, ${long_pub} entr(y|ies) past the cap — counted, not judged)"
+  echo "  (CHANGELOG: ${n_entries} entr(y|ies) read, every version — one section per type, none past ${cap} char. excluding its reference, every sealed one carries its pull request)"
 fi
 
 published=()
