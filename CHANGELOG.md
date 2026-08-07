@@ -255,11 +255,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the commit being made.
 
 - **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
-  may be opened without the maintainer saying so is settled (`AGENTS.md`); whether that needs a gate
-  is not, and this answers it instead of assuming.
+  may be opened without the maintainer saying so is settled; whether that needs a gate is not.
   It records every opening as *with* or *WITHOUT* an instruction and **returns**: it never refuses a
-  tool. It watches the **gesture**, not one script — a guard on `open-pr.sh` alone leaves the door
-  beside it open.
+  tool. It watches the **gesture**, not one script.
   🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
   **20** openings, the gate does not get built.
   The token is **consumed, never dated** — an order and its opening were measured up to **31 turns**
@@ -295,12 +293,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
   whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
   document written the same day, which is how four closed items sat in the open-work section for a
-  full day. It now states open or closed for **each** line, and a closed one leaves the section
-  rather than being marked and left in place. This enumeration is the only thing that catches a
-  closed item nobody marked: the check guarding that section matches a **marker**, so it is blind to
-  the rest. Two mechanical substitutes were ruled out — **staleness by measurement** *(the document
-  is rewritten too often for `git blame` to tell a reviewed line from a displaced one)* and
-  **cross-referencing the CHANGELOG** *(its entries carry no item identifier)*.
+  full day. It now states open or closed for **each** line, and a closed one leaves the section.
+  This enumeration is the only thing that catches a closed item nobody marked: the check guarding
+  that section matches a **marker**, so it is blind to the rest. Staleness and cross-referencing the
+  CHANGELOG were both ruled out as substitutes.
 - **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
   `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
   few an assistant actually *sees*, so a request for the pass reaches the model as an instruction
@@ -417,20 +413,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
   reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
   requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
-- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A `# tone-self` or
-  `# fr-pattern` marker exempts its line **anywhere in the tree** — bound to no file and no line,
-  which is what makes it precise enough to mark a single line, and invisible enough to spread. The
-  verdict now counts them out loud, as `verify-language.sh` already did for its own skipped lines.
-  **10 lines are exempted today**; a number that grows can be noticed, an unwritten one cannot.
+- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A marker exempts its
+  line **anywhere in the tree** — bound to no file and no line, which is what makes it precise enough
+  to mark one line and invisible enough to spread. **10 lines are exempted today**; a number that
+  grows can be noticed, an unwritten one cannot.
 
-- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table assigned
-  "PR `develop → main`, green CI, merge" to Claude, and the sealing step said "through a pull
-  request" — both read as a standing authorisation to OPEN one. A fresh-context agent asked to read
-  this repository's rules answered **yes** to all three of "may an assistant open a pull request on
-  its own initiative / open then merge / merge an existing one", quoting the lines. Opening now says,
-  in both documents, that it happens **on the maintainer's instruction**.
+- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table read as a
+  standing authorisation to OPEN a pull request. A fresh-context agent asked to read this
+  repository's rules answered **yes** to all three of "may an assistant open one on its own
+  initiative / open then merge / merge an existing one", quoting the lines. Opening now says, in both
+  documents, that it happens **on the maintainer's instruction**.
   ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
-  opening as an ordinary step. That one now states it describes **how**, never **whether**.
+  opening as an ordinary step. That one now describes **how**, never **whether**.
 - **The closing pass's word-routing named a payload field that is not documented, and said nothing
   when it did not match.** Two defects, and the second is what hid the first: on a non-match the hook
   was completely silent, so *"it fired and did not match"* was **indistinguishable** from *"it never
@@ -490,14 +484,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   until someone adds the line to **its own branch**. That is the cost of the trace being where the
   change is, and it is the maintainer's call.
 - 🔴 **~~No Renovate or Dependabot pull request could ever go green.~~** *(Superseded by the line
-  above — kept because the diagnosis stands: the gate did block every automated pull request.)* `verify-changelog.sh` demands a
-  `CHANGELOG` line for a user-visible change, a dependency bump touches exactly the paths it counts
-  as visible, and **no bot writes prose** — so every automated pull request was red on a check
-  nothing could satisfy. Observed on two at once: `#101` (zizmor) and `#102` (renovate).
-  A bot's branch is exempt now, and the reason is the convention's own: the GitHub Release carries
-  the auto-generated list of merged pull requests, the `CHANGELOG` says what changed for a user.
-  ⚠️ **`GITHUB_HEAD_REF` before the branch name**: a `pull_request` run checks out a **detached**
-  merge commit, so reading `HEAD` alone would have exempted nothing exactly where it mattered.
+  above — kept because the diagnosis stands.)* A dependency bump touches exactly the paths the check
+  counts as visible, and **no bot writes prose**, so every automated pull request was red on a check
+  nothing could satisfy. A bot's branch is exempt now, for the convention's own reason: the Release
+  carries the list of merged pull requests, the `CHANGELOG` says what changed for a user.
+  ⚠️ **`GITHUB_HEAD_REF` before the branch name** — a `pull_request` run checks out a **detached**
+  merge commit, so reading `HEAD` alone would have exempted nothing where it mattered.
 
 ## [1.3.0](https://github.com/actarus314/project-template/releases/tag/v1.3.0) - 2026-08-05
 
