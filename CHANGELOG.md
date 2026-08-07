@@ -31,6 +31,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   they regenerate from recorded answers rather than patching, which is exactly what that file is for.
   ⚠️ A project generated before this carries the version alone; the runbook says to deduce once and
   write the options in, so the next comparison never guesses again.
+- **The pull-request instrument counted an opening that never happened.** It peels wrappers to find
+  the command position, and `VAR=value` is one of them — an environment prefix must not hide the
+  command behind it. Split on whitespace, a quoted assignment carrying the name falls apart:
+  `PKG="check.sh open-pr.sh checks"` leaves `PKG="check.sh` for the prefix rule to peel, and
+  promotes the rest to the command position. **One false reading out of the first two collected**,
+  on an instrument whose whole job is to decide a percentage over twenty openings. It tokenises with
+  `shlex` now, so quotes hold. Verified on five cases — three real openings still bite, the
+  assignment and a plain `grep` of the name stay silent.
 - **`verify-growth` says what it could NOT compare.** A document created since the last release has
   no reference, so it cannot grow by any percentage — measured: a 402-line file added to `docs/`
   passes unnoticed, at any size. That silence is what let 26 implementation notes be born at
