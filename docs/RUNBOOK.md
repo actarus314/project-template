@@ -301,7 +301,7 @@ forward is **regenerate, then compare** — never a patch applied blind. Measure
 the reason is not a preference: **a generated project is not a subset of the template**. The
 generator filters *(it copied 3 of 12 checks at `v1.2.0`)*, renames *(`templates/repo/X` lands as
 `X`)* and **substitutes** *(year, holder, slug, version, image name)* — so a `git diff` of the
-template applies to **52 of the 81 files** and leaves the rest silently stale. Half-updated is not
+template applies to **56 of the 85 files today** — a share that moves with every check added — and leaves the rest silently stale. Half-updated is not
 half-right: a fresh check reading a stale file turns the project red for a fault it does not have.
 
 | # | Who | Action |

@@ -24,7 +24,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - **A live project can be brought forward to a newer template, and the runbook now says how.** The
   question had been open and untested; it was measured instead. Applying the template's own
-  `git diff` to a project **works for 52 of its 81 files and silently misses the rest**: the
+  `git diff` to a project **works for 56 of its 85 files and silently misses the rest**: the
   generator filters *(3 of 12 checks copied at `v1.2.0`)*, renames *(`templates/repo/X` lands as
   `X`)* and substitutes *(year, holder, slug, version, image name)* — a project is **not** a subset
   of the template. Three-way merge does behave correctly where it applies — clean where the project
