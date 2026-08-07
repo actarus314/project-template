@@ -316,7 +316,7 @@ from what only draws a list. *Maturity* is the one thing no measurement gives: *
 rests on a fact (a path, a tag, a tracked file) and has held; **needs watching** = its verdict rests on
 a threshold or a wording chosen by hand, so it can be wrong in both directions.
 
-⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 3,65 s** *(re-measured 2026-08-06, 3 runs: 3,63 / 3,68 / 3,63)*, a commit on a clean tree in 1,12 s, the full lot in 5,63 s. Anything under 0,4 s does not show at all.
+⏱ **Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64).** An earlier column held single cold runs on a busy machine and was wrong by 1,7× to 4,1×. They do not add up: `check.sh` starts them together, so the lot costs its slowest — **the gate (`--house`) runs in 9,1 s** *(re-measured 2026-08-07, 2 runs: 9,13 / 9,10 — it was **3,65 s** the day before, and the ×2,5 is not a regression: `verify-generated-green` and `verify-travel` GENERATE whole projects, the first costing 3,18 s on its own)*, a commit on a clean tree in 1,12 s, the full lot in 5,63 s. Anything under 0,4 s does not show at all.
 
 > **Where those numbers come from, and how to take them again** — `./check.sh --report`, the control
 > journal. `check.sh` writes every verdict it reaches to
