@@ -37,6 +37,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   of `main`)*. 🔴 `: gone]` alone proves only that the remote disappeared — a branch deleted by hand
   on the forge, or a pull request closed without merging, prints the same thing, and a local branch
   is the only copy there is. Unmerged or unknown, it is reported and left alone.
+  🔴 **The pass does not perform those gestures — it calls `skills/housekeeping/prune-dead-branches.sh`.**
+  A skill is text, so nothing records that it checked anything; in the script the two conditions are
+  code, and every branch examined is printed with the verdict that decided it. Verified on both
+  shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
 
 ### Fixed
 - **A French thousands separator was turning every large number into a false alarm.** The end-of-turn

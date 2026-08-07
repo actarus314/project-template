@@ -34,7 +34,7 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
 | a local branch never pushed? | `git rev-parse --verify origin/<branch>` |
-| a local branch whose remote is GONE — merged, then deleted | `git fetch --prune`, then `git branch -vv \| grep ': gone]'`. 🔴 **Never `--merged main`**: this repository merges by squash, so a merged branch is never an ancestor of `main` and that test returns nothing — measured three times, at the merges of `#117`, `#119` and `#120`, 0 against 1 each time |
+| a local branch whose remote is GONE — it finished its life | `prune-dead-branches.sh`, below *(never `--merged main`: the script says why)* |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |
 | a `RECHERCHE-*` still sitting on the hot side | the workspace root |
@@ -42,22 +42,18 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 
 ### The one gesture this pass performs — deleting a dead local branch
 
-A branch whose remote is gone **and** whose pull request is `MERGED` holds nothing that is not on
-the default branch. It is deleted, with `-D`: `-d` refuses it, since a squash-merged branch is never
-an ancestor of `main`.
-
-🔴 **Both conditions, never one.** `: gone]` says the remote disappeared — not that the work landed.
-A branch deleted by hand on the forge, or a pull request closed without merging, prints exactly the
-same thing, and a local branch is the only copy: neither it nor the neighbouring workspace has a
-remote to recover from. With the pull request unmerged, or unknown, the branch is **reported and
-left alone**.
-
 ```
-git fetch --prune
-git branch -vv | grep ': gone]'                    # candidates
-gh pr list --head <branch> --state merged --json number   # the second condition
-git branch -D <branch>                             # only if that returned one
+./skills/housekeeping/prune-dead-branches.sh              # --dry-run to see without deleting
 ```
+
+🔴 **The pass does not run the gestures itself, and that is the point.** A skill is text: nothing
+records that it checked anything, and a guard the guarded party satisfies by declaring itself
+satisfied is not a guard. The script holds the two conditions as code — **remote gone AND pull
+request `MERGED`** — and prints every branch it examined with the verdict that decided it.
+
+**Why two conditions.** `: gone]` says the remote disappeared, never that the work landed: a branch
+deleted by hand on the forge prints the same thing, and a local branch is the only copy there is.
+Unmerged, or unanswered, it is kept — the script's own refusals are in its header.
 
 ## Step 2 — the judgement, which stays here
 
