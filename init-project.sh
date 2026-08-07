@@ -229,7 +229,9 @@ fi
 # ⚠ THE SAFETY NETS RUN HERE, AFTER the copy AND the workflow substitution.
 # Net 1/2 — placeholders the SCRIPT must substitute. One left behind = a dead link or broken
 # command shipped to the user. Without this check, every NEW placeholder replays the bug silently.
-LEFT=$(grep -rln '<owner>/<repo>\|<repo>\|<image-name>\|<!-- BRANCHING -->' "$DEST/repo" 2>/dev/null || true)
+# Skips what is copied verbatim from the root: never substituted, and it DOCUMENTS these markers.
+LEFT=$(grep -rln '<owner>/<repo>\|<repo>\|<image-name>\|<template-version>\|<!-- BRANCHING -->' "$DEST/repo" 2>/dev/null \
+       | grep -vE '/(check|open-pr|configure-repo)\.sh$|/checks/|/docs/(code|server-config\.md)' || true)
 if [ -n "$LEFT" ]; then
   echo "  ⚠ TEMPLATE BUG — unsubstituted placeholders (the script should have done it):"
   printf '     %s\n' $LEFT

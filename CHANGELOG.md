@@ -31,6 +31,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   they regenerate from recorded answers rather than patching, which is exactly what that file is for.
   ⚠️ A project generated before this carries the version alone; the runbook says to deduce once and
   write the options in, so the next comparison never guesses again.
+- **Making `configure-repo.sh` travel broke the generator's own placeholder net.** The net scans the
+  generated tree for `<owner>/<repo>`, `<image-name>` and friends — and the three files that now
+  travel *(the script, its note, `docs/server-config.md`)* are precisely the ones that **document**
+  those placeholders. Prose was reported as a bug, and the CI failed on all five toolchain
+  variants. The scan now skips what is copied **verbatim from the root**: those files are never
+  substituted, by construction. ⚠️ **The CI carried a second copy of that net, and the two had
+  already drifted** — the CI knew `<template-version>`, the script did not. Both now hold the same
+  list and the same exclusion.
 - **The pull-request instrument counted an opening that never happened.** It peels wrappers to find
   the command position, and `VAR=value` is one of them — an environment prefix must not hide the
   command behind it. Split on whitespace, a quoted assignment carrying the name falls apart:
