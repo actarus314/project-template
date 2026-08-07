@@ -77,9 +77,11 @@ chmod +x "$DEST/repo/checks/"verify-*.sh
 
 # Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
 # is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
-# 🔴 `verify-*.md` ONLY: the generator's own notes would land carrying dead pointers.
+# 🔴 `verify-*.md` ONLY, plus the charter they all link to: the generator's OWN notes describe
+# the tool that builds, which the built project has no use for (detail: docs/code/init-project.md).
 mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
+cp "$TPL/docs/code/README.md"   "$DEST/repo/docs/code/README.md"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -141,18 +143,14 @@ FRAG="$DEST/repo/.branching.frag"
   fi
 } > "$FRAG"
 
-# ONE file receives it, and that is the whole point. The block used to be injected into both
-# CONTRIBUTING.md and AGENTS.md, so every generated project was born with the same paragraph twice —
-# the duplication METHODE forbids, in the two files that TEACH its rules. AGENTS.md keeps it: it is
-# the authority, and the one an agent reads; CONTRIBUTING.md points at it.
+# ONE file receives it: AGENTS.md is the authority and the file an agent reads; CONTRIBUTING.md
+# points at it. Injecting into both is the trap (detail: docs/code/init-project.md).
 sed -e "/<!-- BRANCHING -->/r $FRAG" -e "/<!-- BRANCHING -->/d" "$DEST/repo/AGENTS.md" > "$DEST/repo/AGENTS.md.tmp"
 mv "$DEST/repo/AGENTS.md.tmp" "$DEST/repo/AGENTS.md"
 rm -f "$FRAG"
 
-# Stamp WHICH version of the template built this project. A generated project carries a FROZEN
-# COPY of the templates: without this line, nothing says which one, so nobody can tell whether a
-# later fix ever reached it. Read from the tag at generation time — it is a snapshot, and it
-# stays true about the past even after the template moves on.
+# Stamp WHICH version built this project: a generated project carries a FROZEN COPY, and without
+# this line nothing says whether a later fix ever reached it (detail: docs/code/init-project.md).
 TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unreleased)
 sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
 

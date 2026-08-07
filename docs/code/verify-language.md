@@ -19,7 +19,7 @@ workspace, 8 the French patterns the checks must spell out and 1 the skill's tri
 Both real slips were accented. Claiming the LANGUAGE is covered would be the only true fault
 here; what is covered is accented French, and the verdict says so in those words.
 
-⚠ repo/ ONLY — the discriminator is in [`METHODE.md`](../METHODE.md).
+⚠ repo/ ONLY — the discriminator is [`AGENTS.md`](../../AGENTS.md)'s to state.
 
 Exceptions are DETECTED, never listed — a list of file names presumes a project keeps its
 bilingual pages where this one does:

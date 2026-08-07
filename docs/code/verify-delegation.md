@@ -1,8 +1,8 @@
 # `checks/verify-delegation.sh` — why it is written this way
 
 > Convention: [`README.md`](README.md).
-> The rule and the three opt-ins live in [`claude-code-setup.md`](../claude-code-setup.md); what
-> this check is and when it fires, in [`repo-controls.md`](../repo-controls.md).
+> The rule and its three opt-ins, and what fires this check, are the repository's to state —
+> [`AGENTS.md`](../../AGENTS.md) says where. They are deliberately NOT restated here.
 
 ## Two tools, one rule, two places to read it
 

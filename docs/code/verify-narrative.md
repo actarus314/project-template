@@ -4,7 +4,7 @@
 
 ## What it looks for
 
-The rule is in [`METHODE.md`](../METHODE.md): a comment carries the constraint, the archive
+The rule is [`AGENTS.md`](../../AGENTS.md)'s: a comment carries the constraint, the archive
 carries the story.
 
 🔴 THE RULE HELD BY DISCIPLINE ALONE, AND DISCIPLINE DOES NOT HOLD. The inventory recorded it

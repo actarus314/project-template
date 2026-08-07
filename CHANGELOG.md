@@ -22,6 +22,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A check now generates a project and plays its door on the spot** — `verify-generated-green.sh`.
+  `verify-travel.sh` already generated projects, but it asks whether a *path* still resolves there;
+  this one asks whether the *gate passes* there, and the gap between those two questions is where
+  three defects sat at once, all of them invisible here and fatal on landing. It generates the
+  richest variant, names it, and prints the exact command to replay a failure. It is deliberately
+  ONE variant where `verify-travel` covers four: a check is the same file whatever the toolchain.
 - **A live project can be brought forward to a newer template, and the runbook now says how.** The
   question had been open and untested; it was measured instead. Applying the template's own
   `git diff` to a project **works for 56 of its 85 files and silently misses the rest**: the
@@ -65,6 +71,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   line takes when it slips into a published file. **Measured before being enabled: zero occurrences
   across the whole tree**, so it costs nothing today and speaks the day one appears.
 
+### Changed
+- **`METHODE.md` names the implementation notes among the roles.** The table said where a fact
+  lives — tracking doc, archives, actions, conventions, code, memories — and `docs/code/` was in
+  none of them: a level created without the one column that makes the others work, *what it NEVER
+  contains*. A level that refuses nothing absorbs its neighbours, and it did: 26 pairs of paragraphs
+  now state the same fact in a note and in the header of the script it documents.
+
 ### Fixed
 - **Every project generated since 2026-08-05 got its structuring decisions filed under
   `docs/docs/adr/`.** `cp -R src dst` copies *into* `dst` when `dst` already exists, and the notes
@@ -76,15 +89,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   git, so `.DS_Store` rode along with three of the copied directories. The generated `.gitignore`
   ignores them, so they never reached a commit — but a project does not get to be born with someone
   else's clutter in it.
-
-### Changed
-- **`METHODE.md` names the implementation notes among the roles.** The table said where a fact
-  lives — tracking doc, archives, actions, conventions, code, memories — and `docs/code/` was in
-  none of them: a level created without the one column that makes the others work, *what it NEVER
-  contains*. A level that refuses nothing absorbs its neighbours, and it did: 26 pairs of paragraphs
-  now state the same fact in a note and in the header of the script it documents.
-
-### Fixed
 - **The delegation guard was blind to every subagent a workflow starts.** It hooks the `Agent` tool,
   and a workflow's `agent()` calls never go through it — so the three instructions were enforced on
   one path and merely *habitual* on the other. Measured on a 13-agent run: all of them ran on the
@@ -104,6 +108,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   none of the three and was refused. The accents are a character class now, not a list.
   *(The deeper defect stands, written down and not fixed: the test is for the PRESENCE of the words,
   so a prompt granting itself permission to delegate satisfies it.)*
+- 🔴 **Every project generated since `v1.3.0` was born RED — its very first pull request blocked, in
+  a repository whose owner had not written a line of it.** A generated project's `ci.yml` plays
+  `check.sh --house`, and three separate defects made that gate fail on a freshly generated tree:
+  **33 dead links**, because 24 implementation notes open with a link to a charter that did not
+  travel; **`verify-private-names.sh` exiting non-zero with no output at all**, because the shipped
+  list is comments only and `grep -v` matching nothing exits 1, which `set -euo pipefail` turns into
+  a silent death before the script's own message; and **`verify-echo.sh` reporting a pair that
+  scores below the threshold here and above it there** — it scores with TF-IDF, whose weights depend
+  on corpus size, so a threshold calibrated on ~700 paragraphs does not transport to ~200.
+  The charter now travels, the notes point at `AGENTS.md` instead of documents that stay behind, and
+  the duplicated paragraph was removed at the source rather than the threshold moved.
+- **Two more checks died the same silent death, and one of them killed the message written to
+  prevent exactly that.** In `verify-travel.sh`, `✗ cannot read the capabilities from
+  init-project.sh — this check would pass by looking at nothing` was unreachable code: the pipeline
+  that feeds it exits 1 when it reads no capability, and `set -e` fired first. `verify-tone.sh` had
+  the same shape. `verify-version.sh` had already met this trap and written the reason in a comment;
+  nothing had carried it to its siblings.
 
 ## [1.4.0] - 2026-08-06
 

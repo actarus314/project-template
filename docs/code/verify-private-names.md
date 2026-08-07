@@ -29,6 +29,19 @@ broad that the guard fires on ordinary prose and gets worked around. A repositor
 common English word is the case that breaks it, which is why the recommended form is the full
 `owner/repo` slug or a `\b`-delimited name.
 
+## An empty list is the normal case, and it used to be fatal
+
+The template ships a list of nothing but comments — examples to delete and replace. Filtering the
+comments out of it therefore yields zero lines, and `grep -v` that matches no line exits 1. Under
+`set -euo pipefail` the assignment carries that status, `set -e` kills the script, and nothing is
+printed: the check failed on **every** generated project, silently, for as long as it existed.
+
+`|| true` on that pipeline is what lets the empty-list branch below be reached at all. The branch
+was already written, and correct; it was simply unreachable. The lesson is not local — the same
+shape appeared in `verify-travel.sh`, where the message `✗ cannot read the capabilities` was
+likewise dead code, and in `verify-tone.sh`. `verify-version.sh` had already met it and written the
+reason in a comment; nothing propagated it.
+
 ## What it cannot do
 
 Rewriting a file removes nothing from the history already pushed. The check says so in its own

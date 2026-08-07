@@ -11,7 +11,8 @@ different moment and answered from a different target, so it lives in its own ch
 Keeping both under one roof produced a defect within the hour — gating the pair on prose
 blinded the script half exactly on a commit that touched only scripts.
 
-The rule itself — a closing stage makes the tracking doc SHRINK — is in [`METHODE.md`](../METHODE.md).
+The rule itself — a closing stage makes the tracking doc SHRINK — is not this note's: see
+[`AGENTS.md`](../../AGENTS.md).
 
 Concision is a rule of METHOD, not one of published style, so it follows the method into the
 neighbouring workspace — where the very document METHODE names as the one that must shrink lives.

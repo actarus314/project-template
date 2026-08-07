@@ -82,6 +82,6 @@ sees the whole branch before any merge, and is the authority in any case.
 The check recognises `docs/code/<name>.md` and nothing else, because that is the only destination it
 can derive from a file name. A passage whose real owner is `repo-controls.md`, `METHODE.md` or the
 standard is moved there and **named in the `drop:` line** — the declaration carries what the check
-cannot infer. Deciding which document owns a fact is [`METHODE.md`](../METHODE.md)'s job, never a
+cannot infer. Deciding which document owns a fact is [`AGENTS.md`](../../AGENTS.md)'s job, never a
 script's.
 

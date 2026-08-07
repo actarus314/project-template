@@ -465,6 +465,14 @@ if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^
   if timed ./checks/verify-travel.sh; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
 
+# Same trigger, and it also generates — but it asks the other question: not "does this path
+# resolve there?", but "does the DOOR pass there?". Three defects hid behind that gap at once,
+# including two checks that exited non-zero without printing a single line.
+if [ -x checks/verify-generated-green.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
+  note "verify-generated-green.sh — a generated project's own door"
+  if timed ./checks/verify-generated-green.sh; then ok "generated project born green"; else ko "generated project born red"; fi
+fi
+
 # verify-version.sh — same shape: present only in this repo, silent no-op in a generated project.
 if [ -x checks/verify-version.sh ]; then
   note "verify-version.sh — version coherence"

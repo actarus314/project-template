@@ -21,13 +21,14 @@ if [ ! -f "$LIST" ]; then
 fi
 
 # Comments and blank lines dropped; everything else is an extended-regex alternative.
-patterns=$(grep -vE '^\s*(#|$)' "$LIST" | paste -sd'|' -)
+# `|| true` is load-bearing: a comments-only list is the SHIPPED template (why: the note).
+patterns=$(grep -vE '^\s*(#|$)' "$LIST" | paste -sd'|' - || true)
 if [ -z "$patterns" ]; then
   echo "  ($LIST is empty — nothing was read)"
   exit 0
 fi
 
-count=$(grep -vE '^\s*(#|$)' "$LIST" | wc -l | tr -d ' ')
+count=$(grep -vE '^\s*(#|$)' "$LIST" | wc -l | tr -d ' ' || true)
 hits=$(git ls-files -z | xargs -0 grep -niE "$patterns" 2>/dev/null || true)
 
 if [ -n "$hits" ]; then
