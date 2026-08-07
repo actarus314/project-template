@@ -21,6 +21,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **The closing pass now deletes a dead local branch — on two conditions, never one.** A branch whose
+  remote is gone *and* whose pull request reads `MERGED` holds nothing that is not on the default
+  branch, and it is removed with `-D` *(`-d` refuses it: a squash-merged branch is never an ancestor
+  of `main`)*. 🔴 `: gone]` alone proves only that the remote disappeared — a branch deleted by hand
+  on the forge, or a pull request closed without merging, prints the same thing, and a local branch
+  is the only copy there is. Unmerged or unknown, it is reported and left alone.
+  🔴 **The pass does not perform those gestures — it calls `skills/housekeeping/prune-dead-branches.sh`.**
+  A skill is text, so nothing records that it checked anything; in the script the two conditions are
+  code, and every branch examined is printed with the verdict that decided it. Verified on both
+  shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
+
+- **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
+  The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
+  skipped: an injected instruction is indistinguishable from a fact, and nothing records whether it
+  was obeyed. Seen forty times, *read this* never becomes *this was read*. **Compaction makes it a
+  trap rather than an omission**: the summary carries the documents' conclusions, which is the exact
+  sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
+  on every source, compaction included.
+  The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
+  can satisfy by declaring itself satisfied is not a guard. 🔴 **A read carrying `offset`/`limit` does
+  not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
+  quotation attached. Documents are DETECTED, so a generated project holding none stands down, and it
+  never blocks when half-wired, when the target sits outside the repository, or when no transcript is
+  in the payload. Verified on six situations.
+- **The same instrument was counting its own documentation, and that inverted its verdict.** Two
+  splits happen — command into segments, then segment into tokens — and neither honoured quotes: an
+  operator *inside a quoted argument* ended the segment, so a JSON payload holding
+  `cd /repo && ./open-pr.sh` read as an opening, and editing this check's own note read as another.
+  🔴 **The cascade is the real defect**: a false positive **consumes the instruction token**, so the
+  genuine opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon,
+  one of them a real opening recorded as unauthorised. Both splits use `shlex` now, heredocs are
+  dropped as content, and it is verified on seven shapes — four openings, three quotations.
+
 ### Changed
 - **The growth check now asks the workspace a question a date could never answer: did the closing of
   a stage actually prune the hot side?** The close is observable — an archive directory is born — and
@@ -39,19 +73,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   really enforces is about hooks, which read their payload from stdin and would compete for it.
   Verdicts were captured before and after the change and compared: identical.
 
-### Added
-- **The closing pass now deletes a dead local branch — on two conditions, never one.** A branch whose
-  remote is gone *and* whose pull request reads `MERGED` holds nothing that is not on the default
-  branch, and it is removed with `-D` *(`-d` refuses it: a squash-merged branch is never an ancestor
-  of `main`)*. 🔴 `: gone]` alone proves only that the remote disappeared — a branch deleted by hand
-  on the forge, or a pull request closed without merging, prints the same thing, and a local branch
-  is the only copy there is. Unmerged or unknown, it is reported and left alone.
-  🔴 **The pass does not perform those gestures — it calls `skills/housekeeping/prune-dead-branches.sh`.**
-  A skill is text, so nothing records that it checked anything; in the script the two conditions are
-  code, and every branch examined is printed with the verdict that decided it. Verified on both
-  shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
+- **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
+  cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
+  it two hours before posting one does not make the gesture right, it produces the exact feeling of
+  having it at hand, which is the failure this check exists to stop. Requiring it at session start
+  therefore turned the guard against its own purpose. The method and the standard stay owed by every
+  write — they say how a thing is written and where it goes. The runbook is owed only by a command
+  about to post one of those gestures, each tier carrying its own marker so satisfying one never
+  satisfies the other. Measured: ~16 100 tokens per arming became ~7 900, and the halved cost is a
+  consequence rather than the reason.
 
 ### Fixed
+- **The CHANGELOG repeated a section within one version, and nothing said so.** Keep a Changelog
+  implies one `### Added` per version without ever stating it, so it drifted unwatched across six
+  versions. The rule is now written where the format lives, and the check refuses a repeat in the
+  open section — the published ones are counted and printed, never failed, since a sealed entry is
+  not rewritten. Every version heading also carries the inline link to its Release, which the
+  standard has required all along and only the newest one had.
 - **The closing pass left its scratch artefact behind when it hit its cycle ceiling.** Released at
   the ceiling, it deleted the flag saying a pass was under way but not the enumeration itself — which
   the next pass would then read as its own coverage. Nothing reads that file for state, so nothing
@@ -77,40 +115,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `main` and `git branch --merged main` returns nothing. Measured twice, at the merges of `#117` and
   `#119`: 0 against 1 both times. The inventory reads `git fetch --prune` then
   `git branch -vv | grep ': gone]'`.
-
-### Changed
-- **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
-  cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
-  it two hours before posting one does not make the gesture right, it produces the exact feeling of
-  having it at hand, which is the failure this check exists to stop. Requiring it at session start
-  therefore turned the guard against its own purpose. The method and the standard stay owed by every
-  write — they say how a thing is written and where it goes. The runbook is owed only by a command
-  about to post one of those gestures, each tier carrying its own marker so satisfying one never
-  satisfies the other. Measured: ~16 100 tokens per arming became ~7 900, and the halved cost is a
-  consequence rather than the reason.
-
-### Added
-- **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
-  The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
-  skipped: an injected instruction is indistinguishable from a fact, and nothing records whether it
-  was obeyed. Seen forty times, *read this* never becomes *this was read*. **Compaction makes it a
-  trap rather than an omission**: the summary carries the documents' conclusions, which is the exact
-  sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
-  on every source, compaction included.
-  The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
-  can satisfy by declaring itself satisfied is not a guard. 🔴 **A read carrying `offset`/`limit` does
-  not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
-  quotation attached. Documents are DETECTED, so a generated project holding none stands down, and it
-  never blocks when half-wired, when the target sits outside the repository, or when no transcript is
-  in the payload. Verified on six situations.
-- **The same instrument was counting its own documentation, and that inverted its verdict.** Two
-  splits happen — command into segments, then segment into tokens — and neither honoured quotes: an
-  operator *inside a quoted argument* ended the segment, so a JSON payload holding
-  `cd /repo && ./open-pr.sh` read as an opening, and editing this check's own note read as another.
-  🔴 **The cascade is the real defect**: a false positive **consumes the instruction token**, so the
-  genuine opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon,
-  one of them a real opening recorded as unauthorised. Both splits use `shlex` now, heredocs are
-  dropped as content, and it is verified on seven shapes — four openings, three quotations.
 
 ## [1.4.1](https://github.com/actarus314/project-template/releases/tag/v1.4.1) - 2026-08-07
 
@@ -269,7 +273,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the same shape. `verify-version.sh` had already met this trap and written the reason in a comment;
   nothing had carried it to its siblings.
 
-## [1.4.0] - 2026-08-06
+## [1.4.0](https://github.com/actarus314/project-template/releases/tag/v1.4.0) - 2026-08-06
 
 ### Added
 - **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
@@ -559,7 +563,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ⚠️ **`GITHUB_HEAD_REF` before the branch name**: a `pull_request` run checks out a **detached**
   merge commit, so reading `HEAD` alone would have exempted nothing exactly where it mattered.
 
-## [1.3.0] - 2026-08-05
+## [1.3.0](https://github.com/actarus314/project-template/releases/tag/v1.3.0) - 2026-08-05
 
 ### Changed
 - **`verify-comment-drift.sh` counts in bulk — 1,14 s → 0,53 s, ×2,2**, with an **identical verdict
@@ -925,7 +929,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **bytes as well as lines**: the curated documents run from 57 to 175 bytes per line, so one
   written a sentence per line can swell by a quarter in bytes while its line count goes *down*.
 
-## [1.2.0] - 2026-08-04
+## [1.2.0](https://github.com/actarus314/project-template/releases/tag/v1.2.0) - 2026-08-04
 
 ### Added
 
@@ -1149,7 +1153,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Section numbers remain stable throughout: a removed section keeps its number as a one-line pointer,
   so `standard §11` or `standard §16` written anywhere still resolves.
 
-## [1.1.0] - 2026-08-02
+## [1.1.0](https://github.com/actarus314/project-template/releases/tag/v1.1.0) - 2026-08-02
 
 ### Documentation
 
@@ -1202,7 +1206,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   required something nothing produces and **every PR blocked forever**. The script now refuses
   before writing the ruleset, and `--dry-run` reports it without writing.
 
-## [1.0.0] - 2026-07-31
+## [1.0.0](https://github.com/actarus314/project-template/releases/tag/v1.0.0) - 2026-07-31
 
 First tagged version. The repository went public on this date: everything below had landed
 before the flip, and is sealed here rather than reconstructed.

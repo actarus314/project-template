@@ -12,6 +12,24 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
+# ── One `###` of each type per version, and the open section is the one that can still be fixed ──
+# Keep a Changelog implies it without ever saying it, so it was drifting unwatched. Only
+# `Unreleased` is judged: a published heading is not rewritten (why: docs/code/verify-changelog.md).
+# The published ones are COUNTED and said out loud — a silent zero would read like a clean file.
+if [ -f CHANGELOG.md ]; then
+  dup_open=$(awk '/^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0} o && /^### / {c[$2]++}
+                  END {for (k in c) if (c[k] > 1) printf "%s x%d ", k, c[k]}' CHANGELOG.md || true)
+  dup_pub=$(awk '/^## \[/ {v=($0 ~ /Unreleased/) ? "" : $0} v && /^### / {c[v FS $2]++}
+                 END {n=0; for (k in c) if (c[k] > 1) n++; print n+0}' CHANGELOG.md || true)
+  if [ -n "$dup_open" ]; then
+    # Braces are load-bearing: a bare $name followed by a multi-byte dash is read as part of the name.
+    echo "✗ CHANGELOG 'Unreleased' repeats a section: ${dup_open}— Keep a Changelog wants one of each" >&2
+    echo "  Merge them: one ### per type, in the order Added / Changed / Deprecated / Removed / Fixed / Security." >&2
+    exit 1
+  fi
+  echo "  (Unreleased: one section per type · ${dup_pub} published version(s) repeat one — not judged, they are sealed)"
+fi
+
 published=()
 [ -d templates ]        && published+=('^templates/')
 [ -f docs/RUNBOOK.md ]  && published+=('^docs/RUNBOOK\.md$')

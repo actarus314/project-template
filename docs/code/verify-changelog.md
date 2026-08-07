@@ -4,31 +4,25 @@
 
 ## A user-visible change with no CHANGELOG line
 
-The rule ([`AGENTS.md`](../../AGENTS.md)): a line goes into `Unreleased` as soon as a change is
-visible **to whoever uses the repo** — "a template that changes, a RUNBOOK step that moves, a
-script's behaviour".
+The rule is [`AGENTS.md`](../../AGENTS.md)'s. Two of its three examples are **paths**, so two
+thirds of it are mechanical; the third is a judgement this check leaves alone.
 
-Two of those three are **paths**, so two thirds of the rule are mechanical. Only the third is a
-judgement, and this check deliberately leaves it alone: an internal refactor stays out.
-
-🔴 What it catches is the case that actually happened: four checks shipped, `CHANGELOG` untouched.
-Nobody notices a missing line — the file simply stays plausible.
+🔴 What it catches is the case that happened: four checks shipped, `CHANGELOG` untouched. Nobody
+notices a missing line — the file simply stays plausible.
 
 ## What counts as visible is DETECTED, never listed
 
-This check travels into every generated project, where none of the paths it looks for exist. A
-hand-kept list would then be a list of **absent things**, and would go on being read as a verdict.
-The paths are taken from what the repository actually holds, so the perimeter is whatever the place
-publishes — and nothing where it publishes nothing. A list of three shipped scripts sat here while
-ten travelled.
-
-Empty is a legitimate answer, and the one every generated project gives.
+This check travels into every generated project, where none of the paths it looks for exist: a
+hand-kept list would be a list of **absent things**, still read as a verdict. The perimeter is
+whatever the place publishes — and nothing where it publishes nothing. A list of three shipped
+scripts sat here while ten travelled. Empty is a legitimate answer, and every generated project
+gives it.
 
 ## The unit compared is the BRANCH
 
-Compared against the merge base with the default branch, because that is the unit a pull request
-reviews. When there is nothing to compare — on the default branch itself, or in a fresh project with
-no remote — it **says so**: a run that read nothing must not look like a run that found nothing.
+Compared against the merge base with the default branch — the unit a pull request reviews. With
+nothing to compare *(the default branch itself, a fresh project with no remote)* it **says so**: a
+run that read nothing must not look like one that found nothing.
 
 🔴 **Three sources, not one: committed, staged, and neither.** Reading committed history alone made
 the guard block *the very commit carrying the line it demanded* — the pre-commit hook runs before
@@ -41,3 +35,14 @@ to prevent. In CI the last two sources are empty, so nothing there changes.
 The branch **name** as a trigger: 11 of this repository's last 40 pull requests carry no CHANGELOG
 line and are **right** not to (docs, README, i18n, dependency bumps). A guard firing on better than
 one pull request in four is a guard overridden by reflex.
+
+## One section of each type, and only the open one is judged
+
+Keep a Changelog implies a single `### Added` per version and never says it, so nothing watched
+it: **twelve cases over six published versions**, and two in the open section.
+
+Only `Unreleased` is judged — **a published heading is not rewritten**. The published repeats are
+**counted and printed**, never failed: a silent zero would read like a clean file.
+
+The braces in `${dup_open}` are load-bearing. A bare `$name` followed by a multi-byte dash is read
+as part of the variable name, and under `set -u` the check dies before its own message.

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:091d28886fd44dde9f6fe33a5f2f035c8cf4e07c313cbb10adedc7ecea2193d0
+  checksum-source-md: sha256:4494a6529b3e39257e8e72fdeb7952cf1c76fd367dd7932910be835d640ed481
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1743,7 +1743,7 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-changelog.sh</code></td>
-          <td>a user-visible change with no <code>CHANGELOG</code> line</td>
+          <td>a user-visible change with no <code>CHANGELOG</code> line, <strong>and a repeated <code>###</code> inside <code>Unreleased</code></strong> (the published versions are counted, never failed — a sealed entry is not rewritten)</td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
