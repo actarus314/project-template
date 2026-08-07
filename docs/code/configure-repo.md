@@ -241,7 +241,7 @@ happens to match the repo name on a *generated* project (`init-project.sh` subst
 `<repo>-collector`). Deriving it made the script test a nonexistent package and wrongly announce
 the image as unpullable.
 
-The default visibility of a freshly published ghcr package also depends on the account type: a
-personal account inherits the parent repo's visibility (pullable immediately if public); an
-organization can default to private regardless. So this is tested, never assumed, and the
-"make public" reminder is shown only when the anonymous pull actually fails.
+A freshly published package's default visibility depends on the account type — the fact itself, and
+what it costs a self-hoster, belong to the control table (`repo-controls.md`, in the template). What matters here
+is the consequence for this script: it cannot be derived, so it is **tested anonymously**, and the
+"make public" reminder is printed only when that pull actually fails.
