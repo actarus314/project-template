@@ -380,21 +380,21 @@ if [ -x checks/verify-private-names.sh ]; then
 fi
 
 if [ -x checks/verify-echo.sh ]; then
-  note "verify-echo.sh — the same fact stated twice, in different words (advisory)"
+  note "verify-echo.sh — the same fact stated twice, in different words"
   if touched '\.md$'; then
     if reap verify-echo; then ok "no paragraph restates another"; else ko "a paragraph restates another"; fi
   else echo "  (skipped — no .md changed in this commit)"; skipped "verify-echo" "no .md changed"; fi
 fi
 
 if [ -x checks/verify-growth.sh ]; then
-  note "verify-growth.sh — curated documents that only grow (advisory)"
+  note "verify-growth.sh — curated documents that only grow"
   if touched '\.md$'; then
     if reap verify-growth; then ok "no curated document only grows"; else ko "a curated document only grows"; fi
   else echo "  (skipped — no .md changed in this commit)"; skipped "verify-growth" "no .md changed"; fi
 fi
 
 if [ -x checks/verify-comment-drift.sh ]; then
-  note "verify-comment-drift.sh — a comment outgrowing its code (advisory)"
+  note "verify-comment-drift.sh — a comment outgrowing its code"
   if touched '\.sh$'; then
     if reap verify-comment-drift; then ok "no comment outgrowing its code"; else ko "a comment outgrows its code"; fi
   else echo "  (skipped — no .sh changed in this commit)"; skipped "verify-comment-drift" "no .sh changed"; fi

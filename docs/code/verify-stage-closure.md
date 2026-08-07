@@ -5,10 +5,15 @@
 ## What this carries, and what it deliberately does not
 
 The three gestures a closed stage owes are `METHODE.md`'s to state (prune the hot side, write the
-archive, file the research). The first is already guarded — `verify-growth.sh` watches a curated
-document that only ever grows, compared against the last release. This check carries ONLY what
-that one cannot see, because two controls answering the same question end up disagreeing with each
-other before they disagree with reality.
+archive, file the research). The first is already guarded — `verify-growth.sh` asks, when an archive
+directory is born, whether the hot side shrank. This check carries ONLY what that one cannot see,
+because two controls answering the same question end up disagreeing with each other before they
+disagree with reality.
+
+**The two are inverses, and that is what keeps them apart.** This one reads a closed interval
+between releases and asks whether an archive was written at all; the other is triggered BY an
+archive and asks whether anything was pruned. An archive with no purge is invisible here; a release
+with no archive is invisible there.
 
 ## The trigger was chosen on a measurement, and the obvious one lost
 
