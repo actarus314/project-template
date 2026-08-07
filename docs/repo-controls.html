@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:04a771b793acc917a6b77a3ba2003b9d951768fb37570b6b8c7ace82dcff040a
+  checksum-source-md: sha256:091d28886fd44dde9f6fe33a5f2f035c8cf4e07c313cbb10adedc7ecea2193d0
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1777,7 +1777,7 @@
           <td class="h">both</td>
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
-          <td><strong>settled</strong> — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8</td>
+          <td><strong>settled</strong> — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8. ⚠️ It compares <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
           <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
