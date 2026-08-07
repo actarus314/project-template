@@ -245,7 +245,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - **Ask what became of a deleted comment block.** When five or more lines of explanation leave a
   script, the commit message must say they were never worth writing — or they move into the file's
-  note. A *why* is no longer lost in passing.
+  note, so a *why* is not lost in passing. A `drop:` covers only the files it names.
   ([#115](https://github.com/actarus314/project-template/pull/115))
 - **Measure whether the pull-request rule needs enforcing in code, before enforcing it.** Every
   opening is recorded as made *with* or *without* an instruction, and nothing is ever refused. Below
@@ -281,7 +281,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the commits landed since it was last written and asks for the pass past six. Code counts, a model
   writes. ([#109](https://github.com/actarus314/project-template/pull/109))
 - **Warn when a finished stage left no archive behind**, or when finished research still sat among
-  the live documents at release time. Advisory only.
+  the live documents at release time. Advisory, and it carries only what the growth check cannot
+  see — two controls answering one question end up disagreeing.
   ([#109](https://github.com/actarus314/project-template/pull/109))
 
 ### Changed
@@ -348,7 +349,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ([#112](https://github.com/actarus314/project-template/pull/112))
 - **Make the narrative check able to catch a story at all.** Its only signal was a date, and every
   hit pointed into the archives, which the rule exempts — it had never caught anything. Recall is
-  traded for precision, deliberately.
+  traded for precision, deliberately, because this one refuses a commit.
   ([#111](https://github.com/actarus314/project-template/pull/111))
 - **Recognise two more ways of asking for the closing pass.** A second miss proved the list was
   short; three candidates were measured over 1683 real messages before one was kept. Asking to SEE
@@ -359,8 +360,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   stage closes — has no meaning for it.
   ([#111](https://github.com/actarus314/project-template/pull/111))
 - **Revert the exemption that let a bot's pull request skip the changelog check, one day old.** It
-  silenced the control on exactly the changes that reach a user: pinned tools live inside the
-  templates, so a bump travels into every generated project.
+  silenced the control on exactly the changes that reach a user: pinned tools travel into every
+  generated project. An automated pull request is now red until the line is added to its branch.
   ([#107](https://github.com/actarus314/project-template/pull/107))
 - **~~Fix every automated pull request being red on a check nothing could satisfy.~~** *(Superseded
   by the line above — the diagnosis stands.)* A dependency bump touches exactly the paths counted as
