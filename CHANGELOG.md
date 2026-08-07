@@ -21,6 +21,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
+  The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
+  skipped: an injected instruction is indistinguishable from a fact, and nothing records whether it
+  was obeyed. Seen forty times, *read this* never becomes *this was read*. **Compaction makes it a
+  trap rather than an omission**: the summary carries the documents' conclusions, which is the exact
+  sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
+  on every source, compaction included.
+  The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
+  can satisfy by declaring itself satisfied is not a guard. 🔴 **A read carrying `offset`/`limit` does
+  not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
+  quotation attached. Documents are DETECTED, so a generated project holding none stands down, and it
+  never blocks when half-wired, when the target sits outside the repository, or when no transcript is
+  in the payload. Verified on six situations.
+- **The same instrument was counting its own documentation, and that inverted its verdict.** Two
+  splits happen — command into segments, then segment into tokens — and neither honoured quotes: an
+  operator *inside a quoted argument* ended the segment, so a JSON payload holding
+  `cd /repo && ./open-pr.sh` read as an opening, and editing this check's own note read as another.
+  🔴 **The cascade is the real defect**: a false positive **consumes the instruction token**, so the
+  genuine opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon,
+  one of them a real opening recorded as unauthorised. Both splits use `shlex` now, heredocs are
+  dropped as content, and it is verified on seven shapes — four openings, three quotations.
+
 ## [1.4.1](https://github.com/actarus314/project-template/releases/tag/v1.4.1) - 2026-08-07
 
 ### Added

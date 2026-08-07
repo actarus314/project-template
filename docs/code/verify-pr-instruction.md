@@ -5,45 +5,43 @@
 ## It measures, it does not refuse — and that is the whole point
 
 Whether a pull request may be opened without the maintainer saying so is settled: it may not
-(`AGENTS.md`). **Whether that rule needs enforcing in code is not**, and this instrument exists to
-answer that rather than assume it.
-
-So it records and returns: it never denies a tool, and cannot wedge a session.
+(`AGENTS.md`). **Whether that rule needs enforcing in code is not**, and this instrument answers
+that rather than assume it. So it records and returns: it never denies a tool.
 
 🔴 **The decision threshold is written down BEFORE the data**, so that no figure can be read into
 whatever was already wanted: **after 20 openings, if the share opened WITHOUT an instruction is
 under 5 %, the token does not get built** — the rule sufficed.
 
-⚠️ **The old 49 % is NOT the baseline.** It was measured while this repository's RUNBOOK still
-assigned "PR `develop → main` … merge" to the assistant — an explicit authorisation. Comparing the
-next twenty against it compares two regimes, not two disciplines. **What decides is the absolute
-rate against 5 %.**
+⚠️ **The old 49 % is NOT the baseline** — measured while this repository's RUNBOOK still assigned
+"PR `develop → main` … merge" to the assistant, an explicit authorisation. **What decides is the
+absolute rate against 5 %.**
 
 ## The gesture, never one script
 
-`gh pr create` appears **84 times** in this repository's history. Watching only `open-pr.sh` leaves
-the door beside it wide open, so both are matched, in all their forms.
+`gh pr create` appears **84 times** here. Watching only `open-pr.sh` leaves the door beside it wide
+open, so both are matched, in all their forms.
 
-🔴 **In COMMAND POSITION, never anywhere in the string** — both mistakes happened on the first live
-opening: a commit message quoting `open-pr.sh` counted, and a real opening was skipped because the
-line also ran a `grep`. **Substring presence is not execution.**
+🔴 **In COMMAND POSITION, never anywhere in the string.** Both mistakes happened on the first live
+opening: a commit message quoting `open-pr.sh` counted, a real opening was skipped for a same-line
+`grep`. **Substring presence is not execution.**
 
-Wrappers are peeled **one token at a time, testing before each peel**. A single regex could not:
-it either ate the target (`./open-pr.sh` looks like a path) or stopped short of it (`direnv exec
-<dir>` is three tokens). Verified on six shapes, heredoc and same-line `grep` included.
+## Quotes hold at BOTH levels, and a heredoc is content
 
-## Tokenising with `shlex`, never `.split()`
+Two splits happen — command into segments, segment into tokens — and **neither may ignore quotes**.
+An operator inside a quoted argument ends the segment, and what follows lands in command position:
+a JSON payload holding `cd /repo && ./open-pr.sh` read as an opening. On whitespace, a quoted
+assignment falls apart the same way — `PKG="check.sh open-pr.sh"` left `PKG="check.sh` for the
+`VAR=value` peel, which exists so an environment prefix cannot hide its command. `shlex` does both.
+Wrappers are then peeled **one token at a time, testing before each peel** — a single regex either
+ate the target (`./open-pr.sh` looks like a path) or stopped short (`direnv exec <dir>` is three).
 
-The peeling rule includes `VAR=value`, so an environment prefix (`GH_TOKEN=x gh pr create …`) does
-not hide the command behind it. Split on whitespace, a **quoted assignment holding the name** breaks
-apart: `PKG="check.sh open-pr.sh checks"` leaves `PKG="check.sh` for that rule to peel, and promotes
-`open-pr.sh checks …` to the command position — an opening recorded for a line assigning a string.
+**A heredoc is CONTENT, never commands this shell runs** — and what quotes the gesture most is this
+check's own documentation: editing this note was recorded as an opening.
 
-It produced **one false reading out of the first two collected**, on an instrument whose job is to
-decide a percentage over twenty openings: a base half wrong decides nothing. `shlex` respects the
-quotes, and falls back to a plain split where they are unbalanced, since there it raises.
-⚠️ **The journal records the verdict, never the command read**, so this was diagnosable only from
-the session transcript.
+🔴 **The cascade is what makes it serious.** A false positive **consumes the token**, so the real
+opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon, **one a
+real opening recorded as unauthorised**: overcounting does not add noise, it inverts the verdict.
+Verified on seven shapes. ⚠️ **No literal apostrophe in the embedded Python**: use `\x27`.
 
 ## Consumed, never dated
 
