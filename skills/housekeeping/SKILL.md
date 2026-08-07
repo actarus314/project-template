@@ -34,11 +34,30 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
 | a local branch never pushed? | `git rev-parse --verify origin/<branch>` |
-| a local branch whose remote is GONE — merged, then deleted | `git fetch --prune`, then `git branch -vv \| grep ': gone]'`. 🔴 **Never `--merged main`**: this repository merges by squash, so a merged branch is never an ancestor of `main` and that test returns nothing — measured twice, at the merges of `#117` and `#119`, 0 against 1 both times |
+| a local branch whose remote is GONE — merged, then deleted | `git fetch --prune`, then `git branch -vv \| grep ': gone]'`. 🔴 **Never `--merged main`**: this repository merges by squash, so a merged branch is never an ancestor of `main` and that test returns nothing — measured three times, at the merges of `#117`, `#119` and `#120`, 0 against 1 each time |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |
 | a `RECHERCHE-*` still sitting on the hot side | the workspace root |
 | the newest release, and whether an archive followed it | `git for-each-ref refs/tags` + the archives directory |
+
+### The one gesture this pass performs — deleting a dead local branch
+
+A branch whose remote is gone **and** whose pull request is `MERGED` holds nothing that is not on
+the default branch. It is deleted, with `-D`: `-d` refuses it, since a squash-merged branch is never
+an ancestor of `main`.
+
+🔴 **Both conditions, never one.** `: gone]` says the remote disappeared — not that the work landed.
+A branch deleted by hand on the forge, or a pull request closed without merging, prints exactly the
+same thing, and a local branch is the only copy: neither it nor the neighbouring workspace has a
+remote to recover from. With the pull request unmerged, or unknown, the branch is **reported and
+left alone**.
+
+```
+git fetch --prune
+git branch -vv | grep ': gone]'                    # candidates
+gh pr list --head <branch> --state merged --json number   # the second condition
+git branch -D <branch>                             # only if that returned one
+```
 
 ## Step 2 — the judgement, which stays here
 
@@ -110,4 +129,6 @@ a pass that silently drops an item reads exactly like a pass that had nothing to
 - **No WIP commit.** A commit here goes through the same gate as any other; the hook runs the checks
   and blocks on a gap. Nothing is committed to look tidy.
 - **No push, no pull request opened, unless asked.** Both are the maintainer's call.
+- **No branch deleted on a single condition.** A dead remote is not proof the work landed — the
+  pull request must say `MERGED` too, and the two are checked separately.
 - **No rewriting of an archive.** An archive is immutable once written.

@@ -30,6 +30,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   really enforces is about hooks, which read their payload from stdin and would compete for it.
   Verdicts were captured before and after the change and compared: identical.
 
+### Added
+- **The closing pass now deletes a dead local branch — on two conditions, never one.** A branch whose
+  remote is gone *and* whose pull request reads `MERGED` holds nothing that is not on the default
+  branch, and it is removed with `-D` *(`-d` refuses it: a squash-merged branch is never an ancestor
+  of `main`)*. 🔴 `: gone]` alone proves only that the remote disappeared — a branch deleted by hand
+  on the forge, or a pull request closed without merging, prints the same thing, and a local branch
+  is the only copy there is. Unmerged or unknown, it is reported and left alone.
+
 ### Fixed
 - **A French thousands separator was turning every large number into a false alarm.** The end-of-turn
   check reads numbers announced as a total and asks whether they appear in the turn's output; written
