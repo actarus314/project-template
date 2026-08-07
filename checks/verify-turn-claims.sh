@@ -131,12 +131,17 @@ if m and not HANDLED.search(msg) and FILEREF.search(msg) and not edited:
 # total, or produced while a subagent was consulted: any counted number fired on 4.7% of turns,
 # this shape on 0.65%.
 if out is not None:
-    NUM = re.compile(r"(?<![#§v\d.])\b(\d{2,4})\b\s*(?:\*\*)?\s*"
+    # A French thousands separator is a SPACE, so `5 300` used to be read as the total `300` — the
+    # tail of a number, announced as if it were the whole. Groups are matched as one number.
+    NUM = re.compile(r"(?<![#§v\d.])\b(\d{1,4}(?:[  \u202f\u00a0]\d{3})*)\b\s*(?:\*\*)?\s*"
                      r"(fichiers?|règles?|contrôles?|occurrences?|lignes?|scripts?|copies?|"
                      r"sessions?|paires?|mémoires?|commits?|erreurs?|défauts?)", re.I)
     TOTAL = re.compile(r"\b(total|au total|en tout|somme|cumul|soit)\b", re.I)
     used_agent = '"Agent"' in out or '"Task"' in out
-    unbacked = [x for x in NUM.finditer(msg) if x.group(1) not in out]
+    # Tool output prints 5302, never "5 302": the separators come off before comparing, or every
+    # French-formatted number would be unbacked by construction.
+    plain = lambda n: n.replace(" ", "").replace("\u202f", "").replace("\u00a0", "")
+    unbacked = [x for x in NUM.finditer(msg) if plain(x.group(1)) not in out]
     if unbacked and (TOTAL.search(msg) or used_agent):
         first = " ".join(unbacked[0].group(0).split())
         found.append(f'"{first}" is stated as a total but appears in no output of this turn')

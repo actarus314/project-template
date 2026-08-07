@@ -80,3 +80,10 @@ forgetting to record it is invisible: the numbers simply vanish with the turn. V
 measurement alone fired on 6% of turns and a table alone on 3.75%; requiring BOTH, with at least
 three numeric rows, brings it to 0.77%. A turn that wrote nothing at all is left alone — that is
 a conversation, not a lost measurement.
+
+## A French thousands separator is a space
+
+`5 300` used to be read as the total `300` — the tail of a number, announced as if it were the whole,
+and every number past a thousand produced that false positive. Groups of three are now matched as one
+number. The separators then come off before the comparison, because tool output prints `5302` and
+never `5 302`: without that, a French-formatted number would be unbacked by construction.

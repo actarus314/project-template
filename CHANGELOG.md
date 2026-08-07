@@ -31,6 +31,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Verdicts were captured before and after the change and compared: identical.
 
 ### Fixed
+- **A French thousands separator was turning every large number into a false alarm.** The end-of-turn
+  check reads numbers announced as a total and asks whether they appear in the turn's output; written
+  `5 300`, the number was matched as `300` — the tail announced as the whole, and unbacked by
+  construction since tool output prints `5302`. Groups of three are now read as one number, and the
+  separators come off before the comparison.
 - **The closing pass was being asked for again while it was already running, and it now says so
   instead.** The word-routing branch armed the sequencer without ever checking whether a pass was
   already armed, so a second request restarted a checklist that was half-done. It now points at the
