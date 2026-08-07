@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:d0f29777bb07481eb33e0f0629aabd1cd3b25d8f564e78f2bd1b3a6602c7d33f
+  checksum-source-md: sha256:8f0830e9e8b3877fc4070624e8df1cc6fe545a2081a7fddafd51be264d868c88
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1855,7 +1855,7 @@
           <td class="w"><code>checks/verify-rules-read.sh</code></td>
           <td>writing before the rule documents have been READ — they are injected as context, so nothing traces whether they were ever obeyed</td>
           <td class="h">both</td>
-          <td><code>SessionStart</code> arms it; every <code>Write</code>/<code>Edit</code> landing in the repo checks it</td>
+          <td><code>SessionStart</code> arms it; every <code>Write</code>/<code>Edit</code> landing in the repo owes the method and the standard, and a command posting a lifecycle gesture owes the runbook — each tier with its own marker</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the threshold is not a number but a definition: a read carrying <code>offset</code>/<code>limit</code> does <strong>not</strong> count, since a passage is not the document. Documents are DETECTED, so a generated project holding none stands down. Re-armed at every <code>SessionStart</code>, compaction included — that is the case it exists for</td>
           <td class="t">instant</td>

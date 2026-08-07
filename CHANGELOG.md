@@ -21,6 +21,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
+  cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
+  it two hours before posting one does not make the gesture right, it produces the exact feeling of
+  having it at hand, which is the failure this check exists to stop. Requiring it at session start
+  therefore turned the guard against its own purpose. The method and the standard stay owed by every
+  write — they say how a thing is written and where it goes. The runbook is owed only by a command
+  about to post one of those gestures, each tier carrying its own marker so satisfying one never
+  satisfies the other. Measured: ~16 100 tokens per arming became ~7 900, and the halved cost is a
+  consequence rather than the reason.
+
 ### Added
 - **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
   The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
