@@ -1,6 +1,6 @@
 {
   "name": "project-template",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Creates and configures GitHub projects from a hardened standard: layout, secrets discipline, branch policy, pinned CI checks, and a runbook that says who performs each step",
   "author": {
     "name": "actarus314"

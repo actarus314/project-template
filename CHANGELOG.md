@@ -21,6 +21,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.1](https://github.com/actarus314/project-template/releases/tag/v1.4.1) - 2026-08-07
+
 ### Added
 - **A generated project's origin stamp now says what it was generated WITH, not only from which
   version.** Assisted regeneration starts by reproducing the project (`RUNBOOK` §5), and the options
