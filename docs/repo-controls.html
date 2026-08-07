@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:8fe45223ef0d7ebd63b3ebe14a4ee38bc95d673a5bfad5379e9443613189d501
+  checksum-source-md: sha256:04a771b793acc917a6b77a3ba2003b9d951768fb37570b6b8c7ace82dcff040a
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1757,7 +1757,7 @@
           <td class="h">both</td>
           <td>a <code>.md</code> moved, <strong>here or in the workspace</strong></td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — the 25 % threshold is a judgement call, and the <code>repo/</code> half is <strong>measured weak</strong> (the reference moves at every release: +327 % went unseen). The <code>workspace/</code> half carries no threshold at all</td>
+          <td><strong>needs watching</strong> — the 25 % threshold is a judgement call, and the <code>repo/</code> half is <strong>measured weak</strong> (the reference moves at every release: +327 % went unseen). The <code>workspace/</code> half carries no threshold at all — and it is <strong>answered LOCALLY only</strong>: the CI has no workspace beside it, and says so rather than passing in silence</td>
           <td class="t">0,20 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>

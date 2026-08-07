@@ -24,12 +24,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - **The growth check now asks the workspace a question a date could never answer: did the closing of
   a stage actually prune the hot side?** The close is observable — an archive directory is born — and
-  METHODE already states the hot side shrinks at that moment. So that half carries no threshold and no
-  reference date at all. The half watching `repo/` still compares against the last release, and is now
-  declared **weak** where it is documented: that reference moves at every release, so a slow drift
-  never accumulates — the tracking document grew 327 % across four releases without a single verdict.
-  An archive is detected as a **directory**, never by a file named inside it, and a closure not yet
-  committed is read too, since that is the moment the answer is still useful.
+  METHODE already states the hot side shrinks at that moment, so that half carries no threshold and
+  no reference date at all. The specification tried first was measured against the tracking
+  document's own history and came out green at every usable setting, before a line of it was written.
+  The half watching `repo/` still compares against the last release and is now declared **weak**
+  where it is documented, its reference moving at every release. An archive is detected as a
+  **directory**, never by a file named inside it, and a closure not yet committed is read too. The
+  figures behind each of these live in `docs/code/verify-growth.md`.
 - **The commit gate runs in 3,95 s instead of 9,1 s, and returns the same verdicts.** The two checks
   that generate a whole project ran one after the other, outside the parallel lot, and dominated its
   wall clock by themselves. Nothing required that: each works inside its own `mktemp -d`, and the
