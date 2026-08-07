@@ -34,11 +34,26 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
 | a local branch never pushed? | `git rev-parse --verify origin/<branch>` |
-| a local branch whose remote is GONE — merged, then deleted | `git fetch --prune`, then `git branch -vv \| grep ': gone]'`. 🔴 **Never `--merged main`**: this repository merges by squash, so a merged branch is never an ancestor of `main` and that test returns nothing — measured twice, at the merges of `#117` and `#119`, 0 against 1 both times |
+| a local branch whose remote is GONE — it finished its life | `prune-dead-branches.sh`, below *(never `--merged main`: the script says why)* |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |
 | a `RECHERCHE-*` still sitting on the hot side | the workspace root |
 | the newest release, and whether an archive followed it | `git for-each-ref refs/tags` + the archives directory |
+
+### The one gesture this pass performs — deleting a dead local branch
+
+```
+./skills/housekeeping/prune-dead-branches.sh              # --dry-run to see without deleting
+```
+
+🔴 **The pass does not run the gestures itself, and that is the point.** A skill is text: nothing
+records that it checked anything, and a guard the guarded party satisfies by declaring itself
+satisfied is not a guard. The script holds the two conditions as code — **remote gone AND pull
+request `MERGED`** — and prints every branch it examined with the verdict that decided it.
+
+**Why two conditions.** `: gone]` says the remote disappeared, never that the work landed: a branch
+deleted by hand on the forge prints the same thing, and a local branch is the only copy there is.
+Unmerged, or unanswered, it is kept — the script's own refusals are in its header.
 
 ## Step 2 — the judgement, which stays here
 
@@ -110,4 +125,6 @@ a pass that silently drops an item reads exactly like a pass that had nothing to
 - **No WIP commit.** A commit here goes through the same gate as any other; the hook runs the checks
   and blocks on a gap. Nothing is committed to look tidy.
 - **No push, no pull request opened, unless asked.** Both are the maintainer's call.
+- **No branch deleted on a single condition.** A dead remote is not proof the work landed — the
+  pull request must say `MERGED` too, and the two are checked separately.
 - **No rewriting of an archive.** An archive is immutable once written.
