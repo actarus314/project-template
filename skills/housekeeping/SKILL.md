@@ -34,6 +34,7 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
 | a local branch never pushed? | `git rev-parse --verify origin/<branch>` |
+| a local branch whose remote is GONE — merged, then deleted | `git fetch --prune`, then `git branch -vv \| grep ': gone]'`. 🔴 **Never `--merged main`**: this repository merges by squash, so a merged branch is never an ancestor of `main` and that test returns nothing — measured twice, at the merges of `#117` and `#119`, 0 against 1 both times |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |
 | a `RECHERCHE-*` still sitting on the hot side | the workspace root |

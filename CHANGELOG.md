@@ -21,6 +21,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **The closing pass was being asked for again while it was already running, and it now says so
+  instead.** The word-routing branch armed the sequencer without ever checking whether a pass was
+  already armed, so a second request restarted a checklist that was half-done. It now points at the
+  pass under way and leaves.
+- **The pass's inventory ignored local branches whose remote is gone** — the branches that have
+  finished their life, as opposed to the never-pushed ones it already listed. 🔴 The obvious test
+  does not work here: this repository merges by squash, so a merged branch is never an ancestor of
+  `main` and `git branch --merged main` returns nothing. Measured twice, at the merges of `#117` and
+  `#119`: 0 against 1 both times. The inventory reads `git fetch --prune` then
+  `git branch -vv | grep ': gone]'`.
+
 ### Changed
 - **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
   cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
