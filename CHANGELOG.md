@@ -52,6 +52,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
 
 ### Fixed
+- **The closing pass left its scratch artefact behind when it hit its cycle ceiling.** Released at
+  the ceiling, it deleted the flag saying a pass was under way but not the enumeration itself — which
+  the next pass would then read as its own coverage. Nothing reads that file for state, so nothing
+  would have said otherwise. Both go now.
+- **The routing did not recognise "fin de travail", only "fin de chantier".** The same request, one
+  word apart, reached no skill at all.
 - **Three checks announced themselves as advisory and blocked the commit.** The header of each said
   `blocking: yes`, the control table said blocking, and the line printed above their output said
   *(advisory)* — the one wording a reader actually sees while the gate refuses. Only the check that
