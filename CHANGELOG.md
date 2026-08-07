@@ -22,6 +22,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
+  The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
+  skipped: an injected instruction is indistinguishable from a fact, and nothing records whether it
+  was obeyed. Seen forty times, *read this* never becomes *this was read*. **Compaction makes it a
+  trap rather than an omission**: the summary carries the documents' conclusions, which is the exact
+  sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
+  on every source, compaction included.
+  The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
+  can satisfy by declaring itself satisfied is not a guard. 🔴 **A read carrying `offset`/`limit` does
+  not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
+  quotation attached. Documents are DETECTED, so a generated project holding none stands down, and it
+  never blocks when half-wired, when the target sits outside the repository, or when no transcript is
+  in the payload. Verified on six situations.
 - **A generated project's origin stamp now says what it was generated WITH, not only from which
   version.** Assisted regeneration starts by reproducing the project (`RUNBOOK` §5), and the options
   were **deduced from the tree** — `pages.yml` implies `--pages`, a `develop` branch implies

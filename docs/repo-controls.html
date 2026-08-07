@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:298c063f7c97a363a7eb16aa02f6fc9f81a17b6c35c813b18c76d40cb9827222
+  checksum-source-md: sha256:d0f29777bb07481eb33e0f0629aabd1cd3b25d8f564e78f2bd1b3a6602c7d33f
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1850,6 +1850,16 @@
           <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires. On a workflow it reads the SCRIPT, so the claim is script-wide, never per call <em>(and a workflow invoked by NAME is declared unread)</em></td>
           <td class="t">instant</td>
           <td>n/a — refuses the launch</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-rules-read.sh</code></td>
+          <td>writing before the rule documents have been READ — they are injected as context, so nothing traces whether they were ever obeyed</td>
+          <td class="h">both</td>
+          <td><code>SessionStart</code> arms it; every <code>Write</code>/<code>Edit</code> landing in the repo checks it</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the threshold is not a number but a definition: a read carrying <code>offset</code>/<code>limit</code> does <strong>not</strong> count, since a passage is not the document. Documents are DETECTED, so a generated project holding none stands down. Re-armed at every <code>SessionStart</code>, compaction included — that is the case it exists for</td>
+          <td class="t">instant</td>
+          <td>n/a — a hook, it refuses the write</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-forbidden-command.sh</code></td>
