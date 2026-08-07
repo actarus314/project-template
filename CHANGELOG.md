@@ -22,6 +22,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A live project can be brought forward to a newer template, and the runbook now says how.** The
+  question had been open and untested; it was measured instead. Applying the template's own
+  `git diff` to a project **works for 52 of its 81 files and silently misses the rest**: the
+  generator filters *(3 of 12 checks copied at `v1.2.0`)*, renames *(`templates/repo/X` lands as
+  `X`)* and substitutes *(year, holder, slug, version, image name)* — a project is **not** a subset
+  of the template. Three-way merge does behave correctly where it applies — clean where the project
+  never diverged, **conflict markers** where it did — but only with the template as a remote and a
+  patch scoped to what the project actually received.
+  🔴 **Half-updated is not half-right**: measured, a project whose checks moved forward while its
+  workflow stayed behind **turns red for a fault it does not have** — the fresh check reads the
+  stale file. Hence **assisted regeneration**: generate a reference project with the same options
+  into a scratch directory, diff the two trees, separate what the project never touched from what it
+  deliberately changed, and finish when `./check.sh --house` is green — not when the files are
+  copied.
 - **A private project name was published here for two days, and nothing could have seen it.**
   `gitleaks` matches token SHAPES; a name has none. `verify-private-names.sh` reads a list that
   lives **outside** this repository — publishing the names to hide would publish them — and refuses

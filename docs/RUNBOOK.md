@@ -294,6 +294,26 @@ checking what already exists *(`METHODE.md`)*.
 | bringing an **EXISTING** repo into compliance | — | ⚠️ Its CI names its jobs however it likes, while the ruleset requires **`checks`** *(and `build-check` with `--artefact`)*. **`configure-repo.sh` now REFUSES to set the ruleset** if no job carries the name — a `--dry-run` says so without writing. The fix: an aggregator job named `checks`, `needs:` every other job, `if: always()` *(model: this repo's own `ci.yml`)*. |
 | an existing repo has **NO secret scan at all** | — | **`templates/workflows/gitleaks.yml`** is a standalone workflow for exactly that case: pinned version, checksum-verified, full history, plus a weekly run that catches a secret pushed with `--no-verify`. **Copy it by hand** — no script places it, because a repo generated here already runs gitleaks inside its `ci.yml`, and two identical scans buy nothing. |
 
+### Bringing a project back in line with a newer template — **assisted regeneration**
+
+The project carries the version it was born from *(the stamp in its `AGENTS.md`)*. Bringing it
+forward is **regenerate, then compare** — never a patch applied blind. Measured on 2026-08-07, and
+the reason is not a preference: **a generated project is not a subset of the template**. The
+generator filters *(it copied 3 of 12 checks at `v1.2.0`)*, renames *(`templates/repo/X` lands as
+`X`)* and **substitutes** *(year, holder, slug, version, image name)* — so a `git diff` of the
+template applies to **52 of the 81 files** and leaves the rest silently stale. Half-updated is not
+half-right: a fresh check reading a stale file turns the project red for a fault it does not have.
+
+| # | Who | Action |
+|---|---|---|
+| 1 | Claude | **Read the origin stamp** in the project's `AGENTS.md`, and **deduce the options from the tree**: `.github/workflows/docker-publish.yml` → `--artefact` · `pages.yml` → `--pages` · a `develop` branch → `--staging` · the CI's toolchain → `--type`. |
+| 2 | Claude | **Generate a reference project** with those exact options, into a **scratch directory**, from the template at its current version. |
+| 3 | Claude | **`diff -ru` the two trees**, excluding `.git/` and `.ci-tools/`. Three piles: what the project never touched *(take the new version)* · what it deliberately changed *(keep, and say so)* · what the template no longer ships *(delete, after checking who uses it)*. |
+| 4 | Claude | Apply pile by pile, **then run `./check.sh --house` in the project** — the update is finished when it is green, not when the files are copied. |
+| 5 | Claude | **Move the stamp forward** in `AGENTS.md`, in the same branch. A stamp left behind makes the next comparison start from a version the tree no longer holds. |
+
+⚠️ **The reference project is scratch** — it exists to be compared and deleted, never to be pushed.
+
 ---
 
 ## 6 · Ongoing maintenance
