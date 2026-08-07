@@ -5,18 +5,15 @@
 ## A user-visible change with no CHANGELOG line
 
 The rule is [`AGENTS.md`](../../AGENTS.md)'s. Two of its three examples are **paths**, so two thirds
-of it are mechanical; the third is a judgement this check leaves alone.
-
-🔴 What it catches is the case that happened: four checks shipped, `CHANGELOG` untouched — nobody
-notices a missing line, the file simply stays plausible.
+of it are mechanical; the third is a judgement this check leaves alone. 🔴 What it catches is the
+case that happened: four checks shipped, `CHANGELOG` untouched — nobody notices a missing line.
 
 ## What counts as visible is DETECTED, never listed
 
 This check travels into every generated project, where none of the paths it looks for exist: a
 hand-kept list would be a list of **absent things**, still read as a verdict. The perimeter is
-whatever the place publishes — and nothing where it publishes nothing. A list of three shipped
-scripts sat here while ten travelled. Empty is a legitimate answer, and every generated project
-gives it.
+whatever the place publishes. A list of three shipped scripts sat here while ten travelled, and
+empty is a legitimate answer.
 
 ## The unit compared is the BRANCH
 
@@ -25,25 +22,29 @@ nothing to compare *(the default branch itself, a fresh project with no remote)*
 run that read nothing must not look like one that found nothing.
 
 🔴 **Three sources, not one: committed, staged, and neither.** Reading committed history alone made
-the guard block *the very commit carrying the line it demanded* — the pre-commit hook runs before
-that commit exists, so the fix and its verdict could never meet, and the only ways through were an
-empty commit or `--no-verify`. A guard whose own remedy is unreachable teaches the bypass it exists
-to prevent. In CI the last two sources are empty, so nothing there changes.
+the guard block *the very commit carrying the line it demanded*, so the fix and its verdict could
+never meet — a guard whose own remedy is unreachable teaches the bypass it exists to prevent. In CI
+the last two sources are empty.
 
 ## What was measured and rejected
 
-The branch **name** as a trigger: 11 of this repository's last 40 pull requests carry no CHANGELOG
-line and are **right** not to (docs, README, i18n, dependency bumps). A guard firing on better than
-one pull request in four is a guard overridden by reflex.
+The branch **name** as a trigger: 11 of the last 40 pull requests carry no CHANGELOG line and are
+**right** not to. A guard firing on one pull request in four is a guard overridden by reflex.
 
 ## The form, and why only the open section is judged
 
 Keep a Changelog implies a single `### Added` per version and never says it: **twelve cases over six
-published versions**. The size ceiling is **750 characters per entry** — the third quartile of the
-file's own 185 *(median 507)*, so the shoulder is the corpus's, not a picked number.
+published versions**. The size ceiling is **750 characters per entry**, the third quartile of the
+file's own 185 *(median 507)*.
+⚠️ That calibration is **weak by construction** — a threshold taken from the corpus it means to
+reform endorses the drift. External guides say one line, or one to three sentences.
 
-Only `Unreleased` is judged — **a published heading is not rewritten**. The sealed ones are
-**counted and printed**: a silent zero would read like a clean file.
+Only `Unreleased` is judged for those two — **a published entry is not rewritten**. The sealed ones
+are **counted and printed**: a silent zero would read like a clean file.
+
+The **inline Release link** is checked on every heading, sealed ones included: it belongs to the
+heading rather than to the entry, and sealing is a manual gesture — which is how five of six
+releases shipped without it.
 
 ⚠️ **Only the countable part is gated.** Concision itself is written in — `METHODE` states that no
 script reads clarity, and a model blocking on it is worse than nothing.

@@ -75,11 +75,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The CHANGELOG had no stated form, so it drifted: repeated sections, missing links, entries
   telling the story.** Keep a Changelog implies one `### Added` per version and never says it —
   twelve cases across six versions. The form is now written where the format lives: one section of
-  each type, an entry of about **750 characters** *(the third quartile of the file's own 185
-  entries)*, and the inline link to the Release on every heading.
-  The check refuses a repeat or an oversized entry in the **open** section and **counts** the sealed
-  ones. Every published version was brought into line — sections merged, links added, long lines
-  broken at the sentence — the word sequence held byte-identical through the reflow.
+  each type, an entry of about **750 characters**, and the inline Release link on every heading.
+  The check refuses a repeat or an oversized entry in the open section, and a heading with no link.
+  Every published version was brought into line — sections merged, links added, long lines broken at
+  the sentence.
 - **The closing pass left its scratch artefact behind when it hit its cycle ceiling.** Released at
   the ceiling, it deleted the flag saying a pass was under way but not the enumeration itself — which
   the next pass would then read as its own coverage. Nothing reads that file for state, so nothing

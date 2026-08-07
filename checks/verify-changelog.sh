@@ -29,6 +29,14 @@ if [ -f CHANGELOG.md ]; then
       o && n && /^[[:space:]]/ {n += length($0); next}
       o && n && !/^[[:space:]]*$/ {if (n > cap) print label " (" n ")"; n=0}
       END {if (n > cap) print label " (" n ")"}' CHANGELOG.md || true)
+  # Every versioned heading links its Release (standard §16). Held by nothing until now, which is
+  # how five of six releases shipped without it — the sealing is a manual gesture.
+  no_link=$(awk '/^## \[[0-9]/ && $0 !~ /\]\(http/ {n=$2; gsub(/[][]/,"",n); printf "%s ", n}' CHANGELOG.md || true)
+  if [ -n "$no_link" ]; then
+    echo "✗ CHANGELOG heading without its inline Release link: ${no_link}" >&2
+    echo "  Seal it as: ## [X.Y.Z](<repo-url>/releases/tag/vX.Y.Z) - <date>" >&2
+    exit 1
+  fi
   if [ -n "$long_open" ]; then
     echo "✗ CHANGELOG 'Unreleased' has an entry past ${CHANGELOG_ENTRY_CAP:-750} characters:" >&2
     printf '    %s\n' "$long_open" >&2
