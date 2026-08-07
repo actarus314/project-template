@@ -21,6 +21,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **`CLAUDE.md` is versioned, so that cloning this repository is enough to read its rules.** It was
+  ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
+  started there reported the file was **not in its context** — present on disk, invisible. The rules
+  of a public repository were reaching no one but the maintainer's own checkout. The versioned file
+  carries the import and nothing else; anything personal stays in `~/.claude/CLAUDE.md`.
+  ⚠️ **A generated project still has the same gap** — its `CLAUDE.md` is ignored the same way. Not
+  changed here.
+
 ### Fixed
 - **Every project generated since 2026-08-05 got its structuring decisions filed under
   `docs/docs/adr/`.** `cp -R src dst` copies *into* `dst` when `dst` already exists, and the notes
