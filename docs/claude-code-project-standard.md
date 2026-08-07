@@ -37,7 +37,7 @@ Three things to distinguish clearly:
 `.gitignore` is the operational boundary between the two.
 
 **Language & tone rule**:
-> All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`, `CLAUDE.md`) can stay in French.
+> All **versioned content (pushed to GitHub)** is written in **English** — code, **code comments**, `repo/` docs, `README.md`, `.env.example`. **Exception**: the project's `README.md` is in English (default) **and** French. Local/gitignored files (`workspace/`, `secrets.md`) can stay in French. ⚠️ **`CLAUDE.md` is versioned once a repository is public** *(§6)*, so it follows the English rule from that day on.
 >
 > **Remaining exceptions**: the local file templates stay in French — `templates/repo/CLAUDE.md`, `templates/repo/.envrc`, `templates/workspace/*`.
 > They are gitignored in the generated project and never reach GitHub.
@@ -65,7 +65,7 @@ Three things to distinguish clearly:
 │   ├── .claude/                          ← IGNORED — personal dev config for Claude Code
 │   │   └── settings.local.json
 │   │
-│   ├── CLAUDE.md                         ← IGNORED — Claude Code instructions (pointers, conventions)
+│   ├── CLAUDE.md                         ← the `@AGENTS.md` import, and nothing else (§6)
 │   ├── README.md                         ← versioned — install/run/structure for humans
 │   │
 │   ├── backend/, frontend/, shared/      ← versioned — app code
@@ -130,7 +130,7 @@ Three questions, in order:
 | `.env` | No | Yes (app runtime) | `repo/.env` ignored |
 | `.envrc` | No | Yes (direnv → git/gh) | `repo/.envrc` ignored |
 | `.claude/settings.local.json` | No | Yes (Claude Code) | `repo/.claude/` ignored |
-| `CLAUDE.md` | No | Yes (Claude Code) | `repo/CLAUDE.md` ignored |
+| `CLAUDE.md` | No | Yes (Claude Code) | `repo/CLAUDE.md` — **versioned** once public, and reduced to the import (§6) |
 | `node_modules/` | No | Yes (Node runtime) | `repo/node_modules/` ignored |
 | `data/` (SQLite) | No | Yes (app runtime) | `repo/data/` ignored |
 | Phase 2 plan | No | No | `workspace/plans/` |
@@ -152,9 +152,9 @@ Three questions, in order:
 
 ---
 
-## 6. `CLAUDE.md` — local instructions for Claude Code
+## 6. `CLAUDE.md` — the file that makes the rules readable at all
 
-→ **[`claude-code-setup.md`](claude-code-setup.md)** — what `CLAUDE.md` carries, and what it never carries.
+→ **[`claude-code-setup.md`](claude-code-setup.md)** — why it is versioned on a public repository, what it carries, and what it never carries.
 
 ---
 
@@ -178,6 +178,7 @@ Three questions, in order:
 .env.local
 .envrc
 .claude/
+# CLAUDE.md — while the repository is private. It comes OUT of this list at the flip (§6).
 CLAUDE.md
 
 # deps
@@ -287,7 +288,7 @@ Model: `templates/repo/README.md`.
 
 | File | Role | Why it's versioned |
 |---|---|---|
-| **`AGENTS.md`** | Project instructions **for any agent**: commands, structure, branches, conventions, controls, do-not-touch | **A real standard** ([agents.md](https://agents.md), handed to the Linux Foundation in late 2025, read by 30+ agents: Cursor, Copilot, Gemini CLI…). **`CLAUDE.md` imports it via `@AGENTS.md`** and keeps only the **personal** bits (`workspace/` pointers, secrets, auth) → **a single source, zero drift**. |
+| **`AGENTS.md`** | Project instructions **for any agent**: commands, structure, branches, conventions, controls, do-not-touch | **A real standard** ([agents.md](https://agents.md), handed to the Linux Foundation in late 2025, read by 30+ agents: Cursor, Copilot, Gemini CLI…). **`CLAUDE.md` imports it via `@AGENTS.md`** and carries **nothing else** — a file that cannot hold anything personal is one nobody has to remember not to fill (§6) → **a single source, zero drift**. |
 | **`CHANGELOG.md`** | What changed **for a user** — [Keep a Changelog](https://keepachangelog.com) format, **inline link** per version (`## [X.Y.Z](…/releases/tag/vX.Y.Z)`) | The GitHub Release carries the **auto-generated PR list**; the CHANGELOG carries the **meaning**. *(Sources call this duplication superfluous solo — kept anyway, for the meaning it adds beyond the PR list.)* |
 | **`docs/adr/`** | One entry per **structural** decision (stack, schema, boundary) — [Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions) format | Preserves the **why**, which the code never states. Worth it even solo (near-zero cost). **Immutable**: an outdated decision isn't edited, it's *superseded*. |
 

@@ -33,10 +33,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`CLAUDE.md` is versioned, so that cloning this repository is enough to read its rules.** It was
   ignored by git, and it is the only thing that loads `AGENTS.md`: measured on a clone, an agent
   started there reported the file was **not in its context** — present on disk, invisible. The rules
-  of a public repository were reaching no one but the maintainer's own checkout. The versioned file
-  carries the import and nothing else; anything personal stays in `~/.claude/CLAUDE.md`.
-  ⚠️ **A generated project still has the same gap** — its `CLAUDE.md` is ignored the same way. Not
-  changed here.
+  of a public repository were reaching no one but the maintainer's own checkout.
+  🔴 **The rule is not "publish it", it is what it may CONTAIN**: on a repository that is public, or
+  meant to become public, `CLAUDE.md` is versioned **and carries nothing but the import**. A file
+  that cannot hold anything personal is one nobody has to remember not to fill. Anything personal
+  goes to `~/.claude/CLAUDE.md`; `.claude/` stays ignored — the one **documented** leak around AI
+  tooling is `settings.local.json` holding real credentials, never the text of `CLAUDE.md`.
+  **Measured before deciding**: of 25 public repositories examined one by one, **22 version the file
+  as it is**, 2 ship a template, 1 has none — and six of them, Next.js and Prisma among them, reduce
+  it to a pointer at `AGENTS.md`, which is this arrangement exactly.
+  ⚠️ **A generated project is created PRIVATE and keeps it ignored**: the step belongs to the flip
+  (runbook §4), not to the scaffolding.
+- **Two guards, so the rule does not rest on anyone remembering it.** `verify-do-not-break.sh` fails
+  when a versioned `CLAUDE.md` stops importing `@AGENTS.md` *(nothing would load the rules any more,
+  and nothing would say so)* or when it gains a machine path. And `verify-secret-blindspots.sh` now
+  refuses a `/Users/…` or `/home/…` path **anywhere in versioned content** — the shape a personal
+  line takes when it slips into a published file. **Measured before being enabled: zero occurrences
+  across the whole tree**, so it costs nothing today and speaks the day one appears.
 
 ### Fixed
 - **Every project generated since 2026-08-05 got its structuring decisions filed under

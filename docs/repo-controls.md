@@ -372,9 +372,9 @@ a threshold or a wording chosen by hand, so it can be wrong in both directions.
 | `checks/verify-links.sh` | a relative link or an anchor leading nowhere | both | every commit | ✅ | settled | 0,09 s | ✅ |
 | `checks/verify-checks-wiring.sh` | a control declared nowhere, or **the gate missing from a workflow** | both | every commit | ✅ | settled | 0,04 s | ✅ |
 | `checks/verify-memories.sh` | a memory absent from its index, a `[[link]]` leading nowhere | local | every commit | ✅ | settled | 0,04 s | ✅ *(nothing to read under CI, and it says so)* |
-| `checks/verify-do-not-break.sh` | the four wirings whose breakage makes no sound | both | every commit | ✅ | settled | 0,06 s | ✅ |
+| `checks/verify-do-not-break.sh` | the wirings whose breakage makes no sound — **including a versioned `CLAUDE.md` losing its import, or gaining a machine path** | both | every commit | ✅ | settled | 0,06 s | ✅ |
 | `checks/verify-checksums.sh` | an `.html` that stopped saying what its `.md` says | both | every commit | ✅ | **needs watching** — a matching checksum proves the file was touched, never that it says the same thing | 0,08 s | ✅ |
-| `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL | both | every commit | ✅ | settled | 0,09 s | ✅ |
+| `checks/verify-secret-blindspots.sh` | a file NAMED like a secret, a password inside a remote URL, **a machine path in versioned content** | both | every commit | ✅ | settled | 0,09 s | ✅ |
 | `checks/verify-private-names.sh` | a **private name** *(project, host, person)* published in this repository | both | every commit | ✅ | **needs watching** — it reads a list that lives OUTSIDE the repo *(`../workspace/private-names.txt`)*, and says so when there is none. A pattern too broad gets the guard worked around; the list carries that warning | 0,10 s | ✅ |
 | `checks/verify-changelog.sh` | a user-visible change with no `CHANGELOG` line | both | every commit | ✅ | settled *(perimeter detected, and measured: 3 of the last 40 PRs)* | 0,08 s | ✅ |
 | `checks/verify-growth.sh` | a curated document that only ever grows | both | a `.md` moved | ✅ | **needs watching** — the 25 % threshold is a judgement call | 0,18 s | ✅ *(made blocking 2026-08-05)* |

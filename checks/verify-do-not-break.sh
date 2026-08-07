@@ -60,6 +60,26 @@ else
   skipped="$skipped forced-add-files(no templates/ here)"
 fi
 
+# 2b — CLAUDE.md, on a repository that is already public. It is the only thing that loads AGENTS.md,
+#      and putting it back in .gitignore breaks that silently. Detected, never assumed: a private
+#      repository legitimately keeps it out (standard §6, the flip is when it comes in).
+if [ "$(git config --get remote.origin.url 2>/dev/null)" ] && git ls-files --error-unmatch CLAUDE.md >/dev/null 2>&1; then
+  if ! grep -q "@AGENTS.md" CLAUDE.md; then
+    echo "✗ CLAUDE.md no longer imports @AGENTS.md — nothing loads the rules any more"
+    fail=1
+  fi
+  # The rule is CONTENT, not just presence: a machine path is the shape a personal line takes.
+  if grep -nE "/Users/[a-z]|/home/[a-z]" CLAUDE.md; then
+    echo "✗ CLAUDE.md carries a machine path, and this file is published (standard §6)"
+    fail=1
+  fi
+  read_targets="$read_targets versioned-claude-md"
+elif git ls-files --error-unmatch CLAUDE.md >/dev/null 2>&1; then
+  read_targets="$read_targets versioned-claude-md"
+else
+  skipped="$skipped versioned-claude-md(not tracked here — private repo keeps it out)"
+fi
+
 # 3 — the absolute paths AGENTS.md pins, read from disk at every session start.
 claude_md="$HOME/.claude/CLAUDE.md"
 if [ -f "$claude_md" ]; then

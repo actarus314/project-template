@@ -66,7 +66,19 @@ scan_config() {
 scan_config . 'repo/'
 scan_config ../workspace 'workspace/'
 
+# A HOME path in versioned content: the shape a personal line takes when it slips into a published
+# file. Measured before being enabled — zero occurrences across the whole tree, so it costs nothing
+# today and speaks the day one appears. Excluded on purpose: the CHANGELOG quotes past incidents.
+home_paths=$(git ls-files -z | grep -zv '^CHANGELOG\.md$' \
+  | xargs -0 grep -nE "/(Users|home)/[a-z][a-z0-9_-]+/" 2>/dev/null || true)
+if [ -n "$home_paths" ]; then
+  echo "✗ a machine path sits in versioned content — it says who wrote it and from where:" >&2
+  printf '%s\n' "$home_paths" | head -10 >&2
+  fail=1
+fi
+scanned="$scanned home-paths"
+
 scope="read:${scanned:- nothing}"
 [ -n "$skipped" ] && scope="$scope — NOT read:$skipped (absent)"
-[ "$fail" = 0 ] && echo "✓ no secret-named file tracked, no credential in a remote URL — $scope"
+[ "$fail" = 0 ] && echo "✓ no secret-named file tracked, no credential in a remote URL, no machine path — $scope"
 exit "$fail"
