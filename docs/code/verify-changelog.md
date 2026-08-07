@@ -4,11 +4,11 @@
 
 ## A user-visible change with no CHANGELOG line
 
-The rule is [`AGENTS.md`](../../AGENTS.md)'s. Two of its three examples are **paths**, so two
-thirds of it are mechanical; the third is a judgement this check leaves alone.
+The rule is [`AGENTS.md`](../../AGENTS.md)'s. Two of its three examples are **paths**, so two thirds
+of it are mechanical; the third is a judgement this check leaves alone.
 
-🔴 What it catches is the case that happened: four checks shipped, `CHANGELOG` untouched. Nobody
-notices a missing line — the file simply stays plausible.
+🔴 What it catches is the case that happened: four checks shipped, `CHANGELOG` untouched — nobody
+notices a missing line, the file simply stays plausible.
 
 ## What counts as visible is DETECTED, never listed
 
@@ -36,13 +36,17 @@ The branch **name** as a trigger: 11 of this repository's last 40 pull requests 
 line and are **right** not to (docs, README, i18n, dependency bumps). A guard firing on better than
 one pull request in four is a guard overridden by reflex.
 
-## One section of each type, and only the open one is judged
+## The form, and why only the open section is judged
 
-Keep a Changelog implies a single `### Added` per version and never says it, so nothing watched
-it: **twelve cases over six published versions**, and two in the open section.
+Keep a Changelog implies a single `### Added` per version and never says it: **twelve cases over six
+published versions**. The size ceiling is **750 characters per entry** — the third quartile of the
+file's own 185 *(median 507)*, so the shoulder is the corpus's, not a picked number.
 
-Only `Unreleased` is judged — **a published heading is not rewritten**. The published repeats are
-**counted and printed**, never failed: a silent zero would read like a clean file.
+Only `Unreleased` is judged — **a published heading is not rewritten**. The sealed ones are
+**counted and printed**: a silent zero would read like a clean file.
 
-The braces in `${dup_open}` are load-bearing. A bare `$name` followed by a multi-byte dash is read
-as part of the variable name, and under `set -u` the check dies before its own message.
+⚠️ **Only the countable part is gated.** Concision itself is written in — `METHODE` states that no
+script reads clarity, and a model blocking on it is worse than nothing.
+
+The braces in `${dup_open}` are load-bearing: a bare `$name` before a multi-byte dash is read as
+part of the name, and under `set -u` the check dies before its own message.

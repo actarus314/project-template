@@ -22,51 +22,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **The closing pass now deletes a dead local branch — on two conditions, never one.** A branch whose
-  remote is gone *and* whose pull request reads `MERGED` holds nothing that is not on the default
-  branch, and it is removed with `-D` *(`-d` refuses it: a squash-merged branch is never an ancestor
-  of `main`)*. 🔴 `: gone]` alone proves only that the remote disappeared — a branch deleted by hand
-  on the forge, or a pull request closed without merging, prints the same thing, and a local branch
-  is the only copy there is. Unmerged or unknown, it is reported and left alone.
-  🔴 **The pass does not perform those gestures — it calls `skills/housekeeping/prune-dead-branches.sh`.**
-  A skill is text, so nothing records that it checked anything; in the script the two conditions are
-  code, and every branch examined is printed with the verdict that decided it. Verified on both
-  shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
+- **The closing pass now deletes a dead local branch — on two conditions, never one.** The remote
+  must read `gone` **and** the pull request `MERGED`.
+  🔴 `: gone]` alone proves only that the remote disappeared: a branch deleted by hand on the forge
+  prints the same thing, and a local branch is the only copy there is.
+  The two conditions live in `skills/housekeeping/prune-dead-branches.sh`, which prints every branch
+  it examined with the verdict that decided it — a skill is text, and a guard the guarded party
+  satisfies by declaring itself satisfied is not a guard.
 
 - **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
-  The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
-  skipped: an injected instruction is indistinguishable from a fact, and nothing records whether it
-  was obeyed. Seen forty times, *read this* never becomes *this was read*. **Compaction makes it a
-  trap rather than an omission**: the summary carries the documents' conclusions, which is the exact
-  sensation of having read them, produced without a single read — so `SessionStart` re-arms the check
-  on every source, compaction included.
-  The signal is the session transcript, never a marker the assistant sets: a guard the guarded party
-  can satisfy by declaring itself satisfied is not a guard.
-  🔴 **A read carrying `offset`/`limit` does
-  not count** — taking twenty lines out of a runbook is how a rule ends up applied from memory with a
-  quotation attached.
-  Documents are DETECTED, so a generated project holding none stands down, and it
-  never blocks when half-wired, when the target sits outside the repository, or when no transcript is
-  in the payload. Verified on six situations.
-- **The same instrument was counting its own documentation, and that inverted its verdict.** Two
-  splits happen — command into segments, then segment into tokens — and neither honoured quotes: an
-  operator *inside a quoted argument* ended the segment, so a JSON payload holding
-  `cd /repo && ./open-pr.sh` read as an opening, and editing this check's own note read as another.
-  🔴 **The cascade is the real defect**: a false positive **consumes the instruction token**, so the
-  genuine opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon,
-  one of them a real opening recorded as unauthorised. Both splits use `shlex` now, heredocs are
-  dropped as content, and it is verified on seven shapes — four openings, three quotations.
+  An injected instruction is indistinguishable from a fact, and nothing records whether it was
+  obeyed: seen forty times, *read this* never becomes *this was read*.
+  **Compaction makes it a trap rather than an omission** — the summary carries the documents'
+  conclusions, which is the sensation of having read them without a single read, so `SessionStart`
+  re-arms the check on every source.
+  🔴 **A read carrying `offset`/`limit` does not count.**
+  The signal is the transcript, never a marker the assistant sets. Documents are DETECTED, so a
+  generated project holding none stands down. Verified on six situations.
+- **The same instrument was counting its own documentation, and that inverted its verdict.** Neither
+  of its two splits honoured quotes, so an operator inside a quoted argument ended the segment and a
+  payload merely *mentioning* a command read as one.
+  🔴 **The cascade is the real defect**: a false positive consumes the instruction token, so the
+  genuine opening that follows is filed `WITHOUT an instruction` — three readings in one afternoon,
+  one of them a real opening recorded as unauthorised.
+  Both splits use `shlex` now, and it is verified on seven shapes.
 
 ### Changed
 - **The growth check now asks the workspace a question a date could never answer: did the closing of
   a stage actually prune the hot side?** The close is observable — an archive directory is born — and
-  METHODE already states the hot side shrinks at that moment, so that half carries no threshold and
-  no reference date at all. The specification tried first was measured against the tracking
-  document's own history and came out green at every usable setting, before a line of it was written.
-  The half watching `repo/` still compares against the last release and is now declared **weak**
-  where it is documented, its reference moving at every release. An archive is detected as a
-  **directory**, never by a file named inside it, and a closure not yet committed is read too. The
-  figures behind each of these live in `docs/code/verify-growth.md`.
+  METHODE already states the hot side shrinks then, so that half carries no threshold and no date.
+  The specification tried first came out green at every usable setting, measured before a line of it
+  was written.
+  An archive is detected as a **directory**, never by a file named inside it, and a closure not yet
+  committed is read too. The `repo/` half is unchanged and now declared **weak** where it is
+  documented. Figures: `docs/code/verify-growth.md`.
 - **The commit gate runs in 3,95 s instead of 9,1 s, and returns the same verdicts.** The two checks
   that generate a whole project ran one after the other, outside the parallel lot, and dominated its
   wall clock by themselves. Nothing required that: each works inside its own `mktemp -d`, and the
@@ -76,22 +65,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Verdicts were captured before and after the change and compared: identical.
 
 - **The rules guard asks for the runbook AT THE GESTURE, never up front — and the reason is not its
-  cost.** A runbook holds gestures, with their URLs, their exact permissions and their traps; reading
-  it two hours before posting one does not make the gesture right, it produces the exact feeling of
-  having it at hand, which is the failure this check exists to stop. Requiring it at session start
-  therefore turned the guard against its own purpose. The method and the standard stay owed by every
-  write — they say how a thing is written and where it goes. The runbook is owed only by a command
-  about to post one of those gestures, each tier carrying its own marker so satisfying one never
-  satisfies the other. Measured: ~16 100 tokens per arming became ~7 900, and the halved cost is a
-  consequence rather than the reason.
+  cost.** Reading a book of gestures two hours before posting one does not make the gesture right: it
+  produces the exact feeling of having it at hand, which is the failure this check exists to stop.
+  The method and the standard stay owed by every write; the runbook is owed only by a command about
+  to post such a gesture, each tier carrying its own marker.
+  Measured: ~16 100 tokens per arming became ~7 900 — a consequence, not the reason.
 
 ### Fixed
-- **The CHANGELOG repeated a section within one version, and nothing said so.** Keep a Changelog
-  implies one `### Added` per version without ever stating it, so it drifted unwatched across six
-  versions. The rule is now written where the format lives, and the check refuses a repeat in the
-  open section — the published ones are counted and printed, never failed, since a sealed entry is
-  not rewritten. Every version heading also carries the inline link to its Release, which the
-  standard has required all along and only the newest one had.
+- **The CHANGELOG had no stated form, so it drifted: repeated sections, missing links, entries
+  telling the story.** Keep a Changelog implies one `### Added` per version and never says it —
+  twelve cases across six versions. The form is now written where the format lives: one section of
+  each type, an entry of about **750 characters** *(the third quartile of the file's own 185
+  entries)*, and the inline link to the Release on every heading.
+  The check refuses a repeat or an oversized entry in the **open** section and **counts** the sealed
+  ones. Every published version was brought into line — sections merged, links added, long lines
+  broken at the sentence — the word sequence held byte-identical through the reflow.
 - **The closing pass left its scratch artefact behind when it hit its cycle ceiling.** Released at
   the ceiling, it deleted the flag saying a pass was under way but not the enumeration itself — which
   the next pass would then read as its own coverage. Nothing reads that file for state, so nothing

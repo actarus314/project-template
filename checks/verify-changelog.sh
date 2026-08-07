@@ -21,13 +21,33 @@ if [ -f CHANGELOG.md ]; then
                   END {for (k in c) if (c[k] > 1) printf "%s x%d ", k, c[k]}' CHANGELOG.md || true)
   dup_pub=$(awk '/^## \[/ {v=($0 ~ /Unreleased/) ? "" : $0} v && /^### / {c[v FS $2]++}
                  END {n=0; for (k in c) if (c[k] > 1) n++; print n+0}' CHANGELOG.md || true)
+  # Size: the ceiling is the corpus's own third quartile, never a picked number (verify-changelog.md).
+  # Only the open section again — and `awk` counts what a heading OWNS, blank line to blank line.
+  long_open=$(awk -v cap="${CHANGELOG_ENTRY_CAP:-750}" '
+      /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0}
+      o && /^- \*\*/ {if (n > cap) print label " (" n ")"; label=substr($0,5,44); n=length($0); next}
+      o && n && /^[[:space:]]/ {n += length($0); next}
+      o && n && !/^[[:space:]]*$/ {if (n > cap) print label " (" n ")"; n=0}
+      END {if (n > cap) print label " (" n ")"}' CHANGELOG.md || true)
+  if [ -n "$long_open" ]; then
+    echo "✗ CHANGELOG 'Unreleased' has an entry past ${CHANGELOG_ENTRY_CAP:-750} characters:" >&2
+    printf '    %s\n' "$long_open" >&2
+    echo "  Say what changed and what it means. The story belongs to the pull request and to archives/." >&2
+    exit 1
+  fi
   if [ -n "$dup_open" ]; then
     # Braces are load-bearing: a bare $name followed by a multi-byte dash is read as part of the name.
     echo "✗ CHANGELOG 'Unreleased' repeats a section: ${dup_open}— Keep a Changelog wants one of each" >&2
     echo "  Merge them: one ### per type, in the order Added / Changed / Deprecated / Removed / Fixed / Security." >&2
     exit 1
   fi
-  echo "  (Unreleased: one section per type · ${dup_pub} published version(s) repeat one — not judged, they are sealed)"
+  long_pub=$(awk -v cap="${CHANGELOG_ENTRY_CAP:-750}" '
+      /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0}
+      !o && /^- \*\*/ {if (n > cap) c++; n=length($0); next}
+      !o && n && /^[[:space:]]/ {n += length($0); next}
+      !o && n {if (n > cap) c++; n=0}
+      END {if (n > cap) c++; print c+0}' CHANGELOG.md || true)
+  echo "  (Unreleased: one section per type, no entry past ${CHANGELOG_ENTRY_CAP:-750} char. · sealed versions: ${dup_pub} repeat a section, ${long_pub} entr(y|ies) past the cap — counted, not judged)"
 fi
 
 published=()
