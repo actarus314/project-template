@@ -22,6 +22,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **A generated project's origin stamp now says what it was generated WITH, not only from which
+  version.** Assisted regeneration starts by reproducing the project (`RUNBOOK` §5), and the options
+  were **deduced from the tree** — `pages.yml` implies `--pages`, a `develop` branch implies
+  `--staging`. Deduction reads today's tree, not the answers given back then, so a shortcut whose
+  default moves later reproduces a *different* project in silence. The stamp carries every flag
+  explicitly, negatives included, plus the origin URL. This is the shape `cruft` and `copier` use —
+  they regenerate from recorded answers rather than patching, which is exactly what that file is for.
+  ⚠️ A project generated before this carries the version alone; the runbook says to deduce once and
+  write the options in, so the next comparison never guesses again.
+- **`verify-growth` says what it could NOT compare.** A document created since the last release has
+  no reference, so it cannot grow by any percentage — measured: a 402-line file added to `docs/`
+  passes unnoticed, at any size. That silence is what let 26 implementation notes be born at
+  whatever length. The verdict now reads `54 document(s) · 6 born since the tag, NOT comparable`.
+  *(The anchor itself does not move: growth needs the FAR one — measured, the tracking doc reads
+  +24 % against the tag and −0,2 % against `origin/main`, where every merge resets the accumulation.)*
 - **A generated project commits its `CLAUDE.md`, so cloning it is enough to read its rules.** It was
   gitignored, and it is the only thing that loads `AGENTS.md` — measured on a clone: an agent started
   there did not have that file in its context at all. It ships reduced to the `@AGENTS.md` import;

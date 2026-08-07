@@ -306,11 +306,11 @@ half-right: a fresh check reading a stale file turns the project red for a fault
 
 | # | Who | Action |
 |---|---|---|
-| 1 | Claude | **Read the origin stamp** in the project's `AGENTS.md`, and **deduce the options from the tree**: `.github/workflows/docker-publish.yml` → `--artefact` · `pages.yml` → `--pages` · a `develop` branch → `--staging` · the CI's toolchain → `--type`. |
+| 1 | Claude | **Read the origin stamp** in the project's `AGENTS.md` — it carries the version, the origin, **and the exact options the project was generated with**, every flag explicit. ⚠️ **A project born before those options were stamped carries the version alone**: deduce them from the tree *(`docker-publish.yml` → `--artefact` · `pages.yml` → `--pages` · a `develop` branch → `--staging` · the CI's toolchain → `--type`)*, and **write them into the stamp at step 5**, so the next comparison never has to guess again. |
 | 2 | Claude | **Generate a reference project** with those exact options, into a **scratch directory**, from the template at its current version. |
 | 3 | Claude | **`diff -ru` the two trees**, excluding `.git/` and `.ci-tools/`. Three piles: what the project never touched *(take the new version)* · what it deliberately changed *(keep, and say so)* · what the template no longer ships *(delete, after checking who uses it)*. |
 | 4 | Claude | Apply pile by pile, **then run `./check.sh --house` in the project** — the update is finished when it is green, not when the files are copied. |
-| 5 | Claude | **Move the stamp forward** in `AGENTS.md`, in the same branch. A stamp left behind makes the next comparison start from a version the tree no longer holds. |
+| 5 | Claude | **Move the stamp forward** in `AGENTS.md`, in the same branch — version, origin **and options**. A stamp left behind makes the next comparison start from a version the tree no longer holds. |
 
 ⚠️ **The reference project is scratch** — it exists to be compared and deleted, never to be pushed.
 

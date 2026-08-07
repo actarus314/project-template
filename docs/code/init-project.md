@@ -5,8 +5,7 @@
 
 ## Everything under `checks/` travels, and that is the rule
 
-`check.sh` looks for them THERE; dropped at the root they shipped but never ran — the path died
-where the file landed. And **all** of them travel, never a chosen few: a check DETECTS whether its
+`check.sh` looks for them THERE; at the root they shipped but never ran — the path died on landing. And **all** of them travel, never a chosen few: a check DETECTS whether its
 subject exists where it lands — present, it bites; absent, it says so and returns 0. So "does this one
 deserve to travel?" has no addressee: the check answers it at the place, which no list written here
 can do. The hooks travel too — they read an event, not a file.
@@ -30,16 +29,15 @@ The WHY of the key itself: the `description` block of `templates/repo/.github/re
 
 ## Two safety nets, and what each deliberately excludes
 
-Net 1 catches placeholders the SCRIPT must substitute; without it every new placeholder replays the
-same bug in silence. Net 2 catches placeholders a HUMAN must fill in, in versioned — therefore
-published — files. The script cannot guess `<contact>` and must not invent it, but staying silent
-is worse: a published `SECURITY.md` saying "reach out to `<contact>`" leaves a researcher with no
-way to report a vulnerability. So they are listed, and going public requires them filled in.
+Net 1 catches placeholders the SCRIPT must substitute; without it every new one replays the same bug
+in silence. Net 2 catches those a HUMAN must fill in, in versioned — therefore published — files.
+The script cannot guess `<contact>` and must not invent it, but silence is worse: a published
+`SECURITY.md` saying "reach out to `<contact>`" leaves a researcher no way to report a
+vulnerability. So they are listed, and going public requires them filled in.
 
-`README.md` is excluded on purpose: it is obvious to fill in, and its HTML tags (`<picture>`,
-`<p …>`) are false positives that would drown the one message that matters. `LICENSE` too: its year
-and holder are substituted just above, and the licence text carries its own canonical URL between
-angle brackets, which the pattern would report as a placeholder.
+`README.md` is excluded on purpose: its HTML tags (`<picture>`, `<p …>`) are false positives that
+would drown the one message that matters. `LICENSE` too: its year and holder are substituted just
+above, and its canonical URL sits between angle brackets, which the pattern would report.
 
 ## The lifecycle doc is a SKELETON, and the heredoc is quoted
 
@@ -71,6 +69,8 @@ The branching block goes into `AGENTS.md` alone — it is the authority and the 
 `CONTRIBUTING.md` points at it. Injected into both, every generated project was born carrying the
 same paragraph twice, in the two files whose job is to teach that rule.
 
-The version stamp is written once, at generation time, from the tag. A generated project holds a
+The stamp also carries the **options**, every flag explicit, negatives included: regeneration
+reproduces the project *(`RUNBOOK` §5)*, so a shortcut whose default moves later would reproduce a
+**different** one, in silence. Written, it is exact; deduced from the tree, it is inferred. Written once, from the tag. A generated project holds a
 frozen copy of the templates, so the stamp is a snapshot: it stays true about the past even after
 the template moves on, and it is what makes assisted regeneration possible at all (`RUNBOOK` §5).

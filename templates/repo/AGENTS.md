@@ -5,10 +5,10 @@ This file follows the [AGENTS.md](https://agents.md) convention and is read by m
 agents. Claude Code reads it through the import in `CLAUDE.md` — **versioned for that reason
 alone**: gitignored, it reaches nobody who clones, and nothing else loads this file.
 
-> Scaffolded by **project-template `<template-version>`**.
-> This project carries a **frozen copy** of that version's templates: a later fix to the template
-> does **not** reach it on its own. This line says which version to diff against — it is a
-> snapshot of the past, not a claim about the present.
+> Scaffolded by **project-template `<template-version>`** — `<template-options>`
+> from <template-origin>
+> A **frozen copy**: a later fix to the template does **not** reach it on its own. The line says
+> what to regenerate against, exactly — a snapshot of the past, never a claim about the present.
 
 ## Project
 

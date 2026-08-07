@@ -160,7 +160,17 @@ rm -f "$FRAG"
 # Stamp WHICH version built this project: a generated project carries a FROZEN COPY, and without
 # this line nothing says whether a later fix ever reached it (detail: docs/code/init-project.md).
 TPL_VERSION=$(git -C "$TPL" describe --tags --abbrev=0 2>/dev/null || echo unreleased)
-sed -i.bak "s|<template-version>|$TPL_VERSION|g" "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
+# EXPLICIT flags, negatives included — a default that moves must not silently reproduce another
+# project (detail: docs/code/init-project.md).
+TPL_OPTS="--type $TYPE"
+[ "$PAGES"    = 1 ] && TPL_OPTS="$TPL_OPTS --pages"    || TPL_OPTS="$TPL_OPTS --no-pages"
+[ "$ARTEFACT" = 1 ] && TPL_OPTS="$TPL_OPTS --artefact" || TPL_OPTS="$TPL_OPTS --no-artefact"
+[ "$STAGING"  = 1 ] && TPL_OPTS="$TPL_OPTS --staging"  || TPL_OPTS="$TPL_OPTS --no-staging"
+[ "$LIFECYCLE_DOCS" = 0 ] && TPL_OPTS="$TPL_OPTS --no-lifecycle-docs"
+sed -i.bak -e "s|<template-version>|$TPL_VERSION|g" \
+           -e "s|<template-options>|$TPL_OPTS|g" \
+           -e "s|<template-origin>|https://github.com/actarus314/project-template|g" \
+  "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
 # Same tag, same reason: the ONE link configure-repo.sh carries is pinned to it. Skipped when there
 # is no tag — `blob/unreleased/` would 404, and a dead link is worse than a moving one.
 if [ "$TPL_VERSION" != "unreleased" ]; then

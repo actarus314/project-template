@@ -14,6 +14,7 @@ if [ "${1:-}" = "--version" ]; then
 fi
 
 THRESHOLD=${GROWTH_THRESHOLD:-25}
+COMPARED=0; NEWBORN=0
 
 tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
 [ -n "$tag" ] || { echo "  (no release yet — nothing to compare against)"; exit 0; }
@@ -29,6 +30,12 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
   local T; T=$(mktemp -d)
   git -C "$dir" ls-tree -r --name-only "$rev" \
     | grep -E "$select" | grep -vE "$EXCLUDE" > "$T/paths" || true
+  # A document born since the tag has NO reference, so it cannot grow by any percentage — it is
+  # invisible to this check by construction, at any size. Counted and said, never left silent.
+  git -C "$dir" ls-files | grep -E "$select" | grep -vE "$EXCLUDE" | sort > "$T/today" || true
+  newborn=$(comm -23 "$T/today" <(sort "$T/paths") | wc -l | tr -d ' ')
+  NEWBORN=$((NEWBORN + newborn))
+  COMPARED=$((COMPARED + $(grep -c '' "$T/paths" || true)))
   # Deleted since that point: nothing to compare, and it must not reach the bulk readers either.
   : > "$T/live"
   while IFS= read -r f; do [ -f "$dir/$f" ] && printf '%s\n' "$f" >> "$T/live"; done < "$T/paths"
@@ -102,7 +109,8 @@ else
   scope="repo/ only"
 fi
 
-[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope"
+born=""; [ "$NEWBORN" -gt 0 ] && born=" · $NEWBORN born since the tag, NOT comparable"
+[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope; read: $COMPARED document(s)$born"
 if [ "$grown" != 0 ]; then
   cat >&2 <<'MSG'
   Prune the WHOLE document, not only what this branch added: the newest section is rarely the
