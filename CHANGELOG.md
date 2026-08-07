@@ -21,6 +21,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.1](https://github.com/actarus314/project-template/releases/tag/v1.4.1) - 2026-08-07
+
 ### Added
 - **A guard that refuses a write until the rule documents have been READ** — `verify-rules-read.sh`.
   The rules are named in a file the assistant receives on *every* turn, which is exactly why they get
