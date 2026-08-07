@@ -243,241 +243,129 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.4.0](https://github.com/actarus314/project-template/releases/tag/v1.4.0) - 2026-08-06
 
 ### Added
-- **A deleted comment block can no longer simply vanish.** `verify-dropped-comment.sh` asks, for any
-  block of 5+ lines removed from a script, which of two decisions was made: it should never have been
-  written there — then a `drop:` line in a commit message says so — or it is worth keeping, and it
-  moves into `docs/code/<name>.md`. **Neither is the default.**
-  🔴 **The threshold was measured**: over 40 commits, 24 such blocks were deleted, 19 with their note
-  and 5 without — asked for on about **one commit in eight**. A `drop:` covers **only the files it
-  NAMES**.
-  ⚠️ It judges **commits, never the working tree**: a `pre-commit` hook cannot read the message of
-  the commit being made.
-
-- **An instrument that measures whether the pull-request rule needs enforcing in code.** Whether one
-  may be opened without the maintainer saying so is settled; whether that needs a gate is not.
-  It records every opening as *with* or *WITHOUT* an instruction and **returns**: it never refuses a
-  tool. It watches the **gesture**, not one script.
-  🔴 **Its decision threshold is written before its data**: under **5 %** without an instruction over
-  **20** openings, the gate does not get built.
-  The token is **consumed, never dated** — an order and its opening were measured up to **31 turns**
-  apart, so any expiry short enough to restrict would
-  refuse real orders.
-- **The closing pass is now SEQUENCED, not merely asked for**: once one is under way, the end-of-turn
-  hook holds the turn until the pass artefact **covers** the tracking doc — every backlog item number
-  and every `##` section named, each with a verdict from a closed set (`open` / `closed` / `unchanged`).
-  A skill is text, so a step skips itself and nothing sees it.
-  **Coverage, never presence** — the total is read from the tracking doc itself, so it is not a
-  figure anyone picked, and naming an entry without a verdict does not count it.
-  🔴 **Ceiling of three send-backs, then the turn is released with the gap published**: `Stop` has no
-  native loop protection, and a guard that can wedge the session is worse than the gap it watches.
-- **Two absolute limits on comments, beside the drift that was already there**: a **level** (25 %)
-  and a **longest block** (6 lines), on the files a branch **touches**. Drift alone cannot see a
-  file *born* verbose — it never grows, so it never speaks, and every one of the 25 scripts here
-  sat between 31 % and 64 % comment without a single verdict. Both values were measured before
-  being set: at 4 lines the guard fires on legitimate warnings, at 8 it starts covering section
-  headings. Touched-files-only is what makes the rule landable — applied to the whole tree it would
-  have turned all 25 scripts red at once.
-  ⚠️ **A shebang is not a comment** — counting it made every minimal header a violation.
-- **`docs/code/`** — one note per file, owning its **implementation** constraints, so the *why* has
-  somewhere to go when it leaves a script. What a check looks for stays in `repo-controls.md`; the
-  rule it enforces stays in `METHODE.md`. The notes **travel with the checks** *(`verify-*.md`
-  only: the generator's own notes describe files a generated project does not have)*.
-
-- **The "second pull request on the same undertaking" notice was REMOVED from the hook.** Three
-  forms were tried and each ruled out: **blocking** *(the signal cannot separate a fault from a
-  legitimate stage)*, **a message** *(it fired once and changed nothing)*, and **asking the
-  maintainer** *(escalation adds a decision to the person who wanted fewer)*. The rule stays a
-  convention in `AGENTS.md` and stops pretending to be a guard — the real cost is the full
-  **open+merge cycle**, so the discipline is grouping upstream, not a gate at opening time.
-- **The closing pass now walks the backlog LINE BY LINE.** The `housekeeping` skill used to ask
-  whether the tracking doc still reflected the work — a question that answers *yes* at a glance on a
-  document written the same day, which is how four closed items sat in the open-work section for a
-  full day. It now states open or closed for **each** line, and a closed one leaves the section.
-  This enumeration is the only thing that catches a closed item nobody marked: the check guarding
-  that section matches a **marker**, so it is blind to the rest. Staleness and cross-referencing the
-  CHANGELOG were both ruled out as substitutes.
-- **The closing pass is now ROUTED, not hoped for.** `verify-housekeeping.sh` gains a third event,
-  `UserPromptSubmit`: it reads the prompt before Claude processes it, and its stdout is one of the
-  few an assistant actually *sees*, so a request for the pass reaches the model as an instruction
-  instead of relying on a skill firing by judgement. It exists because of a measured failure — the
-  skill lists *"je vais clear"* among its own triggers, the maintainer wrote exactly that, and
-  **the skill did not fire**. The patterns are the strict ones measured across 1756 real messages
-  *(16 matches, 0,9 %)*; loose wordings matched 82 times, mostly unrelated. It does not block.
-- **`verify-do-not-break` watches EVERY skill's symlink**, detected rather than named. It was
-  hard-coded to one skill for as long as there was only one, and the second shipped with its link
-  guarded by nothing — the exact failure that skill is otherwise prone to: an unlinked skill does
-  not error, it simply never appears.
-- **`verify-workspace` refuses closed items sitting in the open-work section** of the tracking doc.
-  The rule was already written *in that document*, and had been rewritten the same morning because
-  closure markers had piled up there; it was broken again the same day, four markers deep, and
-  growth measured **+24 % against a 25 % threshold — one point short**. The rule itself is binary,
-  so it needs no threshold. ⚠️ **It matches a FORM, never a state**: an item finished, left in place
-  and never marked is invisible to it, and its header says so — a check resting on a habit inherits
-  that habit's reliability.
-- **What a check does with a verdict is now DECLARED, and confronted twice.** Every check carries
-  `# blocking: yes|no` in its header, beside `# hook:` — and *advisory* is a claim about the **exit
-  code**, never about the wording, since `check.sh` turns any non-zero into a failed gate.
-  `verify-checks-wiring` compares that declaration to the control table; **`check.sh` compares it to
-  the REAL exit code** the moment that code exists — the only reading that catches a script
-  contradicting both its header and the table. Three checks had been contradicting themselves, in
-  both directions, and a human found it by reading the table.
-- **The closing pass, asked for by a guard and carried out by a skill.** A `Stop` hook counts the
-  commits landed since the tracking doc was last written to; past a measured threshold it blocks the
-  end of the turn and routes to the `housekeeping` skill, which does the writing. The split is the
-  point: **code for what counts, a model only for what is judged**.
-  The threshold is **6 commits**, from 21 days of history: 4 was tried and withdrawn, and counting
-  pull requests was dropped as blind to work not yet merged.
-  **It also runs on `PreCompact`**, but blocks only on a hand-asked one: a guard that can wedge the
-  tool it protects is worse than the drift it watches.
-- **A check on the CLOSURE of a stage** *(`checks/verify-stage-closure.sh`, advisory)*: the most
-  recent closed stage left no archive behind, or a finished `RECHERCHE-*` was still sitting on the
-  hot side when the release was cut. It carries **only** what `verify-growth.sh` cannot see, since
-  two controls answering one question end up disagreeing. **The trigger was measured, and the
-  obvious one lost**: a merged pull request is followed by a write to the tracking doc 99 % of the
-  time, against 88 % for a random instant — an 11 point edge, biting on 1 pull request in 107. A
-  release is a closure; a fix's pull request is not.
+- **Ask what became of a deleted comment block.** When five or more lines of explanation leave a
+  script, the commit message must say they were never worth writing — or they move into the file's
+  note. A *why* is no longer lost in passing.
+  ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Measure whether the pull-request rule needs enforcing in code, before enforcing it.** Every
+  opening is recorded as made *with* or *without* an instruction, and nothing is ever refused. Below
+  5 % over 20 openings, no gate gets built.
+  ([#114](https://github.com/actarus314/project-template/pull/114))
+- **Hold the end of a turn until the closing pass has actually covered the tracking doc**, item by
+  item and section by section. A pass can no longer be declared done with half of it skipped; after
+  three send-backs the turn is released and the gap is named.
+  ([#112](https://github.com/actarus314/project-template/pull/112))
+- **Refuse a file that is born over-commented**, not only one that drifts there: at most 25 %
+  comment and no block longer than 6 lines, on the files a branch touches. A file that never grows
+  used to trigger nothing at all.
+  ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Give every script a note of its own**, holding the constraints behind the way it is written — so
+  the *why* has somewhere to go when it leaves the code. The notes travel with the checks into a
+  generated project. ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Go through the open work line by line when closing a stage.** Asked as a single question, a
+  document written the same day answers *yes* at a glance: four finished items sat in the open
+  section for a full day. ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Recognise a request for the closing pass in what is typed**, instead of hoping the right skill
+  fires on its own. It was measured failing on the maintainer's own words.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Watch every skill's link, not just the first one.** The second skill shipped with nothing
+  guarding its link — and an unlinked skill does not fail, it silently disappears from the list.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Refuse finished items left in the open-work section** of the tracking doc. ⚠️ It reads a marker,
+  never a state: an item finished and never marked stays invisible to it.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Make every check declare whether it blocks, and confront that claim twice** — against the
+  control table, and against the exit code it really returns. Three checks were announcing the
+  opposite of what they did. ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Add the closing pass that brings the tracking doc back in line with the work.** A guard counts
+  the commits landed since it was last written and asks for the pass past six. Code counts, a model
+  writes. ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Warn when a finished stage left no archive behind**, or when finished research still sat among
+  the live documents at release time. Advisory only.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
 
 ### Changed
-- **The closing pass now reads the WHOLE tracking doc, not just the open-work list.** Stopping there
-  leaves every other section to rot, and the rot was measured: in one reading the maintainer found an
-  entry point stating the finished stage instead of the next gesture, two sections restating the same
-  work, a broken table, and **three false facts**.
-  The skill asks four questions of every section — does it say where to RESUME · is this fact stated
-  twice · does it still hold *(re-measured **from the server**, never a local cache)* · do the tables
-  render. And it must state what could **not** be verified: silence reads as verified.
-- **The `housekeeping` skill stops prescribing delegation outright.** The underlying rule is
-  *delegate as soon as it costs LESS*, and the six `git` commands of its inventory cost less run
-  directly than wrapped in a subagent launch — the prescription had been set aside by hand twice.
-  Delegation is now framed as a cost question, with the three opt-ins still required when it does
-  happen.
+- **Read the whole tracking doc when closing a stage, not only the open-work list.** Everything else
+  was left to rot: one reading found a stale entry point, two sections restating the same work, and
+  three false facts. ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Frame delegation as a cost, not a prescription.** Handing six `git` commands to a subagent costs
+  more than running them; the rule is to delegate as soon as it costs less.
+  ([#111](https://github.com/actarus314/project-template/pull/111))
+- **End a turn by blocking rather than remarking** when a claim looks unbacked, so the reason
+  reaches the assistant and gets settled. Capped at one relaunch per turn, so a false alarm costs
+  one exchange. ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Record whether a check actually caught something, not merely that it ran.** *Did it bite* is the
+  question a threshold is set on, and only *did it fire* was being answered.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Keep the record of which checks fire outside the repository**, shared by every generated
+  project, each line naming the project it came from. *Is this check firing everywhere, or only
+  here* now has somewhere to be answered.
+  ([#109](https://github.com/actarus314/project-template/pull/109))
+- **Write a dependency bump's changelog line on the bot's own branch, before merging.** A line added
+  afterwards is a discipline; on the branch, a line that gets dropped turns the check red again.
+  ([#108](https://github.com/actarus314/project-template/pull/108))
+- **Bump `trivy` v0.72.0 → v0.73.0** in the image-publishing workflow — it travels, so every project
+  generated with `--artefact` scans its image with the newer one; `renovate` 44.7.0 → 44.13.1.
+  ([#105](https://github.com/actarus314/project-template/pull/105),
+  [#106](https://github.com/actarus314/project-template/pull/106))
+- **Bump `zizmor` 1.28.0 → 1.29.0** among the pinned CI tools, so every project generated from now
+  on pins the newer one; `renovate` 43.288.0 → 44.7.0.
+  ([#101](https://github.com/actarus314/project-template/pull/101),
+  [#102](https://github.com/actarus314/project-template/pull/102))
 
-- **The end-of-turn check now BLOCKS.** `checks/verify-turn-claims.sh` ends a turn with
-  `decision: block` instead of a remark: the reason reaches the model, which settles it or states why
-  the signal does not apply. `stop_hook_active` caps that at **one relaunch per turn**, so a false
-  positive costs one exchange and never a loop. The three signals are untouched — they were tuned on
-  4463 real turns to fire on under 1 % each, and a rewording has to be re-measured the same way.
-- **The control journal records the VERDICT, not merely the firing.** The three hooks used to write
-  a `0` before analysing anything, which answered *did the gate fire* and never *did it bite* — and
-  the second question is the one a threshold is set on. Each now writes `1` with the **tag of the
-  signal that caught**, `0` when it looked and found nothing, and `skip` for an event it never
-  evaluated, so a rate reads off `bit / fired`.
-  The journal is **anchored to the script** rather than to the working directory: a hook fires
-  wherever the session sits, and a relative path silently dropped every firing from elsewhere.
-- **The control journal moved OUT of the repository**, to
-  `${XDG_STATE_HOME:-~/.local/state}/claude-controls/controls-log.tsv`. Under `.ci-tools/` it was
-  per-project as well as per-machine, so the one question worth asking of it — *is this gate firing
-  everywhere, or only here* — had nowhere to be answered. Every project generated from this template
-  now appends to the **same** file, each line carrying a seventh column naming the project it came
-  from; `--report` filters on the current one, so a project's page still speaks for that project
-  alone. The switch and `--reset` are global too, and `--reset` names the projects it is about to
-  drop. **Nothing about this reaches a repository**: telemetry is not repository content.
-- **The CHANGELOG line for a bot's bump goes onto ITS OWN branch, before the merge.** Written into
-  the convention that owns it, here and in the template, so it survives the session that decided
-  it. Verified first: Renovate states on every pull request it opens that it rebases only when a
-  pull request becomes conflicted or when the rebase checkbox is ticked, and this repository sets neither
-  `rebaseWhen` nor `rebaseStalePrs` — so a hand-added commit is not overwritten on its own. Where a
-  rebase does drop it, the check goes red again: the failure is **loud, not silent**, which is the
-  property the reverted exemption did not have.
-- **More pinned tooling moved.** `trivy` **v0.72.0 → v0.73.0** in
-  `templates/workflows/docker-publish.yml` — it **travels**, so every project generated with
-  `--artefact` scans its image with the newer one; `renovate` **44.7.0 → 44.13.1**.
-  *(Renovate `#105` and `#106` — the first two automated pull requests to go green on their own
-  since the gate stopped demanding prose from a bot, and the CI log shows the check skipping with
-  its reason named rather than passing by accident.)*
-- **The pinned tooling moved, and a human records it because the bot cannot.** `zizmor`
-  **1.28.0 → 1.29.0** in `templates/repo/requirements-ci.txt`, so **every project generated from
-  now on pins the newer one**; `renovate` **43.288.0 → 44.7.0**, the version `check.sh` and the CI
-  both validate a `renovate.json` against. *(Renovate `#101` and `#102`, merged once `#103` stopped
-  the gate from blocking them.)*
-  ⚠️ **This line is the counterpart of that exemption, not a contradiction of it.** A bot's branch
-  skips the CHANGELOG check because no bot writes prose — which leaves the writing to whoever
-  merges, for the bumps that actually reach a user. `zizmor` does: it travels in a template.
+### Removed
+- **Drop the "second pull request on the same undertaking" warning.** Three forms were tried and
+  each ruled out; it stays a written convention and stops pretending to be a guard.
+  ([#110](https://github.com/actarus314/project-template/pull/110))
 
 ### Fixed
-- **Four facts the documentation stated and that were no longer true**, each re-measured rather than
-  reasoned about: the repo described as **private** while it has been public since 2026-07-31 · a
-  tool listed at the root after it moved under `checks/` · a gate announced at **2,82 s** where three
-  runs give **3,65 s**, and a count of timed checks that no longer matched its own table · the
-  scaffolding command shown without saying the **GitHub repo must already exist**, created by hand
-  and PRIVATE.
-- **`templates/workflows/gitleaks.yml` is documented instead of deleted.** A sweep found it
-  unreferenced: copied by no script, named in no document. Reading it first showed the opposite of
-  dead code — it is the standalone secret scan for an **adopted** repo whose CI has none, a case the
-  tracking doc records for a real repository. What was missing was its entry in the RUNBOOK, not the
-  file. *(A mechanically correct "orphan" verdict, with the wrong conclusion.)*
-
-- **The door check now reads CODE lines only, so a commented-out door no longer satisfies it.**
-  `verify-checks-wiring.sh` compared `check.sh --house` against a workflow's whole text: a
-  `# - run: ./check.sh --house` left in a comment cleared the test while gating nothing — the exact
-  silent failure the check exists to prevent. Its own section 2b already filtered comments, with the
-  reason written beside it; the two now judge alike. *(Found by asking a fresh agent what this repo
-  requires when adding a check: it read the rule correctly, and the code did not match the rule.)*
-- **`verify-tone.sh` publishes how many lines its exception markers exempted.** A marker exempts its
-  line **anywhere in the tree** — bound to no file and no line, which is what makes it precise enough
-  to mark one line and invisible enough to spread. **10 lines are exempted today**; a number that
-  grows can be noticed, an unwritten one cannot.
-
-- **The RUNBOOK granted what the conventions were trying to withhold.** Its release table read as a
-  standing authorisation to OPEN a pull request. A fresh-context agent asked to read this
-  repository's rules answered **yes** to all three of "may an assistant open one on its own
-  initiative / open then merge / merge an existing one", quoting the lines. Opening now says, in both
-  documents, that it happens **on the maintainer's instruction**.
-  ⚠️ `AGENTS.md` contradicted itself too: one bullet asked for an instruction, the next described
-  opening as an ordinary step. That one now describes **how**, never **whether**.
-- **The closing pass's word-routing named a payload field that is not documented, and said nothing
-  when it did not match.** On a non-match the hook stayed silent, so a real gap looked identical to
-  never firing. It now records what it read, and reads **every text value** of the payload instead of
-  one named field — the official docs do not specify a field for `UserPromptSubmit`, so naming one
-  was a guess.
-- **`verify-changelog` blocked the very commit that carried the line it was asking for.** It read
-  committed history only, and the pre-commit hook runs *before* the commit exists — so a contributor
-  adding the entry in the right commit was refused anyway, and the only ways through were an empty
-  commit or `--no-verify`.
-  It now reads the same **three sources** its neighbour already did: what is
-  committed, what is staged, what is not. In CI the last two are empty, so nothing there changes.
-- **`verify-comment-drift` justified its reference point with a reason that is false in this very
-  repository.** It said releases are rare; there were four tags in five days. The reason that holds
-  at any cadence is that a release-anchored reference re-litigates already-merged, already-green
-  work — measured here, the touched-file input went from 1 file to 41. `verify-growth` keeps the far
-  anchor instead: `origin/main` advances at every merge, so accumulation there resets to zero and
-  would otherwise go permanently silent.
-- **`verify-narrative` was blind to the story it exists to catch.** Its only signal was a date, and
-  its five hits were all pointers into `archives/` — which the rule exempts. It caught **nothing**,
-  ever. Six wider signals were measured over 1009 comment lines; five are noise *("used to" carries
-  a constraint far more often than a story), and the sixth needed narrowing from the noun to the
-  VERB: naming the maintainer is usually a constraint ("run by THE MAINTAINER, never by the
-  assistant"), what tells a story is "the maintainer said". 14 lines flagged became 4, all four
-  narrative. Recall is traded for precision, deliberately, because this one blocks.
-- **The closing pass's routing patterns were too narrow, and a second miss proved it.** *"Est-ce que
-  tout est clean pour un clear ?"* matched none of the three — the mechanism fired correctly, its
-  list was short. Three candidates were measured over **1683 real messages** before one was picked:
-  `(pour|avant) [un|le|de] clear` → **2 new matches, zero false positives** *(kept)*; a
-  *clean/propre* variant → the same two but narrower; and the **bare word `clear` → 41 new matches**,
-  nearly all noise *(skill loads, session summaries)* — the original 82 all over again.
-  🔴 **It stops there**: *"Affiche l'état du suivi"* does not match, and must not — asking to SEE the
-  state is not asking for the pass.
-- **`verify-growth` no longer blocks on a GENERATED page.** `CONTROLES.md` is rewritten whole by
-  `check.sh` at every verdict, one row per control recorded — it grows by *recording*, not by
-  writing. With the journal left on it crossed the threshold on its own *(+42 %)* and blocked a
-  commit that had not touched it. The rule the check enforces — a curated document **shrinks** when
-  a stage closes — has no meaning for a page no human writes, which is why it joins the CHANGELOG
-  and the archives among what accumulates by nature.
-
-- 🔴 **The bot exemption is REVERTED, one day old.** It made the control silent on exactly the
-  changes that need it most: `zizmor` and `trivy` are pinned **inside `templates/`**, so a bump
-  **travels into every generated project** — user-visible by the convention's own definition. What
-  replaced the trace was a human writing the line in a **later** pull request: a discipline, not a
-  guard, and this repository holds that a rule kept by discipline is a rule that lapses.
-  ⚠️ **The friction it was meant to remove comes back, knowingly**: an automated pull request is red
-  until someone adds the line to **its own branch**. That is the cost of the trace being where the
-  change is, and it is the maintainer's call.
-- 🔴 **~~No Renovate or Dependabot pull request could ever go green.~~** *(Superseded by the line
-  above — kept because the diagnosis stands.)* A dependency bump touches exactly the paths the check
-  counts as visible, and **no bot writes prose**, so every automated pull request was red on a check
-  nothing could satisfy. A bot's branch is exempt now, for the convention's own reason: the Release
-  carries the list of merged pull requests, the `CHANGELOG` says what changed for a user.
-  ⚠️ **`GITHUB_HEAD_REF` before the branch name** — a `pull_request` run checks out a **detached**
-  merge commit, so reading `HEAD` alone would have exempted nothing where it mattered.
+- **Correct four statements the documentation made that were no longer true**, each re-measured: a
+  repo called private after it went public, a tool listed at its old path, a gate timed at 2,82 s
+  against 3,65 s, a command missing a precondition.
+  ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Document the standalone secret-scanning workflow instead of deleting it.** A sweep found it
+  referenced nowhere and read as dead code; it is what an adopted repository uses when its own CI
+  has no scan. ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Stop a commented-out line from passing as a wired check.** The check that verifies every gating
+  workflow calls the house checks read a workflow's whole text, so a disabled line satisfied it
+  while gating nothing. ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Say how many lines the tone check has been told to skip.** An exemption marker frees its line
+  anywhere in the tree; 10 lines today. A number that grows can be noticed, an unwritten one cannot.
+  ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Stop the runbook granting what the conventions withhold.** Its release table read as a standing
+  authorisation to open a pull request. Both documents now say it happens on the maintainer's
+  instruction. ([#114](https://github.com/actarus314/project-template/pull/114))
+- **Fix the closing pass reading a payload field that does not exist, and staying silent about it.**
+  A real gap looked exactly like never firing. It now reads every text value, and says what it read.
+  ([#113](https://github.com/actarus314/project-template/pull/113))
+- **Stop the changelog check refusing the very commit that carried the line it asked for.** It read
+  committed history only, while the pre-commit hook runs before the commit exists. It now also reads
+  what is staged, and what is neither.
+  ([#112](https://github.com/actarus314/project-template/pull/112))
+- **Replace a justification that was false in this repository.** The comment-drift check said
+  releases are rare; there had been four tags in five days. What holds at any cadence is that a
+  release-anchored reference re-opens already-merged work.
+  ([#112](https://github.com/actarus314/project-template/pull/112))
+- **Make the narrative check able to catch a story at all.** Its only signal was a date, and every
+  hit pointed into the archives, which the rule exempts — it had never caught anything. Recall is
+  traded for precision, deliberately.
+  ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Recognise two more ways of asking for the closing pass.** A second miss proved the list was
+  short; three candidates were measured over 1683 real messages before one was kept. Asking to SEE
+  the state is still not asking for the pass.
+  ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Stop the growth check blocking on a page nobody writes.** The controls page is regenerated whole
+  at every run: it grows by recording, and the rule it enforces — a curated document shrinks when a
+  stage closes — has no meaning for it.
+  ([#111](https://github.com/actarus314/project-template/pull/111))
+- **Revert the exemption that let a bot's pull request skip the changelog check, one day old.** It
+  silenced the control on exactly the changes that reach a user: pinned tools live inside the
+  templates, so a bump travels into every generated project.
+  ([#107](https://github.com/actarus314/project-template/pull/107))
+- **~~Fix every automated pull request being red on a check nothing could satisfy.~~** *(Superseded
+  by the line above — the diagnosis stands.)* A dependency bump touches exactly the paths counted as
+  user-visible, and no bot writes prose.
+  ([#103](https://github.com/actarus314/project-template/pull/103))
 
 ## [1.3.0](https://github.com/actarus314/project-template/releases/tag/v1.3.0) - 2026-08-05
 
