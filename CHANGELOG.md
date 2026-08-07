@@ -22,6 +22,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **The growth check now asks the workspace a question a date could never answer: did the closing of
+  a stage actually prune the hot side?** The close is observable — an archive directory is born — and
+  METHODE already states the hot side shrinks at that moment. So that half carries no threshold and no
+  reference date at all. The half watching `repo/` still compares against the last release, and is now
+  declared **weak** where it is documented: that reference moves at every release, so a slow drift
+  never accumulates — the tracking document grew 327 % across four releases without a single verdict.
+  An archive is detected as a **directory**, never by a file named inside it, and a closure not yet
+  committed is read too, since that is the moment the answer is still useful.
 - **The commit gate runs in 3,95 s instead of 9,1 s, and returns the same verdicts.** The two checks
   that generate a whole project ran one after the other, outside the parallel lot, and dominated its
   wall clock by themselves. Nothing required that: each works inside its own `mktemp -d`, and the
@@ -43,6 +51,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   shapes: a branch whose pull request is merged goes, one with no merged pull request survives.
 
 ### Fixed
+- **Three checks announced themselves as advisory and blocked the commit.** The header of each said
+  `blocking: yes`, the control table said blocking, and the line printed above their output said
+  *(advisory)* — the one wording a reader actually sees while the gate refuses. Only the check that
+  is genuinely advisory keeps the word.
 - **A French thousands separator was turning every large number into a false alarm.** The end-of-turn
   check reads numbers announced as a total and asks whether they appear in the turn's output; written
   `5 300`, the number was matched as `300` — the tail announced as the whole, and unbacked by

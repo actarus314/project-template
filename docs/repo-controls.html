@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:3e7e655bd40876c0afeb0d87c710fe0f312250c44f4e9a92da06e5d5d25d7b61
+  checksum-source-md: sha256:8fe45223ef0d7ebd63b3ebe14a4ee38bc95d673a5bfad5379e9443613189d501
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1753,12 +1753,12 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-growth.sh</code></td>
-          <td>a curated document that only ever grows</td>
+          <td>a curated document that only ever grows — <strong>two halves</strong>: <code>repo/</code> against the last release, <code>workspace/</code> against the <strong>closure of a stage</strong> (an archive directory is born, the hot side must shrink)</td>
           <td class="h">both</td>
-          <td>a <code>.md</code> moved</td>
+          <td>a <code>.md</code> moved, <strong>here or in the workspace</strong></td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — the 25 % threshold is a judgement call</td>
-          <td class="t">0,18 s</td>
+          <td><strong>needs watching</strong> — the 25 % threshold is a judgement call, and the <code>repo/</code> half is <strong>measured weak</strong> (the reference moves at every release: +327 % went unseen). The <code>workspace/</code> half carries no threshold at all</td>
+          <td class="t">0,20 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1981,7 +1981,7 @@
         <tr>
           <td class="w">every commit, if its target moved</td>
           <td>a <code>.sh</code>, a workflow, a <code>renovate.json</code>, a file that travels, a <code>.md</code></td>
-          <td class="h"><code>shellcheck</code> · <code>actionlint</code> + <code>zizmor</code> · the Renovate validator · <code>verify-travel.sh</code> (it generates a whole project) · <code>verify-echo.sh</code> and <code>verify-growth.sh</code> on a <code>.md</code>, <code>verify-comment-drift.sh</code> on a <code>.sh</code> — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts</td>
+          <td class="h"><code>shellcheck</code> · <code>actionlint</code> + <code>zizmor</code> · the Renovate validator · <code>verify-travel.sh</code> (it generates a whole project) · <code>verify-echo.sh</code> and <code>verify-growth.sh</code> on a <code>.md</code>, <code>verify-comment-drift.sh</code> on a <code>.sh</code> — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts. <strong>The workspace is a SEPARATE repository, so a diff run here is blind to it</strong> — <code>check.sh</code> reads its uncommitted diff too, which is what lets a closing stage wake <code>verify-growth</code></td>
         </tr>
         <tr>
           <td class="w">every 6 h — <code>./check.sh</code>, and the CI</td>

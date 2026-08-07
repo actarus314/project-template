@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A curated document that only ever grows — forbidden by METHODE: the hot side SHRINKS when a
-# stage closes. Compared against the last release, in both repositories.
-# 🔴 Documents are DETECTED, never listed; what accumulates by nature is excluded (a CHANGELOG,
-# an archive, a GENERATED page). Why, and the exclusion list: docs/code/verify-growth.md.
+# stage closes. TWO halves, one observable event each:
+#   · repo/       — a .md grown by a percentage since the last release. Weak, and measured so.
+#   · workspace/  — a stage CLOSED (an archive directory is born) with no pruning. No threshold.
+# 🔴 Detected, never listed; what accumulates by nature is excluded. docs/code/verify-growth.md.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
@@ -16,9 +17,9 @@ fi
 THRESHOLD=${GROWTH_THRESHOLD:-25}
 COMPARED=0; NEWBORN=0
 
+# The tag gates the repo/ half ALONE. Exiting here would also skip the workspace half, which needs
+# no release: a project closes its first stage long before it publishes one.
 tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
-[ -n "$tag" ] || { echo "  (no release yet — nothing to compare against)"; exit 0; }
-released_at=$(git log -1 --format=%cI "$tag")
 
 grown=0
 
@@ -87,22 +88,76 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
 # 🔴 DETECTED, never listed — every tracked `.md`, minus what accumulates by nature (a CHANGELOG,
 # an archive, a GENERATED page). Same exclusions as verify-echo.sh: one rule, one set of documents.
 EXCLUDE='(^|/)(CHANGELOG\.md$|archives?/|\.github/|CONTROLES\.md$)'
-compare_tree . "$tag" "" '\.md$'
+if [ -n "$tag" ]; then
+  compare_tree . "$tag" "" '\.md$'
+else
+  echo "  (repo/: no release yet — the percentage half has no reference)"
+fi
 
+# ── The workspace half: a closing stage must make the hot side shrink ────────────────────────
 # The workspace is a separate repository with no remote and no tag, and it is optional: a generated
 # project can be created without it.
-if [ -d ../workspace/.git ]; then
-  ws_rev=$(git -C ../workspace rev-list -1 --before="$released_at" HEAD 2>/dev/null || true)
-  if [ -n "$ws_rev" ]; then
-    # Root and docs/ only — which is where the tracking doc lands, whether this workspace or a
-    # generated one. It leaves out archives/ by construction: they are the cold side, and METHODE
-    # states that too many archive files is not a problem.
-    compare_tree ../workspace "$ws_rev" "workspace/" '\.md$'
+
+# The HOT SIDE is every tracked `.md` outside archives/ — a ROLE, never a file name: METHODE states
+# the tracking document is a default, and a project driven by GSD or Linear names it otherwise.
+# Splitting on TAB is load-bearing: `ls-tree -l` puts the size in field 4 of the first part and the
+# path after the tab, so a path containing a space cannot shift the size column.
+hot_bytes() {            # <repository> <revision, or WORKTREE>
+  local dir="$1" rev="$2"
+  if [ "$rev" = WORKTREE ]; then
+    ( cd "$dir" && git ls-files -z -- '*.md' | xargs -0 wc -c 2>/dev/null ) \
+      | awk '$2 != "total" && $2 !~ /(^|\/)archives\// { s += $1 } END { print s + 0 }'
   else
-    echo "  ⚠ workspace: no commit predates $tag — nothing to compare against"
+    git -C "$dir" ls-tree -r -l "$rev" 2>/dev/null \
+      | awk -F'\t' '{ split($1, f, " ")
+                      if ($2 ~ /\.md$/ && $2 !~ /(^|\/)archives\//) s += f[4] } END { print s + 0 }'
+  fi
+}
+
+# The archive DIRECTORY is the signal, never a file named inside it: a stage can be closed by a
+# dated report and carry no SYNTHESE.md at all, and a guard keyed on that name stays silent on
+# exactly the case it exists for. (Which archive proves it: docs/code/verify-growth.md.)
+# ONE expression, used by both readings below — two copies of it would drift.
+TO_DIR='s|^\(.*archives/[^/]*\)/.*|\1|p'
+archive_dirs() { sed -n "$TO_DIR" | sort -u; }   # paths on stdin → one archive directory per line
+
+if [ -d ../workspace/.git ]; then
+  ws=../workspace
+  scope="repo/ and workspace/"
+
+  # A closure being written RIGHT NOW is the moment this guard is useful, and it has not been
+  # committed yet — the workspace carries no hook, so nothing else will look.
+  born_worktree=$( { git -C "$ws" ls-files --cached --others --exclude-standard; } | archive_dirs)
+  born_head=$(git -C "$ws" ls-tree -r --name-only HEAD 2>/dev/null | archive_dirs)
+  pending=$(comm -23 <(printf '%s\n' "$born_worktree") <(printf '%s\n' "$born_head"))
+
+  if [ -n "$pending" ]; then
+    before=$(hot_bytes "$ws" HEAD); after=$(hot_bytes "$ws" WORKTREE)
+    what="$(printf '%s' "$pending" | tr '\n' ' ') — uncommitted"
+  else
+    # Otherwise: the LAST closure already committed. Read oldest-first and keep each directory's
+    # FIRST appearance — that commit is its birth; the last line is the most recent birth.
+    birth=$(git -C "$ws" log --reverse --diff-filter=A --format='@%H' --name-only -- '*archives/*' \
+            | sed -n -e '/^@/p' -e "$TO_DIR" \
+            | awk '/^@/ { h = substr($0, 2); next }
+                   !($0 in seen) { seen[$0] = 1; print h, $0 }' \
+            | tail -1)
+    if [ -n "$birth" ]; then
+      rev=${birth%% *}; what=${birth#* }
+      before=$(hot_bytes "$ws" "$rev^"); after=$(hot_bytes "$ws" "$rev")
+    fi
+  fi
+
+  if [ -z "${before:-}" ] || [ "$before" = 0 ]; then
+    # Zero targets reads exactly like a clean tree — so it is said, never passed off as a verdict.
+    echo "  (workspace/: no closed stage to compare — no archive directory born under git)"
+  elif [ "$after" -lt "$before" ]; then
+    echo "  ✓ workspace/: the last closure pruned the hot side — $what, $before → $after bytes"
+  else
+    printf '  ↑ %-32s %6d → %6d bytes (%+d) — a stage closed and the hot side did NOT shrink\n' \
+           "workspace/ $what" "$before" "$after" "$((after - before))"
     grown=1
   fi
-  scope="repo/ and workspace/"
 else
   # Said out loud: the verdict used to claim "in either repository" with the neighbour absent.
   echo "  (no ../workspace/.git beside this repo — repo/ only)"
@@ -110,7 +165,7 @@ else
 fi
 
 born=""; [ "$NEWBORN" -gt 0 ] && born=" · $NEWBORN born since the tag, NOT comparable"
-[ "$grown" = 0 ] && echo "✓ no curated document grew by ${THRESHOLD}% since $tag — $scope; read: $COMPARED document(s)$born"
+[ "$grown" = 0 ] && echo "✓ nothing grew unchecked — $scope; read: $COMPARED document(s) against ${tag:-no tag}$born"
 if [ "$grown" != 0 ]; then
   cat >&2 <<'MSG'
   Prune the WHOLE document, not only what this branch added: the newest section is rarely the
