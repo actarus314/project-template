@@ -73,7 +73,28 @@ $stale"
     fi
     read_backlog=" backlog hygiene"
   fi
+
+  # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
+  # empty boxes — and an archive only while UNCOMMITTED: a committed one is immutable, and ten of
+  # them already hold the pattern. Why the marker and not a name: verify-workspace.md.
+  # In the HEADER only: a pledge is made at the top. Anywhere else the literal is prose — the
+  # tracking doc describing this very guard signed itself up, and it is the one file allowed work.
+  pledged=$(cd "$ws" && git ls-files -- '*.md' | while read -r f; do
+    head -10 "$f" 2>/dev/null | grep -qF -- '<!-- no-open-work -->' && printf '%s\n' "$f"
+  done || true)
+  closing=$(cd "$ws" && git ls-files --others --exclude-standard -- '*archives/*.md' 2>/dev/null || true)
+  watched=$(printf '%s\n%s\n' "$pledged" "$closing" | sed '/^$/d' | sort -u)
+  if [ -n "$watched" ]; then
+    # fr-pattern: the documents it reads are French. A leftover DECLARES itself — an infinitive
+    # opening a bullet would match half the prose (measured: verify-workspace.md).
+    open_work=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
+      | xargs -0 grep -nEi '(rest(e|ent) (encore )?à |^[[:space:]]*[-*] \[ \])' 2>/dev/null \
+      | cut -c1-120 || true)
+    [ -n "$open_work" ] && say "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
+$open_work"
+    read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
+  fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
 exit "$fail"

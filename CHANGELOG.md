@@ -10,6 +10,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+### Added
+- **Refuse an open action sitting outside the tracking doc**, in a file pledging to hold none or in an archive still being written.
+  Splitting that doc into neighbours recreates the separate backlog the method forbids.
+  Only a leftover declaring itself matches.
+
 ### Fixed
 - **Stop reporting a stage that did prune the tracking doc, once the next stage reopens work.**
   The comparison now asks whether the hot side ever dropped below its pre-closure size, instead of weighing it today.
