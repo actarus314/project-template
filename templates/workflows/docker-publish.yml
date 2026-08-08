@@ -201,9 +201,15 @@ jobs:
           # Whoever deploys this reads the release, not the workflow, so the pinned image reference
           # comes FIRST. Everything under it is release-notes.sh's: the version's CHANGELOG block
           # and the auto-generated pull-request list, the Release owning nothing of its own.
+          # The fences are escaped inside a DOUBLE-quoted string: in a single-quoted one, shellcheck
+          # reads them as a command substitution that will not expand (SC2016) and fails the lint.
           {
-            printf '## Image\n\n```yaml\nimage: ghcr.io/%s/<image-name>:%s\n```\n\n' \
-              "${GITHUB_REPOSITORY_OWNER}" "${GITHUB_REF_NAME#v}"
+            echo "## Image"
+            echo
+            echo "\`\`\`yaml"
+            echo "image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/<image-name>:${GITHUB_REF_NAME#v}"
+            echo "\`\`\`"
+            echo
             ./release-notes.sh "${GITHUB_REF_NAME}"
           } > "${RUNNER_TEMP}/notes.md"
           gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file "${RUNNER_TEMP}/notes.md"

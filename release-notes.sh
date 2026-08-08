@@ -2,8 +2,10 @@
 # Prints a GitHub Release note on stdout: the version's CHANGELOG block, then the auto-generated
 # pull-request list. Why it is generated rather than written: docs/code/release-notes.md.
 
-# Usage: ./release-notes.sh <tag> [previous-tag]
-#        gh release create vX.Y.Z --title vX.Y.Z --notes-file <(./release-notes.sh vX.Y.Z)
+# Usage: ./release-notes.sh <tag> [previous-tag] > notes.md
+#        gh release create vX.Y.Z --title vX.Y.Z --notes-file notes.md
+# 🔴 Redirect, never `--notes-file <(…)`: process substitution DISCARDS this script's exit code, so
+# a failure here would publish an EMPTY release body as a success.
 
 # SHARED file: init-project.sh copies it into every generated project, like check.sh and open-pr.sh.
 set -euo pipefail
