@@ -15,6 +15,18 @@ THE DISCRIMINATOR, and it comes from the one conforming case rather than from th
 
 A date is allowed IFF the same line points into `archives/`. One line, one pointer, the story lives where stories live. Anything else with a date in a comment is the narrative itself.
 
+The pair METHODE names, side by side. Kept, because the constraint recurs the moment it is ignored:
+
+```bash
+# `gh api` writes its errors to STDOUT: `$(gh api … || echo x)` produces '{"message":…}x'.
+```
+
+Deleted, because it is the incident and not the constraint — and the archive is where it belongs:
+
+```bash
+# This pitfall struck FOUR times… (Observed on test005, 2026-07-14.)
+```
+
 Scope: every COMMENTED line of every tracked text file. Not prose — a CHANGELOG, a runbook and an archive carry dates by design.
 
 🔴 The comment marker is per LANGUAGE, and that is not a refinement. This check TRAVELS into every generated project, and it used to scan `*.sh *.yml *.yaml` only: in a Python, TypeScript or Go project it read nothing at all and reported "no dated narrative" over a repository it had never opened. A guard that travels must not assume the language of the place it lands in.

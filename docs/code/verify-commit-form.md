@@ -7,6 +7,8 @@
 The rule is `METHODE.md`'s, in *"The four places a change is written"*.
 It has to be answered in two places that see different things: the `commit-msg` hook holds a message **being written**, the lot holds commits **already made**.
 
+**Where the 72 comes from**: [Chris Beams](https://cbea.ms/git-commit/) targets 50, but 72 is where GitHub truncates — a wall, not an average, which is what makes it armable at all. The imperative is the same mood as the CHANGELOG's, for the same reason: the subject says what applying the change does.
+
 🔴 **Written as two files, the two would diverge, and the local one is the one nobody re-reads.**
 So the hook carries no rule at all — it hands its message file over and reports what comes back. `.githooks/commit-msg` is nine lines for exactly that reason.
 

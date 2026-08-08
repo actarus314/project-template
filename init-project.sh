@@ -267,6 +267,7 @@ cat > "$DEST/workspace/docs/SUIVI.md" <<'EOF'
 > **RESTER COURT** : lu et édité très souvent, il **RENVOIE** au détail, il ne l'absorbe pas.
 > **Le SUIVI respire** : il grossit pendant une étape, puis **rétrécit à sa clôture** — on élague ici, et on écrit une **synthèse** (quoi/comment/pourquoi, jamais un dump) dans **`archives/`** (un dossier par étape close, froid et immuable).
 > Détail par ailleurs : `../repo/docs/adr/` (décisions) · `../plans/` (planification) · `../notes/`. Stable & cadrant → `repo/AGENTS.md` ; mouvant → ici.
+> **UN SEUL fichier tant qu'il répond à « qu'est-ce que je fais ensuite ? » d'un coup d'œil** — et ça dure longtemps. Le jour où il n'y répond plus, ce qui est **acquis** et ce qui **mord** sortent à côté (`ACQUIS.md`, `PIEGES.md`), et il ne garde que le travail. **Une règle tient ce découpage : rien hors d'ici ne doit appeler un geste**, sinon c'est un second backlog, et c'est le périmé qu'on lit en premier. Détail : `../README.md`.
 
 ## État actuel
 <Où en est le projet, en 3 lignes. Version en prod, ce qui tourne, ce qui est en chantier.>

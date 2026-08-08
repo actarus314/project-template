@@ -63,6 +63,7 @@ The inventory counts; **none of the questions below is answered by counting**, w
      🔴 **Read the SERVER, not the local cache**, for anything that lives on the forge: a stale remote ref made a pass report 19 branches where the forge held 2.
    - **Do the tables still render?** A block quote between a header and its rows breaks the whole table; rows must all carry the same number of cells.
    ⚠️ **State what was checked and what could NOT be** — a third-party dashboard, a token's expiry, an alert count. Unverifiable is a fine answer; silence reads as verified.
+   🔴 **Where the settled and the traps have been split off** *(`ACQUIS.md`, `PIEGES.md` — the shape and the rule are `METHODE.md`'s)*, **the same four questions run over them too**, and only at a closure. `verify-stage-closure` says so when a closed interval left them untouched, but it counts commits: it cannot tell a re-reading from a typo. **Two things leave rather than accumulate** — a settled fact the stage made false, and a trap a check now covers, since an armed rule no longer has to be known.
 
 3. **Did a stage close?** A release usually marks one; a fix's pull request does not. Only the conversation knows.
 4. **If one closed** — the three gestures the METHOD prescribes, in [`docs/METHODE.md`, "Closing out a stage"](../../docs/METHODE.md): prune the hot side so the doc **shrinks**, write the archive as a **synthesis** (never a dump), file the stage's research inside it, then put the memories through the same sieve.

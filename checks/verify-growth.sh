@@ -144,7 +144,10 @@ if [ -d ../workspace/.git ]; then
             | tail -1)
     if [ -n "$birth" ]; then
       rev=${birth%% *}; what=${birth#* }
-      before=$(hot_bytes "$ws" "$rev^"); after=$(hot_bytes "$ws" "$rev")
+      # A closure is a GESTURE, not a commit: the archive is born in one, the hot side is pruned
+      # in the next. Reading the state AT the birth froze "after" before the pruning existed, so a
+      # correct closure was reported as a growth — the shape that gets a guard switched off.
+      before=$(hot_bytes "$ws" "$rev^"); after=$(hot_bytes "$ws" HEAD)
     fi
   fi
 

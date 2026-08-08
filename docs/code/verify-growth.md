@@ -7,14 +7,13 @@
 Scripts are NOT here: a comment outgrowing its code is another question.
 Under one roof, gating the pair on prose blinded the script half on a commit touching only scripts.
 
-The rule — a closing stage makes the tracking doc SHRINK — is [`AGENTS.md`](../../AGENTS.md)'s.
-Concision is a rule of METHOD, not of published style, so it follows the method into the neighbouring workspace, where the document that must shrink lives. Archives are cold.
+The rule — a closing stage makes the tracking doc SHRINK — is [`AGENTS.md`](../../AGENTS.md)'s. Being a rule of METHOD rather than of published style, it follows the method into the neighbouring workspace. Archives are cold.
 
 ## Two halves, because each repository offers a different event
 
 **`repo/` — a percentage since the last release. Weak, and kept knowing it.** The reference moves at every release, so a slow drift never accumulates: the tracking document grew **327 %** over four releases without one verdict, twice landing just under the threshold. It stays because `repo/` has no closure event to anchor to. Reading it as validated is the mistake.
 
-**`workspace/` — the closure of a stage, and no date at all.** The first specification, *"has it shrunk once over the last N writes"*, was ruled out on the document's **263 writes**: the largest gap between two real cuts is **26**, so silence on healthy breathing needs N ≥ 27 — and at N = 27 the last cut sits inside the window. Green at every usable N, because "shrunk" cannot tell a purge from a rewording; a sliding balance is positive **79 %** of the time.
+**`workspace/` — the closure of a stage, and no date at all.** The first specification was ruled out on measurements now filed in the stage's archive.
 
 What replaced it is the event METHODE already names, and it is observable: an archive directory is born. Of the **23** filed, **18** shrink the hot side, **5** grow it.
 
@@ -30,3 +29,5 @@ Why this anchor and the neighbouring check's cannot be swapped:
 [`verify-comment-drift.md`](verify-comment-drift.md). ⚠️ Settled when both halves had an anchor — this one's workspace half has none, so the pair is an input to the overlap review, not a closed case.
 
 BLOCKING. Growth is often legitimate — a subject arrives. What it forbids is growing unnoticed, unable to say at closing time what breathed.
+
+**A closure is a gesture, not a commit**: the archive is born in one, the hot side is pruned in the next. So the comparison ends at `HEAD`, never at the birth — which froze "after" before the pruning existed, and reported a correct closure as a growth.

@@ -306,7 +306,7 @@ The project carries the version it was born from *(the stamp in its `AGENTS.md`)
 | **Dependabot** and **code scanning** alerts | Claude — **autonomously** *(dismiss/reopen)* | on receipt |
 | **SECRET SCANNING alerts** | 🔴 **THE MAINTAINER ALONE** | The assistant is **read-only** on these *(why: §1 step 3)*. |
 | **Write PAT rotation** | Claude **alerts at D-14** · **the maintainer regenerates** | every **90 days** |
-| **`SUIVI.md`** | Claude — **on its own** | consolidate · purge what's shipped **from HERE — it is synthesized into an archive, never lost** *(`METHODE.md`)* |
+| **`SUIVI.md`** | Claude — **on its own** | consolidate · purge what's shipped **from HERE — it is synthesized into an archive, never lost** *(`METHODE.md`)*. Where the settled and the traps have been split off beside it, **a closure re-reads those too** — and that is the only moment it does |
 
 ---
 

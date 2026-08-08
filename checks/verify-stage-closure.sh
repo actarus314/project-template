@@ -37,6 +37,27 @@ rev=$(git -C "$WS" rev-list -1 --before "$last_at" HEAD 2>/dev/null || true)
 hot=""
 [ -n "$rev" ] && hot=$(git -C "$WS" ls-tree --name-only "$rev" | grep '^RECHERCHE-' || true)
 
+# Where the settled and the traps have been SPLIT OFF, a closure owes them a pass too (METHODE).
+# Detected, never assumed: a project keeping one file has nothing to answer for here.
+companions=$(git -C "$WS" ls-files 'ACQUIS.md' 'PIEGES.md' 'docs/ACQUIS.md' 'docs/PIEGES.md' 2>/dev/null || true)
+untouched=""
+born=""
+if [ -n "$companions" ]; then
+  # The interval's OPENING revision: a file born inside it, or after it, owes that closure nothing.
+  # Judging it on an interval it did not span is how a guard cries on the legitimate case and ends
+  # up disarmed — the same blindness verify-growth publishes about documents born since the tag.
+  at_prev=$(git -C "$WS" rev-list -1 --before "$prev_at" HEAD 2>/dev/null || true)
+  while read -r f; do
+    [ -z "$f" ] && continue
+    if [ -z "$at_prev" ] || ! git -C "$WS" cat-file -e "$at_prev:$f" 2>/dev/null; then
+      born="$born $f"; continue
+    fi
+    untouched_scope="${untouched_scope:-}$f "
+    n=$(git -C "$WS" log --format=%H --since "$prev_at" --until "$last_at" -- "$f" | grep -c . || true)
+    [ "$n" -eq 0 ] && untouched="$untouched $f"
+  done <<< "$companions"
+fi
+
 # ⚠ marks; exit code stays 0 — advisory means the EXIT CODE, never the wording (verify-stage-closure.md).
 said=0
 if [ "$archived" -eq 0 ]; then
@@ -47,10 +68,15 @@ if [ -n "$hot" ]; then
   echo "⚠ still on the hot side at $last_name: $(echo "$hot" | tr '\n' ' ')— a finished RECHERCHE-* belongs in its stage folder"
   said=1
 fi
+if [ -n "$untouched" ]; then
+  echo "⚠ $prev_name → $last_name left$untouched untouched — a closure re-reads them: add what the stage"
+  echo "  established or what bit it, drop what it made false, drop a trap a check now covers"
+  said=1
+fi
 
 # Published either way: a bare ✓ cannot be told apart from a check that looked at nothing.
 if [ "$said" -eq 0 ]; then
-  echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* left at the root"
+  echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* left at the root${untouched_scope:+, $untouched_scope re-read}${born:+; younger than $prev_name, not judged:$born}"
 else
   echo "  (advisory — the gate stays green: whether a release closed a stage is a judgement, and a"
   echo "   patch release often closes none. Settling it is the housekeeping pass, not this counter.)"

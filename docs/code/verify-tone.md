@@ -10,6 +10,10 @@ Shared, like `verify-version.sh`: called by `./check.sh` AND by the CI, so the r
 
 ⚠ `git grep` on purpose, never a filesystem walk: the rule is about what is COMMITTED. An untracked scratch file breaking it is nobody's business.
 
+## Why it stops at `repo/`, and that is not an oversight
+
+The neighbouring `workspace/` is left alone deliberately. The second person is a rule of **published style**, paired with the one imposing English on versioned content — and `METHODE.md` states the discriminator that decides any perimeter: a rule of method travels everywhere, a rule of published style **stops where publication stops**. `workspace/` is deliberately in French and never leaves the machine, so extending the check there would import a rule from a perimeter explicitly exempt from its twin. *(Measured: 23 hits there, mostly quotations — an npm error message, the text of a stub.)*
+
 ## Why `-i`, and why the exceptions keep their case
 
 `-i` is not cosmetic: `git grep` is case-sensitive, so the capitalised forms went through untouched — the second person at the START of a sentence, which is where it lands most often. The repo held none in prose, so the guard never had the chance to give itself away; the flag found one on the first run, in a workflow template copied into every generic project.
