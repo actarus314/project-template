@@ -14,7 +14,7 @@ So the hook carries no rule at all — it hands its message file over and report
 
 ## What this guard governs depends on the repository's MERGE METHOD
 
-🔴 **Under a squash merge, these subjects are discarded and the pull-request TITLE becomes the one on the base branch.** Under a merge commit, they land as written.
+🔴 **What reaches the base branch depends on the repository's MERGE METHOD**, which the control table states and this check never reads. Under a merge commit, they land as written.
 `configure-repo.sh` sets squash-only by default and **adds the merge commit as soon as a `develop` exists**, so both cases are live across generated projects — and the repository that hosts this file is squash-only, where the check governs the branch alone.
 
 ➡️ **That is why `open-pr.sh` refuses the same four things on the title**, word list included: one sentence, two possible carriers, one form. Neither tool reads the setting — holding both to it costs nothing and needs no network call.

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:bf6813aeecee4bede429fb2f86cc57f8cf184275fa868f0dcc30f6c01ad9b53e
+  checksum-source-md: sha256:67a52360fda2bd71cc5a0b76b0eb2cb405231edd6def41717f13a0b2274eda09
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1797,7 +1797,7 @@
           <td class="h">both</td>
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
-          <td><strong>settled</strong> — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8. ⚠️ It compares <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
+          <td><strong>settled</strong> — the threshold is 5 lines, and the measurement that set it lives in its note. <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
           <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
