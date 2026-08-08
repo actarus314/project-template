@@ -13,13 +13,13 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ### Added
 - **Refuse a commit subject past 72 characters, uncapitalised, ending on a full stop, or opening on an article.**
   A `commit-msg` hook and a branch-wide check share one file, so the local rule and the CI's cannot diverge.
-  Bots and git's own subjects are exempt.
+  Bots and git's own subjects are exempt. ([#124](https://github.com/actarus314/project-template/pull/124))
 - **Refuse a pull-request title or body out of form, before anything is pushed.**
   The merge method decides whether the title or the branch's subjects survive, so both are held to one form.
-  The owed body sections are read from the repository's own template.
+  The owed body sections are read from the repository's own template. ([#124](https://github.com/actarus314/project-template/pull/124))
 - **Generate a Release note from the `CHANGELOG` instead of writing one for the occasion.**
   `release-notes.sh` prints the version's block, then the auto-generated pull-request list, and fails rather than print half a note.
-  It reads `Unreleased` while the version is not sealed yet.
+  It reads `Unreleased` while the version is not sealed yet. ([#124](https://github.com/actarus314/project-template/pull/124))
 - **Delete a dead local branch only once the remote reads `gone` and its pull request is `MERGED`.**
   `gone` alone also matches a branch removed by hand on the forge, and a local branch is the only copy left.
   It prints every branch it examined and the verdict that decided it. ([#121](https://github.com/actarus314/project-template/pull/121))
@@ -31,7 +31,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Neither of the check's two text splits respected quotes, so a false match consumed the instruction token and filed the next real opening as unauthorized.
   Both now use `shlex`. ([#119](https://github.com/actarus314/project-template/pull/119))
 - **Refuse a sentence hard-wrapped across two lines in a versioned `.md`.**
-  Structure — headings, tables, bullets, quote markers, HTML comments and fenced code, including either nested inside a blockquote — is left alone; only a genuinely cut sentence gets joined.
+  Structure — headings, tables, bullets, quote markers, HTML comments and fenced code, including either nested inside a blockquote — is left alone; only a genuinely cut sentence gets joined. ([#123](https://github.com/actarus314/project-template/pull/123))
 
 ### Changed
 - **Verify that closing a stage shrank the live tracking doc, instead of checking it against a date.**
@@ -45,14 +45,14 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Fixed
 - **Correct the control table, which still published the changelog cap as 750 characters drawn from the corpus.**
-  The cap is 300, taken from Common Changelog, and the whole entry form the check now refuses is listed there.
+  The cap is 300, taken from Common Changelog, and the whole entry form the check now refuses is listed there. ([#124](https://github.com/actarus314/project-template/pull/124))
 - **Give the changelog a stated, enforced form.**
   One section of each type per version, a Release link on every heading, and an entry that opens on the effect, holds 300 characters and ends with the pull request that delivered it.
-  Every published version was brought into line.
+  Every published version was brought into line. ([#123](https://github.com/actarus314/project-template/pull/123))
 - **Delete the closing pass's scratch enumeration file, not only its in-progress flag, once the pass hits its cycle limit.**
-  Left behind, the next pass read the old enumeration as its own already-done coverage.
+  Left behind, the next pass read the old enumeration as its own already-done coverage. ([#123](https://github.com/actarus314/project-template/pull/123))
 - **Recognise "fin de travail" as another way of asking for the closing pass, alongside "fin de chantier".**
-  The same request, one word apart, used to reach no skill at all.
+  The same request, one word apart, used to reach no skill at all. ([#123](https://github.com/actarus314/project-template/pull/123))
 - **Stop three blocking checks from printing "(advisory)" above their own output while still refusing the commit.**
   Their header and the control table already said `blocking: yes`; only the wording a reader sees was wrong.
   Only the genuinely advisory check keeps that word now. ([#122](https://github.com/actarus314/project-template/pull/122))
