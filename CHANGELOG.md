@@ -44,6 +44,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The method and the standard stay owed on every write. ([#120](https://github.com/actarus314/project-template/pull/120))
 
 ### Fixed
+- **Stop the growth check from reporting a correct closure as a failure to prune.**
+  It read the tracking doc at the commit that created the archive, so a pruning done in the next commit was invisible.
+  The comparison now ends at `HEAD`, covering a closure spread over several commits.
 - **Correct the control table, which still published the changelog cap as 750 characters drawn from the corpus.**
   The cap is 300, taken from Common Changelog, and the whole entry form the check now refuses is listed there. ([#124](https://github.com/actarus314/project-template/pull/124))
 - **Give the changelog a stated, enforced form.**
