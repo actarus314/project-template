@@ -302,7 +302,7 @@ The project carries the version it was born from *(the stamp in its `AGENTS.md`)
 
 | What | Who | When |
 |---|---|---|
-| **Renovate PR** *(EVERYTHING: auto-detected ecosystems — actions, npm, docker, pip… — **and** the 4 pinned binaries VERSION+SHA256)* | Claude — **autonomously** | weekly. Minor/patch grouped, **majors alone**. **Routine = PR reviewed by a human; SECURITY = auto-merged** *(no action needed)*. ⚠️ **If a binary's checksum is wrong, `sha256sum -c` fails the CI** — loudly. A red PR gets closed. |
+| **Renovate PR** *(EVERYTHING: auto-detected ecosystems — actions, npm, docker, pip… — **and** the 4 pinned binaries VERSION+SHA256)* | Claude — **autonomously** | weekly. Minor/patch grouped, **majors alone**. **Which of them wait for a human is the update policy** — `security-and-updates.md`, and it decides whether this row is any work at all. ⚠️ **If a binary's checksum is wrong, `sha256sum -c` fails the CI** — loudly. A red PR gets closed. |
 | **Dependabot** and **code scanning** alerts | Claude — **autonomously** *(dismiss/reopen)* | on receipt |
 | **SECRET SCANNING alerts** | 🔴 **THE MAINTAINER ALONE** | The assistant is **read-only** on these *(why: §1 step 3)*. |
 | **Write PAT rotation** | Claude **alerts at D-14** · **the maintainer regenerates** | every **90 days** |

@@ -11,6 +11,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
+  The runbook and the controls document now point at it instead of restating it.
+- **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green.
 - **Separate the trap of a gesture from the trap that belongs to none**, the first staying with its step in the runbook.
   The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating.
 - **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.

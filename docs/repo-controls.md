@@ -267,7 +267,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 | **`actionlint` + `zizmor`** | workflows are code: a `${{ }}` in a `run:` is a **shell injection**. | every PR |
 | **CodeQL** | native **default setup**, enabled by `configure-repo.sh` (`PATCH /code-scanning/default-setup`, `Administration: write`). **Detects languages and KEEPS THEM UP TO DATE on its own** — the previous `codeql.yml` declared only ONE, and missed `actions` workflows *(see "CodeQL: default setup", below)*. **Unavailable on private** (GHAS) → arrives at the flip. The two modes are **mutually exclusive**. | push/PR `main` + weekly |
 | **Dependabot alerts** | **CVE detection** — native, free even on private, **everywhere**: it's the dependency graph that Renovate reads. Version updates → **Renovate**. **Security updates**, though, are only the safety net **at 2 stages** — at 3 stages their PRs would target `main` and bypass staging *(→ `security-and-updates.md`)*. | continuous |
-| **Renovate** | **only update bot.** Auto-detects **all** the repo's ecosystems (npm, docker, actions, pip…) **with no declaration at all**, + the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (`vulnerabilityAlerts`) for its security PRs. Routine = PR reviewed by a **human**; **security = auto-merge**. Minor/patch grouped. | continuous / weekly |
+| **Renovate** | **only update bot.** Auto-detects **all** the repo's ecosystems (npm, docker, actions, pip…) **with no declaration at all**, + the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (`vulnerabilityAlerts`) for its security PRs. **Which updates merge on their own is the update policy, and it is not this document's** *(→ `security-and-updates.md`)*. | continuous / weekly |
 | **Secret scanning + push protection** | native, free on **public** (unavailable on private/Free). | every push |
 | **`main` ruleset** | PR required · required checks (**`checks`** + CodeQL + **`build-check` if `artefact` capability**) · no force-push/delete · no bypass · `required_approving_review_count = 0` (solo). | continuous |
 | **`tags` ruleset + immutable releases** | a `v*` tag that can be neither moved nor deleted, non-replaceable assets. **Without both, the prod pin above is worth NOTHING.** | continuous |
@@ -555,16 +555,10 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 | **No direct push to `main`/`develop`** | **`pre-push`** hook — *the substitute for the missing ruleset* | `--no-verify` (**a decision, not an accident**) |
 | **Never merge a red PR** | ❗ **human rule** — verify that **every expected workflow** is `completed / success` *(command below — above all **not** `gh pr checks`)* | nothing stops it server-side |
 
-> 🔴 **`gh pr checks <n>` is UNUSABLE with this standard's PAT — the rule was written everywhere, and unusable everywhere.**
-> It reads `statusCheckRollup`, which requires the **`Checks`** permission. This permission is **documented** by GitHub but **absent from the UI** for fine-grained PATs: it **cannot be granted** *(github/community#129512, cli/cli#12597)*. Result: `Resource not accessible by personal access token`. *(`gh pr view <n>` alone fails for the same reason.)*
-> **Nothing to add to the PAT** — the command below only needs `Actions: read`, already in the matrix (`secrets-and-auth.md`).
->
-> ```bash
-> sha=$(gh pr view <n> --json headRefOid --jq .headRefOid)   # --json targets → no rollup requested
-> gh run list --commit "$sha" --json workflowName,status,conclusion
-> ```
->
-> **Green ⇔ every expected workflow is `completed / success`** — the exact set, and why a missing workflow is not a green: [`AGENTS.md`](../AGENTS.md#discipline-pr-only).
+> 🔴 **`gh pr checks <n>` is UNUSABLE with this standard's PAT**, and so is `gh pr view <n>` alone — the permission both need cannot be granted at all *(`secrets-and-auth.md`)*.
+> **Nothing has to be added to the PAT for that**: the command that replaces them needs only `Actions: read`, already in the matrix.
+> **The command itself is a gesture** *(`RUNBOOK.md` §2)*, and **what counts as green** — the exact set of workflows, and why a missing one is not a green — is [`AGENTS.md`](../AGENTS.md#discipline-pr-only)'s.
+> What belongs HERE is only this: in private, **nothing on the server enforces it**.
 
 The `pre-push` hook **lets branch creation through** (otherwise a fresh repo's first push would be impossible) and **stays active in public** — the server then refuses the same push, but the local message is far clearer. *Defense in depth.*
 
