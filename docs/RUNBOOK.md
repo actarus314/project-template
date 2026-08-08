@@ -233,7 +233,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 > `verify-version.sh` compares the CHANGELOG's newest **versioned** heading to the newest **tag**
 > *(`Unreleased` is skipped — it is the open section)*. Sealing first creates a heading `X.Y.Z` while the newest tag is still the previous one: the check fails, so the sealing pull request is red and **cannot be merged**. Tagging first inverts it — the tag exists, the sealing PR makes the two agree, and it goes green. *(Verified on `v1.1.0`: the tagged commit still carried `## [1.0.0]` as its newest heading. At `v1.0.0` the mistake was invisible — no tag existed yet, so the guard was a silent no-op.)*
 > ⚠️ **Between the tag and the merge of the sealing PR, `main` is red on that one check.** That window is structural, it is expected, and it closes with the sealing.
-| 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** On a **PERSONAL** account, a package published from a **public** repo inherits its access: it is pullable **immediately**, no action needed. On an **ORG**, it can be **PRIVATE** *(org default)* → anonymous `docker pull` = **403**, and **no one can self-host**. **`configure-repo.sh` runs the test itself** and only requests the action if it fails. |
+| 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** **`configure-repo.sh` runs the anonymous test itself** and only requests the action if it fails — so this step is usually a read. 🔴 **Whether an action is owed depends on the OWNER, not on the repo**: the two defaults, what a `403` costs, and the UI path when it is owed live in `repo-controls.md`, *"Version pin in production"*. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
 
 > 🔴 **PROMOTING TO PRODUCTION USED TO DESTROY STAGING, as long as the repo is PRIVATE** — fixed at the root, but a repo configured before the fix still carries the old setting. Full mechanism: `repo-controls.md`, "Full flow".
@@ -331,7 +331,7 @@ The project carries the version it was born from *(the stamp in its `AGENTS.md`)
 > | **Mandatory 2FA** | `/settings/security` | enabled |
 > | **Classic PATs** | `/settings/personal-access-tokens?tab=classic` | **Restrict** *(blocked)* |
 > | **Fine-grained PATs** | `/settings/personal-access-tokens` | admin approval **required** + max lifetime **90 days** |
-> | **Default package visibility** | `/settings/packages` | ⚠️ on an **org**, a ghcr package is **private by default** *(§3 step 4)* |
+> | **Default package visibility** | `/settings/packages` | ⚠️ decides whether a published image can be pulled at all — `repo-controls.md`, *"Version pin in production"* |
 >
 > ⛔ **What the org does NOT bring, despite appearances**: **org rulesets** require **Team** *(explicit banner on `/settings/rules`)* · a **code security configuration** only replaces the repo action from **several** repos onward *(below that, `configure-repo.sh` already does everything)* · the **"Advanced Security"** screen suggests **Dependabot** is behind the paywall: **that is false**, it is free, private included — it is `/settings/security_analysis` that tells the truth.
 

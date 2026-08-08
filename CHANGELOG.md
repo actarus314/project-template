@@ -10,6 +10,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+### Changed
+- **Separate the trap of a gesture from the trap that belongs to none**, the first staying with its step in the runbook.
+  The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating.
+- **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
+
 ### Added
 - **Refuse a pointer that credits a document with a formula it does not carry.**
   A link is checked, an attribution is not, and one stayed false while every link around it resolved.
