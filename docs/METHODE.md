@@ -25,9 +25,9 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 | Role | Contains | **NEVER contains** |
 |---|---|---|
 | **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | **TWO things and no others: what is going to be done, and what has been done.** The open work — one list, never two — and one line per closed stage pointing at its archive. **Enough to pick back up cold.** | the evidence · the story of the bugs · the long why · **what has shipped** *(purged from HERE to the archive, never lost)* · full plans · **what is settled or what bites** *(→ below)* |
-| **THE SETTLED** *(default: `workspace/ACQUIS.md`)* | what is **decided, proven, or structural**: never reopened, never re-tested. A decision not to do something lands here rather than in an archive: it is consulted, not recounted. | anything calling for a gesture — that is the tracking doc's, and **an item here asking for work is a second backlog**, which is what forbids it |
-| **WHAT BITES** *(default: `workspace/PIEGES.md`)* | the traps that already cost once, read **before** acting. A trap a check now covers **leaves**: an armed rule need not be known. | the same — no open work, or the split collapses into two competing lists |
-| **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by phase or by topic.** | — *(it's the overflow: it can grow)* |
+| **THE SETTLED** *(default: `workspace/ACQUIS.md`)* | **what NOTHING CAN BE DONE ABOUT**: a decision made, a fact proven, a structural limit. Consulted, not told. | 🔴 **a defect that could be fixed** — filed here it becomes a fatality instead of being repaired *(done once, on 2026-08-08)*. A gap is WORK: it belongs in the tracking doc, and an item here asking for one is the second backlog this split forbids |
+| **WHAT BITES** *(default: `workspace/PIEGES.md`)* | the traps that already cost once, read **before** acting. A trap a check now covers **leaves**: an armed rule need not be known. | the same — no open work, or the split collapses into two lists |
+| **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by stage or topic.** | — *(the overflow: it can grow)* |
 | **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, the pitfalls. | the why *(→ conventions)* · the history *(→ archives)* |
 | **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |
 | **THE CODE** *(scripts, workflows)* | **what the code CANNOT say**: a non-obvious constraint, a pitfall that would recur. | **the historical narrative.** Never *"observed on 14/07 on test003…"* |
@@ -61,7 +61,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 > 🔴 **The template initializes EVERY project — including ones later run by a third-party system** *(GSD, superpowers, or other)*.
 > **Forcing our files on them would COLLIDE with theirs** *(`.planning/` & co.)*: **two competing tracking systems means none kept up**. **ONE gets chosen.**
 
-**It is a ROLE, not a file**: GSD's `.planning/`, a Linear, a Notion satisfy it just as well, as long as a fact keeps living in a single place. A resume doc that accumulates the shipped **becomes a journal**. **Goal**: for a human **or** an AI reopening the project 6 months later to find their footing **without reading a wall of text**.
+**It is a ROLE, not a file**: GSD's `.planning/`, a Linear, a Notion satisfy it just as well, as long as a fact keeps living in a single place. A resume doc that accumulates the shipped **becomes a journal**. **Goal**: a human **or** an AI reopening the project 6 months later finds their footing **without a wall of text**.
 
 `SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state **and "what's left to do"**. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
@@ -73,7 +73,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 ## Concision and plainness — in EVERY piece of writing, not just the documents
 
-**Rule set by the maintainer on 2026-08-07**, covering **everything written**: documents, code comments, commit messages, a check's output, a reply.
+**Rule set by the maintainer on 2026-08-07**, covering **everything written**: documents, comments, commit messages, a check's output, a reply.
 
 - **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that survives only because deleting it would take a decision.
 - **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who knows the subject and a reader who does not must reach the same understanding.
