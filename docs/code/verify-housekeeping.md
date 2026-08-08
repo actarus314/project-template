@@ -46,7 +46,9 @@ That is a limit, not an oversight: nothing arms a model's judgement.
 
 🔴 **The 3-cycle ceiling is ours to write.** `Stop` has NO native loop protection: a hook that always returns `block` never lets Claude stop. So the count is kept in the state directory, and on the third send-back the turn is **released** — with what is still uncovered published, not swallowed. A guard that can wedge the session is worse than the gap it watches, and the same reasoning already governs `auto` compaction above.
 
-⚠ **The artefact is scratch.** It lives in the state directory, outside both repositories, and is deleted when the doc is written. It is deliberately not a file beside the tracking doc: a second resume document is a second source, and the stale one is always the one that gets read.
+⚠ **The artefact is scratch.** It lives in the state directory, outside both repositories, and goes when the pass is disarmed.
+
+🔴 **Disarming happens at the next `Stop`, and its condition is the tracking doc's COMMIT, not the write.** The hook compares that commit's date against the arming; a doc written but not yet committed leaves the pass armed. Stated once as "deleted when the doc is written", which is wrong twice over — someone looking straight after the write finds both files still there and reads a leak that is not one. It is deliberately not a file beside the tracking doc: a second resume document is a second source, and the stale one is always the one that gets read.
 
 ### Three invariants deliberately NOT implemented
 

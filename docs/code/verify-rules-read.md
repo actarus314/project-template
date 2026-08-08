@@ -18,6 +18,12 @@ The runbook is a different kind of document — it holds **gestures**, with thei
 
 Each tier carries **its own marker**, so satisfying one never satisfies the other. Measured on 2026-08-07: the three documents together cost ~16 100 tokens per arming, of which the runbook alone is ~8 100 — but the argument is the one above, and the halved cost is a consequence, not the reason.
 
+## Testing it requires an isolated `XDG_STATE_HOME`, and that is not tidiness
+
+The check dates its state from the reads it finds in the transcript. Run against the real state directory, a test arms it from **the session's own opening reads** — and it then refuses every write for the rest of that session, with no way back short of re-reading the documents.
+
+`XDG_STATE_HOME=$(mktemp -d)` is therefore the condition for testing it at all: the bite (rc=2, naming the documents) and the silence are both observable there, and neither is observable in place.
+
 ## Why the transcript, and not a marker the assistant sets
 
 A guard the guarded party can satisfy by declaring itself satisfied is not a guard. The session transcript records tool calls as they were actually issued, so `Read` on a given path either appears in it or does not. No judgement, no self-report — the same discipline as every other hook here.
