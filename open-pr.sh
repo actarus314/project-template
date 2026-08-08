@@ -38,11 +38,19 @@ else
   case "$TITLE" in
     *.) title_bad="ends on a full stop";;
   esac
+  # Only the mechanical half of the imperative, same list as the commit subject and the CHANGELOG
+  # entry: it is one sentence in three places, so one wording refuses it in all three.
+  first=$(printf '%s' "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z].*$//')
+  case "$first" in
+    the|a|an|this|that|its|it|their|there|every|no|nothing|when|after)
+      title_bad="opens on '$first', which describes rather than commands";;
+  esac
 fi
 if [ -n "$title_bad" ]; then
   echo "open-pr: this title $title_bad — nothing pushed, nothing opened." >&2
   echo "    $TITLE" >&2
-  echo "  Squash-merging makes this title the commit subject on $BASE: capitalised, at most ${CAP} characters, no full stop." >&2
+  echo "  Squash-merging makes this title the commit subject on $BASE: an imperative sentence," >&2
+  echo "  capitalised, at most ${CAP} characters, no full stop. It says what merging DOES." >&2
   exit 2
 fi
 

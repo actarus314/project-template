@@ -15,7 +15,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A `commit-msg` hook and a branch-wide check share one file, so the local rule and the CI's cannot diverge.
   Bots and git's own subjects are exempt.
 - **Refuse a pull-request title or body out of form, before anything is pushed.**
-  Squash-merging makes the title the commit subject landing on the default branch: at most 72 characters, capitalised, no full stop.
+  Squash-merging makes the title the subject landing on the default branch, so it owes what a commit subject owes.
   The owed body sections are read from the repository's own template.
 - **Generate a Release note from the `CHANGELOG` instead of writing one for the occasion.**
   `release-notes.sh` prints the version's block, then the auto-generated pull-request list, and fails rather than print half a note.

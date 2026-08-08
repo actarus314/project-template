@@ -12,13 +12,14 @@ A `workflow_dispatch` run is a real run, but it does not satisfy a required `pul
 
 ## Why it waits before opening, not just before checking
 
-Opening straight after `git push` is the main cause of the miss: GitHub has not registered the head commit yet, so the event has nothing to attach a run to. Waiting on `gh api …/commits/$SHA` removes the largest share of it before the harder retry path is needed.
+Opening straight after `git push` is the main cause of the miss: GitHub has not registered the head commit yet, so the event has nothing to attach a run to.
 
 ## 🔴 Why the FORM is refused here, and nowhere else
 
 Merging is `--squash`, so **the title handed to this script is the commit subject that lands on the default branch**. The `commit-msg` hook never sees it: it judges the branch's own commits, which the squash discards. Until this refusal existed, `METHODE.md`'s rule had no armed point of application at all — the measurement is in the stage's archive.
 
 It fires **before the push**: a refusal leaving a branch pushed has already done the irreversible half.
-⚠️ **The imperative is NOT refused here**, where `verify-commit-form.sh` refuses it on a commit subject. A deliberate gap — closing it is a decision about the repository's writing style, not about this script.
+
+**The four refusals are `verify-commit-form.sh`'s**, word list included: one sentence in three places, one wording refusing it in all three. That alignment was a deliberate style decision — the narrative title *("The closing pass deletes…")* gives way to the imperative *("Delete a dead branch…")*.
 
 **The owed sections are read from `.github/PULL_REQUEST_TEMPLATE.md` at run time, never listed here**: a second list would drift, and a project adapting its template adapts what its bodies owe with no code to change. Only the heading's presence is read; whether the section demonstrates anything is a judgement no script reaches.
