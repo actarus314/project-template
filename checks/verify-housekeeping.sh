@@ -138,7 +138,7 @@ if [ "$EVENT" = Stop ] && [ -f "$ARMED" ]; then
   gap=$(TRACK="$TRACK" PASS="$PASS" python3 -c '
 import os, re
 doc = open(os.environ["TRACK"], encoding="utf-8").read().splitlines()
-items = [m.group(1) for l in doc if (m := re.match(r"\| \*\*(\d+)\*\* \|", l))]
+items = [m.group(1) for l in doc if (m := re.match(r"\| \*\*(\d+(?:\.\d+)+|\d+)\*\* \|", l))]
 sections = [l[3:].strip() for l in doc if l.startswith("## ")]
 try: art = open(os.environ["PASS"], encoding="utf-8").read()
 except OSError: art = ""

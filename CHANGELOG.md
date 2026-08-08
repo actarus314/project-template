@@ -11,6 +11,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Ask a closing stage whether it re-read the settled facts and the traps kept beside the tracking doc.**
+  Only where those files exist, only over the interval they actually spanned, and a file younger than it is named in the verdict rather than silently skipped.
 - **Refuse a commit subject past 72 characters, uncapitalised, ending on a full stop, or opening on an article.**
   A `commit-msg` hook and a branch-wide check share one file, so the local rule and the CI's cannot diverge.
   Bots and git's own subjects are exempt. ([#124](https://github.com/actarus314/project-template/pull/124))
@@ -34,6 +36,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Structure — headings, tables, bullets, quote markers, HTML comments and fenced code, including either nested inside a blockquote — is left alone; only a genuinely cut sentence gets joined. ([#123](https://github.com/actarus314/project-template/pull/123))
 
 ### Changed
+- **Ship a tracking-doc template that says when to split off what is settled and what bites.**
+  One file while it still answers "what do I do next" at a glance; past that, both move out beside it, and nothing outside the doc may call for a gesture.
 - **Verify that closing a stage shrank the live tracking doc, instead of checking it against a date.**
   An archive is a directory being created, never a file named inside it; a closure not yet committed is read too.
   The `repo/` half is unchanged and now documented as weak. ([#122](https://github.com/actarus314/project-template/pull/122))
@@ -44,6 +48,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The method and the standard stay owed on every write. ([#120](https://github.com/actarus314/project-template/pull/120))
 
 ### Fixed
+- **Count a backlog item numbered `13.1` in the closing pass's coverage.**
+  The sequencer matched whole numbers only, so a decimal item was invisible while the pass still reported covering the whole document.
 - **Correct the note claiming the closing pass's scratch files vanish when the tracking doc is written.**
   They go at the next `Stop`, and the condition is the doc's commit — so a look taken right after a write finds them still there and reads a leak that is not one.
 - **Stop the growth check from reporting a correct closure as a failure to prune.**

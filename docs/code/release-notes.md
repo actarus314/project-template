@@ -4,8 +4,10 @@
 
 ## Why a script exists at all
 
-The rule and its sources are `METHODE.md`'s, in *"The four places a change is written"*.
+The rule is `METHODE.md`'s, in *"The four places a change is written"*: the Release owns **nothing of its own**.
 What follows from it for this file: **a note nothing writes by hand is a note a script can produce, and reproduce identically** — which is the only reason one exists here.
+
+The source it rests on is [Common Changelog](https://common-changelog.org/): a release *"should contain the same content as the changelog entry"*, and *"long descriptions should be in commits or other references"*. A hand-written Release is a third rendering of one change, and nothing can check a third rendering against the other two.
 
 ## 🔴 The tag comes first, so the section is still called `Unreleased`
 

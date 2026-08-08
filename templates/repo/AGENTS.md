@@ -111,6 +111,7 @@ The checks below are not style preferences with a script attached: each one guar
   direnv hook loads nothing, the PAT is absent. ⚠️ It does **not** change directory — from elsewhere, pin the repo (`git -C repo`, `--repo`).
 - **`../workspace/`** is a git repo with **no remote**, never pushed: tracking doc, notes, secrets.
   Read `../workspace/docs/SUIVI.md` first when resuming; keep it up, with `CHANGELOG.md`.
+  It answers two questions and no others — what is going to be done, what has been done. Should it grow past that, `../workspace/README.md` says where the rest goes.
 
 ## Checks that run
 
