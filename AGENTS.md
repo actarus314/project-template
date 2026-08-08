@@ -17,7 +17,7 @@ This repo **builds and configures** projects, never one itself — what it is (a
 | **`../workspace/`** | ❌ **none — never pushed** | the tracking, the archives, the research |
 
 **`skills/new-project/` is the CANONICAL version of the skill**, and `~/.claude/skills/new-project` is a **symlink** to it.
-It used to live outside any repo: not versioned, not run through CI, not diffable — even though it drives the RUNBOOK, which changes every session. *(The integration audit found 5 drifts, including a command formally forbidden elsewhere in this repo.)* It sits at the **root**, never under `templates/` — and **not** because `init-project.sh` only copies from there. It also copies `check.sh`, `open-pr.sh`, **the whole of `checks/`** *(`cp "$TPL/checks/"verify-*.sh`, since every check detects its own perimeter and none has to be picked)* and **`.githooks/`** — all four **from the ROOT**, never from `templates/`, because a second copy drifts. What protects the skill is that the copies are **named**: two files, one directory, plus one glob confined to `checks/verify-*.sh`. `skills/` is reached by none of them.
+It used to live outside any repo: not versioned, not run through CI, not diffable — even though it drives the RUNBOOK, which changes every session. *(The integration audit found 5 drifts, including a command formally forbidden elsewhere in this repo.)* It sits at the **root**, never under `templates/` — and **not** because `init-project.sh` only copies from there. It also copies `check.sh`, `open-pr.sh`, `release-notes.sh`, **the whole of `checks/`** *(`cp "$TPL/checks/"verify-*.sh`, since every check detects its own perimeter and none has to be picked)* and **`.githooks/`** — all five **from the ROOT**, never from `templates/`, because a second copy drifts. What protects the skill is that the copies are **named**: three files, one directory, plus one glob confined to `checks/verify-*.sh`. `skills/` is reached by none of them.
 
 > 🔴 **`templates/repo/` is therefore NOT the full picture of what a generated project receives.** Reading it suggests a project ships without `check.sh`, without `open-pr.sh` and without `checks/` — it ships all three. They are **not duplicated under `templates/` on purpose**: the template runs them on itself, and a second copy would drift. **To see what a project really receives, generate one** *(`verify-travel.sh` does exactly that, and it is why it generates rather than reads)*.
 
@@ -30,11 +30,12 @@ It used to live outside any repo: not versioned, not run through CI, not diffabl
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ./check.sh   # replays the CI checks LOCALLY, at the pinned versions (local == github)
 ./open-pr.sh <base> <title> <body-file>   # opens a PR AND makes sure the CI actually starts (via direnv exec)
+./release-notes.sh <tag> [previous-tag]   # prints the Release note: the CHANGELOG block, then the PR list
 ```
 
 `configure-repo.sh` is **run by the maintainer** with an **ephemeral** admin PAT — the assistant **never** has `Administration: write`.
 
-**The four commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
+**The five commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
 
 `check.sh` reads the pinned versions in `ci.yml` *(single source)*, pulls the binaries under `.ci-tools/` *(gitignored)* and replays **everything the CI runs**: shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus **two deliberate additions**: validation of any `renovate.json` present *(local-only — it catches the silent freeze of updates on a broken config)*, and the **house checks** under `checks/`. It is **auto-detecting** *(it reads the repo's `ci.yml` and runs ONLY what's found there)*, so the **same** file serves this repo AND every generated project.
 
