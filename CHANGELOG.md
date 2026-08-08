@@ -11,6 +11,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a pointer that credits a document with a formula it does not carry.**
+  A link is checked, an attribution is not, and one stayed false while every link around it resolved.
+  Only a quoted formula counts; a paraphrase would need a judgement.
 - **Refuse an open action sitting outside the tracking doc**, in a file pledging to hold none or in an archive still being written.
   Splitting that doc into neighbours recreates the separate backlog the method forbids.
   Only a leftover declaring itself matches.

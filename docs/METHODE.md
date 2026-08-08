@@ -30,8 +30,8 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 | **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by stage or topic.** | — *(the overflow: it can grow)* |
 | **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, the pitfalls. | the why *(→ conventions)* · the history *(→ archives)* |
 | **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |
-| **THE CODE** *(scripts, workflows)* | **what the code CANNOT say**: a non-obvious constraint, a pitfall that would recur. | **the historical narrative.** Never *"observed on 14/07 on test003…"* |
-| **THE IMPLEMENTATION NOTES** *(`docs/code/<file>.md`)* | **why this file is written this way**: the constraint behind a line, what would break otherwise, **the measurement that set a value**. A subject file's annex, and it **travels with the file it documents**. | the rule *(→ this file, `AGENTS.md`)* · the perimeter, the trigger, the threshold VALUE *(→ the subject file that owns them)* · the dated story *(→ archives)* |
+| **THE CODE** *(scripts, workflows)* | **the constraint ITSELF, in one sentence** — what breaks if this line is written otherwise. Addressed to whoever is about to edit it. | **the historical narrative** *(never "observed on 14/07 on test003…")* · **a figure, an alternative weighed, an incident** *(→ the note below)* |
+| **THE IMPLEMENTATION NOTES** *(`docs/code/<file>.md`)* | **what it took to arrive at that line**: the **measurement** that set a value, the alternatives ruled out and why, what a reader needs in order to CHALLENGE the design. A subject file's annex, and it **travels with the file it documents**. | the rule *(→ this file, `AGENTS.md`)* · the perimeter, the trigger, the threshold VALUE *(→ the subject file that owns them)* · the dated story *(→ archives)* · **the comment restated in other words** |
 | **THE MEMORIES** *(`~/.claude/projects/<project>/memory/`)* | the **reflex** to wake up at startup: a constraint that gets broken **by default**, and the **short story** that says why it exists. | what a **versioned** document already carries *(→ a pointer is enough)* · a fact without the action that follows from it |
 
 ---
@@ -51,6 +51,9 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 > 🔴 **And the constraint works in the OTHER DIRECTION too — that's where its value is.**
 > **Everything the script LEARNS must FLOW BACK to the doc.** A fact living **only** in the script leaves the doc no longer enough to do the work by hand — wrong by omission.
 > ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
+
+> 🔴 **Where the comment stops and its note starts — the two used to claim the same object.** Both were given "the constraint", and neither said which one arbitrates: **32 pairs** of a script and its note scored as restating each other, up to 0,97. That is the mechanical consequence, not carelessness.
+> **The test is what the sentence CARRIES: a figure, an alternative ruled out, or an incident belongs to the note.** The comment keeps the constraint bare — enough not to break the line while editing it; the note keeps what it took to get there — enough to challenge the design. Neither is a summary of the other.
 
 A comment worth keeping states a constraint that would recur if ignored; one worth deleting recounts the incident, with its date and its evidence. **That narrative goes to the archive** — one line in the code, the story there — so deleting it loses nothing, it puts it in the right place. Both worked through on a real pair: [`docs/code/verify-narrative.md`](code/verify-narrative.md).
 

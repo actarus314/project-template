@@ -16,7 +16,7 @@ repo_root=$(pwd -P)
 read_targets=""   # what this run actually looked at
 skipped=""        # what it did not, and why it could not
 
-# 1 — the skill symlink (AGENTS.md, "Do not break"). Every skill under skills/ is checked, detected
+# 1 — the skill symlink (the list this guards: verify-do-not-break.md). Every skill under skills/ is checked, detected
 #     rather than named, and skipped where it is not installed on this machine.
 if [ ! -d skills ]; then
   skipped="$skipped skill-link(this repository holds no skill)"

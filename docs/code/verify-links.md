@@ -4,12 +4,15 @@
 
 ## Why a dead link matters more here
 
-This repo runs on pointers: [`AGENTS.md`](../../AGENTS.md) states a fact lives in ONE place and everywhere else there is a link, never a copy. A broken link silently turns "one source" back into "no source" — nothing renders an error, the reader just lands nowhere and stops following.
+This repo runs on pointers, so a broken one silently turns "one source" back into "no source" — nothing renders an error, the reader lands nowhere and stops following.
 
-## The false positive that shaped the backtick rule
+## Scope, and the false positive that shaped it
 
-The first manual pass read `docs/X.md` and `(…/releases/tag/vX.Y.Z)` — both FORMAT EXAMPLES inside backticks, never real links — as dead links. That is the only false positive the manual pass produced, and it is why the script blanks out fenced and inline code before it ever looks for a link pattern.
+The first manual pass read `docs/X.md` and `(…/releases/tag/vX.Y.Z)` — format EXAMPLES inside backticks — as dead links. Its only false positive, and why fenced and inline code are blanked before any link is looked for.
+An `http(s)` target is someone else's uptime, out of scope. An anchor is checked against the headings it aims at — which is what makes a table of contents safe to write, a dead anchor scrolling to the top rather than raising anything.
 
-## Scope
+## A pointer that puts words in a document's mouth
 
-An `http(s)` target is someone else's uptime and stays out of scope. An anchor is checked against the headings of the file it aims at, which is what makes a table of contents safe to write — a section renamed otherwise leaves every pointer to it dangling, silently, since a dead anchor scrolls to the top instead of raising anything.
+A link is checked, an **attribution** is not — one credited `METHODE.md` with a rule it never carried, while every link around it resolved.
+
+**Only a QUOTED formula counts**, normalised on both sides — a paraphrase needs a judgement, which no check makes. Measured first: the repository held **2**, so no threshold to defend. 🔴 **Both fired, and both were real**: those scripts TRAVEL, and a generated project's `AGENTS.md` is another file — one formula differed by a word, the other named a section absent there.

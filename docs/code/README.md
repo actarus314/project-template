@@ -1,6 +1,8 @@
 # `docs/code/` — the implementation notes
 
-One note per file, owning the **implementation** constraints of that file: why the code is written the way it is, what would break if it were written otherwise.
+One note per file, owning **what it took to arrive at that code**: the measurement that set a value, the alternatives ruled out, what a reader needs in order to challenge the design.
+
+🔴 **The constraint itself stays in the comment**, bare, beside the line it guards. A note carries what a comment must not: a figure, an alternative weighed, an incident.
 
 **It owns nothing else.** The rule a check enforces — and where a fact may live — is [`AGENTS.md`](../../AGENTS.md)'s to state. A note restating a rule is a second source, and the stale copy gets read.
 
