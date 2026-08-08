@@ -44,6 +44,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The method and the standard stay owed on every write. ([#120](https://github.com/actarus314/project-template/pull/120))
 
 ### Fixed
+- **Correct the note claiming the closing pass's scratch files vanish when the tracking doc is written.**
+  They go at the next `Stop`, and the condition is the doc's commit — so a look taken right after a write finds them still there and reads a leak that is not one.
 - **Stop the growth check from reporting a correct closure as a failure to prune.**
   It read the tracking doc at the commit that created the archive, so a pruning done in the next commit was invisible.
   The comparison now ends at `HEAD`, covering a closure spread over several commits.
