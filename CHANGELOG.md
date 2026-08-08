@@ -10,6 +10,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
+
 ### Added
 - **Ask a closing stage whether it re-read the settled facts and the traps kept beside the tracking doc.**
   Only where those files exist, only over the interval they actually spanned, and a file younger than it is named in the verdict rather than silently skipped. ([#125](https://github.com/actarus314/project-template/pull/125))
