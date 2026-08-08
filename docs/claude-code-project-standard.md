@@ -292,6 +292,14 @@ Model: `templates/repo/README.md`.
 
 **Deliberately left out** (solo-project theater, verified): `llms.txt` (SEO fad, not a standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (the tracking doc covers it).
 
+### What TRAVELS from the template, and the question that decides it
+
+🔴 **Does the generated project need it to RUN?** That is the whole rule.
+`check.sh`, `open-pr.sh`, `release-notes.sh`, `checks/` and `.githooks/` are **executed there**, so they travel. `configure-repo.sh` travels for the same reason: a project changes its own status, and setting the server up for that is the one gesture it cannot perform without the script.
+
+**A document describing the tool that BUILDS is pointed at, never copied** — `METHODE.md`, this document, `RUNBOOK.md`. A copy in every project is a copy nothing updates, and a rule gone stale is read with the authority of a live one.
+What travels **beside** a travelling script is what it takes to run that script on the spot: `docs/code/verify-*.md` next to their checks, `docs/server-config.md` next to `configure-repo.sh`, plus **one RUNBOOK link, pinned** to the version the project was born from — `main` would soon describe something the project never received.
+
 ### The LICENSE — a one-file decision, and the right moment to make it
 
 **PolyForm Noncommercial 1.0.0** by default (`templates/repo/LICENSE`): attribution required, noncommercial use allowed, commercial use closed — **including partial use**. Year and holder are substituted by `init-project.sh`, nothing to fill in.

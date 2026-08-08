@@ -147,7 +147,14 @@ if [ -d ../workspace/.git ]; then
       # A closure is a GESTURE, not a commit: the archive is born in one, the hot side is pruned
       # in the next. Reading the state AT the birth froze "after" before the pruning existed, so a
       # correct closure was reported as a growth — the shape that gets a guard switched off.
+      # Reading it at HEAD moves the same fault one step on: the NEXT stage legitimately reopens
+      # work, and the guard then bites a closure that did prune. So the question is whether the hot
+      # side EVER dropped below its pre-closure size — a fact, settled once, and never a threshold.
       before=$(hot_bytes "$ws" "$rev^"); after=$(hot_bytes "$ws" HEAD)
+      for rv in $(git -C "$ws" rev-list --reverse "$rev^..HEAD"); do
+        [ "$after" -lt "$before" ] && break
+        m=$(hot_bytes "$ws" "$rv"); [ "$m" -lt "$after" ] && after=$m
+      done
     fi
   fi
 
@@ -155,7 +162,7 @@ if [ -d ../workspace/.git ]; then
     # Zero targets reads exactly like a clean tree — so it is said, never passed off as a verdict.
     echo "  (workspace/: no closed stage to compare — no archive directory born under git)"
   elif [ "$after" -lt "$before" ]; then
-    echo "  ✓ workspace/: the last closure pruned the hot side — $what, $before → $after bytes"
+    echo "  ✓ workspace/: the last closure pruned the hot side — $what, $before → $after bytes at its lowest"
   else
     printf '  ↑ %-32s %6d → %6d bytes (%+d) — a stage closed and the hot side did NOT shrink\n' \
            "workspace/ $what" "$before" "$after" "$((after - before))"

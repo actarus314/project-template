@@ -11,6 +11,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Fixed
+- **Stop reporting a stage that did prune the tracking doc, once the next stage reopens work.**
+  The comparison now asks whether the hot side ever dropped below its pre-closure size, instead of weighing it today.
+  It still refuses a closure that never pruned.
 - **See an opening spread over several lines, the shape most commands take.**
   A newline ends a command, and the tokeniser swallowed it as whitespace.
   Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12.

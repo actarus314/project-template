@@ -70,7 +70,7 @@ cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
 # release-notes.sh is EXECUTED there, by the project's own release workflow — so it travels, where a
-# document describing this tool would only be pointed at (METHODE: what runs there, travels).
+# document describing this tool would only be pointed at (the rule and its reason: standard §16).
 cp "$TPL/release-notes.sh" "$DEST/repo/release-notes.sh"
 chmod +x "$DEST/repo/release-notes.sh"
 
