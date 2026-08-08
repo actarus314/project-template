@@ -255,6 +255,9 @@ fi
 # workspace/ templates
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
+# Pinned here and not with the others: this file is copied AFTER that block runs, so it was missed.
+[ "$TPL_VERSION" = "unreleased" ] || { sed -i.bak "s|project-template/blob/main/|project-template/blob/$TPL_VERSION/|g" \
+  "$DEST/workspace/secrets.md" && rm -f "$DEST/workspace/secrets.md.bak"; }
 # The list verify-private-names.sh reads. It ships EMPTY and commented: the check travels with the
 # repo, so its list has to exist beside it, or the pointer in its note lands nowhere.
 cp "$TPL/templates/workspace/private-names.txt"   "$DEST/workspace/private-names.txt"

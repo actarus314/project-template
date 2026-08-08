@@ -1,7 +1,7 @@
 # AGENTS.md — instructions for coding agents
 
 Read this before changing anything in this repository.
-This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding agents. Claude Code reads it through the import in `CLAUDE.md` — **versioned for that reason alone**: gitignored, it reaches nobody who clones, and nothing else loads this file.
+This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding agents. Claude Code reads it through the import in `CLAUDE.md`, **which is versioned for that reason alone** — gitignored, that import would reach nobody who clones, and nothing else loads this file.
 
 > Scaffolded by **project-template `<template-version>`** — `<template-options>`
 > from <template-origin> A **frozen copy**: a later fix to the template does **not** reach it on its own. The line says what to regenerate against, exactly — a snapshot of the past, never a claim about the present.

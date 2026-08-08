@@ -32,6 +32,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Only a leftover declaring itself matches.
 
 ### Fixed
+- **Stop sending a generated project's secrets file to a document it never receives**, named there three times.
+  The permission matrix is reached at a link pinned to the version the project was born from.
+- **Repair the sentence explaining why a generated `CLAUDE.md` is versioned**, which stated the opposite of its own reason.
 - **Stop reporting a stage that did prune the tracking doc, once the next stage reopens work.**
   The comparison now asks whether the hot side ever dropped below its pre-closure size, instead of weighing it today.
   It still refuses a closure that never pruned.
