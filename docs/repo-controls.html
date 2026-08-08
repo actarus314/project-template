@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:280f4e2024999bd3d0332628755849cec688da70e390ef128de46e793fd29690
+  checksum-source-md: sha256:de63d3b8933a77609dd64b5cc20d73cc803710654d37d3422bd43ac45b54cf2d
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1903,11 +1903,11 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-pr-instruction.sh</code></td>
-          <td>a pull request <strong>opened</strong> with no instruction from the maintainer</td>
+          <td><strong>a gesture that opens a pull request</strong>, run with no instruction from the maintainer — the attempt, never the pull request: a <code>PreToolUse</code> fires before the command, so an <code>open-pr.sh</code> its own title guard refuses records exactly like one that opened</td>
           <td class="h">local</td>
           <td>opening a pull request</td>
           <td class="p">✅</td>
-          <td><strong>an INSTRUMENT, never a gate</strong> — it records and returns, it never refuses a tool and cannot wedge a session. Its decision threshold was written before its data: under 5 % without an instruction over 20 openings, no gate gets built</td>
+          <td><strong>an INSTRUMENT, never a gate</strong> — it records and returns, it never refuses a tool and cannot wedge a session. Its decision threshold was written before its data: under 5 % without an instruction over 20 attempts, no gate gets built</td>
           <td class="t">instant</td>
           <td>n/a — records, never refuses</td>
         </tr>

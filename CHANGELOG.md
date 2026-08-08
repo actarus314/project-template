@@ -10,6 +10,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+### Fixed
+- **See an opening spread over several lines, the shape most commands take.**
+  A newline ends a command, and the tokeniser swallowed it as whitespace.
+  Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12.
+
 ## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
 
 ### Added
