@@ -93,6 +93,18 @@ else
   skipped="$skipped absolute-pointers(no assistant instructions here)"
 fi
 
+# 3b — the ONE address a generated project has for the documents it never receives. Its notes NAME
+#      them, which is allowed; the charter alone says where to read them. Lose that line and 28
+#      pointers go mute at once, here and in every project already generated.
+charter=docs/code/README.md
+if [ -f "$charter" ]; then
+  grep -q 'project-template/blob/[^/]*/docs' "$charter" \
+    || { echo "✗ $charter no longer says where the documents this project lacks can be read"; fail=1; }
+  read_targets="$read_targets charter-address"
+else
+  skipped="$skipped charter-address(no docs/code/ here)"
+fi
+
 # 4 — the hooks: a LOCAL file outside any repo, and an undeclared hook never fires. Which lines of
 #     the table are hooks is DEDUCED (their gate cell reads "n/a"), never hard-coded here.
 settings="$HOME/.claude/settings.json"

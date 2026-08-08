@@ -89,13 +89,15 @@ chmod +x "$DEST/repo/checks/"verify-*.sh
 
 # Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
 # is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
-# 🔴 `verify-*.md` ONLY, plus the charter they all link to: the generator's OWN notes describe
-# the tool that builds, which the built project has no use for (detail: docs/code/init-project.md).
+# 🔴 The rule is the SCRIPT, not the glob: a note travels when its script does. Only the notes of
+# what stays behind — this file, the standard's own — are left (detail: docs/code/init-project.md).
 mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
 cp "$TPL/docs/code/README.md"          "$DEST/repo/docs/code/README.md"
 cp "$TPL/docs/code/configure-repo.md"  "$DEST/repo/docs/code/configure-repo.md"
 cp "$TPL/docs/code/release-notes.md"   "$DEST/repo/docs/code/release-notes.md"
+cp "$TPL/docs/code/check.md"           "$DEST/repo/docs/code/check.md"
+cp "$TPL/docs/code/open-pr.md"         "$DEST/repo/docs/code/open-pr.md"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"

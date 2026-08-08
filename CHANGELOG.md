@@ -19,6 +19,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
 
 ### Added
+- **Refuse the loss of the one address a generated project has** for the documents it never receives.
+  Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once.
+- **Ship `check.sh` and `open-pr.sh` with their own notes**, which stayed behind while both scripts travelled.
 - **Tell a generated project where the documents it does not hold can be read**, from the notes charter, at a link pinned to the version it was born from.
   Those notes name the method and the controls document, which never travel.
 - **Refuse a pointer that credits a document with a formula it does not carry.**
