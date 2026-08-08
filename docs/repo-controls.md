@@ -93,7 +93,7 @@ feat/…   ●────●────●────────┘
 | 1 | Branch off `main` | `git switch -c feat/<topic>` |
 | 2 | Commit — the hook refuses a secret | `git commit` |
 | 3 | Open the PR — **the CI runs before the code touches `main`** | `gh pr create --fill` |
-| 4 | Merge **only if the CI is green** | `gh run list --commit "$(gh pr view <n> --json headRefOid --jq .headRefOid)"` then `gh pr merge --squash` *(**not** `gh pr checks`: the `Checks` permission cannot be granted — "The control matrix", below)* |
+| 4 | Merge **only if the CI is green** | `gh pr merge --squash`, once the green is read — the command that reads it, and what counts as green, are `RUNBOOK.md` §2 and [`AGENTS.md`](../AGENTS.md#discipline-pr-only)'s |
 
 ### With `staging` — three tiers, because there's a host to validate
 
