@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:ffc3467a00eeaf2a49480e83284c12da6e798bbfe0c0a3a407f894a56b073d7a
+  checksum-source-md: sha256:280f4e2024999bd3d0332628755849cec688da70e390ef128de46e793fd29690
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1767,7 +1767,7 @@
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — 🔴 it does <strong>not</strong> govern <code>main</code>: merging is <code>--squash</code>, so the subject landing there is the pull-request title (measured: all 40 of the last, 25 of them past 72), refused by <code>open-pr.sh</code> instead. Bots and git's own subjects are exempt, or every Renovate pull request would go red</td>
+          <td><strong>needs watching</strong> — 🔴 <strong>what reaches the default branch depends on the repository's MERGE METHOD</strong>, which this check never reads: under squash these subjects are discarded and the pull-request title takes their place (here, squash-only: all 40 of the last subjects on <code>main</code> are titles, 25 past 72), under a merge commit they land as written. <code>open-pr.sh</code> therefore refuses the same four things on the title. Bots and git's own subjects are exempt, or every Renovate pull request would go red</td>
           <td class="t">0,17 s</td>
           <td>✅</td>
         </tr>

@@ -10,12 +10,14 @@ It has to be answered in two places that see different things: the `commit-msg` 
 🔴 **Written as two files, the two would diverge, and the local one is the one nobody re-reads.**
 So the hook carries no rule at all — it hands its message file over and reports what comes back. `.githooks/commit-msg` is nine lines for exactly that reason.
 
-## What this guard does NOT govern, and it is the first thing to know
+## What this guard governs depends on the repository's MERGE METHOD
 
-🔴 **Squash-merging discards these subjects: `open-pr.sh` is what governs the default branch, and `open-pr.md` carries the measurement.**
+🔴 **Under a squash merge, these subjects are discarded and the pull-request TITLE becomes the one on the base branch.** Under a merge commit, they land as written.
+`configure-repo.sh` sets squash-only by default and **adds the merge commit as soon as a `develop` exists**, so both cases are live across generated projects — and the repository that hosts this file is squash-only, where the check governs the branch alone.
 
-What is left here is **the branch**, plus a `develop → main` promotion, which merges as a merge commit and does keep its own subjects.
-Read alone, this check looks like a guard on the published history. It is not, and saying so here is the only thing that stops it being believed.
+➡️ **That is why `open-pr.sh` refuses the same four things on the title**, word list included: one sentence, two possible carriers, one form. Neither tool reads the setting — holding both to it costs nothing and needs no network call.
+
+Read alone, this check looks like a guard on the published history. **Whether it is one depends on a setting it never reads**, and saying so here is the only thing that stops it being assumed.
 
 ## The refusals, and the one that is only half a refusal
 

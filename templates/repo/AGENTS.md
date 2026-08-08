@@ -123,7 +123,8 @@ The checks below are not style preferences with a script attached: each one guar
   The hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
 - **`./check.sh`** — replays the CI's security checks locally at the pinned versions, so `local == github`.
 - **`./open-pr.sh`** — opens a PR and makes sure CI starts on it (GitHub sometimes drops the dispatch).
-  It also refuses a title that is not an imperative sentence — past 72 characters, uncapitalised, ending on a full stop or opening on an article — and a body missing a section of the template: squash-merging makes that title the subject landing on `main`.
+  It also refuses a title that is not an imperative sentence — past 72 characters, uncapitalised, ending on a full stop or opening on an article — and a body missing a section of the template.
+  Under a squash merge that title becomes the commit subject on the base branch; under a merge commit the branch's own subjects land instead. Both are held to one form, since the merge method decides which one survives.
 - **`./release-notes.sh <tag>`** — prints the Release note: the version's `CHANGELOG` block, then the
   auto-generated pull-request list. The release workflow calls it, so a Release carries nothing written for the occasion.
 - **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,

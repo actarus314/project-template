@@ -22,10 +22,11 @@ BODY_FILE="${3:?usage: open-pr.sh <base-branch> <title> <body-file>}"
 [ -f "$BODY_FILE" ] || { echo "open-pr: body file not found: $BODY_FILE" >&2; exit 2; }
 
 # ── The form of the title, and of the body — refused HERE, before anything is pushed ────────────
-# 🔴 Merging is `--squash`, so THIS TITLE is the subject that lands on the default branch. The
-# `commit-msg` hook never sees it — the squash discards the commits it judged — which makes this the
-# only place governing what the history ends up carrying.
-# Rules and sources: METHODE.md, "The four places a change is written"; the measurement: open-pr.md.
+# 🔴 Under a SQUASH merge, THIS TITLE becomes the subject on the base branch, and the commits the
+# `commit-msg` hook judged are discarded. Under a merge commit, those commits land instead. Which one
+# applies depends on the repository's merge method, so BOTH are held to one form — and the refusals
+# below are `verify-commit-form.sh`'s, word list included.
+# Rules and sources: METHODE.md, "The four places a change is written". Detail: open-pr.md.
 CAP="${PR_TITLE_CAP:-72}"
 n=$(printf '%s' "$TITLE" | wc -m | tr -d ' ')
 title_bad=""
@@ -49,8 +50,8 @@ fi
 if [ -n "$title_bad" ]; then
   echo "open-pr: this title $title_bad — nothing pushed, nothing opened." >&2
   echo "    $TITLE" >&2
-  echo "  Squash-merging makes this title the commit subject on $BASE: an imperative sentence," >&2
-  echo "  capitalised, at most ${CAP} characters, no full stop. It says what merging DOES." >&2
+  echo "  Under a squash merge this title BECOMES the commit subject on $BASE, so it owes what one" >&2
+  echo "  owes: an imperative sentence, capitalised, at most ${CAP} characters, no full stop." >&2
   exit 2
 fi
 
