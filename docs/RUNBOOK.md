@@ -124,6 +124,7 @@ cd <project-folder>/repo && [ -n "$GITHUB_PAT" ] && echo "PAT loaded ✓" || ech
 | *Metadata* | *Read* | *automatic* |
 
 > ⚠️ **`Administration` IS NOT ENOUGH** — every missing permission in the table above fails **silently**: why, and how the recipe is derived, in [`secrets-and-auth.md`](secrets-and-auth.md#pat-permissions-two-tiers).
+> 🔴 **A THIRD copy of this table exists on purpose**: `templates/repo/docs/server-config.md` **travels**, and a generated project performs this gesture without holding either document above. It is the one copy that cannot be replaced by a pointer — so a new endpoint called by `configure-repo.sh` means editing three tables, not two.
 > **This token is stored NOWHERE**: no keychain, no `.envrc`, no shell history. The script requests it as **masked input**.
 
 ### Step 7b — the maintainer: run the script

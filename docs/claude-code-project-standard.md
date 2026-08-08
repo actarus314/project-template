@@ -298,7 +298,8 @@ Model: `templates/repo/README.md`.
 `check.sh`, `open-pr.sh`, `release-notes.sh`, `checks/` and `.githooks/` are **executed there**, so they travel. `configure-repo.sh` travels for the same reason: a project changes its own status, and setting the server up for that is the one gesture it cannot perform without the script.
 
 **A document describing the tool that BUILDS is pointed at, never copied** — `METHODE.md`, this document, `RUNBOOK.md`. A copy in every project is a copy nothing updates, and a rule gone stale is read with the authority of a live one.
-What travels **beside** a travelling script is what it takes to run that script on the spot: `docs/code/verify-*.md` next to their checks, `docs/server-config.md` next to `configure-repo.sh`, plus **one RUNBOOK link, pinned** to the version the project was born from — `main` would soon describe something the project never received.
+🔴 **A note travels when its SCRIPT travels** — the rule is the script, never a glob over file names. A tool that runs there without its note leaves its constraints to be re-derived, or written into the code as comments, which is what this whole arrangement avoids.
+What travels beside it is what it takes to run that script on the spot: `docs/code/<name>.md` next to its check, `docs/server-config.md` next to `configure-repo.sh`, plus **one RUNBOOK link, pinned** to the version the project was born from — `main` would soon describe something the project never received.
 
 ### The LICENSE — a one-file decision, and the right moment to make it
 

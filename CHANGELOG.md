@@ -17,6 +17,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Separate the trap of a gesture from the trap that belongs to none**, the first staying with its step in the runbook.
   The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating.
 - **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
+- **Ship the code of conduct with the private reporting channel** a solo-maintained project needs, where the template still sent every report through the maintainer.
+- **Say in the changelog template that an entry is capped at 300 characters**, which the check that travels with it already refused.
+- **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds.
 
 ### Added
 - **Refuse the loss of the one address a generated project has** for the documents it never receives.

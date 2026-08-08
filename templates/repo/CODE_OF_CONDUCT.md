@@ -60,7 +60,10 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-`<contact>`.
+`<contact>`, or privately through
+[GitHub's report abuse form](https://github.com/contact/report-abuse).
+On a project maintained by one person, the private form is the right channel
+when the maintainer is themselves the concern, since it does not go through them.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

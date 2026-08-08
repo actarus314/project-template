@@ -22,7 +22,7 @@ it states what changed for a user of the project, not what was merged.
      yes  - **Speed up search on large libraries.**
      no   - **Optimise the index query in store.ts.**
 
-3. Keep it to one to three sentences. The demonstration that the change was right — sample sizes, percentages, how the bug was found — belongs to the pull request. What must survive the cut is any LIMIT of the new behaviour, since that is what stops a reader from acting wrongly.
+3. Keep it under 300 characters, the pull-request reference excluded — `checks/verify-changelog.sh` refuses more. The demonstration that the change was right — sample sizes, percentages, how the bug was found — belongs to the pull request. What must survive the cut is any LIMIT of the new behaviour, since that is what stops a reader from acting wrongly.
 
 4. End with the pull request that delivered it, in parentheses. Several go inside ONE pair, separated by commas — a bare #12 is NOT a link in a file, only inside an issue or a pull request:
      ([#12](https://github.com/<owner>/<repo>/pull/12), [#14](https://github.com/<owner>/<repo>/pull/14))
