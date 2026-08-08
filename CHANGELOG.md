@@ -19,6 +19,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
 
 ### Added
+- **Tell a generated project where the documents it does not hold can be read**, from the notes charter, at a link pinned to the version it was born from.
+  Those notes name the method and the controls document, which never travel.
 - **Refuse a pointer that credits a document with a formula it does not carry.**
   A link is checked, an attribution is not, and one stayed false while every link around it resolved.
   Only a quoted formula counts; a paraphrase would need a judgement.

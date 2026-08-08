@@ -174,11 +174,12 @@ sed -i.bak -e "s|<template-version>|$TPL_VERSION|g" \
            -e "s|<template-options>|$TPL_OPTS|g" \
            -e "s|<template-origin>|https://github.com/actarus314/project-template|g" \
   "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
-# Same tag, same reason: the ONE link configure-repo.sh carries is pinned to it. Skipped when there
-# is no tag — `blob/unreleased/` would 404, and a dead link is worse than a moving one.
+# Same tag, same reason: every link back to this repo is pinned to it, so it keeps describing what
+# the project actually received. Skipped with no tag — `blob/unreleased/` 404s, worse than moving.
 if [ "$TPL_VERSION" != "unreleased" ]; then
   sed -i.bak "s|project-template/blob/main/|project-template/blob/$TPL_VERSION/|g" \
-    "$DEST/repo/configure-repo.sh" && rm -f "$DEST/repo/configure-repo.sh.bak"
+    "$DEST/repo/configure-repo.sh" "$DEST/repo/docs/code/README.md" \
+    && rm -f "$DEST/repo/configure-repo.sh.bak" "$DEST/repo/docs/code/README.md.bak"
 fi
 
 # ⚠ The key is INJECTED HERE, never carried by the template.
