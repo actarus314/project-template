@@ -1,10 +1,14 @@
-## What & why
+## What this changes
 
-<!-- What does this change, and why? Link an issue if there is one. -->
+<!-- The effect, in a line or two. The commits carry the intention, the diff shows the how. -->
 
-## Tested how
+## How it was verified
 
-<!-- Tests/typecheck green, or steps taken to manually verify. -->
+<!-- What was measured, and the command or run that says so. Never a retelling of the diff. -->
+
+## What was ruled out
+
+<!-- Options considered and dropped, each with its reason. "Nothing" is a valid answer. -->
 
 ## Checklist
 

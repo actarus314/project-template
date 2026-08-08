@@ -11,6 +11,15 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a commit subject past 72 characters, uncapitalised, ending on a full stop, or opening on an article.**
+  A `commit-msg` hook and a branch-wide check share one file, so the local rule and the CI's cannot diverge.
+  Bots and git's own subjects are exempt.
+- **Refuse a pull-request title or body out of form, before anything is pushed.**
+  Squash-merging makes the title the commit subject landing on the default branch: at most 72 characters, capitalised, no full stop.
+  The owed body sections are read from the repository's own template.
+- **Generate a Release note from the `CHANGELOG` instead of writing one for the occasion.**
+  `release-notes.sh` prints the version's block, then the auto-generated pull-request list, and fails rather than print half a note.
+  It reads `Unreleased` while the version is not sealed yet.
 - **Delete a dead local branch only once the remote reads `gone` and its pull request is `MERGED`.**
   `gone` alone also matches a branch removed by hand on the forge, and a local branch is the only copy left.
   It prints every branch it examined and the verdict that decided it. ([#121](https://github.com/actarus314/project-template/pull/121))
@@ -35,6 +44,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The method and the standard stay owed on every write. ([#120](https://github.com/actarus314/project-template/pull/120))
 
 ### Fixed
+- **Correct the control table, which still published the changelog cap as 750 characters drawn from the corpus.**
+  The cap is 300, taken from Common Changelog, and the whole entry form the check now refuses is listed there.
 - **Give the changelog a stated, enforced form.**
   One section of each type per version, a Release link on every heading, and an entry that opens on the effect, holds 300 characters and ends with the pull request that delivered it.
   Every published version was brought into line.

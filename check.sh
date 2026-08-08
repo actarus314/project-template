@@ -412,6 +412,13 @@ if [ -x checks/verify-changelog.sh ]; then
   if reap verify-changelog; then ok "changelog"; else ko "changelog"; fi
 fi
 
+# verify-commit-form.sh — the same file the `commit-msg` hook hands its message to, run here on the
+# branch's commits. The hook is bypassable and invisible server-side; this is what the CI sees.
+if [ -x checks/verify-commit-form.sh ]; then
+  note "verify-commit-form.sh — a commit subject out of form"
+  if reap verify-commit-form; then ok "commit subjects"; else ko "a commit subject is out of form"; fi
+fi
+
 # verify-links.sh — a dead relative link is invisible: nothing renders an error, the reader just
 # lands nowhere. This repo runs on pointers, so a broken one turns "one source" back into none.
 if [ -x checks/verify-links.sh ]; then

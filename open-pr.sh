@@ -21,6 +21,53 @@ TITLE="${2:?usage: open-pr.sh <base-branch> <title> <body-file>}"
 BODY_FILE="${3:?usage: open-pr.sh <base-branch> <title> <body-file>}"
 [ -f "$BODY_FILE" ] || { echo "open-pr: body file not found: $BODY_FILE" >&2; exit 2; }
 
+# ── The form of the title, and of the body — refused HERE, before anything is pushed ────────────
+# 🔴 Merging is `--squash`, so THIS TITLE is the subject that lands on the default branch. The
+# `commit-msg` hook never sees it — the squash discards the commits it judged — which makes this the
+# only place governing what the history ends up carrying.
+# Rules and sources: METHODE.md, "The four places a change is written"; the measurement: open-pr.md.
+CAP="${PR_TITLE_CAP:-72}"
+n=$(printf '%s' "$TITLE" | wc -m | tr -d ' ')
+title_bad=""
+if [ "$n" -gt "$CAP" ]; then title_bad="runs to $n characters, past $CAP"
+else
+  case "$TITLE" in
+    [A-Z]*) ;;
+    *) title_bad="does not open on a capital";;
+  esac
+  case "$TITLE" in
+    *.) title_bad="ends on a full stop";;
+  esac
+fi
+if [ -n "$title_bad" ]; then
+  echo "open-pr: this title $title_bad — nothing pushed, nothing opened." >&2
+  echo "    $TITLE" >&2
+  echo "  Squash-merging makes this title the commit subject on $BASE: capitalised, at most ${CAP} characters, no full stop." >&2
+  exit 2
+fi
+
+# The sections are read from the TEMPLATE, never listed here: a project that adapts its template
+# adapts what is owed with it, and one list cannot go stale against the other. No template, nothing
+# to owe — and it says so rather than passing in silence.
+TEMPLATE=.github/PULL_REQUEST_TEMPLATE.md
+if [ -f "$TEMPLATE" ]; then
+  missing=""
+  while IFS= read -r heading; do
+    grep -qxF "$heading" "$BODY_FILE" || missing="${missing}    ${heading}
+"
+  done < <(grep '^## ' "$TEMPLATE" || true)
+  if [ -n "$missing" ]; then
+    echo "open-pr: the body is missing a section of $TEMPLATE — nothing pushed, nothing opened." >&2
+    printf '%s' "$missing" >&2
+    echo "  The pull request owns the DEMONSTRATION: what was measured, what was ruled out, how to verify." >&2
+    echo "  Start from the template: cp $TEMPLATE <body-file>" >&2
+    exit 2
+  fi
+  echo "open-pr: title ${n} char., and the body carries every section of $TEMPLATE."
+else
+  echo "open-pr: title ${n} char. — no $TEMPLATE here, so no section is owed of the body."
+fi
+
 HEAD="$(git rev-parse --abbrev-ref HEAD)"
 [ "$HEAD" != "$BASE" ] || { echo "open-pr: head and base are both '$BASE'" >&2; exit 2; }
 REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"

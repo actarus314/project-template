@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:1bbf8344c3ad22e9c38340d95c8cdc953023abb672261bc2abcb5e0903fcab15
+  checksum-source-md: sha256:6c279c5fa58bb279a02eb6044e702d2359ad7a27aa8b417466596d8ddc3bda75
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1753,12 +1753,22 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-changelog.sh</code></td>
-          <td>a user-visible change with no <code>CHANGELOG</code> line, <strong>a repeated <code>###</code> or an entry past 750 characters inside <code>Unreleased</code>, and a version heading with no inline Release link</strong> (the cap is the corpus's third quartile; the published versions are counted, never failed — a sealed entry is not rewritten)</td>
+          <td>a user-visible change with no <code>CHANGELOG</code> line, and the FORM of every entry: <strong>a repeated <code>###</code>, an entry past 300 characters excluding its reference, an opening that is not a present-tense verb or that names the file instead of the effect, a version heading with no inline Release link, and a sealed entry citing no merged pull request</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
-          <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em></td>
+          <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em> — ⚠️ the cap is <strong>300, from <a href="https://common-changelog.org/">Common Changelog</a></strong>; the earlier 750 was the corpus's own third quartile, which endorses the drift it was meant to correct</td>
           <td class="t">0,08 s</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-commit-form.sh</code></td>
+          <td>a commit subject past 72 characters, uncapitalised, ending on a full stop, opening on an article, or with its body glued to line 2</td>
+          <td class="h">both</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — 🔴 it does <strong>not</strong> govern <code>main</code>: merging is <code>--squash</code>, so the subject landing there is the pull-request title (measured: all 40 of the last, 25 of them past 72), refused by <code>open-pr.sh</code> instead. Bots and git's own subjects are exempt, or every Renovate pull request would go red</td>
+          <td class="t">0,05 s</td>
           <td>✅</td>
         </tr>
         <tr>

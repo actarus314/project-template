@@ -69,6 +69,11 @@ chmod +x "$DEST/repo/check.sh"
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
+# release-notes.sh is EXECUTED there, by the project's own release workflow — so it travels, where a
+# document describing this tool would only be pointed at (METHODE: what runs there, travels).
+cp "$TPL/release-notes.sh" "$DEST/repo/release-notes.sh"
+chmod +x "$DEST/repo/release-notes.sh"
+
 # configure-repo.sh travels: a generated project changes status on its own (private → public), and
 # that is the ONE gesture needing server config it cannot reach without this script. Its single link
 # to the RUNBOOK is PINNED on the way out — the version a project was born from stays true about it
@@ -90,6 +95,7 @@ mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
 cp "$TPL/docs/code/README.md"          "$DEST/repo/docs/code/README.md"
 cp "$TPL/docs/code/configure-repo.md"  "$DEST/repo/docs/code/configure-repo.md"
+cp "$TPL/docs/code/release-notes.md"   "$DEST/repo/docs/code/release-notes.md"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -326,7 +332,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 # EXPLICIT list (never `git add -A`: `.env` and `.envrc` carry secrets and are gitignored,
 # but that's not something to bet on). ⚠ Corollary: every file ADDED to the template must be added
 # HERE — otherwise it's created on disk and NEVER committed. The net below makes that loud.
-git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh configure-repo.sh \
+git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh release-notes.sh configure-repo.sh \
         CLAUDE.md \
         checks \
         SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks

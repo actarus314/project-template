@@ -198,15 +198,12 @@ jobs:
             echo "Release ${GITHUB_REF_NAME} already exists — skipping."
             exit 0
           fi
-          # Whoever deploys this reads the release, not the workflow: the notes carry the pinned
-          # image reference. `--generate-notes` cannot prepend anything, so the notes are fetched
-          # through the API and the image block is placed in front of them.
-          notes=$(gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
-            -f tag_name="${GITHUB_REF_NAME}" --jq .body)
-          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "## Image
-
-          \`\`\`yaml
-          image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/<image-name>:${GITHUB_REF_NAME#v}
-          \`\`\`
-
-          ${notes}"
+          # Whoever deploys this reads the release, not the workflow, so the pinned image reference
+          # comes FIRST. Everything under it is release-notes.sh's: the version's CHANGELOG block
+          # and the auto-generated pull-request list, the Release owning nothing of its own.
+          {
+            printf '## Image\n\n```yaml\nimage: ghcr.io/%s/<image-name>:%s\n```\n\n' \
+              "${GITHUB_REPOSITORY_OWNER}" "${GITHUB_REF_NAME#v}"
+            ./release-notes.sh "${GITHUB_REF_NAME}"
+          } > "${RUNNER_TEMP}/notes.md"
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file "${RUNNER_TEMP}/notes.md"

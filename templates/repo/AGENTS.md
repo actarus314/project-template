@@ -118,9 +118,14 @@ The checks below are not style preferences with a script attached: each one guar
   BLOCKING replay of `./check.sh --commit` on every commit, with the full lot every 6h (`CHECK_MAX_AGE_HOURS`).
   *(Stated here rather than linked: this is a generated project, and the document that owns the three rhythms lives in the template repository, where no link from here resolves. The behaviour itself is carried by `.githooks/pre-commit` — that file is what decides, this line describes it.)*
 - **pre-push hook** — refuses a direct push to `main` / `develop` (the missing ruleset).
-  Both hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
+- **commit-msg hook** — refuses a subject past 72 characters, uncapitalised, ending on a full stop or
+  opening on an article, and a body glued to line 2. It carries no rule of its own: it hands the message to `checks/verify-commit-form.sh`, the file the CI runs on the branch.
+  The hooks: a fresh clone must re-arm them once: `git config core.hooksPath .githooks`.
 - **`./check.sh`** — replays the CI's security checks locally at the pinned versions, so `local == github`.
 - **`./open-pr.sh`** — opens a PR and makes sure CI starts on it (GitHub sometimes drops the dispatch).
+  It also refuses a title past 72 characters, uncapitalised or ending on a full stop, and a body missing a section of the template: squash-merging makes that title the subject landing on `main`.
+- **`./release-notes.sh <tag>`** — prints the Release note: the version's `CHANGELOG` block, then the
+  auto-generated pull-request list. The release workflow calls it, so a Release carries nothing written for the occasion.
 - **CI** (on every pull request, and required before merge) — `gitleaks` over the *full* history,
   `actionlint` + `zizmor` on the workflows, `semgrep` static analysis, `osv-scanner` on every manifest it discovers (`-r .`; CI-only tooling is out of scope via .gitignore), then the project's own tests.
 - **CodeQL** — security analysis; a finding blocks the merge.
