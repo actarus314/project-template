@@ -20,6 +20,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Ship the code of conduct with the private reporting channel** a solo-maintained project needs, where the template still sent every report through the maintainer.
 - **Say in the changelog template that an entry is capped at 300 characters**, which the check that travels with it already refused.
 - **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds.
+- **Give concision a test that decides**: remove the word, the sentence, the line, and keep the removal if nothing breaks.
+  The rule asked for concision without saying how to settle a case, so every trim was an argument.
 
 ### Added
 - **Refuse the loss of the one address a generated project has** for the documents it never receives.
