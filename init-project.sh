@@ -70,7 +70,7 @@ cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
 # release-notes.sh is EXECUTED there, by the project's own release workflow — so it travels, where a
-# document describing this tool would only be pointed at (METHODE: what runs there, travels).
+# document describing this tool would only be pointed at (the rule and its reason: standard §16).
 cp "$TPL/release-notes.sh" "$DEST/repo/release-notes.sh"
 chmod +x "$DEST/repo/release-notes.sh"
 
@@ -89,13 +89,15 @@ chmod +x "$DEST/repo/checks/"verify-*.sh
 
 # Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
 # is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
-# 🔴 `verify-*.md` ONLY, plus the charter they all link to: the generator's OWN notes describe
-# the tool that builds, which the built project has no use for (detail: docs/code/init-project.md).
+# 🔴 The rule is the SCRIPT, not the glob: a note travels when its script does. Only the notes of
+# what stays behind — this file, the standard's own — are left (detail: docs/code/init-project.md).
 mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
 cp "$TPL/docs/code/README.md"          "$DEST/repo/docs/code/README.md"
 cp "$TPL/docs/code/configure-repo.md"  "$DEST/repo/docs/code/configure-repo.md"
 cp "$TPL/docs/code/release-notes.md"   "$DEST/repo/docs/code/release-notes.md"
+cp "$TPL/docs/code/check.md"           "$DEST/repo/docs/code/check.md"
+cp "$TPL/docs/code/open-pr.md"         "$DEST/repo/docs/code/open-pr.md"
 
 # Versioned GitHub files (community + .github)
 cp -R "$TPL/templates/repo/.github"          "$DEST/repo/.github"
@@ -174,11 +176,12 @@ sed -i.bak -e "s|<template-version>|$TPL_VERSION|g" \
            -e "s|<template-options>|$TPL_OPTS|g" \
            -e "s|<template-origin>|https://github.com/actarus314/project-template|g" \
   "$DEST/repo/AGENTS.md" && rm -f "$DEST/repo/AGENTS.md.bak"
-# Same tag, same reason: the ONE link configure-repo.sh carries is pinned to it. Skipped when there
-# is no tag — `blob/unreleased/` would 404, and a dead link is worse than a moving one.
+# Same tag, same reason: every link back to this repo is pinned to it, so it keeps describing what
+# the project actually received. Skipped with no tag — `blob/unreleased/` 404s, worse than moving.
 if [ "$TPL_VERSION" != "unreleased" ]; then
   sed -i.bak "s|project-template/blob/main/|project-template/blob/$TPL_VERSION/|g" \
-    "$DEST/repo/configure-repo.sh" && rm -f "$DEST/repo/configure-repo.sh.bak"
+    "$DEST/repo/configure-repo.sh" "$DEST/repo/docs/code/README.md" \
+    && rm -f "$DEST/repo/configure-repo.sh.bak" "$DEST/repo/docs/code/README.md.bak"
 fi
 
 # ⚠ The key is INJECTED HERE, never carried by the template.
@@ -252,6 +255,9 @@ fi
 # workspace/ templates
 cp "$TPL/templates/workspace/README.md"           "$DEST/workspace/README.md"
 cp "$TPL/templates/workspace/secrets-template.md" "$DEST/workspace/secrets.md"
+# Pinned here and not with the others: this file is copied AFTER that block runs, so it was missed.
+[ "$TPL_VERSION" = "unreleased" ] || { sed -i.bak "s|project-template/blob/main/|project-template/blob/$TPL_VERSION/|g" \
+  "$DEST/workspace/secrets.md" && rm -f "$DEST/workspace/secrets.md.bak"; }
 # The list verify-private-names.sh reads. It ships EMPTY and commented: the check travels with the
 # repo, so its list has to exist beside it, or the pointer in its note lands nowhere.
 cp "$TPL/templates/workspace/private-names.txt"   "$DEST/workspace/private-names.txt"

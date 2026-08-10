@@ -1,9 +1,11 @@
 # `docs/code/` — the implementation notes
 
-One note per file, owning the **implementation** constraints of that file: why the code is written the way it is, what would break if it were written otherwise.
+One note per file, owning **what it took to arrive at that code**: the measurement that set a value, the alternatives ruled out, what a reader needs to challenge the design.
 
-**It owns nothing else.** The rule a check enforces — and where a fact may live — is [`AGENTS.md`](../../AGENTS.md)'s to state. A note restating a rule is a second source, and the stale copy gets read.
+🔴 **The constraint itself stays in the comment**, bare, beside the line it guards. A note carries what a comment must not: a figure, an alternative weighed, an incident.
 
-These notes **travel**, beside the checks they document, into every generated project. So they are written to be read WHERE THEY LAND: pointing at a file only the generating repo holds is a dead end there, and a check says so.
+**It owns nothing else.** The rule a check enforces is [`AGENTS.md`](../../AGENTS.md)'s to state, and a note restating one is a second source — the stale copy gets read.
 
-🔴 **A `blocking:` header describes the EXIT CODE, not the wording** — `check.sh` turns any non-zero into a KO. Three once printed *(advisory)* while refusing the commit.
+These notes **travel** into every generated project, so they are written to be read WHERE THEY LAND. 🔴 **Naming a document this project does not hold is a pointer; restating it is not.** They live where it was generated from: https://github.com/actarus314/project-template/blob/main/docs/
+
+🔴 **A `blocking:` header describes the EXIT CODE, not the wording** — any non-zero is a KO. Three once printed *(advisory)* while refusing the commit.

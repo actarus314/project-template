@@ -260,6 +260,8 @@ An entry that matches no file is **not harmful** — for a path generated only i
 
 Polished, concise, **zero fluff**. Bilingual **English then French**, separated by `---`.
 
+> 🔴 **It may RESTATE a description another document owns — never a RULE.** A visitor does not clone: sending them to `AGENTS.md` to learn what a folder holds points at a file they will never open, so the showcase says it on the spot, and briefly. A constraint keeps its single owner — restated here, the showcase becomes a second source of rules, and the stale one gets read. Worked through on one case: what `../workspace/` holds is described in both, while the rule that it never gains a remote lives in `AGENTS.md` alone.
+
 **Typical structure**:
 - **Title** = `Name — subtitle that says what it is` (not just the name).
 - **Hook** aimed at the user's real problem, honest (no hollow superlatives).
@@ -291,6 +293,15 @@ Model: `templates/repo/README.md`.
 **Present from the FIRST commit** *(all created by `init-project.sh`)*: `LICENSE` · `README` *(dual target, §15)* · `SECURITY.md` *(private advisories)* · `CONTRIBUTING.md` · `CODE_OF_CONDUCT.md` · `.github/` *(CI, `renovate.json`, `ISSUE_TEMPLATE/` + `config.yml`, PR template)* · `.gitattributes` if a vendored library.
 
 **Deliberately left out** (solo-project theater, verified): `llms.txt` (SEO fad, not a standard) · `SUPPORT.md` · `GOVERNANCE.md` · `CITATION.cff` · `ROADMAP.md` (the tracking doc covers it).
+
+### What TRAVELS from the template, and the question that decides it
+
+🔴 **Does the generated project need it to RUN?** That is the whole rule.
+`check.sh`, `open-pr.sh`, `release-notes.sh`, `checks/` and `.githooks/` are **executed there**, so they travel. `configure-repo.sh` travels for the same reason: a project changes its own status, and setting the server up for that is the one gesture it cannot perform without the script.
+
+**A document describing the tool that BUILDS is pointed at, never copied** — `METHODE.md`, this document, `RUNBOOK.md`. A copy in every project is a copy nothing updates, and a rule gone stale is read with the authority of a live one.
+🔴 **A note travels when its SCRIPT travels** — the rule is the script, never a glob over file names. A tool that runs there without its note leaves its constraints to be re-derived, or written into the code as comments, which is what this whole arrangement avoids.
+What travels beside it is what it takes to run that script on the spot: `docs/code/<name>.md` next to its check, `docs/server-config.md` next to `configure-repo.sh`, plus **one RUNBOOK link, pinned** to the version the project was born from — `main` would soon describe something the project never received.
 
 ### The LICENSE — a one-file decision, and the right moment to make it
 

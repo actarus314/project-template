@@ -15,6 +15,7 @@ ref=$(git rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/
       || git describe --tags --abbrev=0 2>/dev/null || true)
 [ -n "$ref" ] || { echo "  (no reference point yet — nothing to compare against)"; exit 0; }
 
+# Adjustable. Below this, a removal is an edit, not a block going missing: verify-dropped-comment.md.
 BLOCK=${DROPPED_BLOCK_THRESHOLD:-5}
 command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 0; }
 

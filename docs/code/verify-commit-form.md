@@ -14,7 +14,7 @@ So the hook carries no rule at all — it hands its message file over and report
 
 ## What this guard governs depends on the repository's MERGE METHOD
 
-🔴 **Under a squash merge, these subjects are discarded and the pull-request TITLE becomes the one on the base branch.** Under a merge commit, they land as written.
+🔴 **What reaches the base branch depends on the repository's MERGE METHOD**, which the control table states and this check never reads. Under a merge commit, they land as written.
 `configure-repo.sh` sets squash-only by default and **adds the merge commit as soon as a `develop` exists**, so both cases are live across generated projects — and the repository that hosts this file is squash-only, where the check governs the branch alone.
 
 ➡️ **That is why `open-pr.sh` refuses the same four things on the title**, word list included: one sentence, two possible carriers, one form. Neither tool reads the setting — holding both to it costs nothing and needs no network call.
@@ -43,4 +43,4 @@ In practice the joined text runs past the cap and is refused for its length inst
 
 **The default branch is skipped, deliberately.** Published history is not rewritten *(RUNBOOK §3)*, so judging it would only ever report what cannot be fixed — the shape that gets a check switched off.
 
-`wc -m` counts characters under a UTF-8 locale and **bytes** under `C`, where an em dash reads as three. That way the miscount refuses early; it never passes wrongly.
+**The locale changes what the cap counts**, and the direction of the error was chosen rather than suffered: the constraint sits in the script, beside the line it governs.

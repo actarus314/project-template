@@ -42,6 +42,7 @@ def headings(path):
             _heads[key] = set(); return _heads[key]
         _heads[key] = {slug(m.group(1)) for m in re.finditer(r"^#{1,6}\s+(.+?)\s*$", text, re.M)}
     return _heads[key]
+# Nothing here is authored: a dead link inside a dependency is not this repo's to fix.
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 bad = []
 # A root that is not there reads exactly like a root with nothing wrong in it, so this count is
@@ -77,9 +78,39 @@ for root in (pathlib.Path(a) for a in sys.argv[1:]):
                 if slug(frag) not in headings(dest):
                     bad.append(f"{md}: {target} — no heading matches that anchor")
 
+# A pointer can NAME a document and put words in its mouth, and nothing reads an attribution. Only
+# a QUOTED formula counts, compared normalised — unquoted is a paraphrase, which is a judgement.
+def flat(s):
+    return re.sub(r"\s+", " ", re.sub(r"[^\w\s]", "", s)).strip().lower()
+
+owners, quoted = {}, 0
+for root in (pathlib.Path(a) for a in sys.argv[1:]):
+    for md in (root.rglob("*.md") if root.is_dir() else []):
+        if not any(s in md.parts for s in SKIP):
+            owners.setdefault(md.stem, md)
+if owners:
+    ATTR = re.compile(r"\((" + "|".join(map(re.escape, owners)) + r")(?:\.md)?\s*[:,]\s*"
+                      r"[\"“«]\s*([^\"”»)]{8,90}?)\s*[\"”»]\)")
+    for root in (pathlib.Path(a) for a in sys.argv[1:]):
+        for src in sorted(list(root.rglob("*.md")) + list(root.rglob("*.sh")) if root.is_dir() else []):
+            if any(s in src.parts for s in SKIP):
+                continue
+            try:
+                body = src.read_text()
+            except OSError:
+                continue
+            for doc, words in ATTR.findall(body):
+                quoted += 1
+                try:
+                    target = flat(owners[doc].read_text())
+                except OSError:
+                    continue
+                if flat(words) not in target:
+                    bad.append(f"{src}: credits {doc}.md with \"{words}\" — that document does not say it")
+
 for b in bad:
     print(f"✗ dead link — {b}", file=sys.stderr)
-scope = f"{files} file(s) in {', '.join(read) or 'nothing'}"
+scope = f"{files} file(s) in {', '.join(read) or 'nothing'}, {quoted} quoted attribution(s)"
 if absent:
     scope += f" — NOT read: {', '.join(absent)} (absent)"
 print(f"✓ every relative link resolves — {scope}" if not bad

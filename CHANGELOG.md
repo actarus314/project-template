@@ -10,6 +10,55 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+### Changed
+- **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
+  The runbook and the controls document now point at it instead of restating it.
+- **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green.
+- **Separate the trap of a gesture from the trap that belongs to none**, the first staying with its step in the runbook.
+  The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating.
+- **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
+- **Ship the code of conduct with the private reporting channel** a solo-maintained project needs, where the template still sent every report through the maintainer.
+- **Say in the changelog template that an entry is capped at 300 characters**, which the check that travels with it already refused.
+- **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds.
+- **Give concision a test that decides**: remove the word, the sentence, the line, and keep the removal if nothing breaks.
+  The rule asked for concision without saying how to settle a case, so every trim was an argument.
+- **Split four comment blocks from the notes that repeated them**, the comment keeping the bare constraint and the note what it took to get there.
+  The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49.
+- **Say beside each adjustable threshold why it can be moved**, where eight of the thirteen stood bare.
+  An exception with no reason on the spot reads as an oversight, and gets widened or deleted at random.
+
+### Added
+- **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
+- **Allow the README to restate a description, never a rule**, the line that was practised without being written.
+  A visitor never clones, so sending them elsewhere to learn what a folder holds points at a file they will not open.
+
+- **Refuse a skill front matter whose `description` is folded onto the `name` line**, a break that raises no error.
+- **Refuse the loss of the one address a generated project has** for the documents it never receives.
+  Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once.
+- **Ship `check.sh` and `open-pr.sh` with their own notes**, which stayed behind while both scripts travelled.
+- **Tell a generated project where the documents it does not hold can be read**, from the notes charter, at a link pinned to the version it was born from.
+  Those notes name the method and the controls document, which never travel.
+- **Refuse a pointer that credits a document with a formula it does not carry.**
+  A link is checked, an attribution is not, and one stayed false while every link around it resolved.
+  Only a quoted formula counts; a paraphrase would need a judgement.
+- **Refuse an open action sitting outside the tracking doc**, in a file pledging to hold none or in an archive still being written.
+  Splitting that doc into neighbours recreates the separate backlog the method forbids.
+  Only a leftover declaring itself matches.
+
+### Fixed
+- **Make both skills fire on the phrases they were written for**, where their `description` sat folded onto the `name` line.
+  YAML read the pair as one key, so the field the assistant consults before invoking a skill did not exist — the skill loaded and listed, and never triggered.
+- **Stop reading a YAML front matter as prose**, where the sentence-per-line check saw its two keys as one sentence cut in half.
+- **Stop sending a generated project's secrets file to a document it never receives**, named there three times.
+  The permission matrix is reached at a link pinned to the version the project was born from.
+- **Repair the sentence explaining why a generated `CLAUDE.md` is versioned**, which stated the opposite of its own reason.
+- **Stop reporting a stage that did prune the tracking doc, once the next stage reopens work.**
+  The comparison now asks whether the hot side ever dropped below its pre-closure size, instead of weighing it today.
+  It still refuses a closure that never pruned.
+- **See an opening spread over several lines, the shape most commands take.**
+  A newline ends a command, and the tokeniser swallowed it as whitespace.
+  Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12.
+
 ## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
 
 ### Added

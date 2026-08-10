@@ -16,7 +16,7 @@ The rule is [`AGENTS.md`](../../AGENTS.md)'s: two of its three examples are **pa
 
 ## The form — the rule is standard §16, this is why the code counts as it does
 
-The ceiling is **300 characters**, once 750. ⚠️ **That 750 was the corpus's own third quartile: a threshold taken from what it must reform endorses the drift.** Sealed versions are judged now, not merely counted.
+The ceiling is **300 characters**, and where that number comes from — with the 750 it replaced, and why — is the standard's §16. Sealed versions are judged now, not merely counted.
 
 🔴 **Three ways the counting goes wrong if written naively**, each measured here:
 

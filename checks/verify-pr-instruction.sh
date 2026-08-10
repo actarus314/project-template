@@ -54,9 +54,8 @@ try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
 print(str((ev.get("tool_input") or {}).get("command") or ""))
 ' || true)
-# In COMMAND POSITION, never anywhere in the string. Both mistakes happened on the first live
-# opening: a commit message quoting `open-pr.sh` counted as one, and a real opening was skipped
-# because the same line also ran a grep. Substring presence is not execution.
+# In COMMAND POSITION, never anywhere in the string: substring presence is not execution.
+# The two openings that proved it, one counted wrongly and one missed: verify-pr-instruction.md.
 opens=$(printf '%s' "$cmd" | python3 -c '
 import re, shlex, sys
 OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")
@@ -69,20 +68,22 @@ OPS = {";", "&&", "||", "|", "&", "\n"}
 # was recorded as a pull request being opened, and it consumed the token the real one then needed.
 HEREDOC = re.compile(r"<<-?\s*[\"\x27]?(\w+)[\"\x27]?\n.*?\n\s*\1\s*$", re.S | re.M)
 def segments(cmd):
-    # Splitting on ; & | WITHOUT honouring quotes cuts strings open: an operator inside a quoted
-    # argument ends the segment, and whatever follows lands in command position. shlex tokenises
-    # and separates the operators itself. Both readings fall back on a plain split when quotes are
-    # unbalanced — there shlex raises, and there is nothing better to read.
+    # Splitting on ; & | WITHOUT honouring quotes cuts strings open, so shlex separates the
+    # operators itself; on unbalanced quotes it raises, and a plain split is all there is left.
+    # A NEWLINE ends a command too and shlex swallows it as whitespace, hence the line split FIRST.
     cmd = HEREDOC.sub("\n", cmd)
-    lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
-    lex.whitespace_split = True
-    try: toks = list(lex)
-    except ValueError: return [s.split() for s in re.split(r"[;&|\n]+", cmd)]
-    segs, cur = [], []
-    for tok in toks:
-        if tok in OPS: segs.append(cur); cur = []
-        else: cur.append(tok)
-    segs.append(cur)
+    segs = []
+    for line in cmd.split("\n"):
+        lex = shlex.shlex(line, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        try: toks = list(lex)
+        except ValueError:
+            segs.extend(s.split() for s in re.split(r"[;&|]+", line)); continue
+        cur = []
+        for tok in toks:
+            if tok in OPS: segs.append(cur); cur = []
+            else: cur.append(tok)
+        segs.append(cur)
     return segs
 def opens(toks):
     toks = list(toks)

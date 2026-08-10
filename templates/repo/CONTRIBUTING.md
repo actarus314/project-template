@@ -6,7 +6,7 @@ This is a small, solo-maintained project — there's no formal process, but bug 
 
 - For anything non-trivial, open an issue first to discuss the approach.
 - Run it locally and check the change actually works.
-- Keep code and comments in **English**.
+- Keep code and comments in **English** — with the one exception `AGENTS.md` states, and it is the only place that states it.
 - No new dependencies for what a few lines of code can do.
 - User-facing change (a fix, a feature, a behavior change)? Add a line to the CHANGELOG.
 

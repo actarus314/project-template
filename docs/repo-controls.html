@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:280f4e2024999bd3d0332628755849cec688da70e390ef128de46e793fd29690
+  checksum-source-md: sha256:5de5659248da8a796908f53e65582658d51b3c732c103f51ad95cfc7cb31965e
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -783,7 +783,7 @@
         </tr>
         <tr>
           <td class="w">Renovate</td>
-          <td class="h"><strong>Only update bot.</strong> Auto-detects <strong>all</strong> the repo's ecosystems (npm, docker, actions, pip…) with <strong>no declaration at all</strong>, plus the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (<code>vulnerabilityAlerts</code>) for its security PRs. Routine = PR reviewed by a <strong>human</strong>; <strong>security = auto-merge</strong>. Minor/patch grouped.</td>
+          <td class="h"><strong>Only update bot.</strong> Auto-detects <strong>all</strong> the repo's ecosystems (npm, docker, actions, pip…) with <strong>no declaration at all</strong>, plus the 4 pinned VERSION+SHA256 binaries (gitleaks, actionlint, osv-scanner, trivy). Reads Dependabot alerts (<code>vulnerabilityAlerts</code>) for its security PRs. <strong>Which updates merge on their own is the update policy, and it is not this document's</strong> (see <code>security-and-updates.md</code>).</td>
           <td class="t">continuous / weekly</td>
         </tr>
         <tr>
@@ -1325,7 +1325,7 @@
     <p>On a private repo on Free, GitHub would accept a direct push to <code>main</code>, and a red PR can be merged. A discipline that's only written down doesn't exist: it's carried by tools everywhere possible.</p>
     <p><strong>The <code>pre-commit</code> hook</strong> refuses a secret. <strong>The <code>pre-push</code> hook</strong> refuses direct writes to <code>main</code> — it's the missing ruleset, brought back onto the developer's machine. Both can be bypassed with <code>--no-verify</code>: a decision, not an accident.</p>
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
-    <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>: it reads <code>statusCheckRollup</code>, which requires the <code>Checks</code> permission — <strong>documented by GitHub but absent from the UI</strong> of fine-grained PATs, so impossible to grant. The result is <code>Resource not accessible by personal access token</code>, and <code>gh pr view &lt;n&gt;</code> alone fails for the same reason. The rule was written everywhere, and <strong>unenforceable everywhere</strong>.</p>
+    <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>, and not <code>gh pr view &lt;n&gt;</code> alone either: the permission both need cannot be granted at all — the derivation belongs to <code>secrets-and-auth.md</code>. What belongs here is only that in private, nothing on the server enforces the rule.</p>
     <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha" --json workflowName,status,conclusion</code>. The <code>--json</code> form targets a field, so no rollup is requested — and it is what makes each workflow's <code>completed / success</code> readable one by one.</p>
     <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong> — the exact set, and why a missing workflow is not a green, live in <code>AGENTS.md</code>, “Discipline — PR-only”.</p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>
@@ -1673,17 +1673,17 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-workspace.sh</code></td>
-          <td>two tracking systems competing, or a secret tracked by git</td>
+          <td>two tracking systems competing, a secret tracked by git, <strong>and open work on either side of the tracking doc</strong> — a closed item inside it, an action outside it in a file pledging to hold none or in an archive being written</td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for</td>
+          <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for. Both hygiene halves match a FORM, never a state: an unmarked closed item, or a leftover that never declares itself, stays invisible</td>
           <td class="t">0,11 s</td>
           <td>✅</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-links.sh</code></td>
-          <td>a relative link or an anchor leading nowhere</td>
+          <td>a relative link or an anchor leading nowhere, <strong>and a pointer crediting a named document with a quoted formula that document does not carry</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
@@ -1713,7 +1713,7 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-do-not-break.sh</code></td>
-          <td>the wirings whose breakage makes no sound — <strong>including a versioned <code>CLAUDE.md</code> losing its import, or gaining a machine path</strong></td>
+          <td>the wirings whose breakage makes no sound — <strong>including a versioned <code>CLAUDE.md</code> losing its import, the one address a generated project has for the documents it never receives, and a skill's <code>description</code> folded onto its <code>name</code> line</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>
@@ -1797,7 +1797,7 @@
           <td class="h">both</td>
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
-          <td><strong>settled</strong> — threshold measured before being set: over 40 commits, 19 such blocks came WITH their note and 5 without, so a declaration is asked for on ~1 commit in 8. ⚠️ It compares <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
+          <td><strong>settled</strong> — the threshold is 5 lines, and the measurement that set it lives in its note. <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
           <td class="t">0,10 s</td>
           <td>✅</td>
         </tr>
@@ -1903,11 +1903,11 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-pr-instruction.sh</code></td>
-          <td>a pull request <strong>opened</strong> with no instruction from the maintainer</td>
+          <td><strong>a gesture that opens a pull request</strong>, run with no instruction from the maintainer — the attempt, never the pull request: a <code>PreToolUse</code> fires before the command, so an <code>open-pr.sh</code> its own title guard refuses records exactly like one that opened</td>
           <td class="h">local</td>
           <td>opening a pull request</td>
           <td class="p">✅</td>
-          <td><strong>an INSTRUMENT, never a gate</strong> — it records and returns, it never refuses a tool and cannot wedge a session. Its decision threshold was written before its data: under 5 % without an instruction over 20 openings, no gate gets built</td>
+          <td><strong>an INSTRUMENT, never a gate</strong> — it records and returns, it never refuses a tool and cannot wedge a session. Its decision threshold was written before its data: under 5 % without an instruction over 20 attempts, no gate gets built</td>
           <td class="t">instant</td>
           <td>n/a — records, never refuses</td>
         </tr>

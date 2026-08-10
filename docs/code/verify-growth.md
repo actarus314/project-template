@@ -30,4 +30,6 @@ Why this anchor and the neighbouring check's cannot be swapped:
 
 BLOCKING. Growth is often legitimate — a subject arrives. What it forbids is growing unnoticed, unable to say at closing time what breathed.
 
-**A closure is a gesture, not a commit**: the archive is born in one, the hot side is pruned in the next. So the comparison ends at `HEAD`, never at the birth — which froze "after" before the pruning existed, and reported a correct closure as a growth.
+**A closure is a gesture, not a commit**: the archive is born in one, the hot side is pruned in the next. So the comparison cannot end at the birth, which froze "after" before the pruning existed.
+
+🔴 **Ending it at `HEAD` moved the same fault one step on**, and it bit three times before the shape was seen: the stage that opens next **legitimately** reopens work, so the hot side climbs again and a closure that did prune is reported as one that did not. The question is therefore whether the hot side **ever** dropped below its pre-closure size — walked commit by commit, stopping at the first that did. A fact, settled once and for good, where a window of N commits would have been one more threshold to defend.

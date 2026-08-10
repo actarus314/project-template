@@ -10,7 +10,7 @@ This file is therefore **versioned**, and deliberately almost empty: it carries 
 
 ## The neighbouring workspace, when there is one
 
-The maintainer's checkout has a `../workspace/` beside this repository — the tracking doc, the archives, the research. It is **never pushed** *(the reason: the standard's decision rule, §3)*, so a clone does not have it, and nothing here depends on it.
+The maintainer's checkout has a `../workspace/` beside this repository. What it holds is `AGENTS.md`'s to say, and why it is **never pushed** is the standard's decision rule *(§3)* — a clone does not have it, and nothing here depends on it.
 
 When it is there, `../workspace/SUIVI.md` is the entry point for picking the work back up: where things stand, what remains, the known traps.
 

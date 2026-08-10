@@ -39,5 +39,15 @@ It was broken again the same day, four markers deep, and no check noticed at the
 
 ⚠️ **What this cannot do, and must not be read as more than.** It matches a FORM, never a state: an item that is finished, left in place, and never marked at all is invisible to it. The marker is a habit of whoever writes the document, not a guarantee, and a check rested on a habit inherits that habit's reliability. Whether the backlog still describes the open work is the same question as whether the tracking doc is TRUE, which this whole file states is not verifiable.
 
+## The other direction: open work living OUTSIDE the tracking doc
+
+Splitting the tracking doc into neighbours recreates the separate backlog METHODE forbids, the moment one of them holds an action. The hygiene above never asked: it opens the tracking doc alone, looking for a CLOSED item.
+
+**A file DECLARES it holds none**, with `<!-- no-open-work -->`, and only declared files are read. A name would be wrong twice over: METHODE makes those names a default, and the conformity checklist beside them legitimately carries **58 empty boxes**.
+
+**A closing archive is read while still uncommitted** — the moment an action gets buried, and the only one worth looking at: an archive is immutable, so a committed one can never be repaired. Ten of the thirty already hold the pattern.
+
+🔴 **The pattern is narrow because the wide one was measured**: anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself. Only a leftover that declares itself matches. First run, it found an arbitration filed as a trap, left nowhere else.
+
 🔴 **The marker counts only at the START of a cell.** Anywhere else it is a MENTION, not a mark:
 the very row describing this rule quotes `des lignes passent à ✅`, and a loose match once read that sentence itself as a closed item. The same failure the forbidden-command hook pays for with heredocs, and the wiring check pays for with code lines — a literal appears in prose too.

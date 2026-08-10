@@ -16,7 +16,7 @@ repo_root=$(pwd -P)
 read_targets=""   # what this run actually looked at
 skipped=""        # what it did not, and why it could not
 
-# 1 — the skill symlink (AGENTS.md, "Do not break"). Every skill under skills/ is checked, detected
+# 1 — the skill symlink (the list this guards: verify-do-not-break.md). Every skill under skills/ is checked, detected
 #     rather than named, and skipped where it is not installed on this machine.
 if [ ! -d skills ]; then
   skipped="$skipped skill-link(this repository holds no skill)"
@@ -43,6 +43,21 @@ else
     fi
   done
   [ "$seen_link" = 1 ] && read_targets="$read_targets skill-link($(ls -d skills/*/ 2>/dev/null | wc -l | tr -d ' ') skill(s))"
+
+  # 1b — the front matter. `description` is the only field read before invoking a skill, so folded
+  #      onto the `name` line it stops being a key at all: the skill loads, lists, and never fires.
+  seen_fm=0
+  for f in skills/*/SKILL.md; do
+    [ -f "$f" ] || continue
+    seen_fm=$((seen_fm + 1))
+    for key in name description; do
+      grep -qE "^$key: *[^ ]" "$f" || {
+        echo "✗ $f: no '$key:' at the start of a line — YAML reads a folded pair as one key, and the skill never fires"
+        fail=1
+      }
+    done
+  done
+  [ "$seen_fm" -gt 0 ] && read_targets="$read_targets skill-frontmatter($seen_fm file(s))"
 fi
 
 # 2 — the three files AGENTS.md pins (git add -f, the neighbouring template .gitignore). Checked
@@ -91,6 +106,18 @@ if [ -f "$claude_md" ]; then
   read_targets="$read_targets absolute-pointers"
 else
   skipped="$skipped absolute-pointers(no assistant instructions here)"
+fi
+
+# 3b — the ONE address a generated project has for the documents it never receives. Its notes NAME
+#      them, which is allowed; the charter alone says where to read them. Lose that line and 28
+#      pointers go mute at once, here and in every project already generated.
+charter=docs/code/README.md
+if [ -f "$charter" ]; then
+  grep -q 'project-template/blob/[^/]*/docs' "$charter" \
+    || { echo "✗ $charter no longer says where the documents this project lacks can be read"; fail=1; }
+  read_targets="$read_targets charter-address"
+else
+  skipped="$skipped charter-address(no docs/code/ here)"
 fi
 
 # 4 — the hooks: a LOCAL file outside any repo, and an undeclared hook never fires. Which lines of

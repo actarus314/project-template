@@ -88,3 +88,15 @@ Left unwritten in the prompt, **the default does the opposite of all three, sile
 - **For a plugin distribution** — a `hooks/hooks.json` beside the manifest, where `${CLAUDE_PLUGIN_ROOT}` **does** resolve: the runtime substitutes it in **configuration it reads itself** (hooks, MCP servers, monitors), **never** in a skill's own text. A skill's Markdown is read by the assistant like any other file, not templated by the runtime — a path written as `${CLAUDE_PLUGIN_ROOT}/…` inside a `SKILL.md` stays a literal, unresolved string, so the skill has to compute its own absolute path instead *(a measured failure of exactly this: [`skills/new-project/SKILL.md`](../skills/new-project/SKILL.md#step-0-resolve-the-template-root-before-reading-anything), "Step 0")*.
 
 ⚠️ **Keep the trigger narrow.** Anything that is not a subagent launch must exit at once: a guard that fires everywhere earns overrides until nobody reads it any more.
+
+---
+
+## What a `SKILL.md` owes — the contract, and the failure that has no error
+
+A skill is a folder holding `SKILL.md`, plus whatever it calls. The file opens on a YAML front matter, and **`name` and `description` are two separate keys, each on its own line** — measured across 60 installed third-party skills, all of them do this and none deviates.
+
+> 🔴 **Written on one line, `description` stops existing.** YAML reads `name: x description: y` as a single key whose value is the whole string. The skill still loads, still lists, and **never fires on the phrases it was written for** — the field carrying its triggers was never parsed. Both skills here shipped that way, and nothing reported it: no error, no warning, no missing file.
+
+**`description` is the only thing the assistant reads before deciding to invoke** — so it states *when to use this*, with the maintainer's own wording as triggers, not what the skill does internally. That belongs to the body.
+
+**The body then owes two things.** It **resolves its own paths**, for the reason the delegation section above already states. And it **points rather than restates**: the runbook, the standard and the method own their content, so a skill that copies a procedure becomes the stale copy the day that procedure moves.

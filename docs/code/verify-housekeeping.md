@@ -32,7 +32,7 @@ Other things worth saying — work left uncommitted, a branch never pushed — a
 
 ## The sequencer — a step that skips itself, and nothing sees it
 
-Asking for the pass is not the same as the pass happening. **A skill is text**: a step gets skipped and there is no mechanism to notice. Lived on 2026-08-05 — the line-by-line enumeration skipped, 5 facts re-measured out of 40, and a result that would have passed any "the file is not empty" check.
+Asking for the pass is not the same as the pass happening. **A skill is text**: a step gets skipped and there is no mechanism to notice. Measured: the line-by-line enumeration skipped, 5 facts re-measured out of 40, and a result that would have passed any "the file is not empty" check.
 
 So the turn does not end while a pass is under way and its artefact does not yet **cover** the tracking doc.
 

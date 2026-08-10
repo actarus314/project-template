@@ -1,7 +1,7 @@
 # AGENTS.md — instructions for coding agents
 
 Read this before changing anything in this repository.
-This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding agents. Claude Code reads it through the import in `CLAUDE.md` — **versioned for that reason alone**: gitignored, it reaches nobody who clones, and nothing else loads this file.
+This file follows the [AGENTS.md](https://agents.md) convention and is read by most coding agents. Claude Code reads it through the import in `CLAUDE.md`, **which is versioned for that reason alone** — gitignored, that import would reach nobody who clones, and nothing else loads this file.
 
 > Scaffolded by **project-template `<template-version>`** — `<template-options>`
 > from <template-origin> A **frozen copy**: a later fix to the template does **not** reach it on its own. The line says what to regenerate against, exactly — a snapshot of the past, never a claim about the present.
@@ -42,7 +42,7 @@ This file follows the [AGENTS.md](https://agents.md) convention and is read by m
 A private repository on a Free plan has **no rulesets**: every check below still runs, but **none of them is required** — GitHub would accept a direct push to `main`, or the merge of a red pull request. The safety net is local, and partly human.
 
 - **Open PRs with `./open-pr.sh <base> <title> <body-file>`** — it pushes, opens the PR, and
-  confirms a `pull_request` run actually starts. GitHub intermittently fails to dispatch the CI run; a PR with **0 runs** looks like a pass but was never checked. If none appears it close/reopens the PR to re-fire the event. **"0 runs" is never green.**
+  confirms a `pull_request` run actually starts. GitHub intermittently fails to dispatch the CI run; a PR with **0 runs** looks like a pass but was never checked. If none appears it close/reopens the PR to re-fire the event. **"0 runs" is NEVER a green.**
 - **Never merge a pull request whose CI is not green.** Nothing on the server prevents it.
   Check first, every time:
 
