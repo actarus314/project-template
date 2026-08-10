@@ -30,8 +30,8 @@ record() {   # <rc|skip> <reason>
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$JOURNAL_NAME" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
-# Armed by all THREE routes, since the pass is reached by all three — arming on the asked-in-words
-# one alone would leave the drift route, the most frequent, sequenced by nothing.
+# Armed by all THREE routes, since the pass is reached by all three. Which routes, and the fourth
+# one no mechanism can arm: verify-housekeeping.md.
 arm() { mkdir -p "$STATE_DIR"; [ -f "$ARMED" ] || printf '%s 0\n' "$(date +%s)" > "$ARMED"; }
 
 # The payload is read for two fields only: which event this is, and — on PreCompact — whether the
@@ -127,7 +127,7 @@ if [ "$EVENT" = Stop ] && [ -f "$ARMED" ]; then
   JOURNAL_NAME="housekeeping (pass under way)"
   read -r armed_at used < "$ARMED"
   # Disarmed by a WRITE to the tracking doc, never by the turn ending: the pass is over when the
-  # doc moved. Falling back on the threshold would disarm a pass asked for with no drift at all.
+  # doc moved. The fallback weighed and dropped: verify-housekeeping.md.
   if [ "$(git -C "$WS" log -1 --format=%at -- SUIVI.md 2>/dev/null || echo 0)" -gt "$armed_at" ]; then
     rm -f "$ARMED" "$PASS"
     record 0 "pass closed — the tracking doc was written"

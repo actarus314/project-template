@@ -43,4 +43,4 @@ In practice the joined text runs past the cap and is refused for its length inst
 
 **The default branch is skipped, deliberately.** Published history is not rewritten *(RUNBOOK §3)*, so judging it would only ever report what cannot be fixed — the shape that gets a check switched off.
 
-`wc -m` counts characters under a UTF-8 locale and **bytes** under `C`, where an em dash reads as three. That way the miscount refuses early; it never passes wrongly.
+**The locale changes what the cap counts**, and the direction of the error was chosen rather than suffered: the constraint sits in the script, beside the line it governs.

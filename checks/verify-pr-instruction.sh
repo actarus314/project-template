@@ -54,9 +54,8 @@ try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
 print(str((ev.get("tool_input") or {}).get("command") or ""))
 ' || true)
-# In COMMAND POSITION, never anywhere in the string. Both mistakes happened on the first live
-# opening: a commit message quoting `open-pr.sh` counted as one, and a real opening was skipped
-# because the same line also ran a grep. Substring presence is not execution.
+# In COMMAND POSITION, never anywhere in the string: substring presence is not execution.
+# The two openings that proved it, one counted wrongly and one missed: verify-pr-instruction.md.
 opens=$(printf '%s' "$cmd" | python3 -c '
 import re, shlex, sys
 OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")

@@ -22,11 +22,14 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds.
 - **Give concision a test that decides**: remove the word, the sentence, the line, and keep the removal if nothing breaks.
   The rule asked for concision without saying how to settle a case, so every trim was an argument.
+- **Split four comment blocks from the notes that repeated them**, the comment keeping the bare constraint and the note what it took to get there.
+  The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49.
 
 ### Added
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
 - **Allow the README to restate a description, never a rule**, the line that was practised without being written.
   A visitor never clones, so sending them elsewhere to learn what a folder holds points at a file they will not open.
+
 - **Refuse a skill front matter whose `description` is folded onto the `name` line**, a break that raises no error.
 - **Refuse the loss of the one address a generated project has** for the documents it never receives.
   Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once.
