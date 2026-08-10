@@ -104,7 +104,8 @@ The template defaults to placing `SUIVI.md` in `workspace/docs/` *(the state AND
    - **No / doesn't know** → apply the default *(`SUIVI.md`)*.
 
 2. 🔴 **If NO tool is explicitly named — SEARCH FOR WHAT EXISTS BEFORE BUILDING ONE** *(why: `docs/METHODE.md`)*.
-   **~100 skills are installed**, including all of GSD *(`gsd-review-backlog` · `gsd-capture` · `gsd-docs-update`… among others)* — **use `find-skills`**, and also check the **agents**, the **plugins**, the **marketplace**, the **native features**.
+   Check the **skills**, the **agents**, the **plugins**, the **marketplace**, the **native features** — and the **web**, when nothing installed fits.
+   🔴 **Read the inventory, never a remembered count**: `~/.claude/plugins/installed_plugins.json` and `~/.claude/skills/`. A figure written into a rule is stale the next time a plugin lands, and **no tool on the machine reports what is installed** — this step is the only thing that looks.
    **Only build custom as a last resort, and SAY SO.**
 
 > **The principle itself holds regardless of which tool carries it** *(`docs/METHODE.md`)*:

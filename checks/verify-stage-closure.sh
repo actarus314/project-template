@@ -32,10 +32,18 @@ last_name=${last%%$'\t'*}; last_at=${last#*$'\t'}
 # (verify-stage-closure.md).
 archived=$(git -C "$WS" log --format=%H --since "$prev_at" --until "$last_at" -- archives | grep -c . || true)
 
-# What was still on the hot side when that release was cut.
+# What was still on the hot side when that release was cut — the ROOT, and every WIP/ folder.
+# 🔴 Listed at ONE level, never `-r`: archives/ holds finished RECHERCHE-* by design, and a
+# recursive walk would report every one of them as still hot (why this shape: verify-stage-closure.md).
 rev=$(git -C "$WS" rev-list -1 --before "$last_at" HEAD 2>/dev/null || true)
 hot=""
-[ -n "$rev" ] && hot=$(git -C "$WS" ls-tree --name-only "$rev" | grep '^RECHERCHE-' || true)
+if [ -n "$rev" ]; then
+  hot=$(git -C "$WS" ls-tree --name-only "$rev" | grep '^RECHERCHE-' || true)
+  # A folder is the unit here: WIP/<stage>/ moves to archives/<stage>/ whole, so naming the
+  # folder is what the reader acts on — listing its files would bury that under their names.
+  wip=$(git -C "$WS" ls-tree --name-only "$rev:WIP" 2>/dev/null || true)
+  [ -n "$wip" ] && hot=$(printf '%s\n%s\n' "$hot" "$(printf 'WIP/%s\n' $wip)" | sed '/^$/d')
+fi
 
 # Where the settled and the traps have been SPLIT OFF, a closure owes them a pass too (METHODE).
 # Detected, never assumed: a project keeping one file has nothing to answer for here.
@@ -65,7 +73,7 @@ if [ "$archived" -eq 0 ]; then
   said=1
 fi
 if [ -n "$hot" ]; then
-  echo "⚠ still on the hot side at $last_name: $(echo "$hot" | tr '\n' ' ')— a finished RECHERCHE-* belongs in its stage folder"
+  echo "⚠ still on the hot side at $last_name: $(echo "$hot" | tr '\n' ' ')— once finished, it belongs under archives/"
   said=1
 fi
 if [ -n "$untouched" ]; then
@@ -76,7 +84,7 @@ fi
 
 # Published either way: a bare ✓ cannot be told apart from a check that looked at nothing.
 if [ "$said" -eq 0 ]; then
-  echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* left at the root${untouched_scope:+, $untouched_scope re-read}${born:+; younger than $prev_name, not judged:$born}"
+  echo "✓ the last closed stage left its archive — read: $prev_name → $last_name, $archived archive commit(s), no RECHERCHE-* at the root and no WIP/ folder left${untouched_scope:+, $untouched_scope re-read}${born:+; younger than $prev_name, not judged:$born}"
 else
   echo "  (advisory — the gate stays green: whether a release closed a stage is a judgement, and a"
   echo "   patch release often closes none. Settling it is the housekeeping pass, not this counter.)"
