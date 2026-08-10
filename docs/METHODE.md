@@ -79,6 +79,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 **Rule set by the maintainer on 2026-08-07**, covering **everything written**: documents, comments, commit messages, a check's output, a reply.
 
 - **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that survives only because deleting it would take a decision.
+  🔴 **The test is a DELETION, and it holds in every register** — code, prose, comment, terminal output: remove the word, the sentence, the line, and **if nothing breaks, it stays removed.** What makes it usable is that it asks about the EFFECT of the removal, never about the worth of the text. *(Anthropic states it for a rules file: "would removing this cause Claude to make mistakes? If not, cut it.")*
 - **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who knows the subject and a reader who does not must reach the same understanding.
 
 > 🔴 **A size CEILING was considered and RULED OUT**, and the reason matters: capping a file pushes the overflow into sub-files, which moves the problem and risks losing what gets moved. **Concision is written in, never enforced by a wall.**
