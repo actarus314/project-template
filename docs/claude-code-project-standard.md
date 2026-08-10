@@ -260,6 +260,8 @@ An entry that matches no file is **not harmful** — for a path generated only i
 
 Polished, concise, **zero fluff**. Bilingual **English then French**, separated by `---`.
 
+> 🔴 **It may RESTATE a description another document owns — never a RULE.** A visitor does not clone: sending them to `AGENTS.md` to learn what a folder holds points at a file they will never open, so the showcase says it on the spot, and briefly. A constraint keeps its single owner — restated here, the showcase becomes a second source of rules, and the stale one gets read. Worked through on one case: what `../workspace/` holds is described in both, while the rule that it never gains a remote lives in `AGENTS.md` alone.
+
 **Typical structure**:
 - **Title** = `Name — subtitle that says what it is` (not just the name).
 - **Hook** aimed at the user's real problem, honest (no hollow superlatives).
