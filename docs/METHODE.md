@@ -176,7 +176,7 @@ Before adding a piece of information, **a single question**:
 
 Look in the repository, then in the **skills and agents**, the **plugins**, the **marketplace**, the **native features** — and on the **web**, when nothing installed fits. **Only build custom as a last resort, and say so.**
 🔴 **On an undertaking that lasts, run that check again at every new brick** — not once at the start.
-🔴 **Read the inventory, never a remembered count.** No tool reports what is installed *(measured 2026-08-10: the closest one recommends from a static catalogue and never opens the local inventory)*, so a figure written into a document is stale the day a plugin lands — and a stale figure is read as a live one.
+🔴 **Read the inventory, never a remembered count.** Nothing reports what is installed, so a figure written into a document is stale the day a plugin lands — and a stale figure is read as a live one.
 
 **"Cast a wide net" and "be exhaustive" ask for EXPLORATION, never for volume.** They mean sweeping the solution space **before** committing — the options, what exists, and the questioning of the need itself as much as of the approach, **including "build nothing, adopt something else"**.
 **Concluding that there is nothing to build is a RESULT, not a failure** — as is concluding that what was built should be dropped.
