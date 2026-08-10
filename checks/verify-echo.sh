@@ -13,6 +13,7 @@ fi
 
 command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 0; }
 
+# Adjustable. What 0.40 catches, what it lets through, and the count at 0.30: verify-echo.md.
 ECHO_THRESHOLD=${ECHO_THRESHOLD:-0.40} python3 - <<'PY'
 import re, subprocess, sys, os, glob, math, collections, pathlib
 

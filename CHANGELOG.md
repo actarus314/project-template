@@ -24,6 +24,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The rule asked for concision without saying how to settle a case, so every trim was an argument.
 - **Split four comment blocks from the notes that repeated them**, the comment keeping the bare constraint and the note what it took to get there.
   The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49.
+- **Say beside each adjustable threshold why it can be moved**, where eight of the thirteen stood bare.
+  An exception with no reason on the spot reads as an oversight, and gets widened or deleted at random.
 
 ### Added
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.

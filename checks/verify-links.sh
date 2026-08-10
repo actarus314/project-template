@@ -42,6 +42,7 @@ def headings(path):
             _heads[key] = set(); return _heads[key]
         _heads[key] = {slug(m.group(1)) for m in re.finditer(r"^#{1,6}\s+(.+?)\s*$", text, re.M)}
     return _heads[key]
+# Nothing here is authored: a dead link inside a dependency is not this repo's to fix.
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 bad = []
 # A root that is not there reads exactly like a root with nothing wrong in it, so this count is

@@ -14,6 +14,7 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
+# Adjustable. What this percentage punishes, and the floor it still lacks: verify-growth.md.
 THRESHOLD=${GROWTH_THRESHOLD:-25}
 COMPARED=0; NEWBORN=0
 

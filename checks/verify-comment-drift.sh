@@ -22,6 +22,7 @@ ref=$(git rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/
 ref_at=$(git log -1 --format=%cI "$ref")
 grown=0
 
+# Adjustable, and the default is measured rather than picked: verify-comment-drift.md.
 COMMENT_DRIFT=${COMMENT_DRIFT_THRESHOLD:-40}
 # Added comment lines below which a percentage gap is an artefact of a small base.
 COMMENT_MIN_LINES=${COMMENT_MIN_LINES:-20}

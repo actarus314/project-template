@@ -54,6 +54,7 @@ gens = [a.split("=", 1) for a in sys.argv[2:]]
 EXT = "md|sh|yml|yaml|json|txt|html|py"
 PATH = re.compile(r"(?<![\w./-])((?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.(?:" + EXT + r"))")
 LOOSE = re.compile(r"[A-Za-z0-9_./-]+\.(?:" + EXT + r")")
+# Nothing here is authored, so no path in it travels: skipped rather than reported.
 SKIP = {".git", "node_modules", ".ci-tools", "venv"}
 norm = lambda p: p[2:] if p.startswith("./") else p
 

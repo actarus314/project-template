@@ -12,6 +12,7 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
+# Adjustable: how many commits may pile up before the pass is owed (verify-housekeeping.md).
 THRESHOLD=${HOUSEKEEPING_THRESHOLD:-6}
 JOURNAL_NAME="housekeeping (end of turn)"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -22,6 +23,7 @@ JOURNAL="$STATE_DIR/controls-log.tsv"
 SLUG=$(printf '%s' "$PROJECT" | tr '/' '-')
 ARMED="$STATE_DIR/housekeeping-$SLUG.armed"        # a pass is under way: how many times it has been sent back
 PASS="$STATE_DIR/housekeeping-$SLUG.pass"          # its artefact — EPHEMERAL, and never a second resume doc
+# Adjustable ceiling, ours to write: `Stop` has no native loop protection (verify-housekeeping.md).
 CYCLES=${HOUSEKEEPING_CYCLES:-3}
 
 record() {   # <rc|skip> <reason>
