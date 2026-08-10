@@ -43,6 +43,21 @@ else
     fi
   done
   [ "$seen_link" = 1 ] && read_targets="$read_targets skill-link($(ls -d skills/*/ 2>/dev/null | wc -l | tr -d ' ') skill(s))"
+
+  # 1b — the front matter. `description` is the only field read before invoking a skill, so folded
+  #      onto the `name` line it stops being a key at all: the skill loads, lists, and never fires.
+  seen_fm=0
+  for f in skills/*/SKILL.md; do
+    [ -f "$f" ] || continue
+    seen_fm=$((seen_fm + 1))
+    for key in name description; do
+      grep -qE "^$key: *[^ ]" "$f" || {
+        echo "✗ $f: no '$key:' at the start of a line — YAML reads a folded pair as one key, and the skill never fires"
+        fail=1
+      }
+    done
+  done
+  [ "$seen_fm" -gt 0 ] && read_targets="$read_targets skill-frontmatter($seen_fm file(s))"
 fi
 
 # 2 — the three files AGENTS.md pins (git add -f, the neighbouring template .gitignore). Checked

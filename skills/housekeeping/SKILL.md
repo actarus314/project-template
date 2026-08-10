@@ -1,5 +1,6 @@
 ---
-name: housekeeping description: Use when the maintainer asks for the development admin to be brought up to date — "fais la passe de fin de chantier", "fais une passe de fin de chantier", "je vais clear", "pour que je puisse clear et repartir", "les suivis sont-ils à jour ?", "repos locaux à jour ?", "tout est en ordre ?" — or when the end-of-turn guard reports that commits have piled up with nothing written down. Brings the tracking doc back in line with the work, files an archive if a stage closed, and says what is still owed.
+name: housekeeping
+description: Use when the maintainer asks for the development admin to be brought up to date — "fais la passe de fin de chantier", "fais une passe de fin de chantier", "je vais clear", "pour que je puisse clear et repartir", "les suivis sont-ils à jour ?", "repos locaux à jour ?", "tout est en ordre ?" — or when the end-of-turn guard reports that commits have piled up with nothing written down. Brings the tracking doc back in line with the work, files an archive if a stage closed, and says what is still owed.
 ---
 
 # The closing pass — bringing the admin back in line with the work

@@ -23,11 +23,15 @@ if [ "${#files[@]}" -eq 0 ]; then
 fi
 
 hits=$(awk '
-  FNR==1 {fence=0; comment=0; prev=""}
+  FNR==1 {fence=0; comment=0; fm=0; prev=""}
   {
     line=$0; sub(/^[[:space:]]+/,"",line); sub(/[[:space:]]+$/,"",line)
     gsub(/^(>[[:space:]]*)+/, "", line)   # stripped first: a fence or a comment stays one inside a quote too
   }
+  # A YAML front matter is a set of KEYS, not prose: `name:` and `description:` are two records, and
+  # reading them as one sentence cut in half would refuse the only shape a SKILL.md may have.
+  FNR==1 && line ~ /^---$/ {fm=1; next}
+  fm { if (line ~ /^---$/) fm=0; prev=""; next }
   line ~ /^```/ {fence=!fence; prev=""; next}
   fence {next}
   comment { if (line ~ /-->/) comment=0; prev=""; next }

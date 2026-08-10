@@ -24,6 +24,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The rule asked for concision without saying how to settle a case, so every trim was an argument.
 
 ### Added
+- **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
+- **Refuse a skill front matter whose `description` is folded onto the `name` line**, a break that raises no error.
 - **Refuse the loss of the one address a generated project has** for the documents it never receives.
   Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once.
 - **Ship `check.sh` and `open-pr.sh` with their own notes**, which stayed behind while both scripts travelled.
@@ -37,6 +39,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Only a leftover declaring itself matches.
 
 ### Fixed
+- **Make both skills fire on the phrases they were written for**, where their `description` sat folded onto the `name` line.
+  YAML read the pair as one key, so the field the assistant consults before invoking a skill did not exist — the skill loaded and listed, and never triggered.
+- **Stop reading a YAML front matter as prose**, where the sentence-per-line check saw its two keys as one sentence cut in half.
 - **Stop sending a generated project's secrets file to a document it never receives**, named there three times.
   The permission matrix is reached at a link pinned to the version the project was born from.
 - **Repair the sentence explaining why a generated `CLAUDE.md` is versioned**, which stated the opposite of its own reason.
