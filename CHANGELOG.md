@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Bump `renovate` 44.13.1 → 44.14.10**, the pinned validator that reads every `renovate.json` here and in the template — a config the older one accepted is now checked against the current schema. ([#128](https://github.com/actarus314/project-template/pull/128))
 - **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
   The runbook and the controls document now point at it instead of restating it.
 - **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green.
