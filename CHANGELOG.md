@@ -34,6 +34,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
 
 ### Added
+- **State that reading a mechanism means reading its file whole**, where an exact citation was passing for a verified argument.
+  Content needs the passage; behaviour needs the whole file, and past 25 000 tokens a read is silently truncated.
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
 - **Allow the README to restate a description, never a rule**, the line that was practised without being written.
   A visitor never clones, so sending them elsewhere to learn what a folder holds points at a file they will not open.
