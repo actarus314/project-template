@@ -17,12 +17,15 @@ The 6-hour cache is what puts it out of scope: one call serves every project of 
 
 The stamp holds **two** pairs of backticks on one line: the version right after the name, and the generation options further along.
 A pattern whose class merely stops at the first backtick reaches the second pair whenever the version is unreadable, and reports `--type static --pages …` **as the version** — measured on 2026-08-11, and the branch meant to say "stamped, no version" was unreachable in the process.
-Hence the narrow class: only markup, spaces and a linking word may stand between the name and the version. The linking word is what keeps `at \`<hash>\`` readable, which three adopted projects still carry.
+Hence the narrow class: **only markup and spaces** may stand between the name and the version, which is exactly what the generator writes there.
+🔴 **Any other shape falls to "stamped, no version", and the line is printed** — a word standing between the name and the backticks, a version that never made it in. The detector recognises **what the generator produces**, and for anything else it states what it read rather than guessing at it.
 
-## Refusing what cannot be ordered, which is a validation and not a second format
+## Refusing what cannot be ordered
 
-`sort -V` orders numbers. Anything else has to be **refused**, not ordered: fed a commit hash, it would return an answer, and the verdict would be a lie stated with confidence.
-The generator only ever writes a version number — the hash-shaped stamps date from a time when the template carried no tag at all, and they disappear as those projects are brought into line. **What is armed is the refusal, never support for a second format.**
+`sort -V` orders numbers. Anything else has to be **refused**, not ordered: it returns an answer either way, and the verdict would be a lie stated with confidence.
+🔴 **The case that makes it necessary is `unreleased`**: the generator falls back to that word when the template carries no tag at all, so a project can hold a **well-formed** stamp whose content is not a version — a fork of this tool, generating before it has tagged anything.
+Measured: `sort -V` ranks `unreleased` **above** `1.5.0`, so without the refusal the verdict reads `up to date`, which is the failure this whole check exists to avoid.
+⚠️ **Reachable by construction, never observed here**: this repository has carried tags since `v1.0.0`, so nothing generated from it since can hold that word.
 
 ## Alternatives ruled out
 

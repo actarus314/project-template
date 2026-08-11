@@ -20,11 +20,11 @@ head_block=$(head -n 12 "$AGENTS")
 stamp=$(printf '%s\n' "$head_block" | grep -m1 'project-template')
 [ -n "$stamp" ] || { echo "· no stamp — read: AGENTS.md head block, no project-template line"; exit 0; }
 
-# Only markup, spaces and a linking word may stand between the name and the version: the stamp puts
-# its version right after the name, and its OPTIONS in a second pair of backticks further along the
+# Only markup and spaces may stand between the name and the version: the generator writes the
+# version right after the name, and the OPTIONS in a second pair of backticks further along the
 # same line. A class that merely stops at the first backtick reaches that second pair whenever the
 # version is unreadable, and reports the options as the version.
-marked=$(printf '%s' "$stamp" | sed -n 's/.*project-template[*[:space:]a-zA-Z]*`v\{0,1\}\([^`]*\)`.*/\1/p')
+marked=$(printf '%s' "$stamp" | sed -n 's/.*project-template[*[:space:]]*`v\{0,1\}\([^`]*\)`.*/\1/p')
 origin=$(printf '%s\n' "$head_block" | sed -n 's|.*from \(https://github\.com/[^ ]*\).*|\1|p' | head -1)
 [ -n "$marked" ] || { echo "· stamped, no version — read: $stamp"; echo "  no version between backticks after the name; nothing to compare"; exit 0; }
 
