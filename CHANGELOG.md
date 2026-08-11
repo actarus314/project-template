@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Bump `renovate` 44.13.1 → 44.14.10**, the validator every `renovate.json` is read by — the CI pin here, and the fallback inside `check.sh`, which travels: a project generated from now on validates its own config against the newer schema. ([#128](https://github.com/actarus314/project-template/pull/128))
 - **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
   The runbook and the controls document now point at it instead of restating it.
 - **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green.
