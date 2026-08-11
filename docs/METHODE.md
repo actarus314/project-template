@@ -27,6 +27,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 | **THE TRACKING DOC** *(default: `workspace/docs/SUIVI.md`)* | **TWO things and no others: what is going to be done, and what has been done.** The open work — one list, never two — and one line per closed stage pointing at its archive. **Enough to pick back up cold.** | the evidence · the story of the bugs · the long why · **what has shipped** *(purged from HERE to the archive, never lost)* · full plans · **what is settled or what bites** *(→ below)* |
 | **THE SETTLED** *(default: `workspace/ACQUIS.md`)* | **what NOTHING CAN BE DONE ABOUT**: a decision made, a fact proven, a structural limit. Consulted, not told. | 🔴 **a defect that could be fixed** — filed here it becomes a fatality instead of being repaired *(done once, on 2026-08-08)*. A gap is WORK: it belongs in the tracking doc, and an item here asking for one is the second backlog this split forbids |
 | **WHAT BITES** *(default: `workspace/PIEGES.md`)* | the traps that already cost once **and attach to no single gesture**, read **before** acting. A trap a check now covers **leaves**: an armed rule need not be known. | the same — no open work, or the split collapses into two lists · **a trap that belongs to one gesture** *(→ the runbook, at that gesture)* |
+| **THE WORK IN FLIGHT** *(default: `workspace/WIP/<date>-<stage>/`)* | the research and the instructions of a stage **still open** — one folder per stage, named like the archive it will become. | a finished stage *(→ it MOVES, below)* · a document with a permanent role, which stays where it is read |
 | **THE ARCHIVES** *(default: `workspace/docs/archives/<stage>/`)* | **THE DETAIL.** The why, the how, the evidence, the measurements, the sources. **Dated, by stage or topic.** | — *(the overflow: it can grow)* |
 | **THE ACTIONS** *(`RUNBOOK.md`)* | The actions, in **ORDER**, and **WHO performs them**. The URLs, the exact values, and **the trap OF A GESTURE — the one that bites while performing it**. | the why *(→ conventions)* · the history *(→ archives)* · **a trap belonging to no gesture** *(→ what bites, above)* |
 | **THE CONVENTIONS** *(`claude-code-project-standard.md`, the ADRs)* | The rules and the **WHY** behind each rule. | the procedure *(→ runbook)* · the story of incidents *(→ archives)* |
@@ -70,7 +71,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 **The two rows above are a matter of SCALE, not a second system.** A new project keeps ONE file — three near-empty ones cost more to keep in step. The split comes when the doc stops answering *"what do I do next"* at a glance: measured here on 2026-08-08, **160 of its 263 lines held nothing anyone could act on**. The rule stated there is what holds it together, and the file names are a default, as `SUIVI.md` is.
 
-> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, resumption — **CHECK WHAT ALREADY EXISTS**: installed skills and agents *(around a hundred, all of **GSD** among them)*, plugins, marketplace, native features. **Only build custom as a last resort** — and say so.
+> ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, resumption — the rule below applies in full: **check what already exists, build custom only as a last resort, and say so.**
 
 ---
 
@@ -122,6 +123,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 **At EVERY finished stage** *(an undertaking, a phase, a batch — not every commit)*:
 
 1. **Prune the hot side.** Take out of `SUIVI.md` everything the stage closed. It **shrinks** — that is the sign the stage is finished.
+   **Where the work in flight has its own folder, this step is a MOVE** — `WIP/<date>-<stage>/` becomes `archives/<stage>/` whole, so nothing has to be picked out file by file. 🔴 **A move breaks the links pointing INTO it, and an archive is immutable on its FACTS — a path a move invalidated is not one.** Repair them; a dead link preserves nothing. *(Measured here: four documents moved, three archives to repair.)*
 2. **Write the stage's archive — a SYNTHESIS, NEVER a move or a dump** *(ADR format: context → decisions → consequences)*:
    the sources get **read in FULL**, then distilled into the **WHAT** *(what was done)* **+ the HOW** *(the pitfalls encountered)* **+ the WHY** *(why these choices, what got ruled out)*.
    Goal: **enough to NEVER reopen a closed topic for lack of information — and not one line more.**
@@ -165,6 +167,21 @@ Before adding a piece of information, **a single question**:
 **And if a document grows: nothing gets crammed in — the detail comes out.**
 
 ---
+
+## Searching before building — and what "cast a wide net" actually asks for
+
+**Rule set by the maintainer, versioned here on 2026-08-10** *(it lived in a machine-local file, so it reached no clone and no generated project)*.
+
+> **Look for what already exists before proposing anything, and before building anything.**
+
+Look in the repository, then in the **skills and agents**, the **plugins**, the **marketplace**, the **native features** — and on the **web**, when nothing installed fits. **Only build custom as a last resort, and say so.**
+🔴 **On an undertaking that lasts, run that check again at every new brick** — not once at the start.
+🔴 **Read the inventory, never a remembered count.** Nothing reports what is installed, so a figure written into a document is stale the day a plugin lands — and a stale figure is read as a live one.
+
+**"Cast a wide net" and "be exhaustive" ask for EXPLORATION, never for volume.** They mean sweeping the solution space **before** committing — the options, what exists, and the questioning of the need itself as much as of the approach, **including "build nothing, adopt something else"**.
+**Concluding that there is nothing to build is a RESULT, not a failure** — as is concluding that what was built should be dropped.
+
+**An audit sweeps the whole matrix, groups by root cause, and fixes at the root** — never one point at a time. A list of symptoms fixed one by one leaves the cause, which produces the next list.
 
 ## Delegating: Claude is the orchestrator
 

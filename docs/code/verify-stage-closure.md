@@ -4,15 +4,19 @@
 
 ## What this carries, and what it deliberately does not
 
-The three gestures a closed stage owes are `METHODE.md`'s to state. The first is guarded — `verify-growth.sh` asks, when an archive is born, whether the hot side shrank. This carries ONLY what that one cannot see: two controls answering one question disagree with each other before they disagree with reality.
-
-**The two are inverses, and that is what keeps them apart.** This one reads a closed interval between releases and asks whether an archive was written; the other is triggered BY an archive and asks whether anything was pruned. An archive with no purge is invisible here; a release with no archive is invisible there.
+The three gestures a closed stage owes are `METHODE.md`'s to state, and `verify-growth.sh` already guards the first. **The two are inverses, and that is what keeps them apart**: this one reads a closed interval between releases and asks whether an archive was written, the other is triggered BY an archive and asks whether anything was pruned. An archive with no purge is invisible here, a release with no archive invisible there — and two controls answering one question disagree with each other before they disagree with reality.
 
 ## The trigger was chosen on a measurement, and the obvious one lost
 
 "A merged pull request should be followed by a write to the tracking doc" looks compelling: 99 % of them are, within 24 h. But against 400 instants drawn at random, 88 % are too — an 11-point edge, a guard biting on 1 pull request out of 107, and no edge at all at 72 h. In an active session the doc is written several times a day AND several pull requests land: the correlation comes from density, not cause. **A RELEASE is a closure; a fix's pull request is not.** *(Method and full figures: the stage's own RECHERCHE.)*
 
 The release decides the REFERENCE POINT, never the rhythm: this runs at every commit, like its siblings, and speaks the moment a closed interval is left empty.
+
+## Why the hot side is read at ONE level, in two places
+
+**`archives/` holds finished `RECHERCHE-*` by design**, so a recursive walk — the obvious shortcut — would report every closed stage as still running, and a guard crying on the legitimate case ends up disarmed. Hence one level: the root, plus the immediate children of `WIP/`, whose unit is the **folder** since it reaches `archives/` whole.
+
+🔴 **The blindness this repairs failed by PASSING**: with the root alone, work moved into `WIP/<date>-<stage>/` matched nothing, and the check announced *"no RECHERCHE-\* left"* having looked into a directory it could not see. Measured 2026-08-10, before the move: an empty root, four folders below it.
 
 ## The settled and the traps, where they have been split off
 

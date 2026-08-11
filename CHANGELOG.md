@@ -26,6 +26,12 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49.
 - **Say beside each adjustable threshold why it can be moved**, where eight of the thirteen stood bare.
   An exception with no reason on the spot reads as an oversight, and gets widened or deleted at random.
+- **State the search-before-building rule in the method**, where it lived in a machine-local file that no clone and no generated project ever read.
+  It now covers the whole undertaking, not just the choice of a tracking tool, and says to read the inventory rather than a remembered count.
+- **Give the work in flight a place of its own**, one folder per open stage, named like the archive it becomes.
+  Closing a stage turns into moving that folder, instead of picking files out of a root.
+- **Stop the project skill from naming a discovery tool**, which was a broken symlink on the machine that prescribed it.
+  A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
 
 ### Added
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
@@ -58,6 +64,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **See an opening spread over several lines, the shape most commands take.**
   A newline ends a command, and the tokeniser swallowed it as whitespace.
   Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12.
+- **See the work in flight once it sits in a subfolder.**
+  Reading the workspace root alone, the closure check found nothing under a folder and announced that nothing was left — it failed by passing.
 
 ## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
 
