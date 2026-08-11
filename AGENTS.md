@@ -31,11 +31,12 @@ It used to live outside any repo: not versioned, not run through CI, not diffabl
 ./check.sh   # replays the CI checks LOCALLY, at the pinned versions (local == github)
 ./open-pr.sh <base> <title> <body-file>   # opens a PR AND makes sure the CI actually starts (via direnv exec)
 ./release-notes.sh <tag> [previous-tag]   # prints the Release note: the CHANGELOG block, then the PR list
+./fleet.sh   # which generated projects run behind this template — reads the projects the harness has seen
 ```
 
 `configure-repo.sh` is **run by the maintainer** with an **ephemeral** admin PAT — the assistant **never** has `Administration: write`.
 
-**The five commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
+**The six commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. **`fleet.sh` is the one that does NOT travel**: it serves whoever holds the template, never a project generated from it. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
 
 `check.sh` reads the pinned versions in `ci.yml` *(single source)*, pulls the binaries under `.ci-tools/` *(gitignored)* and replays **everything the CI runs**: shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus **two deliberate additions**: validation of any `renovate.json` present *(local-only — it catches the silent freeze of updates on a broken config)*, and the **house checks** under `checks/`. It is **auto-detecting** *(it reads the repo's `ci.yml` and runs ONLY what's found there)*, so the **same** file serves this repo AND every generated project.
 
