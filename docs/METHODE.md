@@ -87,7 +87,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 **One sentence, one line — and no width imposed on top of it.** The break follows the meaning, so a diff shows the sentence that changed rather than the paragraph around it. 🔴 **Wrapping at a column is a layout frozen into the file**: the renderer rejoins those lines anyway. `verify-line-form.sh` refuses a sentence cut across two lines; third-party texts keep the upstream's own layout.
 
-⚠️ **A width THRESHOLD was measured and rejected**, and the reason outlives this rule: *"median 92 characters per line"* came from a corpus that was itself hard-wrapped — calibrated on exactly what it was meant to reform, like the changelog's old 750-character cap. **A threshold comes from a reference or an objective, never from the average of what is being corrected.** One sentence per line is binary, so it can be armed at all.
+⚠️ **A width THRESHOLD was measured and rejected**: *"median 92 characters per line"* came from a corpus that was itself hard-wrapped. **A threshold comes from a reference or an objective, never from the average of what is being corrected** — the same trap caught the changelog's old cap *([standard §16](claude-code-project-standard.md#16-project-lifecycle-docs-and-what-a-project-ships))*. One sentence per line is binary, so it can be armed at all.
 
 **What can be measured is measured; the rest is not.** Jargon and clarity are judgements: no script reads them, and a model blocking on them is worse than nothing — a green light given wrongly has no second line of defence.
 
@@ -108,8 +108,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 ## The main documents stay SHORT
 
-**If they grow, the detail MOVES OUT — to the archive, or to the file that owns it. It does not get crammed in.** A document no one rereads is of no use: the runbook is read **while doing** the work, and unread, the action gets done from memory — which is a wrong action.
-
+A document no one rereads is of no use: the runbook is read **while doing** the work, and unread, the action gets done from memory — which is a wrong action.
 **Many files is not the problem, as long as the links are honored** — a light directory structure beats 25 `.md` at one level mixing living documents with archives.
 
 ---
@@ -145,7 +144,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 **A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** These rules are armed: `check.sh` runs them.
 
-**The list of checks, their perimeter, their rhythm, their gate and what they cost live in [`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere else.** Three partial copies of that list once coexisted, and the three disagreed on how many there were.
+**The list of checks, their perimeter, their rhythm, their gate and what they cost live in [`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere else**, three partial copies having once disagreed on how many there were.
 
 **What belongs HERE is the question that decides a perimeter**, because it is a question of writing:
 
@@ -182,6 +181,13 @@ Look in the repository, then in the **skills and agents**, the **plugins**, the 
 **Concluding that there is nothing to build is a RESULT, not a failure** — as is concluding that what was built should be dropped.
 
 **An audit sweeps the whole matrix, groups by root cause, and fixes at the root** — never one point at a time. A list of symptoms fixed one by one leaves the cause, which produces the next list.
+
+## Reading in full before stating what a mechanism does
+
+> **Before stating what a mechanism does, read the file implementing it — in full.**
+
+🔴 **An exact citation is not a verified argument**: the rank can be right while the reach of the mechanism was never followed. **Content needs the passage; BEHAVIOUR needs the whole file**, which a `grep` only appears to answer.
+⚠️ **Under the reading cap only**: past 25 000 tokens a `Read` is **silently** truncated.
 
 ## Delegating: Claude is the orchestrator
 
