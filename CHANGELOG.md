@@ -39,6 +39,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A project carrying no such check triggers nothing, and says nothing.
 - **Tell whoever opens a session in a generated project that its template has moved on**, naming what was read and linking the release that changed it.
   The project itself receives nothing: without the plugin, it knows nothing. The comparison is against the latest release, never against `main`.
+- **Show in one place which generated projects run behind the template**, with `./fleet.sh`, reading the projects the harness has already seen.
+  A project never opened with Claude Code is invisible to it, and a moved one leaves a dead entry — the count of both is printed with the table.
 - **State that reading a mechanism means reading its file whole**, where an exact citation was passing for a verified argument.
   Content needs the passage; behaviour needs the whole file, and past 25 000 tokens a read is silently truncated.
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
