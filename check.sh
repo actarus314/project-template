@@ -267,13 +267,32 @@ RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 
 
 if external; then
   note "Pinned tools (auto-detected from $CI)"
-  [ -n "$GITLEAKS_VERSION" ]   && ensure_gitleaks "$GITLEAKS_VERSION"
-  [ -n "$ACTIONLINT_VERSION" ] && ensure_actionlint "$ACTIONLINT_VERSION"
-  if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION"; fi
+  # A tool that never ARRIVED is not a check that found something, and under `set -e` the two used
+  # to look alike: the fetch died, and the caller reported gaps. Exit 3 says which one it is, and
+  # the caller decides — repo/ blocks on it, the workspace gate does not (repo-controls.md).
+  missing=""
+  if [ -n "$GITLEAKS_VERSION" ];   then ensure_gitleaks   "$GITLEAKS_VERSION"   || true
+                                        [ -x "$CACHE/gitleaks" ]   || missing="$missing gitleaks"; fi
+  if [ -n "$ACTIONLINT_VERSION" ]; then ensure_actionlint "$ACTIONLINT_VERSION" || true
+                                        [ -x "$CACHE/actionlint" ] || missing="$missing actionlint"; fi
+  if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION" || true
+                                        [ -x "$CACHE/osv-scanner" ] || missing="$missing osv-scanner"; fi
   venv_specs=()
   if in_ci zizmor  && [ -n "$ZIZMOR_SPEC" ];  then venv_specs+=("$ZIZMOR_SPEC");  fi
   if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); fi
-  [ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
+  if [ "${#venv_specs[@]}" -gt 0 ]; then
+    ensure_venv "${venv_specs[@]}" || true
+    for spec in "${venv_specs[@]}"; do
+      [ -x "$CACHE/venv/bin/${spec%%==*}" ] || missing="$missing ${spec%%==*}"
+    done
+  fi
+  # The STATE on disk, never the fetch's exit code: inside a list ending in `||`, bash turns `set -e`
+  # OFF within the function called, so a dead curl went through and the lot announced itself ready.
+  if [ -n "$missing" ]; then
+    printf '  \033[31m✗ pinned tool(s) not there:%s — no network, or %s/ is cold\033[0m\n' "$missing" "$CACHE"
+    echo "    They checked NOTHING. This is a tool that never arrived, not a check that found something."
+    exit 3
+  fi
   ok "ready under $CACHE/"
 else
   note "House checks only (--house) — the external tools are the CI's own steps"

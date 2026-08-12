@@ -40,7 +40,17 @@ if [ ! -x "$gate" ]; then
 fi
 
 # --commit, never --house: it reads this repository's diff too, and skips what cannot be affected.
-if ! CHECK_COMMIT_IN="$ws" "$gate" --commit; then
+rc=0
+CHECK_COMMIT_IN="$ws" "$gate" --commit || rc=$?
+
+# 3 is a pinned tool that could not be fetched, never a gap. This repository holds the tracking and
+# the archives, written wherever the maintainer is: no network must not mean no writing. The secret
+# scan above already ran, on the system's own gitleaks.
+if [ "$rc" = 3 ]; then
+  echo "  (commit allowed: the checks needing those tools did NOT run — rerun ./check.sh when back online)"
+  exit 0
+fi
+if [ "$rc" != 0 ]; then
   echo
   echo "✗ check.sh found gaps (above) — commit blocked."
   echo "  The checks that read this workspace run here, and nowhere else on its own commits."

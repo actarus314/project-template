@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:6d35666c20b81410e6bec81486c28b4f632fbe8b3eb81d44a036d20df6258be0
+  checksum-source-md: sha256:d82008c35044e47d956a73f5dc995f19642296908628c250801648b17529e41b
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -2021,7 +2021,8 @@
     <h3>🔴 A commit in the neighbouring <code>workspace/</code> fires that first rhythm too</h3>
     <p>Same <code>--commit</code>, through a gate of its own: <code>repo/.githooks-workspace/pre-commit</code>, armed over there by a <strong>LOCAL</strong> <code>core.hooksPath</code>. <code>init-project.sh</code> sets it; a fresh clone and an assisted regeneration arrive unarmed, and <code>verify-workspace.sh</code> <strong>warns</strong> without blocking — no commit here repairs the neighbour's config. It scans that repository's staged content with <code>gitleaks</code> first, then runs the same lot, since <code>check.sh</code> already reads both dirty trees.</p>
     <p><strong>What it does NOT wake are the two checks that GENERATE a project.</strong> They answer about the code tree, and work in flight next door cannot change their verdict — so the gate states WHERE the commit is being made, through <code>CHECK_COMMIT_IN</code>, and <code>verify-checks-wiring.sh</code> fails the build the day either half stops naming it. Dropped, the fallback is silent: a note commit would wake both again, at <strong>2 260 ms</strong> and <strong>3 476 ms</strong> measured.</p>
-    <p><strong>Cost: 2,1 s — a floor, never a ceiling</strong>, <code>--commit</code> being the mode that runs the external tools: a cold cache or no network refuses the commit. <span class="tool">why the gate lives in repo/, and what it buys: docs/code/init-project.md</span></p>
+    <p><strong>Cost: 2,1 s — a floor, never a ceiling</strong>, <code>--commit</code> being the mode that fetches the external tools.</p>
+    <p>🔴 <strong>A pinned tool that never ARRIVES exits <code>3</code>, which is not a gap.</strong> <code>check.sh</code> judges that on the STATE on disk, never on the fetch's exit code: inside a list ending in <code>||</code>, bash turns <code>set -e</code> off within the function called, so a dead <code>curl</code> used to reach <code>✓ ready</code>. <strong>repo/ blocks on a 3 like on anything else; the workspace gate lets the commit through</strong> and names the checks that did not run — that repository holds the tracking and the archives, written wherever the maintainer happens to be, and its secret scan runs on the system's own <code>gitleaks</code>, offline. <span class="tool">why the gate lives in repo/, and what it buys: docs/code/init-project.md</span></p>
   </div>
 
   <div class="note">

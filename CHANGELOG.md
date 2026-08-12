@@ -65,6 +65,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Only a leftover declaring itself matches.
 
 ### Fixed
+- **Stop a pinned tool that never arrived from reading as a check that found something**: it exits 3 now, judged on the state on disk.
+  `repo/` blocks on a 3; the workspace gate lets the note through, offline, naming what did not run.
 - **Make both skills fire on the phrases they were written for**, where their `description` sat folded onto the `name` line.
   YAML read the pair as one key, so the field the assistant consults before invoking a skill did not exist — the skill loaded and listed, and never triggered.
 - **Stop reading a YAML front matter as prose**, where the sentence-per-line check saw its two keys as one sentence cut in half.
