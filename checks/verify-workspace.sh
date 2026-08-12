@@ -31,6 +31,23 @@ else
   tracked=$(git -C "$ws" ls-files 2>/dev/null | grep -iE '(^|/)(secrets?|\.env)(\.[a-z]+)?$' || true)
   [ -n "$tracked" ] && say "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
 
+  # The workspace's own gate. Checked in TWO parts because each fails silently on its own: an unset
+  # core.hooksPath runs the default hooks (there are none), and a path pointing nowhere makes git
+  # run nothing at all, without a word. A LOCAL config travels through no diff, so a regenerated
+  # project arrives here unarmed — hence the exact command in the message rather than a rule to look up.
+  gate_hook="$ws/../repo/.githooks-workspace/pre-commit"
+  if [ -f "$gate_hook" ]; then
+    hp=$(git -C "$ws" config --local --get core.hooksPath 2>/dev/null || true)
+    if [ -z "$hp" ]; then
+      say "has NO gate — the checks that read it only run when repo/ is committed too, and a session touching the workspace alone passes none. Arm it:
+    git -C $ws config --local core.hooksPath ../repo/.githooks-workspace"
+    elif [ ! -x "$ws/$hp/pre-commit" ]; then
+      say "core.hooksPath is '$hp', where no executable pre-commit sits — git then runs NOTHING, and says nothing"
+    else
+      read_gate=", gate wired"
+    fi
+  fi
+
   # ONE tracking system (METHODE). Archives excluded: a closed stage keeps its own account.
   n=$(git -C "$ws" ls-files 2>/dev/null | grep -icE '(^|/)(SUIVI|TRACKING|PROGRESS)\.md$' || true)
   systems=$n
@@ -96,5 +113,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
 exit "$fail"

@@ -32,6 +32,16 @@ and must not invent it, but silence is worse: a published `SECURITY.md` saying "
 An empty file does not get filled in, it gets ignored; the sections are the questions someone — human or AI — asks reopening the project six months later. The heredoc is quoted (`'EOF'`): without the quotes the shell reads the backticks as command substitution and EMPTIES every `paths` entry.
 The project name is substituted afterwards, by `sed`.
 
+## The workspace gets a gate of its own, and it lives in `repo/`
+
+`core.hooksPath` is per-repository, so one directory cannot arm both. The neighbour's hook therefore ships in `repo/.githooks-workspace/` and the workspace points back at it — a copy placed inside `workspace/`, which is versioned nowhere, would be the second copy this repo refuses everywhere else.
+
+What it buys: 13 checks read `workspace/`, but until this gate they only ran when `repo/` was committed in the same stretch. Measured on this repository, **31 % of the workspace's 530 commits were never followed by a repo commit within six hours** — a defect entering there surfaced days later, on the commit that revealed it rather than the one that introduced it.
+
+It runs `--commit`, never `--house`: that mode already folds the workspace's own diff into what it reads *(`check.sh` says why, where it does it)*, and skips what the change cannot affect — so the two checks that generate a whole project stay asleep. Measured: **2.1 s against 4.4 s**.
+
+🔴 **`core.hooksPath` is LOCAL config, so it travels through no diff.** A project brought forward by assisted regeneration *(RUNBOOK §5)* arrives unarmed, and `verify-workspace.sh` is what says so — with the one command that repairs it, rather than a rule to go and look up.
+
 ## The gitleaks hook is armed AFTER the initial commit
 
 The initial commit is clean by construction (an EXPLICIT file list, never `.env`/`.envrc`), so there is nothing to scan. Arming it first would need gitleaks to commit this scaffolding, and the hook hard-failing in its absence would block generation — the script sabotaging itself right after warning that gitleaks is missing. It protects DEV commits, not the scaffolding.

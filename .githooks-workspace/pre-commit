@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Blocks a commit here when the checks that read workspace/ find a gap — without it they ran only
+# when repo/ was committed too. It sits in repo/ because core.hooksPath is per-repository, and it
+# scans no staged secret: this workspace never leaves the machine.
+set -euo pipefail
+
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
+gate="$(git rev-parse --show-toplevel)/../repo/check.sh"
+[ -x "$gate" ] || exit 0
+
+# --commit, never --house: that mode reads this repository's diff too, and skips what the change
+# cannot affect, so the checks that generate a whole project stay asleep.
+if ! "$gate" --commit; then
+  echo
+  echo "✗ check.sh found gaps (above) — commit blocked."
+  echo "  13 checks read this workspace, and this hook is where they run on its own commits."
+  echo "  Emergency: git commit --no-verify (a decision, not an accident)."
+  exit 1
+fi
+
+exit 0
