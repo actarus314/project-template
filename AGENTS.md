@@ -31,11 +31,12 @@ It used to live outside any repo: not versioned, not run through CI, not diffabl
 ./check.sh   # replays the CI checks LOCALLY, at the pinned versions (local == github)
 ./open-pr.sh <base> <title> <body-file>   # opens a PR AND makes sure the CI actually starts (via direnv exec)
 ./release-notes.sh <tag> [previous-tag]   # prints the Release note: the CHANGELOG block, then the PR list
+./fleet.sh   # which generated projects run behind this template — reads the projects the harness has seen
 ```
 
 `configure-repo.sh` is **run by the maintainer** with an **ephemeral** admin PAT — the assistant **never** has `Administration: write`.
 
-**The five commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
+**The six commands above live at the ROOT; every sub-check lives in `checks/`** — nobody runs those by hand, `check.sh` calls them. **`fleet.sh` is the one that does NOT travel**: it serves whoever holds the template, never a project generated from it. *(`verify-checksums.sh` used to sit in `docs/` and its siblings at the root: one nature, two treatments.)*
 
 `check.sh` reads the pinned versions in `ci.yml` *(single source)*, pulls the binaries under `.ci-tools/` *(gitignored)* and replays **everything the CI runs**: shellcheck · actionlint · zizmor · **semgrep** · **osv-scanner** · gitleaks — plus **two deliberate additions**: validation of any `renovate.json` present *(local-only — it catches the silent freeze of updates on a broken config)*, and the **house checks** under `checks/`. It is **auto-detecting** *(it reads the repo's `ci.yml` and runs ONLY what's found there)*, so the **same** file serves this repo AND every generated project.
 
@@ -77,5 +78,6 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
 
 - **`~/.claude/CLAUDE.md` points via an ABSOLUTE path** to `docs/claude-code-project-standard.md`, `docs/METHODE.md` and `docs/RUNBOOK.md`. Moving them breaks **every** Claude Code session, **silently**.
 - **`templates/repo/.envrc`, `templates/repo/CLAUDE.md` and `templates/repo/requirements-ci.txt` are tracked via `git add -f`**: the neighboring **template** `.gitignore` would otherwise ignore them *(`requirements-ci.txt` is DELIBERATELY so — excluded from the osv scan, see its comment in that `.gitignore`)*. **Never `git rm --cached` them.**
-- **`~/.claude/skills/new-project` is a SYMLINK to `skills/new-project/`** — so **moving this folder breaks the skill**, silently: it simply disappears from the list, with no error. To restore it: `ln -s <new path> ~/.claude/skills/new-project`. *(A copy instead of a link would be worse: it would drift, and that is exactly what produced 13 stale copies of the PAT recipes.)*
+- **TWO symlinks point into `skills/` — `~/.claude/skills/new-project` AND `~/.claude/skills/housekeeping`** — so **moving either folder breaks its skill**, silently: it simply disappears from the list, with no error. To restore one: `ln -s <new path> ~/.claude/skills/<name>`. *(A copy instead of a link would be worse: it would drift, and that is exactly what produced 13 stale copies of the PAT recipes.)*
+  🔴 **A test that removes only the first proves nothing about the second**: the surviving link masks the plugin, so the skill still resolves — and it resolves **unprefixed**, which is the tell. Both removed, both come back as `project-template:<name>` *(measured 2026-08-11)*.
 - **Never commit a secret.** `.env` and `.envrc` are untracked, and must stay that way.

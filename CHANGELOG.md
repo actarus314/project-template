@@ -35,6 +35,14 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
 
 ### Added
+- **Fire a project's version check when a session opens**, from the plugin's own hook rather than from anything the project has to install.
+  A project carrying no such check triggers nothing, and says nothing.
+- **Tell whoever opens a session in a generated project that its template has moved on**, naming what was read and linking the release that changed it.
+  The project itself receives nothing: without the plugin, it knows nothing. The comparison is against the latest release, never against `main`.
+- **Warn at session start when the plugin itself is behind**, from its own repository, so the line shows in any folder and not only in a generated project.
+  Claude Code does not auto-update a third-party marketplace. A manifest declaring no repository is said so, never guessed at.
+- **Show in one place which generated projects run behind the template**, with `./fleet.sh`, reading the projects the harness has already seen.
+  A moved project leaves a dead entry, counted under the table; one never opened with Claude Code is invisible, and cannot be counted at all.
 - **State that reading a mechanism means reading its file whole**, where an exact citation was passing for a verified argument.
   Content needs the passage; behaviour needs the whole file, and past 25 000 tokens a read is silently truncated.
 - **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
