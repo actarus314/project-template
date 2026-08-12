@@ -91,7 +91,7 @@ The rest is **one file per subject** — the method · the standard · secrets a
 ### `../workspace/` — the build
 
 - **`SUIVI.md`** — the log *(the hot one)*. **To open first** to resume work. Short, it **points** to the archives.
-- **`archives/`** — *the cold one*: one folder per closed stage *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, each **synthesized** *(what/how/why)*. The three pieces of research that settled things live in **`archives/conception/`**.
+- **`archives/`** — *the cold one*: one folder per closed stage *(`2026-07-conception/`, `2026-07-tests-grandeur-nature/`, `2026-07-template-sous-git/`)*, each **synthesized** *(what/how/why)*. The three pieces of research that settled things live in **`archives/conception/`**.
 
 ---
 
@@ -215,7 +215,7 @@ Le reste est **un fichier par sujet** — la méthode · le standard · les secr
 ### `../workspace/` — la fabrication
 
 - **`SUIVI.md`** — le journal *(le chaud)*. **À ouvrir en premier** pour reprendre le travail. Court, il **pointe** vers les archives.
-- **`archives/`** — *le froid* : un dossier par étape close *(`conception/`, `tests-grandeur-nature/`, `template-sous-git/`)*, chacune **synthétisée** *(quoi/comment/pourquoi)*. Les trois recherches qui ont tranché vivent dans **`archives/conception/`**.
+- **`archives/`** — *le froid* : un dossier par étape close *(`2026-07-conception/`, `2026-07-tests-grandeur-nature/`, `2026-07-template-sous-git/`)*, chacune **synthétisée** *(quoi/comment/pourquoi)*. Les trois recherches qui ont tranché vivent dans **`archives/conception/`**.
 
 ---
 

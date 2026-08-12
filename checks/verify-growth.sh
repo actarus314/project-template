@@ -131,6 +131,10 @@ if [ -d ../workspace/.git ]; then
   born_worktree=$( { git -C "$ws" ls-files --cached --others --exclude-standard; } | archive_dirs)
   born_head=$(git -C "$ws" ls-tree -r --name-only HEAD 2>/dev/null | archive_dirs)
   pending=$(comm -23 <(printf '%s\n' "$born_worktree") <(printf '%s\n' "$born_head"))
+  # A RENAMED archive is not a BORN one, and git is what tells them apart. Read as a birth, three
+  # folders gaining a date prefix asked the hot side to shrink for stages closed months earlier.
+  renamed=$(git -C "$ws" diff --cached -M --diff-filter=R --name-only 2>/dev/null | archive_dirs)
+  [ -z "$renamed" ] || pending=$(comm -23 <(printf '%s\n' "$pending") <(printf '%s\n' "$renamed"))
 
   if [ -n "$pending" ]; then
     before=$(hot_bytes "$ws" HEAD); after=$(hot_bytes "$ws" WORKTREE)
