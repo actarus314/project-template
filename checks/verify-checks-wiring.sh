@@ -137,6 +137,26 @@ if INIT.exists():
 else:
     unread.append(f"the generator's copy of checks/ (no {INIT} here)")
 
+# ── 5. The neighbour's gate and the runner name the same variable ─────────────────────────────
+# That gate is the only caller knowing WHERE a commit is being made: git tells the runner nothing
+# that survives the clearing the gate must do first. One fact in two files, so they are compared —
+# dropped on either side, the runner silently judges a workspace commit as one made here, and wakes
+# the two checks that generate a whole project. CODE lines only, as in 2b and 3.
+VAR = "CHECK_COMMIT_IN"
+HOOK = pathlib.Path(".githooks-workspace/pre-commit")
+if RUNNER.exists() and HOOK.exists():
+    def in_code(p):
+        return any(VAR in l for l in p.read_text(encoding="utf-8").splitlines()
+                   if not l.lstrip().startswith("#"))
+    if in_code(RUNNER) and not in_code(HOOK):
+        bad.append(f"{RUNNER} reads {VAR}, but {HOOK} never passes it — a commit over there would "
+                   f"be judged as one made here, waking the checks that generate a project")
+    if in_code(HOOK) and not in_code(RUNNER):
+        bad.append(f"{HOOK} passes {VAR}, which {RUNNER} no longer reads — the value goes nowhere")
+    read.append(f"the neighbour's gate and the runner on {VAR}")
+else:
+    unread.append(f"{VAR} (no {HOOK} or no {RUNNER} here)")
+
 for b in bad:
     print(f"✗ {b}")
 if not bad:

@@ -35,8 +35,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
 
 ### Added
-- **Gate the workspace's own commits**, which 13 checks read but none guarded: they ran only when `repo/` was committed too.
-  A generated project is armed from its first commit, and the gate stays silent where no `repo/` sits beside it.
+- **Gate the workspace's own commits**, which the checks reading it never covered: they ran only when `repo/` was committed too, and nothing scanned its staged content for secrets.
+  A generated project is armed from its first commit; one armed at nothing is warned about, never blocked.
 - **Fire a project's version check when a session opens**, from the plugin's own hook rather than from anything the project has to install.
   A project carrying no such check triggers nothing, and says nothing.
 - **Tell whoever opens a session in a generated project that its template has moved on**, naming what was read and linking the release that changed it.

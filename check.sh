@@ -143,6 +143,14 @@ changed=""
 [ "$MODE" = commit ] && changed=$( { git diff --name-only HEAD 2>/dev/null || true
                                      git -C ../workspace diff --name-only HEAD 2>/dev/null || true; } )
 touched() { [ "$MODE" != commit ] || printf '%s\n' "$changed" | grep -qE "$1"; }
+
+# WHERE the commit is being made, which git tells a hook only through variables that same hook must
+# clear before calling this — so the caller states it, and repo/ is the default. The two checks that
+# GENERATE a whole project answer about THIS tree: work in flight in the other repository cannot
+# change their verdict, and its own commit is what judges it.
+here=""
+[ "$MODE" = commit ] && here=$(git -C "${CHECK_COMMIT_IN:-.}" diff --name-only HEAD 2>/dev/null || true)
+touched_here() { [ "$MODE" != commit ] || printf '%s\n' "$here" | grep -qE "$1"; }
 external() { [ "$MODE" != house ]; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
@@ -285,8 +293,8 @@ for s in checks/verify-*.sh; do
     *verify-echo.sh)          touched '\.md$' || continue;;
     *verify-growth.sh)        touched '\.md$' || continue;;
     *verify-comment-drift.sh) touched '\.sh$' || continue;;
-    *verify-travel.sh)          touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$' || continue;;
-    *verify-generated-green.sh) touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/' || continue;;
+    *verify-travel.sh)          touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$' || continue;;
+    *verify-generated-green.sh) touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/' || continue;;
   esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
@@ -306,12 +314,15 @@ for s in checks/verify-*.sh; do
     if [ -n "$_t0" ] && [ -n "$_t1" ]; then echo $(( (_t1 - _t0) / 1000 )) >"$PAR/$n.ms"; fi ) &
 done
 
-if external && in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
+if external && in_ci shellcheck && touched '\.sh$|^\.githooks'; then
   note "shellcheck — shell scripts"
   targets=()
   while IFS= read -r f; do targets+=("$f"); done < <(
     find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-  if [ -d .githooks ]; then while IFS= read -r f; do targets+=("$f"); done < <(find .githooks -type f); fi
+  # A hook carries no extension, and there is more than one hooks directory: the gate that arms the
+  # neighbour is a second one. Naming a single directory left it unlinted here AND in the CI.
+  while IFS= read -r f; do targets+=("$f"); done < <(
+    find . -type f -path './.githooks*' -not -path './.git/*')
   if [ "${#targets[@]}" -eq 0 ]; then ok "no shell scripts"
   elif ! command -v shellcheck >/dev/null 2>&1; then ko "shellcheck missing — 'brew install shellcheck'"
   elif timed shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
@@ -470,7 +481,7 @@ if [ -x checks/verify-checks-wiring.sh ]; then
   if reap verify-checks-wiring; then ok "checks wired"; else ko "a check is not wired as declared"; fi
 fi
 
-if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
+if [ -x checks/verify-travel.sh ] && touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if reap verify-travel; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
@@ -478,7 +489,7 @@ fi
 # Same trigger, and it also generates — but it asks the other question: not "does this path
 # resolve there?", but "does the DOOR pass there?". Three defects hid behind that gap at once,
 # including two checks that exited non-zero without printing a single line.
-if [ -x checks/verify-generated-green.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
+if [ -x checks/verify-generated-green.sh ] && touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
   note "verify-generated-green.sh — a generated project's own door"
   if reap verify-generated-green; then ok "generated project born green"; else ko "generated project born red"; fi
 fi

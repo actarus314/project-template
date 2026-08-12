@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Blocks a commit here when the checks that read workspace/ find a gap — without it they ran only
-# when repo/ was committed too. It sits in repo/ because core.hooksPath is per-repository.
+# Blocks a commit here on a staged secret, or on a gap the checks that read workspace/ find.
+# It ships in the CODE repository: core.hooksPath is per-repository, one directory cannot arm both.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -8,15 +8,39 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-gate="$(git rev-parse --show-toplevel)/../repo/check.sh"
-[ -x "$gate" ] || exit 0
+# The hook's OWN location names the code repository; no sibling is guaranteed to be spelled `repo`.
+gate="$(cd "$(dirname "$0")/.." && pwd)/check.sh"
+# Handed to check.sh below, read while git's environment still says where the commit is being made.
+ws=$(git rev-parse --show-toplevel)
+
+# BEFORE the environment is cleared below: under `commit -a` the staged tree exists only in the index
+# git exports, so clearing first scans the last commit and passes the secret entered in this one.
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "✗ gitleaks is not installed — staged changes cannot be read."
+  echo "  Install it:  brew install gitleaks"
+  exit 1
+fi
+if ! output=$(gitleaks git --staged --no-banner --redact 2>&1); then
+  printf '%s\n' "$output"
+  echo
+  echo "✗ Secret detected in staged changes — commit blocked."
+  echo "  A secret entered into a git object stays there, remote or not."
+  echo "  Emergency: git commit --no-verify (a decision, not an accident)."
+  exit 1
+fi
 
 # git exports its environment to a hook, and check.sh runs git in the OTHER repository, where with
 # `commit -a` these name THIS workspace's in-flight index — which the checks would then overwrite.
 unset GIT_INDEX_FILE GIT_DIR GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY
 
+# Said out loud: from here, an absent neighbour and a check.sh stripped of its bit look alike.
+if [ ! -x "$gate" ]; then
+  echo "  (no executable check.sh at $gate — the checks that read this workspace did NOT run)"
+  exit 0
+fi
+
 # --commit, never --house: it reads this repository's diff too, and skips what cannot be affected.
-if ! "$gate" --commit; then
+if ! CHECK_COMMIT_IN="$ws" "$gate" --commit; then
   echo
   echo "✗ check.sh found gaps (above) — commit blocked."
   echo "  The checks that read this workspace run here, and nowhere else on its own commits."

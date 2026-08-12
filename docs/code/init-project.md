@@ -5,7 +5,7 @@
 
 ## Everything under `checks/` travels, and that is the rule
 
-`check.sh` looks for them THERE; at the root they shipped unrun. All travel, never a chosen few: a check DETECTS whether its subject exists where it lands — present it bites, absent it says so and returns 0. So "does this one deserve to travel?" has no addressee: the check answers at the place, which no list here can. Hooks travel too — they read an event, not a file.
+Why none of them has to be picked is [`AGENTS.md`](../../AGENTS.md)'s to say. What belongs here: `check.sh` looks for them under `checks/`, and at the root they shipped unrun. Hooks travel on the same footing — they read an event, not a file.
 
 ## `docs/code/`: which notes are copied, and which are not
 
@@ -34,13 +34,11 @@ The project name is substituted afterwards, by `sed`.
 
 ## The workspace gets a gate of its own, and it lives in `repo/`
 
-`core.hooksPath` is per-repository, so one directory cannot arm both: the neighbour's hook ships in `repo/.githooks-workspace/` and the workspace points back at it.
-**What it buys**: the checks that read `workspace/` used to run only when `repo/` was committed in the same stretch — measured here, **31 % of the workspace's 530 commits were never followed by one within six hours**, so a defect surfaced days later, on the commit that revealed it.
+`core.hooksPath` is per-repository, so one directory cannot arm both: the neighbour's hook ships in `repo/.githooks-workspace/` and the workspace points back at it. **What fires it, what it reads and what it costs are [`repo-controls.md`](../repo-controls.md)'s**, which owns the control rhythms.
+**The measurement that made it worth building**: those checks used to run only when `repo/` was committed in the same stretch, and **166 of that workspace's 530 commits — 31 % — were followed by none within six hours**, so a defect surfaced days later, on the commit that revealed it.
 
-It runs `--commit`, which folds the workspace's diff into what it reads and skips what the change cannot affect. **2.1 s against 4.4 s — on a clean `repo/` and a warm tool cache, and neither is guaranteed**: `check.sh` unions BOTH dirty trees, so uncommitted work in `repo/` wakes the two project-generating checks, and `--commit` runs the external tools, so a cold cache or no network refuses a note commit. **A floor, never a ceiling.**
-
-🔴 **`core.hooksPath` is LOCAL config: it travels through no diff.** A project brought forward by assisted regeneration *(RUNBOOK §5)* arrives unarmed, and `verify-workspace.sh` says so with the command that repairs it.
-🔴 **The hook must clear git's exported environment before calling `check.sh`.** Git hands a hook `GIT_INDEX_FILE` and friends; under `commit -a` they name the workspace's in-flight index, which the generating checks then overwrite — the commit dies mid-tree, naming neither the hook nor the cause.
+🔴 **`core.hooksPath` is LOCAL config: it travels through no diff**, so the script arms it on the spot, and assisted regeneration *(`RUNBOOK` §5)* still lands unarmed.
+🔴 **The hook clears git's exported environment before calling `check.sh` — and reads the staged content before that.** `GIT_INDEX_FILE` and friends name the workspace's in-flight index under `commit -a`: left set, the generating checks overwrite it and the commit dies mid-tree naming no cause; cleared too early, `gitleaks --staged` reads the last commit and passes the secret entered in this one.
 
 ## The gitleaks hook is armed AFTER the initial commit
 
