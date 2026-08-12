@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-# Fleet view: which generated projects run behind the template. It reads the harness's own project
-# list, which is a CACHE and never a registry — a project never opened with Claude Code is invisible
-# here, and a moved one leaves a dead slug behind. Both limits are printed with the table.
+# Fleet view: which generated projects run behind the template, from the harness's own project list.
+# That list is a CACHE, never a registry — the table prints what it therefore cannot see.
 # It parses NO stamp: the check does that, once, for everyone.
 set -uo pipefail
-# `|| exit 1`: shellcheck refuses a bare cd (SC2164), and SC2164 is a WARNING, so `-S warning` does
-# not filter it — the gate command would stop before ever running check.sh.
+# `|| exit 1`: SC2164 is a WARNING, so `-S warning` does not filter it and the gate would stop here.
 cd "$(dirname "$0")" || exit 1
 
 if [ "${1:-}" = "--version" ]; then
@@ -18,40 +16,53 @@ CHECK=./hooks/check-template-version.sh
 PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
 [ -d "$PROJECTS_DIR" ] || { echo "· nothing read — no $PROJECTS_DIR on this machine"; exit 0; }
 
-# A slug replaced every "/" with "-", and a folder name may itself contain a dash: walk the segments
-# shortest-first and backtrack, testing existence at each step. A blind substitution loses 7 slugs
-# out of 18 on this machine. Why a walk and not a table of exceptions: docs/code/fleet.md.
+# A slug folded every "/" into a "-", and a folder name may itself hold a dash: the segments are
+# walked shortest-first, testing existence at each step. Why a walk, and the cap: docs/code/fleet.md.
+STEPS_MAX=2000   # a slug that resolves to nothing branches at every dash, and nothing else stops it
+found=(); steps=0
 _walk() {
   local base="$1" rest="$2" i seg tail
-  if [ -z "$rest" ]; then [ -d "$base" ] && { printf '%s\n' "$base"; return 0; }; return 1; fi
+  steps=$((steps + 1)); [ "$steps" -le "$STEPS_MAX" ] || return 0
+  if [ -z "$rest" ]; then [ -d "$base" ] && found+=("$base"); return 0; fi
   for ((i = 0; i <= ${#rest}; i++)); do
     if [ "$i" -eq "${#rest}" ]; then seg="$rest"; tail=""
     elif [ "${rest:i:1}" = "-" ]; then seg="${rest:0:i}"; tail="${rest:i+1}"
     else continue; fi
     [ -n "$seg" ] || continue
     [ -d "$base/$seg" ] || continue
-    _walk "$base/$seg" "$tail" && return 0
+    _walk "$base/$seg" "$tail"
   done
-  return 1
+  return 0
 }
-resolve() { _walk "" "${1#-}"; }
+# It fills `found` instead of printing: called in a command substitution it would fill a subshell's
+# array, and the readings would be counted there and lost.
+resolve() { found=(); steps=0; _walk "" "${1#-}"; [ "${#found[@]}" -gt 0 ]; }
 
-lines=(); dead=(); slugs=0; scratch=0
+lines=(); dead=(); slugs=0; scratch=0; ambiguous=0
 for entry in "$PROJECTS_DIR"/*; do
-  # Directories only. A dot-file such as .DS_Store is never matched by this glob anyway — the test
-  # is here for anything else the harness may drop in.
+  # Directories only: the glob already skips dot-files, this covers anything else dropped in.
   [ -d "$entry" ] || continue
   slug=$(basename "$entry"); slugs=$((slugs + 1))
   case "$slug" in
     -private-tmp-*|-tmp-*) scratch=$((scratch + 1)); continue ;;   # session scratchpads: prefix only
   esac
-  if ! path=$(resolve "$slug"); then dead+=("$slug"); continue; fi
-  # ONE implementation, called once per project. Only the first line is kept: its first character
-  # carries the state, which is the whole contract between the two.
+  if ! resolve "$slug"; then
+    # A probe under $TMPDIR stays VISIBLE while it exists — that is what lets a constructed fleet
+    # carry a late project. Gone, it is a cleaned-up temporary, never a project that moved.
+    case "$slug" in
+      -private-var-folders-*|-var-folders-*) scratch=$((scratch + 1)) ;;
+      *) dead+=("$slug") ;;
+    esac
+    continue
+  fi
+  path="${found[0]}"
+  # The generated layout is <project>/repo, so the folder's own name identifies no project.
+  label=$(basename "$path"); [ "$label" != repo ] || label=$(basename "$(dirname "$path")")
+  [ "${#found[@]}" -le 1 ] || { label="$label ⚠${#found[@]}"; ambiguous=$((ambiguous + 1)); }
+  # Only the first line is kept, and relayed WHOLE: ⚠ ✓ · are multi-byte, so ${v:0:1} under LANG=C
+  # hands back a truncated byte. The state stays readable because it opens the line.
   verdict=$(CLAUDE_PROJECT_DIR="$path" "$CHECK" 2>/dev/null | head -1)
-  # The verdict is relayed WHOLE, never sliced: ⚠ ✓ · are multi-byte, and ${v:0:1} under LANG=C
-  # returns a truncated byte. The state stays readable because it opens the line.
-  lines+=("$(basename "$path")|$verdict")
+  lines+=("$label|$verdict")
 done
 
 echo "project-template fleet — $slugs slug(s) read from $PROJECTS_DIR"
@@ -60,6 +71,7 @@ for e in "${lines[@]:-}"; do
   printf '  %-22s %s\n' "${e%%|*}" "${e#*|}"
 done
 for e in "${dead[@]:-}"; do [ -n "$e" ] && printf '  ✗ %-22s (path no longer exists)\n' "$e"; done
-printf '  read: %d slug(s), %d scratchpad(s) skipped, %d dead path(s). This list is the harness cache, not a registry: a project never opened with Claude Code is invisible here.\n' \
+printf '  read: %d slug(s), %d scratchpad(s) skipped or cleaned up, %d dead path(s). This list is the harness cache, not a registry: a project never opened with Claude Code is invisible here.\n' \
   "$slugs" "$scratch" "${#dead[@]}"
+[ "$ambiguous" -eq 0 ] || printf '  ⚠N marks %d slug(s) that more than one reading resolves — the first one is what the row shows.\n' "$ambiguous"
 exit 0

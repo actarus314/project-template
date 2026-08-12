@@ -8,8 +8,9 @@
 Nothing declares a project there and nothing removes one: a project never opened is **invisible**, and a project moved leaves its old slug behind for good.
 Both limits are printed with the table rather than left to be discovered — a fleet view that quietly under-counts is worse than none.
 
-Measured on 2026-08-11: **22 slugs, 5 scratchpads skipped, 5 dead paths, so 12 projects resolved**. Two of the dead ones are probe projects generated for these very tests; three are real — one project moved between two folders and left one slug per location behind.
+Measured on 2026-08-12: **23 slugs, 8 scratchpads or cleaned-up probes skipped, 3 dead paths, so 12 projects resolved**. The three dead ones are real — one project moved between two folders and left one slug per location behind.
 🔴 **12 is a floor, not a total.** The count of slugs moves the moment a session opens anywhere; fewer than 12 resolved signals a regression of the dash-folding below, more slugs signals nothing at all.
+⚠️ **The dead count was reading 6 the day before**, half of it test probes whose temporary directory had been cleaned up. A number meant to say *"look at this"* is worth nothing once routine noise is allowed into it.
 
 ## Folding the dashes — a blind substitution loses seven slugs out of eighteen
 
@@ -24,10 +25,19 @@ A slug replaced every `/` with a `-`, and **a folder name may itself contain a d
 Hence the walk: take the shortest segment that **exists on disk**, recurse, backtrack when the tail fails.
 A table of known exceptions was the other option, and it was ruled out for the reason the method states — it is a second source, stale the day a folder is renamed, and its staleness is silent.
 
+🔴 **Nothing says a slug has ONE reading.** `…-two-words-repo` can fold onto a real `two-words/repo` **and** a real `two/words-repo`, and stopping at the first found made the other disappear without a line. Every reading is now collected and the row is marked `⚠N`, the first one being what it shows: the walk cannot know which is meant, and the reader can.
+The price is that the space is always walked whole, so it is capped at **2 000 steps** — a slug resolving to nothing branches at every one of its dashes, and only the filesystem was stopping it. Measured over the 23 slugs of this machine: **0.28 s stopping at the first, 0.69 s walking all of them**, cap never approached.
+
 ## Why `CLAUDE_PROJECTS_DIR` exists
 
 Without it, the "behind the template" state cannot be exercised at all: the real list holds no generated project running late, and fabricating one means pointing the script at a built directory of slugs.
-⚠️ The scratchpad filter matches the `-private-tmp-` and `-tmp-` prefixes only. A probe project created by `mktemp -d` lands under `/var/folders/…` on macOS and is therefore **not** filtered — which is precisely what lets a constructed fleet carry a positive case.
+⚠️ The scratchpad filter drops the `-private-tmp-` and `-tmp-` prefixes outright. A probe project created by `mktemp -d` lands under `/var/folders/…` on macOS and is **deliberately not** dropped — which is precisely what lets a constructed fleet carry a positive case.
+🔴 **Deliberate while it exists, noise once it is gone**: the temporary directory is cleaned up, the slug stays, and the probe was landing among the dead paths. A `/var/folders` slug that no longer resolves is therefore counted with the scratchpads, never with the dead — **the two prefixes are read at two different moments, and that is the whole point**. Filtering them at the top like the others would have silently removed the ability to test a late project at all.
+
+## The column that identifies — the folder's own name identifies nothing
+
+The standard layout is `<project>/repo`, so a resolved path ends on `repo` for **every** generated project: the first table printed **five rows named `repo` out of twelve**, and a fleet view whose rows cannot be told apart answers no question at all.
+The row therefore steps up to the parent folder whenever the leaf is `repo` — the project's name is the folder holding the two repositories, which is what the standard makes stable.
 
 ## It parses no stamp, and that is the point
 
