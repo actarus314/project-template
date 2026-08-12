@@ -83,6 +83,12 @@ else
   write_cache "$latest" || trailer="  · NOT written: the cache under $CACHE_DIR — the network is called again next session"
 fi
 
+# The same refusal as the stamp's, on the value that came back from the API: a tag_name is not
+# bound to be a version number, and padding an unorderable string does not make it orderable.
+case "$latest" in
+  *[!0-9.]*) echo "· NOT ordered: latest release — read: \`$latest\`, which sort -V cannot order"; echo "  read: stamp v$local_v"; exit 0 ;;
+esac
+
 # `sort -V` ranks 1.2 BELOW 1.2.0, so a two-part stamp would read as late against a three-part
 # release. Both sides are padded to three parts before being ordered — never a string compare.
 pad3() { local a b c IFS=.; read -r a b c <<<"$1"; printf '%s.%s.%s' "${a:-0}" "${b:-0}" "${c:-0}"; }
@@ -104,6 +110,7 @@ fi
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json" ]; then
   plugin_v=$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' \
              "$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)
+  case "$plugin_v" in *[!0-9.]*) plugin_v="" ;; esac   # same refusal, and silence rather than a lie
   if [ -n "$plugin_v" ] && [ "$(pad3 "$plugin_v")" != "$(pad3 "$latest")" ] && [ "$(newer_of "$plugin_v" "$latest")" = "$(pad3 "$latest")" ]; then
     echo "⚠ this plugin is v$plugin_v, latest is v$latest — update: claude plugin update project-template"
   fi

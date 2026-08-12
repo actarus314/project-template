@@ -26,7 +26,8 @@ Hence the walk: take the shortest segment that **exists on disk**, recurse, back
 A table of known exceptions was the other option, and it was ruled out for the reason the method states — it is a second source, stale the day a folder is renamed, and its staleness is silent.
 
 🔴 **Nothing says a slug has ONE reading.** `…-two-words-repo` can fold onto a real `two-words/repo` **and** a real `two/words-repo`, and stopping at the first found made the other disappear without a line. Every reading is now collected and the row is marked `⚠N`, the first one being what it shows: the walk cannot know which is meant, and the reader can.
-The price is that the space is always walked whole, so it is capped at **2 000 steps** — a slug resolving to nothing branches at every one of its dashes, and only the filesystem was stopping it. Measured over the 23 slugs of this machine: **0.28 s stopping at the first, 0.69 s walking all of them**, cap never approached.
+The price is that the space is always walked whole, so it is capped at **2 000 steps** — a slug resolving to nothing branches at every one of its dashes, and only the filesystem was stopping it. Measured over the 23 slugs of this machine: **0.28 s stopping at the first, 0.69 s walking all of them**.
+⚠️ **2 000 is an arbitrary ceiling, and reading it as a measured one would be the mistake**: the worst real slug here costs **8 steps**, so the cap sits 250 times above it. It is not there to bound a cost — it is there so that a pathological tree cannot make the walk run away, and a number close to the real cases would turn a slow project into a truncated one.
 
 ## Why `CLAUDE_PROJECTS_DIR` exists
 

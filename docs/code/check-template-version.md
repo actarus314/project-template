@@ -26,6 +26,8 @@ The 6-hour cache is what puts it out of scope: one call serves every project of 
 `sort -V` ranks `1.2` **below** `1.2.0`, so a two-part stamp against a three-part release reads as late.
 Both sides are padded to three parts before being ordered. The generator only ever writes three, so this is a guard against a hand-written stamp and against a fork tagging `v1.2` — never a second supported format.
 
+🔴 **The refusal above has to cover BOTH sides, and it used to cover one.** The stamp is validated where it is read; `latest` comes back from the API, where nothing binds a `tag_name` to be a version number — `v2.0-rc1` reaches the comparison untouched. Padding it produces `2.0-rc1.0`, which `sort -V` will happily order into a verdict nobody can defend. It is refused on the same test as the stamp, and the plugin's own version with it: **a value that cannot be ordered gets a printed line, or silence, never a comparison.**
+
 ## What the plugin's own line does NOT cover
 
 It is printed **after** the project's verdict, and every path that exits earlier exits before reaching it: in a folder that was **not** generated from the template — no `AGENTS.md`, no stamp — **the plugin never reports itself late**, however far behind it is.
