@@ -5,7 +5,7 @@
 
 ## Everything under `checks/` travels, and that is the rule
 
-`check.sh` looks for them THERE; at the root they shipped unrun. All travel, never a chosen few: a check DETECTS whether its subject exists where it lands — present it bites, absent it says so and returns 0. So "does this one deserve to travel?" has no addressee: the check answers at the place, which no list here can. Hooks travel too — they read an event, not a file.
+Why none of them has to be picked is [`AGENTS.md`](../../AGENTS.md)'s to say. What belongs here: `check.sh` looks for them under `checks/`, and at the root they shipped unrun. Hooks travel on the same footing — they read an event, not a file.
 
 ## `docs/code/`: which notes are copied, and which are not
 
@@ -31,6 +31,14 @@ and must not invent it, but silence is worse: a published `SECURITY.md` saying "
 
 An empty file does not get filled in, it gets ignored; the sections are the questions someone — human or AI — asks reopening the project six months later. The heredoc is quoted (`'EOF'`): without the quotes the shell reads the backticks as command substitution and EMPTIES every `paths` entry.
 The project name is substituted afterwards, by `sed`.
+
+## The workspace gets a gate of its own, and it lives in `repo/`
+
+`core.hooksPath` is per-repository, so one directory cannot arm both: the neighbour's hook ships in `repo/.githooks-workspace/` and the workspace points back at it. **What fires it, what it reads and what it costs are [`repo-controls.md`](../repo-controls.md)'s**, which owns the control rhythms.
+**The measurement that made it worth building**: those checks used to run only when `repo/` was committed in the same stretch, and **166 of that workspace's 530 commits — 31 % — were followed by none within six hours**, so a defect surfaced days later, on the commit that revealed it.
+
+🔴 **`core.hooksPath` is LOCAL config: it travels through no diff**, so the script arms it on the spot, and assisted regeneration *(`RUNBOOK` §5)* still lands unarmed.
+🔴 **The hook clears git's exported environment before calling `check.sh` — and reads the staged content before that.** `GIT_INDEX_FILE` and friends name the workspace's in-flight index under `commit -a`: left set, the generating checks overwrite it and the commit dies mid-tree naming no cause; cleared too early, `gitleaks --staged` reads the last commit and passes the secret entered in this one.
 
 ## The gitleaks hook is armed AFTER the initial commit
 

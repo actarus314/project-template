@@ -56,7 +56,7 @@ jobs:
       - name: shellcheck the scripts, the local runner and the hooks (shellcheck is preinstalled)
         run: |
           mapfile -t targets < <(find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-          if [ -d .githooks ]; then mapfile -t -O "${#targets[@]}" targets < <(find .githooks -type f); fi
+          mapfile -t -O "${#targets[@]}" targets < <(find . -type f -path './.githooks*' -not -path './.git/*')
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"
       # Each check announces what it read; an absent target is never folded into a silent pass.

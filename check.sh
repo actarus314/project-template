@@ -143,6 +143,14 @@ changed=""
 [ "$MODE" = commit ] && changed=$( { git diff --name-only HEAD 2>/dev/null || true
                                      git -C ../workspace diff --name-only HEAD 2>/dev/null || true; } )
 touched() { [ "$MODE" != commit ] || printf '%s\n' "$changed" | grep -qE "$1"; }
+
+# WHERE the commit is being made, which git tells a hook only through variables that same hook must
+# clear before calling this — so the caller states it, and repo/ is the default. The two checks that
+# GENERATE a whole project answer about THIS tree: work in flight in the other repository cannot
+# change their verdict, and its own commit is what judges it.
+here=""
+[ "$MODE" = commit ] && here=$(git -C "${CHECK_COMMIT_IN:-.}" diff --name-only HEAD 2>/dev/null || true)
+touched_here() { [ "$MODE" != commit ] || printf '%s\n' "$here" | grep -qE "$1"; }
 external() { [ "$MODE" != house ]; }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')          # darwin | linux
@@ -259,13 +267,32 @@ RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 
 
 if external; then
   note "Pinned tools (auto-detected from $CI)"
-  [ -n "$GITLEAKS_VERSION" ]   && ensure_gitleaks "$GITLEAKS_VERSION"
-  [ -n "$ACTIONLINT_VERSION" ] && ensure_actionlint "$ACTIONLINT_VERSION"
-  if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION"; fi
+  # A tool that never ARRIVED is not a check that found something, and under `set -e` the two used
+  # to look alike: the fetch died, and the caller reported gaps. Exit 3 says which one it is, and
+  # the caller decides — repo/ blocks on it, the workspace gate does not (repo-controls.md).
+  missing=""
+  if [ -n "$GITLEAKS_VERSION" ];   then ensure_gitleaks   "$GITLEAKS_VERSION"   || true
+                                        [ -x "$CACHE/gitleaks" ]   || missing="$missing gitleaks"; fi
+  if [ -n "$ACTIONLINT_VERSION" ]; then ensure_actionlint "$ACTIONLINT_VERSION" || true
+                                        [ -x "$CACHE/actionlint" ] || missing="$missing actionlint"; fi
+  if in_ci osv-scanner && [ -n "$OSV_VERSION" ]; then ensure_osv "$OSV_VERSION" || true
+                                        [ -x "$CACHE/osv-scanner" ] || missing="$missing osv-scanner"; fi
   venv_specs=()
   if in_ci zizmor  && [ -n "$ZIZMOR_SPEC" ];  then venv_specs+=("$ZIZMOR_SPEC");  fi
   if in_ci semgrep && [ -n "$SEMGREP_SPEC" ]; then venv_specs+=("$SEMGREP_SPEC"); fi
-  [ "${#venv_specs[@]}" -gt 0 ] && ensure_venv "${venv_specs[@]}"
+  if [ "${#venv_specs[@]}" -gt 0 ]; then
+    ensure_venv "${venv_specs[@]}" || true
+    for spec in "${venv_specs[@]}"; do
+      [ -x "$CACHE/venv/bin/${spec%%==*}" ] || missing="$missing ${spec%%==*}"
+    done
+  fi
+  # The STATE on disk, never the fetch's exit code: inside a list ending in `||`, bash turns `set -e`
+  # OFF within the function called, so a dead curl went through and the lot announced itself ready.
+  if [ -n "$missing" ]; then
+    printf '  \033[31m✗ pinned tool(s) not there:%s — no network, or %s/ is cold\033[0m\n' "$missing" "$CACHE"
+    echo "    They checked NOTHING. This is a tool that never arrived, not a check that found something."
+    exit 3
+  fi
   ok "ready under $CACHE/"
 else
   note "House checks only (--house) — the external tools are the CI's own steps"
@@ -285,8 +312,8 @@ for s in checks/verify-*.sh; do
     *verify-echo.sh)          touched '\.md$' || continue;;
     *verify-growth.sh)        touched '\.md$' || continue;;
     *verify-comment-drift.sh) touched '\.sh$' || continue;;
-    *verify-travel.sh)          touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$' || continue;;
-    *verify-generated-green.sh) touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/' || continue;;
+    *verify-travel.sh)          touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$' || continue;;
+    *verify-generated-green.sh) touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/' || continue;;
   esac
   [ -x "$s" ] || continue
   n=$(basename "$s" .sh)
@@ -306,12 +333,15 @@ for s in checks/verify-*.sh; do
     if [ -n "$_t0" ] && [ -n "$_t1" ]; then echo $(( (_t1 - _t0) / 1000 )) >"$PAR/$n.ms"; fi ) &
 done
 
-if external && in_ci shellcheck && touched '\.sh$|^\.githooks/'; then
+if external && in_ci shellcheck && touched '\.sh$|^\.githooks'; then
   note "shellcheck — shell scripts"
   targets=()
   while IFS= read -r f; do targets+=("$f"); done < <(
     find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-  if [ -d .githooks ]; then while IFS= read -r f; do targets+=("$f"); done < <(find .githooks -type f); fi
+  # A hook carries no extension, and there is more than one hooks directory: the gate that arms the
+  # neighbour is a second one. Naming a single directory left it unlinted here AND in the CI.
+  while IFS= read -r f; do targets+=("$f"); done < <(
+    find . -type f -path './.githooks*' -not -path './.git/*')
   if [ "${#targets[@]}" -eq 0 ]; then ok "no shell scripts"
   elif ! command -v shellcheck >/dev/null 2>&1; then ko "shellcheck missing — 'brew install shellcheck'"
   elif timed shellcheck -S warning "${targets[@]}"; then ok "shellcheck"; else ko "shellcheck"; fi
@@ -470,7 +500,7 @@ if [ -x checks/verify-checks-wiring.sh ]; then
   if reap verify-checks-wiring; then ok "checks wired"; else ko "a check is not wired as declared"; fi
 fi
 
-if [ -x checks/verify-travel.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
+if [ -x checks/verify-travel.sh ] && touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$'; then
   note "verify-travel.sh — paths that die where the file lands"
   if reap verify-travel; then ok "travelling paths"; else ko "travelling paths"; fi
 fi
@@ -478,7 +508,7 @@ fi
 # Same trigger, and it also generates — but it asks the other question: not "does this path
 # resolve there?", but "does the DOOR pass there?". Three defects hid behind that gap at once,
 # including two checks that exited non-zero without printing a single line.
-if [ -x checks/verify-generated-green.sh ] && touched '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
+if [ -x checks/verify-generated-green.sh ] && touched_here '^templates/|^checks/|^check\.sh$|^init-project\.sh$|^docs/code/'; then
   note "verify-generated-green.sh — a generated project's own door"
   if reap verify-generated-green; then ok "generated project born green"; else ko "generated project born red"; fi
 fi

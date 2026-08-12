@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:5de5659248da8a796908f53e65582658d51b3c732c103f51ad95cfc7cb31965e
+  checksum-source-md: sha256:d82008c35044e47d956a73f5dc995f19642296908628c250801648b17529e41b
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1383,6 +1383,11 @@
       <span class="cmd">gitleaks git --staged --redact</span>
     </div>
     <div class="step">
+      <b>Hook, the neighbour's — <code>.githooks-workspace/pre-commit</code></b>
+      <p>Covers <code>workspace/</code>, which nothing else reads for content: <code>check.sh</code> scans from <code>repo/</code> outward, and the two name-matching checks match NAMES. It matters there because that repository is committed with <code>git add -A</code>, deliberately, its content being free-form.</p>
+      <span class="cmd">gitleaks git --staged --redact</span>
+    </div>
+    <div class="step">
       <b>CI — the <code>checks</code> job</b>
       <p>A pinned <code>gitleaks</code> binary with a verified checksum, run with <code>fetch-depth: 0</code> so it scans the full history, on both toolchains. <strong>Not <code>gitleaks-action</code></strong>: it requires a license on an organization repo, which would leave CI red by default.</p>
     </div>
@@ -1673,10 +1678,10 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-workspace.sh</code></td>
-          <td>two tracking systems competing, a secret tracked by git, <strong>and open work on either side of the tracking doc</strong> — a closed item inside it, an action outside it in a file pledging to hold none or in an archive being written</td>
+          <td>two tracking systems competing, a secret tracked by git, <strong>open work on either side of the tracking doc</strong> — a closed item inside it, an action outside it in a file pledging to hold none or in an archive being written — <strong>and a gate armed at nothing over there</strong></td>
           <td class="h">both</td>
           <td>every commit</td>
-          <td class="p">✅</td>
+          <td class="p">✅ <span class="tool">the gate half warns: it judges the neighbour's local config, which no commit here can repair</span></td>
           <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for. Both hygiene halves match a FORM, never a state: an unmarked closed item, or a leftover that never declares itself, stays invisible</td>
           <td class="t">0,11 s</td>
           <td>✅</td>
@@ -2010,6 +2015,14 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="note accent">
+    <h3>🔴 A commit in the neighbouring <code>workspace/</code> fires that first rhythm too</h3>
+    <p>Same <code>--commit</code>, through a gate of its own: <code>repo/.githooks-workspace/pre-commit</code>, armed over there by a <strong>LOCAL</strong> <code>core.hooksPath</code>. <code>init-project.sh</code> sets it; a fresh clone and an assisted regeneration arrive unarmed, and <code>verify-workspace.sh</code> <strong>warns</strong> without blocking — no commit here repairs the neighbour's config. It scans that repository's staged content with <code>gitleaks</code> first, then runs the same lot, since <code>check.sh</code> already reads both dirty trees.</p>
+    <p><strong>What it does NOT wake are the two checks that GENERATE a project.</strong> They answer about the code tree, and work in flight next door cannot change their verdict — so the gate states WHERE the commit is being made, through <code>CHECK_COMMIT_IN</code>, and <code>verify-checks-wiring.sh</code> fails the build the day either half stops naming it. Dropped, the fallback is silent: a note commit would wake both again, at <strong>2 260 ms</strong> and <strong>3 476 ms</strong> measured.</p>
+    <p><strong>Cost: 2,1 s — a floor, never a ceiling</strong>, <code>--commit</code> being the mode that fetches the external tools.</p>
+    <p>🔴 <strong>A pinned tool that never ARRIVES exits <code>3</code>, which is not a gap.</strong> <code>check.sh</code> judges that on the STATE on disk, never on the fetch's exit code: inside a list ending in <code>||</code>, bash turns <code>set -e</code> off within the function called, so a dead <code>curl</code> used to reach <code>✓ ready</code>. <strong>repo/ blocks on a 3 like on anything else; the workspace gate lets the commit through</strong> and names the checks that did not run — that repository holds the tracking and the archives, written wherever the maintainer happens to be, and its secret scan runs on the system's own <code>gitleaks</code>, offline. <span class="tool">why the gate lives in repo/, and what it buys: docs/code/init-project.md</span></p>
   </div>
 
   <div class="note">

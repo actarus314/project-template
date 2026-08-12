@@ -46,6 +46,9 @@ if [ -e "$DEST" ]; then echo "✗ $DEST already exists — aborting."; exit 1; f
 
 echo "→ Creating $DEST"
 mkdir -p "$DEST/repo" "$DEST/workspace/docs" "$DEST/workspace/plans" "$DEST/workspace/notes"
+# ABSOLUTE from here on: the script cd's into $DEST/repo further down, after which a relative
+# parent folder makes every later $DEST resolve against the wrong directory.
+DEST="$(cd "$DEST" && pwd)"
 
 # repo/ templates
 cp "$TPL/templates/repo/.gitignore"    "$DEST/repo/.gitignore"
@@ -58,8 +61,11 @@ cp "$TPL/templates/repo/.env.example"  "$DEST/repo/.env"        # to fill in (gi
 # pre-commit hook (gitleaks) — versioned, enabled below via core.hooksPath.
 # 🔴 From the ROOT, like check.sh and checks/ — never templates/: a second copy drifts.
 cp -R "$TPL/.githooks"                       "$DEST/repo/.githooks"
+# The NEIGHBOUR's gate — core.hooksPath is per-repository, so one directory cannot arm both.
+#   (detail: docs/code/init-project.md)
+cp -R "$TPL/.githooks-workspace"             "$DEST/repo/.githooks-workspace"
 # chmod on ALL hooks, never one by name: git SILENTLY ignores a hook that is not executable.
-chmod +x "$DEST/repo/.githooks/"*
+chmod +x "$DEST/repo/.githooks/"* "$DEST/repo/.githooks-workspace/"*
 
 # local == github: the SAME check.sh, auto-detecting. The pre-commit hook reruns it and blocks.
 cp "$TPL/check.sh" "$DEST/repo/check.sh"
@@ -69,8 +75,7 @@ chmod +x "$DEST/repo/check.sh"
 cp "$TPL/open-pr.sh" "$DEST/repo/open-pr.sh"
 chmod +x "$DEST/repo/open-pr.sh"
 
-# release-notes.sh is EXECUTED there, by the project's own release workflow — so it travels, where a
-# document describing this tool would only be pointed at (the rule and its reason: standard §16).
+# release-notes.sh is EXECUTED there, by the project's own release workflow — so it travels (standard §16).
 cp "$TPL/release-notes.sh" "$DEST/repo/release-notes.sh"
 chmod +x "$DEST/repo/release-notes.sh"
 
@@ -87,10 +92,8 @@ mkdir -p "$DEST/repo/checks"
 cp "$TPL/checks/"verify-*.sh "$DEST/repo/checks/"
 chmod +x "$DEST/repo/checks/"verify-*.sh
 
-# Their notes travel WITH them: a check pointing at docs/code/<name>.md that lands where the file
-# is absent carries a dead pointer — verify-travel.sh reports it, and rightly.
-# 🔴 The rule is the SCRIPT, not the glob: a note travels when its script does. Only the notes of
-# what stays behind — this file, the standard's own — are left (detail: docs/code/init-project.md).
+# Their notes travel WITH them: a check whose docs/code/<name>.md is absent carries a dead pointer.
+#   (which ones are copied, and why the rule is the SCRIPT and not the glob: docs/code/init-project.md)
 mkdir -p "$DEST/repo/docs/code"
 cp "$TPL/docs/code/"verify-*.md "$DEST/repo/docs/code/" 2>/dev/null || true
 cp "$TPL/docs/code/README.md"          "$DEST/repo/docs/code/README.md"
@@ -342,7 +345,7 @@ if command -v direnv >/dev/null 2>&1; then direnv allow .; else echo "  (direnv 
 git add .gitignore .env.example README.md .gitattributes LICENSE LICENSE-MIT check.sh open-pr.sh release-notes.sh configure-repo.sh \
         CLAUDE.md \
         checks \
-        SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks
+        SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md CHANGELOG.md AGENTS.md docs .github .githooks .githooks-workspace
 # requirements-ci.txt is gitignored ON PURPOSE (excluded from the osv scan, see .gitignore): a plain `git add`
 # would skip it SILENTLY → broken CI (`pip install -r`). `-f` versions it anyway (same pattern as .envrc).
 git add -f requirements-ci.txt
@@ -352,6 +355,10 @@ git commit -q -m "initial project structure"
 #   (detail: docs/code/init-project.md)
 git config --local core.hooksPath .githooks
 command -v gitleaks >/dev/null 2>&1 || echo "  ⚠ gitleaks missing — 'brew install gitleaks' (otherwise every commit will be blocked)"
+
+# Same arming, same reason, AFTER its initial commit. Relative to the workspace's top level, so the
+# pair survives being moved.   (detail: docs/code/init-project.md)
+git -C "$DEST/workspace" config --local core.hooksPath ../repo/.githooks-workspace
 
 # Net: a versionable file present on disk but ABSENT from the commit is a silent trap
 # — the CI will fail on the first push over a "missing" file that's plainly visible locally.

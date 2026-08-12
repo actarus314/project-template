@@ -77,7 +77,7 @@ jobs:
       - name: shellcheck the scripts and the hooks (preinstalled on the runner)
         run: |
           mapfile -t targets < <(find . -type f -name '*.sh' -not -path './.ci-tools/*' -not -path './.git/*' -not -path './node_modules/*')
-          if [ -d .githooks ]; then mapfile -t -O "${#targets[@]}" targets < <(find .githooks -type f); fi
+          mapfile -t -O "${#targets[@]}" targets < <(find . -type f -path './.githooks*' -not -path './.git/*')
           if [ "${#targets[@]}" -eq 0 ]; then echo "no shell here"; exit 0; fi
           printf 'shellcheck: %s\n' "${targets[@]}"
           shellcheck -S warning "${targets[@]}"

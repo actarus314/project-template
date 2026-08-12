@@ -17,7 +17,12 @@ ws=../workspace
 [ -d "$ws" ] || { echo "  (no $ws beside this repo — nothing to check)"; exit 0; }
 
 fail=0
+not_read=""
 say() { echo "✗ workspace/: $1" >&2; fail=1; }
+# A verdict on the NEIGHBOUR's local config, which no commit here can repair and which this
+# repository never receives through a diff — blocking on it stops the work in repo/ for a fault
+# sitting next door, and the exact command to repair it is in the message.
+warn() { echo "⚠ workspace/: $1" >&2; }
 
 if ! git -C "$ws" rev-parse --git-dir >/dev/null 2>&1; then
   say "not a git repository — a plain folder has no history and no safety net"
@@ -30,6 +35,41 @@ else
   # A tracked NAME betrays, not the content — gitleaks already scans content (verify-workspace.md).
   tracked=$(git -C "$ws" ls-files 2>/dev/null | grep -iE '(^|/)(secrets?|\.env)(\.[a-z]+)?$' || true)
   [ -n "$tracked" ] && say "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
+
+  # The workspace's own gate. The armed path is RESOLVED before being judged, because each way of
+  # getting it wrong is silent on its own: an unset core.hooksPath runs the default hooks (there are
+  # none), a path pointing nowhere makes git run nothing at all, and a path pointing at ANOTHER hooks
+  # directory runs someone else's hook while this gate stays absent. A LOCAL config travels through
+  # no diff, so a regenerated project arrives here unarmed — hence the exact command in the message.
+  gate_dir="$PWD/.githooks-workspace"   # this repository's own, whatever the directory is named
+  if [ ! -f "$gate_dir/pre-commit" ]; then
+    not_read="$not_read .githooks-workspace/pre-commit(absent here — nothing to arm)"
+  elif [ ! -x "$gate_dir/pre-commit" ]; then
+    say "$gate_dir/pre-commit is not executable — git ignores a hook without that bit, and says nothing"
+  else
+    hp=$(git -C "$ws" config --local --get core.hooksPath 2>/dev/null || true)
+    # git honours an ABSOLUTE hooksPath; a relative one is read from the work tree's top level.
+    case "$hp" in
+      "") armed="";;
+      /*) armed="$hp";;
+      *)  armed="$ws/$hp";;
+    esac
+    resolved=""
+    [ -n "$armed" ] && resolved=$(cd "$armed" 2>/dev/null && pwd -P || true)
+    if [ -z "$hp" ]; then
+      warn "has NO gate — the checks that read it only run when this repository is committed too, and a session touching the workspace alone passes none. Arm it:
+    git -C $ws config --local core.hooksPath ../$(basename "$PWD")/.githooks-workspace"
+      read_gate=", gate NOT wired"
+    elif [ -z "$resolved" ]; then
+      warn "core.hooksPath is '$hp', which resolves to no directory — git then runs NOTHING, and says nothing"
+      read_gate=", gate NOT wired"
+    elif [ "$resolved" != "$(cd "$gate_dir" && pwd -P)" ]; then
+      warn "core.hooksPath is '$hp' → $resolved, which is not this gate — those hooks run, this one never does"
+      read_gate=", gate NOT wired"
+    else
+      read_gate=", gate wired"
+    fi
+  fi
 
   # ONE tracking system (METHODE). Archives excluded: a closed stage keeps its own account.
   n=$(git -C "$ws" ls-files 2>/dev/null | grep -icE '(^|/)(SUIVI|TRACKING|PROGRESS)\.md$' || true)
@@ -96,5 +136,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"
