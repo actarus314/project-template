@@ -39,6 +39,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A project carrying no such check triggers nothing, and says nothing.
 - **Tell whoever opens a session in a generated project that its template has moved on**, naming what was read and linking the release that changed it.
   The project itself receives nothing: without the plugin, it knows nothing. The comparison is against the latest release, never against `main`.
+- **Warn at session start when the plugin itself is behind**, from its own repository, so the line shows in any folder and not only in a generated project.
+  Claude Code does not auto-update a third-party marketplace. A manifest declaring no repository is said so, never guessed at.
 - **Show in one place which generated projects run behind the template**, with `./fleet.sh`, reading the projects the harness has already seen.
   A moved project leaves a dead entry, counted under the table; one never opened with Claude Code is invisible, and cannot be counted at all.
 - **State that reading a mechanism means reading its file whole**, where an exact citation was passing for a verified argument.
