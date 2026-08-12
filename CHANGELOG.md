@@ -33,6 +33,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Closing a stage turns into moving that folder, instead of picking files out of a root.
 - **Stop the project skill from naming a discovery tool**, which was a broken symlink on the machine that prescribed it.
   A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
+- **Stop a renamed archive folder from reading as a stage that just closed**, which asked the tracking doc to shrink for work closed a month earlier.
+  What git reports as a rename leaves the set; an archive folder that is genuinely new still triggers the verdict.
 
 ### Added
 - **Fire a project's version check when a session opens**, from the plugin's own hook rather than from anything the project has to install.

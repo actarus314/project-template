@@ -224,7 +224,7 @@ An entry that matches no file is **not harmful** — for a path generated only i
 > 🔴 **This document states the WHY; the RUNBOOK states the ORDER OF ACTIONS.**
 > In case of a mismatch between the two: **the RUNBOOK is authoritative on procedure**, this document on **conventions** — and **the mismatch is a defect to fix**, not an arbitration to make in passing.
 
-**A Claude Code skill drives it** *(`new-project`)*: it stops at every action the maintainer must perform, gives the exact URL and values, waits for confirmation, then verifies. See `workspace/archives/conception/SKILLS.md`.
+**A Claude Code skill drives it** *(`new-project`)*: it stops at every action the maintainer must perform, gives the exact URL and values, waits for confirmation, then verifies. See `workspace/archives/2026-07-conception/SKILLS.md`.
 
 ## 11. Classic pitfalls to avoid
 

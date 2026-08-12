@@ -25,11 +25,12 @@ The hot side is **every tracked `.md` outside archives/**, never a named file �
 
 The tag gates the `repo/` half **alone**: exiting on a missing tag would skip the other, and a first stage closes long before a first release. Bytes AND lines are compared there: at 57 to 175 bytes per line, a document can swell by half in bytes without moving a line.
 
-Why this anchor and the neighbouring check's cannot be swapped:
-[`verify-comment-drift.md`](verify-comment-drift.md). ⚠️ Settled when both halves had an anchor — this one's workspace half has none, so the pair is an input to the overlap review, not a closed case.
+Why this anchor and the neighbouring check's cannot be swapped: [`verify-comment-drift.md`](verify-comment-drift.md).
 
 BLOCKING. Growth is often legitimate — a subject arrives. What it forbids is growing unnoticed, unable to say at closing time what breathed.
 
 **A closure is a gesture, not a commit**: the archive is born in one, the hot side is pruned in the next. So the comparison cannot end at the birth, which froze "after" before the pruning existed.
+
+🔴 **A RENAMED archive is not a born one**, and the worktree against `HEAD` reads it as one. Measured on 2026-08-12: three folders gaining a date prefix asked the hot side to shrink for stages closed a month earlier. What `--diff-filter=R` reports therefore leaves the birth set — proven both ways, an uncommitted archive still triggering and a rename alone no longer.
 
 🔴 **Ending it at `HEAD` moved the same fault one step on**, and it bit three times before the shape was seen: the stage that opens next **legitimately** reopens work, so the hot side climbs again and a closure that did prune is reported as one that did not. The question is therefore whether the hot side **ever** dropped below its pre-closure size — walked commit by commit, stopping at the first that did. A fact, settled once and for good, where a window of N commits would have been one more threshold to defend.
