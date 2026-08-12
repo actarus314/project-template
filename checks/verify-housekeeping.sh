@@ -143,7 +143,17 @@ if [ "$EVENT" = Stop ] && [ -f "$ARMED" ]; then
   gap=$(TRACK="$TRACK" PASS="$PASS" python3 -c '
 import os, re
 doc = open(os.environ["TRACK"], encoding="utf-8").read().splitlines()
-items = [m.group(1) for l in doc if (m := re.match(r"\| \*\*(\d+(?:\.\d+)+|\d+)\*\* \|", l))]
+# The number OPENS the first cell, and its bold holds nothing but numbers — that is what separates
+# a backlog row from an archive one, which the closing pipe never did: every row carries a tag right
+# after the number, so this saw NOTHING, in 30 revisions running (verify-housekeeping.md).
+items = []
+for l in doc:
+    cells = l.split("|")
+    if len(cells) < 3:
+        continue
+    m = re.match(r"\s*(?:▶\s*)?\*\*([\d\s·.]+)\*\*", cells[1])   # fr-pattern: the doc it reads is French
+    if m:
+        items += re.findall(r"\d+(?:\.\d+)*", m.group(1))
 sections = [l[3:].strip() for l in doc if l.startswith("## ")]
 try: art = open(os.environ["PASS"], encoding="utf-8").read()
 except OSError: art = ""
