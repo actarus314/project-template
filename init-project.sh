@@ -46,6 +46,9 @@ if [ -e "$DEST" ]; then echo "✗ $DEST already exists — aborting."; exit 1; f
 
 echo "→ Creating $DEST"
 mkdir -p "$DEST/repo" "$DEST/workspace/docs" "$DEST/workspace/plans" "$DEST/workspace/notes"
+# ABSOLUTE from here on: the script cd's into $DEST/repo further down, after which a relative
+# parent folder makes every later $DEST resolve against the wrong directory.
+DEST="$(cd "$DEST" && pwd)"
 
 # repo/ templates
 cp "$TPL/templates/repo/.gitignore"    "$DEST/repo/.gitignore"

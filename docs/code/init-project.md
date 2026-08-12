@@ -34,13 +34,13 @@ The project name is substituted afterwards, by `sed`.
 
 ## The workspace gets a gate of its own, and it lives in `repo/`
 
-`core.hooksPath` is per-repository, so one directory cannot arm both. The neighbour's hook therefore ships in `repo/.githooks-workspace/` and the workspace points back at it — a copy placed inside `workspace/`, which is versioned nowhere, would be the second copy this repo refuses everywhere else.
+`core.hooksPath` is per-repository, so one directory cannot arm both: the neighbour's hook ships in `repo/.githooks-workspace/` and the workspace points back at it.
+**What it buys**: the checks that read `workspace/` used to run only when `repo/` was committed in the same stretch — measured here, **31 % of the workspace's 530 commits were never followed by one within six hours**, so a defect surfaced days later, on the commit that revealed it.
 
-What it buys: 13 checks read `workspace/`, but until this gate they only ran when `repo/` was committed in the same stretch. Measured on this repository, **31 % of the workspace's 530 commits were never followed by a repo commit within six hours** — a defect entering there surfaced days later, on the commit that revealed it rather than the one that introduced it.
+It runs `--commit`, which folds the workspace's diff into what it reads and skips what the change cannot affect. **2.1 s against 4.4 s — on a clean `repo/` and a warm tool cache, and neither is guaranteed**: `check.sh` unions BOTH dirty trees, so uncommitted work in `repo/` wakes the two project-generating checks, and `--commit` runs the external tools, so a cold cache or no network refuses a note commit. **A floor, never a ceiling.**
 
-It runs `--commit`, never `--house`: that mode already folds the workspace's own diff into what it reads *(`check.sh` says why, where it does it)*, and skips what the change cannot affect — so the two checks that generate a whole project stay asleep. Measured: **2.1 s against 4.4 s**.
-
-🔴 **`core.hooksPath` is LOCAL config, so it travels through no diff.** A project brought forward by assisted regeneration *(RUNBOOK §5)* arrives unarmed, and `verify-workspace.sh` is what says so — with the one command that repairs it, rather than a rule to go and look up.
+🔴 **`core.hooksPath` is LOCAL config: it travels through no diff.** A project brought forward by assisted regeneration *(RUNBOOK §5)* arrives unarmed, and `verify-workspace.sh` says so with the command that repairs it.
+🔴 **The hook must clear git's exported environment before calling `check.sh`.** Git hands a hook `GIT_INDEX_FILE` and friends; under `commit -a` they name the workspace's in-flight index, which the generating checks then overwrite — the commit dies mid-tree, naming neither the hook nor the cause.
 
 ## The gitleaks hook is armed AFTER the initial commit
 

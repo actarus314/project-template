@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Blocks a commit here when the checks that read workspace/ find a gap — without it they ran only
-# when repo/ was committed too. It sits in repo/ because core.hooksPath is per-repository, and it
-# scans no staged secret: this workspace never leaves the machine.
+# when repo/ was committed too. It sits in repo/ because core.hooksPath is per-repository.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -12,12 +11,15 @@ fi
 gate="$(git rev-parse --show-toplevel)/../repo/check.sh"
 [ -x "$gate" ] || exit 0
 
-# --commit, never --house: that mode reads this repository's diff too, and skips what the change
-# cannot affect, so the checks that generate a whole project stay asleep.
+# git exports its environment to a hook, and check.sh runs git in the OTHER repository, where with
+# `commit -a` these name THIS workspace's in-flight index — which the checks would then overwrite.
+unset GIT_INDEX_FILE GIT_DIR GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY
+
+# --commit, never --house: it reads this repository's diff too, and skips what cannot be affected.
 if ! "$gate" --commit; then
   echo
   echo "✗ check.sh found gaps (above) — commit blocked."
-  echo "  13 checks read this workspace, and this hook is where they run on its own commits."
+  echo "  The checks that read this workspace run here, and nowhere else on its own commits."
   echo "  Emergency: git commit --no-verify (a decision, not an accident)."
   exit 1
 fi
