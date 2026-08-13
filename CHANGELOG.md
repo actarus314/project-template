@@ -16,6 +16,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [1.6.0](https://github.com/actarus314/project-template/releases/tag/v1.6.0) - 2026-08-14
 
 ### Changed
+- **Hand over the rule itself when a write is refused**, instead of ordering a re-read of the documents that carry it — the block is unchanged, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 - **Bump `renovate` 44.13.1 → 44.14.10**, the validator every `renovate.json` is read by — the CI pin here, and the fallback inside `check.sh`, which travels: a project generated from now on validates its own config against the newer schema. ([#128](https://github.com/actarus314/project-template/pull/128))
 - **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
   The runbook and the controls document now point at it instead of restating it. ([#129](https://github.com/actarus314/project-template/pull/129))

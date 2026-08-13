@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # hook: SessionStart, PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
-# The rule documents must be READ before anything is written. A rule that is merely INJECTED reads as
-# a fact, and nothing traces whether it was ever obeyed. Why the transcript is the signal, why a
-# partial read does not count, and what re-arms it: docs/code/verify-rules-read.md.
+# On a refusal the rule itself goes out, in plain text on STDERR with exit 2 — the only channel that
+# reaches the model from here, and the one block a JSON field cannot override. Never print JSON: this
+# hook's stdout is not read at all, and systemMessage addresses the user. Which tier owes a rule and
+# which owes a read, and what re-arms it: docs/code/verify-rules-read.md.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -153,17 +154,31 @@ if [ -z "$missing" ]; then
   exit 0
 fi
 
-record 1 "not read: $missing"
-python3 - "$missing" <<'PY' >&2
-import json, sys
-missing = sys.argv[1].split()
-print(json.dumps({
-    "hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny"},
-    "systemMessage": ("Read these IN FULL before acting — no offset, no limit: "
-                      + ", ".join(missing)
-                      + ". They are injected as context, never as an executed instruction, so nothing "
-                        "records whether they were obeyed; and after a compaction the summary carries "
-                        "their conclusions, which is exactly what feels like having read them."),
-}))
-PY
+# The runbook is DATA — the order of the actions, the URLs, the exact values, who performs each. No
+# short form stands in for it, so this tier keeps demanding the read and stays unsatisfied until it
+# happens: its marker is written above, on the read, and nowhere else.
+if [ "$OK" = "$OKG" ]; then
+  record 1 "not read: $missing"
+  printf '%s\n%s\n' \
+    "Read $missing IN FULL before this gesture — no offset, no limit." \
+    'It holds the order of the actions and who performs each, with the exact values. A gesture performed from memory is a wrong gesture.' >&2
+  exit 2
+fi
+
+# The other tier is a RULE, and a rule fits in a sentence. Sending it beats ordering a read of the
+# documents carrying it: the reading is the part that already feels done. The marker is written HERE,
+# on the refusal, because once the rule has been sent there is no read left to observe.
+mkdir -p "$STATE_DIR"; : > "$OK"
+record 1 "rule sent in place of a read: $missing"
+cat >&2 <<'RULE'
+This write is refused once, so that the rule it owes arrives here instead of a reading list.
+
+A fact lives in ONE place. Before writing one, check whether it already lives elsewhere: if it does,
+link it and repair the original — never copy it. If removing a sentence breaks nothing, it stays removed.
+
+Versioned content is written in English, and never in the second person. Whatever is not needed to
+clone, build or run the app lives beside the repository, never inside it.
+
+Reissuing the same call will go through.
+RULE
 exit 2
