@@ -9,7 +9,7 @@ The rule documents are named in a file the assistant receives on **every turn**.
 
 The first answer to that was to demand the read and refuse until it happened. It was the wrong lever, on two counts that are measured rather than argued.
 
-**Ordering a read buys nothing that is observable.** What peer-reviewed work measures is the opposite move: re-stating the rule after a lapse restores compliance for about thirty tokens, where demanding a re-read of the documents carrying it costs four orders of magnitude more and produces no recorded change in behaviour.
+**Ordering a read buys nothing that is observable.** What peer-reviewed work measures is the opposite move: re-stating the rule after a lapse restores compliance for about thirty tokens, where demanding a re-read of the documents carrying it costs several hundred times that — and produces no recorded change in behaviour.
 
 **And the gesture being demanded had gone hollow.** This check reads the tool CALL, never its result — so a `Read` the harness itself rejects still counts as one. A guard satisfiable by an empty gesture is no longer guarding.
 

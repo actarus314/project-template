@@ -179,6 +179,7 @@ link it and repair the original — never copy it. If removing a sentence breaks
 Versioned content is written in English, and never in the second person. Whatever is not needed to
 clone, build or run the app lives beside the repository, never inside it.
 
-Reissuing the same call will go through.
+The block lifts here: this rule is owed once per session, and it has just been sent. Every write that
+follows goes through, whatever its target.
 RULE
 exit 2
