@@ -71,7 +71,7 @@ except Exception: sys.exit(0)
 ti = ev.get("tool_input") or {}
 cmd = str(ti.get("command") or "")
 if not cmd:
-    print("write:" + str(ti.get("file_path") or "")); raise SystemExit
+    print("write:" + str(ti.get("file_path") or ti.get("notebook_path") or "")); raise SystemExit
 # In COMMAND POSITION, never anywhere in the string. Matching the substring refused a grep and a wc
 # that merely NAMED a script, six times in one session — how a guard earns its own bypass. The
 # technique and its measurements are verify-pr-instruction.sh and its note; keep the two in step.
@@ -107,7 +107,11 @@ case "$kind" in
   gesture)
     [ -n "$GESTURE_DOC" ] || exit 0
     required=("$GESTURE_DOC"); OK="$OKG" ;;
-  command) exit 0 ;;                    # any other command: nothing is being posed, say nothing
+  # A command writes as surely as an edit tool does — a redirection, sed -i, a script called inline.
+  # Naming the ones that write is a list that always misses one, and a missed write is a write nobody
+  # sees; one notice too many costs a single extra message per session. So every command counts, and
+  # only a tool call carrying a path is filtered on where that path lands.
+  command) ;;
   write:*)
     case "${kind#write:}" in "$REPO"/*) ;; *) exit 0;; esac   # only what lands in this repository
     ;;
@@ -171,7 +175,7 @@ fi
 mkdir -p "$STATE_DIR"; : > "$OK"
 record 1 "rule sent in place of a read: $missing"
 cat >&2 <<'RULE'
-This write is refused once, so that the rule it owes arrives here instead of a reading list.
+This first action is held back once, so that the rule it owes arrives here instead of a reading list.
 
 A fact lives in ONE place. Before writing one, check whether it already lives elsewhere: if it does,
 link it and repair the original — never copy it. If removing a sentence breaks nothing, it stays removed.
@@ -179,7 +183,7 @@ link it and repair the original — never copy it. If removing a sentence breaks
 Versioned content is written in English, and never in the second person. Whatever is not needed to
 clone, build or run the app lives beside the repository, never inside it.
 
-The block lifts here: this rule is owed once per session, and it has just been sent. Every write that
+The block lifts here: this rule is owed once per session, and it has just been sent. Everything that
 follows goes through, whatever its target.
 RULE
 exit 2

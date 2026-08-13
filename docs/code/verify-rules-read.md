@@ -17,7 +17,9 @@ So the refusal still fires, and the block is unchanged: the write does not happe
 
 ## Two tiers, and only one of them can be summarised
 
-The method and the standard are owed by **every write**. They state how a thing is written and where it goes — and that fits in a sentence, so the sentence is what goes out.
+The method and the standard are owed by **every action taken here**. They state how a thing is written and where it goes — and that fits in a sentence, so the sentence is what goes out.
+
+**A command counts as much as an edit tool**, and no attempt is made to tell which commands write: a redirection, `sed -i` or an inline script all do, and any list naming them misses one. A write nobody sees is the expensive failure; one notice too many costs a single extra message per session. Only a tool call carrying a path is filtered on where that path lands.
 
 The runbook is a different kind of document. It holds **gestures**, with their order, their URLs, their exact values and who performs each. **No short form stands in for data**: a summary of a runbook is a gesture performed from memory with a quotation attached. That tier therefore keeps demanding the read, and keeps refusing until it happens.
 
