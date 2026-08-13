@@ -178,10 +178,12 @@ cat >&2 <<'RULE'
 This first action is held back once, so that the rule it owes arrives here instead of a reading list.
 
 A fact lives in ONE place. Before writing one, check whether it already lives elsewhere: if it does,
-link it and repair the original — never copy it. If removing a sentence breaks nothing, it stays removed.
+link it, and repair the original where it is wrong — never copy it. If removing a sentence breaks
+nothing, it stays removed.
 
-Versioned content is written in English, and never in the second person. Whatever is not needed to
-clone, build or run the app lives beside the repository, never inside it.
+Versioned content is written in English, and never in the second person; a README carries English and
+French together, deliberately. Whatever is not needed to clone, build or run the app lives beside the
+repository — unless the app or the tooling reads it there, in which case it stays and is ignored.
 
 The block lifts here: this rule is owed once per session, and it has just been sent. Everything that
 follows goes through, whatever its target.
