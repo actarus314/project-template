@@ -188,6 +188,11 @@ Look in the repository, then in the **skills and agents**, **plugins**, **market
 🔴 **On an undertaking that lasts, run that check again at every new brick** — not once at the start.
 🔴 **Read the inventory, never a remembered count**: nothing reports what is installed, so a figure in a document is stale the day a plugin lands — and read as live.
 
+🔴 **The rule governs DOING, not only building — and that half is the one the maintainer names as almost never followed** *(2026-08-12)*.
+**Before starting a piece of work, look at what is INSTALLED — skills, MCP servers, plugins — use it, and name the tool chosen.**
+Their catalogue is already in the opening context, so reading it costs no tool call.
+🔴 **A source that resists is not SKIPPED**: a page that only exists once its JavaScript runs gets read with a tool that can run it. **Skipping it in silence is the defect; attempting it and failing is a finding, reported with what was tried.**
+
 **"Cast a wide net" and "be exhaustive" ask for EXPLORATION, never for volume**: sweeping the solution space **before** committing — the options, what exists, and the need itself, **including "build nothing, adopt something else"**.
 **Concluding that there is nothing to build is a RESULT, not a failure** — as is concluding that what was built should be dropped.
 

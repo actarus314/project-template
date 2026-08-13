@@ -1,12 +1,5 @@
-# Secrets & local config.
-#
-# The leading `/` ANCHORS the pattern at the root. Without it, the homonymous TEMPLATES
-# in `templates/repo/` would be ignored — they are the product of this repo.
-#
-# That is not enough: `templates/repo/.gitignore` is itself an ACTIVE .gitignore,
-# and a deeper .gitignore always beats the root one. It therefore ignores its
-# own neighbors `.envrc` and `CLAUDE.md`. They are tracked via `git add -f` — an
-# already-tracked file escapes .gitignore. Do NOT `git rm --cached` them.
+# Secrets & local config. The leading `/` ANCHORS at the root: without it, the homonymous
+# templates under `templates/repo/` are ignored too — and why they are force-added: AGENTS.md.
 /.env
 /.envrc
 /.claude/
@@ -18,3 +11,5 @@
 
 # Pinned binaries that `check.sh` downloads to align local with CI.
 /.ci-tools/
+
+.playwright-mcp/
