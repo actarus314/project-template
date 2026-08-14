@@ -1,0 +1,16 @@
+# How GitHub groups pull requests in the list `release-notes.sh` asks it for.
+#
+# 🔴 NOT the same file as .github/workflows/release.yml, which PUBLISHES a release. Same name, two
+# folders, unrelated roles — the collision is GitHub's, and it is the reason this comment exists.
+#
+# The grouping is by LABEL, and the only labels posted here are a bot's: Renovate sets
+# `dependencies`, and Dependabot sets it too on the security updates it may open. Human pull
+# requests carry none, so they all land in the first category — which is what it is for.
+changelog:
+  categories:
+    - title: Changes
+      labels: ['*']
+      exclude:
+        labels: [dependencies]
+    - title: Dependencies
+      labels: [dependencies]
