@@ -92,9 +92,10 @@ if declared:
         bad.append(f"{n}.sh declares itself a hook, but {TABLE} does not say so")
 
     # ── What each check says it does with a verdict, against what the table publishes ──────────
-    # Two statements of one fact, so they get compared. Hooks are out: their column says `n/a`.
-    # (docs/code/verify-checks-wiring.md)
-    for n in sorted(set(declared) - table_hooks):
+    # PRESENCE is owed by EVERY check, hooks included — the table states the line sits next to
+    # `# hook:`. Only the COMPARISON is meaningless for a hook, whose column reads `n/a`. Exempting
+    # them from both is what let two checks ship with no declaration at all. (verify-checks-wiring.md)
+    for n in sorted(declared):
         p = pathlib.Path("checks") / f"{n}.sh"
         if not p.exists():
             continue
@@ -103,13 +104,16 @@ if declared:
             bad.append(f"{n}.sh declares no `# blocking:` line — what it does with a verdict is "
                        f"then a matter of reading the code")
             continue
+        if n in table_hooks:
+            continue                     # a hook: declaration read, nothing in the table to match it
         gate = declared[n]
         table_blocks = gate.startswith("✅")
         if m.group(1) == "yes" and not table_blocks:
             bad.append(f"{n}.sh declares `# blocking: yes` but {TABLE} does not publish it as blocking")
         if m.group(1) == "no" and table_blocks:
             bad.append(f"{n}.sh declares `# blocking: no` but {TABLE} publishes it as blocking")
-    read.append(f"{len(set(declared) - table_hooks)} blocking declaration(s) against the table")
+    read.append(f"{len(declared)} blocking declaration(s) read, "
+                f"{len(set(declared) - table_hooks)} of them compared to the table")
 
 # ── 3. THE DOOR — every workflow that gates a project calls it ────────────────────────────────
 # This is the part that says something everywhere. A generated project holds no table and no

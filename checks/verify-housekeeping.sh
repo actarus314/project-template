@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking: yes   (through `decision: block` on stdout — the exit stays 0, or the JSON is dropped)
 # hook: Stop, PreCompact, UserPromptSubmit — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # The development admin falling behind the work: commits piling up with nothing written down.
 # THREE events (Stop, PreCompact, UserPromptSubmit), threshold 6 commits since the last write.
@@ -41,7 +42,9 @@ arm() { mkdir -p "$STATE_DIR"; [ -f "$ARMED" ] || printf '%s 0\n' "$(date +%s)" 
 payload=$(cat)
 EVENT=$(printf '%s' "$payload" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 TRIGGER=$(printf '%s' "$payload" | sed -n 's/.*"trigger"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-[ -n "$EVENT" ] || EVENT=Stop
+# An unreadable payload used to fall back to Stop — the ONE branch that can block, and the one that
+# would then bypass the exception forbidding a block during a FORCED compaction. Say nothing instead.
+[ -n "$EVENT" ] || { record skip "no event in payload"; exit 0; }
 case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; esac
 
 # ── UserPromptSubmit: the pass was ASKED FOR, in words. Route it, and stop there. ─────────────

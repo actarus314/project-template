@@ -84,7 +84,8 @@ def med(v): return f"{statistics.median(v)/1000:.2f} s" if v else "—"
 total_ms = sum(statistics.median(a["ms"]) for a in agg.values() if a["ms"])
 
 recording = sys.argv[3] == "on"
-status = ("🟢 **Recording is ON** — this page grows at every verdict."
+status = ("🟢 **Recording is ON** — the JOURNAL grows at every verdict, but this page is a "
+          "SNAPSHOT of it: only `./check.sh --report` refreshes it, and it is stale until then."
           if recording else
           "🔴 **Recording is OFF — this page is FROZEN.** Nothing has been added since the newest "
           "record below, and nothing will be. Switch it back on: `./check.sh --report --on`.")

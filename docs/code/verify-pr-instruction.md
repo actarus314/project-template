@@ -2,47 +2,46 @@
 
 > Convention: [`README.md`](README.md).
 
-## It measures, it does not refuse — and that is the whole point
+## It measures, it does not refuse
 
-Whether a pull request may be opened without the maintainer saying so is settled: it may not (`AGENTS.md`). **Whether that rule needs enforcing in code is not**, and this instrument answers that rather than assume it. So it records and returns: it never denies a tool.
+That a pull request may not be opened unasked is settled (`AGENTS.md`); **whether that needs enforcing in code is not**. This answers it: it records, and never denies a tool.
 
-🔴 **The decision threshold is written down BEFORE the data**, so that no figure can be read into whatever was already wanted: **after 20 openings, if the share opened WITHOUT an instruction is under 5 %, the token does not get built** — the rule sufficed.
+🔴 **The threshold is written BEFORE the data**, so no figure can be read into what was already wanted: **after 20 openings, under 5 % without an instruction, the token does not get built.** ⚠️ **The old 49 % is not the baseline**: it was measured while the RUNBOOK still authorised the assistant to open.
 
-⚠️ **The old 49 % is NOT the baseline** — measured while this repository's RUNBOOK still assigned "PR `develop → main` … merge" to the assistant, an explicit authorisation. **What decides is the absolute rate against 5 %.**
+🔴 **No earlier reading is a denominator** — and **the label is what keeps generations apart**: a name no earlier line contains, where `pr opened` was a prefix of its predecessor and one grep returned both. The arithmetic of the last nine is in the research.
 
-⚠️ **Nothing recorded before the newline fix counts either**: those readings span three generations of this code, and a broken instrument yields no denominator. **The count starts over**, the earlier lines keeping a name of their own so no later total sweeps them up.
+## The order and its target, up to three words apart
+
+Demanding them ADJACENT missed real orders: `ouvre et merge les pr` was filed as opened WITHOUT one. Past three words, `ouvre le fichier de suivi … la PR` matches and orders nothing. 🔴 **Word boundaries matter as much**: without them `ouvrir` matched inside `couvrir` and `pr` inside `premier`.
+
+**Widening without disqualifying INVERTS the verdict**: a ban would arm the token. Three rules answer for it, read within the verb's own clause:
+
+| Rule | Turns away | Why it holds |
+|---|---|---|
+| **negation** | `arrête d'ouvrir des PR` | two real bans, plus a reproach after the fact |
+| **generic target** | `la capacité d'ouvrir des PR` | `des PR` names the class; an order names the object |
+| **third-party subject** | `renovate peut lancer deux pr` | a bot OPENS, it does not order |
+
+**The acceptance set is written before the pattern it tests**, both directions; the bench prints its tally. Over 1536 human prompts it matches 110 against the old 111 — 6 real orders gained, 7 false ones dropped. It runs the script, not a copy.
+
+⚠️ **Known and unchased**: an order carried by its *result* names no verb, so the measure stays pessimistic — which would matter as a gate.
+
+## The event also fires on text the maintainer never typed
+
+🔴 **A finished agent reporting back armed the token** — its report quoted the opening script in a code excerpt, and the harness injects that under this event. Measured to the second, then reproduced. The bias runs the dangerous way: **an authorisation from machine noise makes the next unordered opening read as ordered**. **21 injected entries carry the pattern, 0 of 1087 real prompts carry a tag**, recounted at source.
 
 ## The gesture, never one script
 
-`gh pr create` appears **84 times** here. Watching only `open-pr.sh` leaves the door beside it wide open, so both are matched, in all their forms.
+`gh pr create` appears **84 times** here: watching only `open-pr.sh` leaves the door beside it open. Both are matched in all their forms, **in command position only**: a commit message quoting it counted; a real opening was skipped for a `grep`. **Substring presence is not execution.**
 
-🔴 **In COMMAND POSITION, never anywhere in the string.** Both mistakes happened on the first live opening: a commit message quoting `open-pr.sh` counted, a real opening was skipped for a same-line `grep`. **Substring presence is not execution.**
+**Four traps make that reading hard, and each was paid for once**: the line split comes before the token split, quotes hold at both levels, wrappers are peeled one token at a time testing before each peel, and a heredoc is CONTENT. The measurements behind each are in the research, with the nine shapes it is verified on.
 
-## A newline ends a command, and shlex does not say so
+🔴 **The cascade is what makes a false positive serious**: it consumes the token, so the real opening that follows is filed `WITHOUT an instruction`. Overcounting inverts the verdict rather than adding noise.
 
-**The line split comes FIRST.** `shlex` treats a newline as whitespace and never emits one as a token, so a `"\n"` among the operators is read by nobody and a multi-line command collapses into one segment — whose head is then an ordinary word, `git` or `printf`, where the peel stops.
+## Consumed on use, and no older than its session
 
-🔴 **It failed by PASSING.** Replayed over a three-day window against the pull requests GitHub recorded: **8 openings seen of 13**, the five missed all multi-line, which is the shape most commands take here. After the split: **12 of 13**.
+An order and its opening were measured **up to 31 turns apart**, only 39 % in the same turn: any expiry in turns short enough to restrict refuses real orders, any longer one authorises the session. **One order, one opening** — gone on use. **But it does not outlive the session it was given in**, one having been found armed overnight; the token carries that session, and where the field is absent the check says so rather than assume.
 
-## Quotes hold at BOTH levels, and a heredoc is content
+🔴 **A REFUSED opening consumes the order all the same** — measured three times, 21 s to 55 s apart, so the retry that followed was filed as unauthorised. Two openings repeating the same command WHOLE — peeled, it loses the repository and two targets read alike — with no order between them cannot be two pull requests: the second is a **retry**, labelled apart and outside the denominator.
 
-Two splits happen — command into segments, segment into tokens — and **neither may ignore quotes**.
-An operator inside a quoted argument ends the segment, and what follows lands in command position:
-a JSON payload holding `cd /repo && ./open-pr.sh` read as an opening. On whitespace, a quoted assignment falls apart the same way — `PKG="check.sh open-pr.sh"` left `PKG="check.sh` for the `VAR=value` peel, which exists so an environment prefix cannot hide its command. `shlex` does both.
-Wrappers are then peeled **one token at a time, testing before each peel** — a single regex either ate the target (`./open-pr.sh` looks like a path) or stopped short (`direnv exec <dir>` is three).
-
-**A heredoc is CONTENT, never commands this shell runs** — and what quotes the gesture most is this check's own documentation: editing this note was recorded as an opening.
-
-🔴 **The cascade is what makes it serious.** A false positive **consumes the token**, so the real opening that follows is filed `WITHOUT an instruction`. Three readings in one afternoon, **one a real opening recorded as unauthorised**: overcounting does not add noise, it inverts the verdict.
-Verified on nine shapes, the two multi-line ones added once they were measured. ⚠️ **No literal apostrophe in the embedded Python**: use `\x27`.
-
-## Consumed, never dated
-
-An order and the opening it authorises were measured **up to 31 turns apart**, with only 39 % in the same turn. So any expiry short enough to restrict would refuse real orders, and any expiry long enough to cover them would authorise everything for the rest of the session. **One order, one opening** dissolves that: the token has no lifetime, and disappears on use.
-
-⚠️ **Known and counted**: an order carried by its expected *result* — "une PR par repo", "promeus" — names no opening verb, and one order can command several openings.
-The pattern matched **40 of 1281** real messages, and the forms it misses are listed in the research. As an instrument this only skews the measure pessimistic; it would matter if this became a gate.
-
-## The prompt field is not named
-
-The field carrying the prompt is undocumented for `UserPromptSubmit`, so **every text value** of the payload is read instead. Naming one is what left the neighbouring check mute for seven hours.
+**The field carrying the prompt is undocumented**, so every text value is read instead: naming one left a neighbouring check mute for seven hours. ⚠️ **No literal apostrophe in the embedded Python** — `\x27`, `shellcheck` refusing `’`.

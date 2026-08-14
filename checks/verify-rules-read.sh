@@ -26,6 +26,13 @@ record() {   # <rc> <reason>
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
+# No interpreter: say so and stand down. Silent, this guard stops arming AND stops asking, while the
+# markers of an earlier session survive to excuse the next one.
+if ! command -v python3 >/dev/null 2>&1; then
+  record skip "no python3"
+  exit 0
+fi
+
 payload=$(cat)
 EVENT=$(printf '%s' "$payload" | python3 -c '
 import json, sys
@@ -56,26 +63,54 @@ fi
 
 # Which tier is this? A command about to post a lifecycle gesture asks for the runbook, and for it
 # alone — the other two are owed by every write, and their own marker attests to them.
-cmd=$(printf '%s' "$payload" | python3 -c '
-import json, sys
+kind=$(printf '%s' "$payload" | python3 -c '
+import json, re, shlex, sys
 try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
-print(str((ev.get("tool_input") or {}).get("command") or ""))
+ti = ev.get("tool_input") or {}
+cmd = str(ti.get("command") or "")
+if not cmd:
+    print("write:" + str(ti.get("file_path") or "")); raise SystemExit
+# In COMMAND POSITION, never anywhere in the string. Matching the substring refused a grep and a wc
+# that merely NAMED a script, six times in one session — how a guard earns its own bypass. The
+# technique and its measurements are verify-pr-instruction.sh and its note; keep the two in step.
+GEST = re.compile(r"(?:\S*/)?(?:configure-repo|init-project|open-pr)\.sh\s|git\s+tag\b|gh\s+pr\s+merge\b|gh\s+release\b")
+PEEL = re.compile(r"^(?:cd|direnv|exec|env|sudo|time|command|nohup)$|^[-./~]\S*$|^\S+=\S*$")
+OPS = {";", "&&", "||", "|", "&", "\n"}
+HEREDOC = re.compile(r"<<-?\s*[\"\x27]?(\w+)[\"\x27]?\n.*?\n\s*\1\s*$", re.S | re.M)
+def segments(c):
+    c = HEREDOC.sub("\n", c)
+    out = []
+    for line in c.split("\n"):
+        lex = shlex.shlex(line, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        try: toks = list(lex)
+        except ValueError:
+            out.extend(s.split() for s in re.split(r"[;&|]+", line)); continue
+        cur = []
+        for tok in toks:
+            if tok in OPS: out.append(cur); cur = []
+            else: cur.append(tok)
+        out.append(cur)
+    return out
+def poses(toks):
+    toks = list(toks)
+    while toks:
+        if GEST.match(" ".join(toks) + " "): return True
+        if not PEEL.match(toks[0]): return False
+        toks.pop(0)
+    return False
+print("gesture" if any(poses(s) for s in segments(cmd)) else "command")
 ' || true)
-case "$cmd" in
-  *configure-repo.sh*|*init-project.sh*|*open-pr.sh*|*"git tag"*|*"gh pr merge"*|*"gh release"*)
+case "$kind" in
+  gesture)
     [ -n "$GESTURE_DOC" ] || exit 0
     required=("$GESTURE_DOC"); OK="$OKG" ;;
-  *)
-    [ -n "$cmd" ] && exit 0             # any other command: nothing is being posed, say nothing
-    target=$(printf '%s' "$payload" | python3 -c '
-import json, sys
-try: ev = json.load(sys.stdin)
-except Exception: sys.exit(0)
-print(str((ev.get("tool_input") or {}).get("file_path") or ""))
-' || true)
-    case "$target" in "$REPO"/*) ;; *) exit 0;; esac   # only what lands in this repository
+  command) exit 0 ;;                    # any other command: nothing is being posed, say nothing
+  write:*)
+    case "${kind#write:}" in "$REPO"/*) ;; *) exit 0;; esac   # only what lands in this repository
     ;;
+  *) exit 0 ;;                          # unreadable payload: never block on what could not be read
 esac
 
 [ ${#required[@]} -gt 0 ] || exit 0     # nothing to read here — a generated project, or another repo
