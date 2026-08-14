@@ -32,9 +32,13 @@ if [ -f CHANGELOG.md ]; then
       $0 ~ "^## \\[" v "\\]" {in_v=1; next}
       in_v && /^(## |### )/ {exit}
       in_v && /^> / {sub(/^> /, ""); print}' CHANGELOG.md; }
-  # At tag time the section is still `Unreleased` — RUNBOOK §3 tags before sealing.
-  summary=$(read_summary "${TAG#v}")
-  [ -n "$summary" ] || summary=$(read_summary "Unreleased")
+  # No heading yet at tag time, so `Unreleased` IS this version's summary; once one exists, only its
+  # own counts — an empty fallback would staple today's summary onto an old version (.md note).
+  if grep -q "^## \[${TAG#v}\]" CHANGELOG.md; then
+    summary=$(read_summary "${TAG#v}")
+  else
+    summary=$(read_summary "Unreleased")
+  fi
 fi
 
 args=(-f "tag_name=$TAG")
