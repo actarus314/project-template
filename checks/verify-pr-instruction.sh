@@ -29,6 +29,13 @@ record() {   # <rc> <reason> [label]
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${3:-pull request opened}" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
+# No interpreter: say so and stay out of the way, like the three neighbouring hooks. Silent, this
+# instrument stops measuring while the journal still looks healthy — and a rate would be read from it.
+if ! command -v python3 >/dev/null 2>&1; then
+  record skip "no python3"
+  exit 0
+fi
+
 payload=$(cat)
 EVENT=$(printf '%s' "$payload" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 # The session: the field two neighbouring checks already rely on in flight, session_id being unproven.
