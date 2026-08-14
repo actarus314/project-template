@@ -314,7 +314,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 >
 > 🔴 **It lives OUTSIDE every repository, and that is the point.** Telemetry is not repository content, and a journal kept under `.ci-tools/` was per-project as well as per-machine: the one question worth asking of it — *is this gate firing everywhere, or only here* — had nowhere to be answered. Every project running these checks appends to the **same** file, each line carrying the project it came from, and `--report` filters on the current one so a project's page still speaks for that project alone. The path is deliberately not named after this repository: the journal outlives the project that first wrote it.
 >
-> **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. **The three hooks record their own VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
+> **Skips are recorded too, with the gate that decided them** — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. **The six hooks record their own VERDICT**, which `check.sh` cannot do: it never runs them. Recording the firing alone was the earlier design, and it answered the wrong question — *did the gate fire*, never *did it bite*, and a threshold is set on the second. A hook now writes `1` with the tag of the signal that caught, `0`
 > when it looked and found nothing, and `skip` for a turn it never evaluated: a rate reads off `bit / fired` without counting the turns nobody looked at.
 >
 > 🔴 **OFF by default** — a development instrument, not a permanent one. `--report --on` starts the recording, `--off` stops it, `--reset` clears it; while off it costs one file test per verdict.
@@ -371,7 +371,7 @@ On dev hosts (local Mac): `:latest` or no pin at all is fine.
 > compares it to the REAL exit code** the moment that code exists *(it catches the case where the code contradicts both — the only one a comparison of declarations cannot see)*. The price of the second is that it speaks only when the check actually bites; fabricating a biting case for all 21 was weighed and left out.
 
 > **Travels: yes, all of them, and that is the rule** — `init-project.sh` copies `checks/` whole, and a control DETECTS whether its subject exists where it lands: present it bites, absent it says so.
-> The three hooks travel too; a project that wants them has to declare them in its own settings.
+> The six hooks travel too; a project that wants them has to declare them in its own settings.
 > The external tools travel through the workflow templates, at the versions those files pin.
 >
 > ⚠️ **`local`, `GitHub` or `both`** describes where the control RUNS, never what it may look at.
@@ -405,7 +405,7 @@ The split is not how long a check takes, it is **what has to change for it to sa
 
 | Rhythm | What makes the verdict new | What runs there |
 |---|---|---|
-| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above **except the four below and the three hooks**, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
+| **every commit** — `./check.sh --commit` | any file of the tree | every check in the table above **except the four below and the six hooks**, plus `gitleaks` over what is not pushed yet *(a cost that stays flat as the repo grows)* |
 | **every commit, if its target moved** | a `.sh`, a workflow, a `renovate.json`, a file that travels, **a `.md` — in this repo OR in the neighbouring workspace** | `shellcheck` · `actionlint` + `zizmor` · the Renovate validator · `verify-travel.sh` *(it generates a whole project)* · **`verify-echo.sh`** and **`verify-growth.sh`** on a `.md`, **`verify-comment-drift.sh`** on a `.sh` — each on ITS OWN target. Pairing two of them under one condition once blinded the script half on a commit that touched only scripts. 🔴 **The workspace is a SEPARATE repository, so a diff run here is blind to it** — `check.sh` reads its uncommitted diff too, which is what lets a closing stage wake `verify-growth` |
 | **every 6 h** — `./check.sh`, and the CI | an external base, or a tool version | `osv-scanner` *(the OSV database is queried online)* · `semgrep` *(its packs are downloaded)* · `gitleaks` over the full history *(its rules are baked into a pinned binary)* |
 
@@ -432,7 +432,7 @@ The split is not how long a check takes, it is **what has to change for it to sa
 
 > **A hook DECLARES ITSELF**, in its own header — `# hook: <event>`. `check.sh` detects that line rather than naming the hooks, which was the last hand-written list left in it, and the one that travelled into every project with nothing to guard it. A fifth hook dropped into `checks/` would have joined the parallel lot and hung on STDIN, with no output at all.
 >
-> **The three hooks are outside all of this.** `verify-delegation.sh`, `verify-turn-claims.sh` and `verify-forbidden-command.sh` are fired by the assistant's own events, not by `check.sh` — which must never start them: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.
+> **The six hooks are outside all of this.** `verify-delegation.sh`, `verify-forbidden-command.sh`, `verify-housekeeping.sh`, `verify-pr-instruction.sh`, `verify-rules-read.sh` and `verify-turn-claims.sh` are fired by the assistant's own events, not by `check.sh` — which must never start them: each reads its payload from STDIN, and inside the parallel lot they would compete for it with every sibling. A check skipped by its rhythm says so **as a skip**: a missing capture otherwise reads as "it never ran", and a skip that looks like a breakage is how a real breakage stops being noticed.
 
 🔴 **A check that reads the tree reads ALL of it, in both modes.** Narrowing one to the diff is blind by construction: deleting a file breaks a link in another one, and no diff mentions that. What the changed files decide is whether a check **runs**, never what it looks at.
 

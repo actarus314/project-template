@@ -67,6 +67,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Only a leftover declaring itself matches.
 
 ### Fixed
+- **Stop asking for the runbook when a command merely NAMES a lifecycle script**, a `grep` or a `wc` paying the same price as a real invocation — the gesture is now read in command position, wrappers peeled.
+- **Say when a hook has no interpreter instead of measuring nothing**: two of them recorded no line at all without `python3`, leaving a journal that looked healthy.
+- **Refuse to guess the event on an unreadable payload**, where the housekeeping hook fell back to the one branch that can block — including during a forced compaction it must never block.
+- **Require the `# blocking:` header from every check, hooks included**, which the cross-check exempted in bulk: two shipped without one.
 - **Count an instruction to open a pull request when a word separates the verb from its target** — `ouvre et merge les pr` was missed, and the opening it authorised filed as unauthorised. The pattern now turns away bans and generic targets, and ignores harness-injected text.
 - **Stop counting a refused opening and its retry as two**, where the first consumed the order and the second was filed as unauthorised. An order also no longer outlives the session it was given in.
 - **Keep two openings towards different repositories apart**, where the retry fingerprint dropped the wrappers and with them the target, so the second one left the count entirely.

@@ -16,6 +16,17 @@ Written in the script, the runbook, the conventions *and* the tracking doc, **th
 
 ---
 
+## And when two sources disagree, the CODE decides what IS
+
+> **The code is the truth about what happens — it is what runs. Prose states an intention, and drifts without a sound.**
+
+**Settle every claim on the file that runs**, read in full and reproduced where it can be: one document set against another proves nothing.
+**Then read what the losing sentence CLAIMS.** Describing what the code does, it is false — **correct the prose**. Prescribing what the code must do, the code is late — **correct the code**.
+🔴 **Never rewrite a prescription to match a gap**: that closes the divergence by deleting the requirement, and nothing reports it afterwards. Never arbitrate in passing.
+*(Between two documents, the arbitration is [standard §10](claude-code-project-standard.md#10-creating-configuring-evolving-a-project-the-runbook).)*
+
+---
+
 ## Where each thing lives — by ROLE, not by file name
 
 The roles below are **stable**; the files that carry them are not *(see "The tracking tool is a default")*.
@@ -53,7 +64,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 > **Everything the script LEARNS must FLOW BACK to the doc.** A fact living **only** in the script leaves the doc no longer enough to do the work by hand — wrong by omission.
 > ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
 
-> 🔴 **Where the comment stops and its note starts — the two used to claim the same object.** Both were given "the constraint", and neither said which one arbitrates: **32 pairs** of a script and its note scored as restating each other, up to 0,97. That is the mechanical consequence, not carelessness.
+> 🔴 **Where the comment stops and its note starts — both claimed "the constraint", with nothing arbitrating**: **32 pairs** of a script and its note scored as restating each other, up to 0,97.
 > **The test is what the sentence CARRIES: a figure, an alternative ruled out, or an incident belongs to the note.** The comment keeps the constraint bare — enough not to break the line while editing it; the note keeps what it took to get there — enough to challenge the design. Neither is a summary of the other.
 
 A comment worth keeping states a constraint that would recur if ignored; one worth deleting recounts the incident, with its date and its evidence. **That narrative goes to the archive** — one line in the code, the story there — so deleting it loses nothing, it puts it in the right place. Both worked through on a real pair: [`docs/code/verify-narrative.md`](code/verify-narrative.md).
@@ -65,11 +76,11 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 > 🔴 **The template initializes EVERY project — including ones later run by a third-party system** *(GSD, superpowers, or other)*.
 > **Forcing our files on them would COLLIDE with theirs** *(`.planning/` & co.)*: **two competing tracking systems means none kept up**. **ONE gets chosen.**
 
-**It is a ROLE, not a file**: GSD's `.planning/`, a Linear, a Notion satisfy it just as well, as long as a fact keeps living in a single place. A resume doc that accumulates the shipped **becomes a journal**. **Goal**: a human **or** an AI reopening the project 6 months later finds their footing **without a wall of text**.
+**It is a ROLE, not a file**: GSD's `.planning/`, a Linear, a Notion satisfy it as well, as long as a fact keeps living in a single place. A doc that accumulates the shipped **becomes a journal**. **Goal**: whoever reopens the project in 6 months finds their footing **without a wall of text**.
 
 `SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state **and "what's left to do"**. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
-**The two rows above are a matter of SCALE, not a second system.** A new project keeps ONE file — three near-empty ones cost more to keep in step. The split comes when the doc stops answering *"what do I do next"* at a glance: measured here on 2026-08-08, **160 of its 263 lines held nothing anyone could act on**. The rule stated there is what holds it together, and the file names are a default, as `SUIVI.md` is.
+**The two rows above are a matter of SCALE, not a second system.** A new project keeps ONE file — three near-empty ones cost more to keep in step. The split comes when the doc stops answering *"what do I do next"* at a glance, measured here at **160 of 263 lines**.
 
 > ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, resumption — the rule below applies in full: **check what already exists, build custom only as a last resort, and say so.**
 
@@ -87,7 +98,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 **One sentence, one line — and no width imposed on top of it.** The break follows the meaning, so a diff shows the sentence that changed rather than the paragraph around it. 🔴 **Wrapping at a column is a layout frozen into the file**: the renderer rejoins those lines anyway. `verify-line-form.sh` refuses a sentence cut across two lines; third-party texts keep the upstream's own layout.
 
-⚠️ **A width THRESHOLD was measured and rejected**: *"median 92 characters per line"* came from a corpus that was itself hard-wrapped. **A threshold comes from a reference or an objective, never from the average of what is being corrected** — the same trap caught the changelog's old cap *([standard §16](claude-code-project-standard.md#16-project-lifecycle-docs-and-what-a-project-ships))*. One sentence per line is binary, so it can be armed at all.
+⚠️ **A width threshold was measured and rejected**: *"92 characters"* came from a corpus already hard-wrapped. **A threshold comes from a reference or an objective, never from the average of what is corrected** *([standard §16](claude-code-project-standard.md#16-project-lifecycle-docs-and-what-a-project-ships))*. One sentence per line is binary, so it can be armed.
 
 **What can be measured is measured; the rest is not.** Jargon and clarity are judgements: no script reads them, and a model blocking on them is worse than nothing — a green light given wrongly has no second line of defence.
 
@@ -108,7 +119,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 ## The main documents stay SHORT
 
-A document no one rereads is of no use: the runbook is read **while doing** the work, and unread, the action gets done from memory — which is a wrong action.
+A document no one rereads is of no use: the runbook is read **while doing** the work, and unread, its action gets done from memory — a wrong action.
 **Many files is not the problem, as long as the links are honored** — a light directory structure beats 25 `.md` at one level mixing living documents with archives.
 
 ---
@@ -124,8 +135,8 @@ A document no one rereads is of no use: the runbook is read **while doing** the 
 1. **Prune the hot side.** Take out of `SUIVI.md` everything the stage closed. It **shrinks** — that is the sign the stage is finished.
    **Where the work in flight has its own folder, this step is a MOVE** — `WIP/<date>-<stage>/` becomes `archives/<stage>/` whole, so nothing has to be picked out file by file. 🔴 **A move breaks the links pointing INTO it, and an archive is immutable on its FACTS — a path a move invalidated is not one.** Repair them; a dead link preserves nothing. *(Measured here: four documents moved, three archives to repair.)*
 2. **Write the stage's archive — a SYNTHESIS, NEVER a move or a dump** *(ADR format: context → decisions → consequences)*:
-   the sources get **read in FULL**, then distilled into the **WHAT** *(what was done)* **+ the HOW** *(the pitfalls encountered)* **+ the WHY** *(why these choices, what got ruled out)*.
-   Goal: **enough to NEVER reopen a closed topic for lack of information — and not one line more.**
+   Sources **read in FULL**, distilled into the WHAT, the HOW *(the pitfalls)* and the WHY *(what got ruled out)*.
+   Goal: **enough never to reopen a closed topic for lack of information — and not one line more.**
 3. **File the stage's research and evidence there** *(a `RECHERCHE-*` is cold once done — it goes into ITS stage folder, not at the root of the hot side)*.
 4. **Commit.** The archive is immutable *(except for a project paradigm shift)*.
 5. **Re-read the SETTLED and the TRAPS**, where they have been split off *(previous section)*: the stage adds what it established and what bit it, and **removes what it made false** — a settled fact turned false is worse than none, and a trap an armed check now covers no longer has to be known. **This is the only moment they are touched**; between two closures, nothing.
@@ -136,15 +147,15 @@ A document no one rereads is of no use: the runbook is read **while doing** the 
 
 **The directory structure stays LIGHT**: a few stage folders, a few useful files each — **neither a giant freezer, nor 38 folders of two 90-line files.**
 
-> 🔴 **The trap — and it has been committed** *(15/07)*: **freezing the verbatim** of `SUIVI` into a single 114 KB block. A freezer that **never gets opened**: if finding the *why* behind a line on the hot side requires digging through the huge archive, **it will not get done**. The archive gets **synthesized**; it does not get **dumped**.
+> 🔴 **The trap, already committed** *(15/07)*: freezing `SUIVI` verbatim into a single 114 KB block — a freezer nobody opens, so the *why* behind a hot line never gets found. **The archive gets synthesized, never dumped.**
 
 ---
 
 ## What is ARMED — and how far a rule travels
 
-**A rule held by discipline alone is a rule that gets re-established by periodic manual passes — never a rule that holds.** These rules are armed: `check.sh` runs them.
+**A rule held by discipline alone gets re-established by periodic passes — it never holds.** These rules are armed: `check.sh` runs them.
 
-**The list of checks, their perimeter, their rhythm, their gate and what they cost live in [`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere else**, three partial copies having once disagreed on how many there were.
+**The list of checks, their perimeter, their rhythm, their gate and what they cost live in [`repo-controls.md`](repo-controls.md)** — the document that owns the control matrix — **and nowhere else**: three partial copies once disagreed on how many there were.
 
 **What belongs HERE is the question that decides a perimeter**, because it is a question of writing:
 
@@ -169,25 +180,26 @@ Before adding a piece of information, **a single question**:
 
 ## Searching before building — and what "cast a wide net" actually asks for
 
-**Rule set by the maintainer, versioned here on 2026-08-10** *(it lived in a machine-local file, so it reached no clone and no generated project)*.
+**Rule set by the maintainer, versioned here on 2026-08-10** *(it lived in a machine-local file, reaching no clone)*.
 
 > **Look for what already exists before proposing anything, and before building anything.**
 
-Look in the repository, then in the **skills and agents**, the **plugins**, the **marketplace**, the **native features** — and on the **web**, when nothing installed fits. **Only build custom as a last resort, and say so.**
+Look in the repository, then in the **skills and agents**, **plugins**, **marketplace** and **native features** — then the **web**, when nothing installed fits. **Only build custom as a last resort, and say so.**
 🔴 **On an undertaking that lasts, run that check again at every new brick** — not once at the start.
-🔴 **Read the inventory, never a remembered count.** Nothing reports what is installed, so a figure written into a document is stale the day a plugin lands — and a stale figure is read as a live one.
+🔴 **Read the inventory, never a remembered count**: nothing reports what is installed, so a figure in a document is stale the day a plugin lands — and read as live.
 
-**"Cast a wide net" and "be exhaustive" ask for EXPLORATION, never for volume.** They mean sweeping the solution space **before** committing — the options, what exists, and the questioning of the need itself as much as of the approach, **including "build nothing, adopt something else"**.
+**"Cast a wide net" and "be exhaustive" ask for EXPLORATION, never for volume**: sweeping the solution space **before** committing — the options, what exists, and the need itself, **including "build nothing, adopt something else"**.
 **Concluding that there is nothing to build is a RESULT, not a failure** — as is concluding that what was built should be dropped.
 
-**An audit sweeps the whole matrix, groups by root cause, and fixes at the root** — never one point at a time. A list of symptoms fixed one by one leaves the cause, which produces the next list.
+**An audit sweeps the whole matrix, groups by root cause, and fixes at the root** — a list of symptoms fixed one by one leaves the cause, which produces the next list.
 
 ## Reading in full before stating what a mechanism does
 
 > **Before stating what a mechanism does, read the file implementing it — in full.**
 
-🔴 **An exact citation is not a verified argument**: the rank can be right while the reach of the mechanism was never followed. **Content needs the passage; BEHAVIOUR needs the whole file**, which a `grep` only appears to answer.
+🔴 **An exact citation is not a verified argument**: **content needs the passage, BEHAVIOUR needs the whole file** — which a `grep` only appears to answer.
 ⚠️ **Under the reading cap only**: past 25 000 tokens a `Read` is **silently** truncated.
+
 
 ## Delegating: Claude is the orchestrator
 
