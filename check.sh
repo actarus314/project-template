@@ -10,6 +10,13 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Judge the repository this file sits in, never one named by the environment. A git hook exports
+# GIT_DIR, absolute inside a worktree, so it outlives the `cd` above — and a check on a GENERATED
+# project then reads the caller's repository instead, returning a verdict about the wrong tree.
+# GIT_INDEX_FILE is deliberately left alone: during a commit it names the index being built, which
+# is exactly what the staged-content checks are meant to read.
+unset GIT_DIR GIT_WORK_TREE
+
 CI=.github/workflows/ci.yml
 CACHE=.ci-tools
 mkdir -p "$CACHE"

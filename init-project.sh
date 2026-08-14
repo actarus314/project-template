@@ -4,6 +4,11 @@ set -euo pipefail
 # Initialize a Claude Code project per the organization standard.
 #   (detail: docs/code/init-project.md)
 
+# This script CREATES repositories, so it must never act on one inherited from the environment.
+# A git hook exports GIT_DIR to whatever it was called from, and inside a worktree that value is
+# ABSOLUTE — so it survives every `cd` below and captures each git gesture, wherever it is aimed.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+
 PROJ=""; SLUG=""; BASE="$HOME/Documents/Claude"; TYPE="static"
 PAGES=""; ARTEFACT=""; STAGING=""      # empty = "unspecified" → the shortcut will decide
 LIFECYCLE_DOCS=1
