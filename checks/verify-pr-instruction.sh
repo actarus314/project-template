@@ -17,18 +17,22 @@ PROJECT="$(basename "$(dirname "$REPO")")/$(basename "$REPO")"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/claude-controls"
 JOURNAL="$STATE_DIR/controls-log.tsv"
 [ -f "$STATE_DIR/journal-on" ] || JOURNAL=""
-TOKEN="$STATE_DIR/pr-instruction-$(printf '%s' "$PROJECT" | tr '/' '-').token"
+SLUG=$(printf '%s' "$PROJECT" | tr '/' '-')
+TOKEN="$STATE_DIR/pr-instruction-$SLUG.token"
+LAST="$STATE_DIR/pr-instruction-$SLUG.last"     # the opening last counted, so a retry is not a second one
 
-# The label of a generation is never a PREFIX of an earlier one — readings that must not be summed
-# cannot share a name a grep would sweep up together.
-record() {   # <rc> <reason>
+# A generation's label is never a PREFIX of an earlier one, and a retry takes one of its own:
+# readings that must not be summed cannot share a name a grep sweeps up together.
+record() {   # <rc> <reason> [label]
   [ -n "$JOURNAL" ] || return 0
-  printf '%s\thook\tpull request opened\t%s\t\t%s\t%s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$PROJECT" >> "$JOURNAL"
+  printf '%s\thook\t%s\t%s\t\t%s\t%s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${3:-pull request opened}" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
 payload=$(cat)
 EVENT=$(printf '%s' "$payload" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+# The session: the field two neighbouring checks already rely on in flight, session_id being unproven.
+SESSION=$(printf '%s' "$payload" | sed -n 's/.*"transcript_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
 # The maintainer's words, watched for an instruction to open. The field carrying the prompt is not
 # documented, so every text value is read — a named field that turns out wrong stays mute for hours.
@@ -66,7 +70,8 @@ def ordered(txt):
     return bool(RESULT.search(txt))
 sys.exit(7 if ordered(txt) else 0)
 ' && rc=0 || rc=$?
-  [ "${rc:-0}" = 7 ] && { mkdir -p "$STATE_DIR"; date -u +%Y-%m-%dT%H:%M:%SZ > "$TOKEN"; }
+  # A fresh order reopens the count: the previous opening is no longer what a retry would repeat.
+  [ "${rc:-0}" = 7 ] && { mkdir -p "$STATE_DIR"; printf '%s\n%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SESSION" > "$TOKEN"; rm -f "$LAST"; }
   exit 0
 fi
 
@@ -109,23 +114,40 @@ def segments(cmd):
             else: cur.append(tok)
         segs.append(cur)
     return segs
+# Printed PEELED of its wrappers, so the same gesture through direnv or through cd reads alike.
 def opens(toks):
     toks = list(toks)
     while toks:
-        if OPEN.match(" ".join(toks) + " "): return True
-        if not PEEL.match(toks[0]): return False
+        if OPEN.match(" ".join(toks) + " "): return " ".join(toks)
+        if not PEEL.match(toks[0]): return ""
         toks.pop(0)
-    return False
-print("yes" if any(opens(s) for s in segments(sys.stdin.read())) else "no")
-' || echo no)
-[ "$opens" = yes ] || exit 0
+    return ""
+for seg in segments(sys.stdin.read()):
+    hit = opens(seg)
+    if hit:
+        print(hit); break
+' || true)
+[ -n "$opens" ] || exit 0
 
-if [ -f "$TOKEN" ]; then
+# A refused opening consumes the order too. Two openings repeating the same peeled command with no
+# order in between cannot be two pull requests: the first one did not get made.
+if [ "$(cat "$LAST" 2>/dev/null || true)" = "$opens" ]; then
+  record 0 "retry of the same opening" "pull request retried"
+  exit 0
+fi
+mkdir -p "$STATE_DIR"; printf '%s' "$opens" > "$LAST"
+
+if [ ! -f "$TOKEN" ]; then
+  record 1 "WITHOUT an instruction"
+# An order does not outlive its session; an absent field is published, never assumed.
+elif [ -n "$SESSION" ] && [ -n "$(sed -n 2p "$TOKEN")" ] && [ "$(sed -n 2p "$TOKEN")" != "$SESSION" ]; then
+  rm -f "$TOKEN"
+  record 1 "WITHOUT an instruction — the order came from an earlier session"
+else
   # Consumed, never dated: an order and the opening it authorises sat up to 31 turns apart, so any
   # expiry short enough to restrict would refuse real orders. One order, one opening.
-  rm -f "$TOKEN"
-  record 0 "with an instruction"
-else
-  record 1 "WITHOUT an instruction"
+  s=$(sed -n 2p "$TOKEN"); rm -f "$TOKEN"
+  if [ -n "$s" ]; then record 0 "with an instruction"
+  else record 0 "with an instruction — session unknown"; fi
 fi
 exit 0
