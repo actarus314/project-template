@@ -30,7 +30,7 @@ It used to live outside any repo: not versioned, not run through CI, not diffabl
 ./configure-repo.sh <owner>/<repo> [homepage] [description] [topics-csv] [--dry-run]
 ./check.sh   # replays the CI checks LOCALLY, at the pinned versions (local == github)
 ./open-pr.sh <base> <title> <body-file>   # opens a PR AND makes sure the CI actually starts (via direnv exec)
-./release-notes.sh <tag> [previous-tag]   # prints the Release note: the CHANGELOG block, then the PR list
+./release-notes.sh <tag> [previous-tag]   # prints the Release note: the version's 3-line summary, then the PR list
 ./fleet.sh   # which generated projects run behind this template — reads the projects the harness has seen
 ```
 

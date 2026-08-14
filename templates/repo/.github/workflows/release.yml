@@ -23,8 +23,8 @@ jobs:
             echo "Release ${GITHUB_REF_NAME} already exists — skipping."
             exit 0
           fi
-          # The Release owns nothing of its own: release-notes.sh copies the version's CHANGELOG
-          # block and appends the auto-generated pull-request list. It fails rather than print half
-          # a note, so a missing half stops the release instead of shipping quietly incomplete.
+          # The Release owns nothing of its own: release-notes.sh copies the three lines the version
+          # opens on, then the auto-generated pull-request list. It fails rather than print half a
+          # note, so a missing half stops the release instead of shipping quietly incomplete.
           ./release-notes.sh "${GITHUB_REF_NAME}" > "${RUNNER_TEMP}/notes.md"
           gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file "${RUNNER_TEMP}/notes.md"
