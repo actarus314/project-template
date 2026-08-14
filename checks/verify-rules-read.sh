@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # hook: SessionStart, PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
-# The rule documents must be READ before anything is written. A rule that is merely INJECTED reads as
-# a fact, and nothing traces whether it was ever obeyed. Why the transcript is the signal, why a
-# partial read does not count, and what re-arms it: docs/code/verify-rules-read.md.
+# On a refusal the rule itself goes out, in plain text on STDERR with exit 2 — the only channel that
+# reaches the model from here, and the one block a JSON field cannot override. Never print JSON: this
+# hook's stdout is not read at all, and systemMessage addresses the user. Which tier owes a rule and
+# which owes a read, and what re-arms it: docs/code/verify-rules-read.md.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -70,7 +71,7 @@ except Exception: sys.exit(0)
 ti = ev.get("tool_input") or {}
 cmd = str(ti.get("command") or "")
 if not cmd:
-    print("write:" + str(ti.get("file_path") or "")); raise SystemExit
+    print("write:" + str(ti.get("file_path") or ti.get("notebook_path") or "")); raise SystemExit
 # In COMMAND POSITION, never anywhere in the string. Matching the substring refused a grep and a wc
 # that merely NAMED a script, six times in one session — how a guard earns its own bypass. The
 # technique and its measurements are verify-pr-instruction.sh and its note; keep the two in step.
@@ -106,7 +107,11 @@ case "$kind" in
   gesture)
     [ -n "$GESTURE_DOC" ] || exit 0
     required=("$GESTURE_DOC"); OK="$OKG" ;;
-  command) exit 0 ;;                    # any other command: nothing is being posed, say nothing
+  # A command writes as surely as an edit tool does — a redirection, sed -i, a script called inline.
+  # Naming the ones that write is a list that always misses one, and a missed write is a write nobody
+  # sees; one notice too many costs a single extra message per session. So every command counts, and
+  # only a tool call carrying a path is filtered on where that path lands.
+  command) ;;
   write:*)
     case "${kind#write:}" in "$REPO"/*) ;; *) exit 0;; esac   # only what lands in this repository
     ;;
@@ -153,17 +158,34 @@ if [ -z "$missing" ]; then
   exit 0
 fi
 
-record 1 "not read: $missing"
-python3 - "$missing" <<'PY' >&2
-import json, sys
-missing = sys.argv[1].split()
-print(json.dumps({
-    "hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny"},
-    "systemMessage": ("Read these IN FULL before acting — no offset, no limit: "
-                      + ", ".join(missing)
-                      + ". They are injected as context, never as an executed instruction, so nothing "
-                        "records whether they were obeyed; and after a compaction the summary carries "
-                        "their conclusions, which is exactly what feels like having read them."),
-}))
-PY
+# The runbook is DATA — the order of the actions, the URLs, the exact values, who performs each. No
+# short form stands in for it, so this tier keeps demanding the read and stays unsatisfied until it
+# happens: its marker is written above, on the read, and nowhere else.
+if [ "$OK" = "$OKG" ]; then
+  record 1 "not read: $missing"
+  printf '%s\n%s\n' \
+    "Read $missing IN FULL before this gesture — no offset, no limit." \
+    'It holds the order of the actions and who performs each, with the exact values. A gesture performed from memory is a wrong gesture.' >&2
+  exit 2
+fi
+
+# The other tier is a RULE, and a rule fits in a sentence. Sending it beats ordering a read of the
+# documents carrying it: the reading is the part that already feels done. The marker is written HERE,
+# on the refusal, because once the rule has been sent there is no read left to observe.
+mkdir -p "$STATE_DIR"; : > "$OK"
+record 1 "rule sent in place of a read: $missing"
+cat >&2 <<'RULE'
+This first action is held back once, so that the rule it owes arrives here instead of a reading list.
+
+A fact lives in ONE place. Before writing one, check whether it already lives elsewhere: if it does,
+link it, and repair the original where it is wrong — never copy it. If removing a sentence breaks
+nothing, it stays removed.
+
+Versioned content is written in English, and never in the second person; a README carries English and
+French together, deliberately. Whatever is not needed to clone, build or run the app lives beside the
+repository — unless the app or the tooling reads it there, in which case it stays and is ignored.
+
+The block lifts here: this rule is owed once per session, and it has just been sent. Everything that
+follows goes through, whatever its target.
+RULE
 exit 2

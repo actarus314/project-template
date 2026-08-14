@@ -10,6 +10,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [Unreleased]
 
+### Changed
+- **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
+
 ### Fixed
 - **Let the closing-pass sequencer see the backlog it counts**, where its row pattern demanded a shape the tracking doc has never had.
 
