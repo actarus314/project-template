@@ -115,7 +115,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 **A commit subject is an imperative sentence of at most 72 characters**, capitalised, no final full stop, then a blank line — where that wall comes from: [`docs/code/verify-commit-form.md`](code/verify-commit-form.md).
 
-🔴 **The Release was the one drifting**: written by hand, it re-told the CHANGELOG in other words — a third rendering nothing could check. Copied, it becomes mechanical *(sources and mechanism: [`docs/code/release-notes.md`](code/release-notes.md))*.
+🔴 **The Release was the one drifting**: it re-told the CHANGELOG in other words — a third rendering nothing could check. **Linked rather than retold**, it leaves the entries their single source, and what is written is the half no list stands in for *(the three routes tried and dropped: [`docs/code/release-notes.md`](code/release-notes.md))*.
 
 ## The main documents stay SHORT
 

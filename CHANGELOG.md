@@ -16,6 +16,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
 ### Fixed
+- **Stop the runbook from prescribing a Release note that publishes empty**, its command omitting the written text on stdin while it and the method still described the generated note they no longer produce.
 - **Stop a git hook's inherited `GIT_DIR` from capturing the generator and the door**: absolute inside a worktree, it outlived every `cd`, wrote two commits onto the caller's branch, flipped its `core.bare`, and had a generated project's checks judge the wrong tree.
 - **Let the closing-pass sequencer see the backlog it counts**, where its row pattern demanded a shape the tracking doc has never had.
 
