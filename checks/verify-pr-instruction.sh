@@ -55,7 +55,8 @@ ORDER = re.compile(r"\b(" + VERB + r")\b((?:\s+\S+){0,3}?)\s+(prs?|pull\s+reques
 RESULT = re.compile(r"open-pr\.sh|une pr par|en une pr|promeus|promeut", re.I)   # fr-pattern
 # Three disqualifiers, read within the CLAUSE only. Widening the gap without them inverts the verdict:
 # a ban on opening would arm the token, which is worse than the false negative being fixed.
-NEG = re.compile(r"\b(ne|sans|pas|plus|jamais|ni|aucune?|arr[êe]te[rz]?|arr[êe]tes|stop|[ée]vite[rz]?|inutile)\b|\bn[\x27\u2019]", re.I)   # fr-pattern
+# `plus` stays out: comparative far more often, and the ne/n- forms carry every negation it joins.
+NEG = re.compile(r"\b(ne|sans|pas|jamais|ni|aucune?|arr[êe]te[rz]?|arr[êe]tes|stop|[ée]vite[rz]?|inutile)\b|\bn[\x27\u2019]", re.I)   # fr-pattern
 GENERIC = re.compile(r"\b(des|de|d[\x27\u2019])$", re.I)   # "des PR" names the class; an order names the object   # fr-pattern
 THIRD = re.compile(r"\b(renovate|dependabot|le bot|un bot|github)\b", re.I)   # a third party OPENS, it does not order   # fr-pattern
 CLAUSE = re.compile(r"[.,;:!?\n—]|(?<=\s)-(?=\s)")
@@ -65,7 +66,8 @@ def ordered(txt):
         cut = max([c.end() for c in CLAUSE.finditer(head)] or [0])
         window, gap = head[cut:][-60:], m.group(2)
         if NEG.search(window) or NEG.search(gap): continue
-        if GENERIC.search(gap.strip()) or THIRD.search(window): continue
+        # The generic marker sits in the gap, or just before the verb when nothing separates them.
+        if GENERIC.search(gap.strip() or window.strip()) or THIRD.search(window): continue
         return True
     return bool(RESULT.search(txt))
 sys.exit(7 if ordered(txt) else 0)
@@ -90,18 +92,14 @@ print(str((ev.get("tool_input") or {}).get("command") or ""))
 opens=$(printf '%s' "$cmd" | python3 -c '
 import re, shlex, sys
 OPEN = re.compile(r"(?:\S*/)?open-pr\.sh\s|gh\s+pr\s+create\b")
-# Wrappers are peeled ONE token at a time, testing before each peel — a single regex either ate the
-# target (./open-pr.sh looks like a path) or stopped short of it (direnv exec <dir> is three tokens).
+# Peeled ONE token at a time, testing before each peel: one regex ate the target or stopped short.
 PEEL = re.compile(r"^(?:cd|direnv|exec|env|sudo|time|command|nohup)$|^[-./~]\S*$|^\S+=\S*$")
 OPS = {";", "&&", "||", "|", "&", "\n"}
-# A heredoc is CONTENT, never commands this shell runs. Left in, any text that merely quotes the
-# gesture — the documentation of this very check — reads as an opening. Measured: editing that note
-# was recorded as a pull request being opened, and it consumed the token the real one then needed.
+# A heredoc is CONTENT, never commands this shell runs: text quoting the gesture read as an opening.
 HEREDOC = re.compile(r"<<-?\s*[\"\x27]?(\w+)[\"\x27]?\n.*?\n\s*\1\s*$", re.S | re.M)
 def segments(cmd):
-    # Splitting on ; & | WITHOUT honouring quotes cuts strings open, so shlex separates the
-    # operators itself; on unbalanced quotes it raises, and a plain split is all there is left.
-    # A NEWLINE ends a command too and shlex swallows it as whitespace, hence the line split FIRST.
+    # shlex separates the operators, quotes honoured; on unbalanced quotes it raises and a plain
+    # split is all there is left. A NEWLINE ends a command and shlex swallows it: line split FIRST.
     cmd = HEREDOC.sub("\n", cmd)
     segs = []
     for line in cmd.split("\n"):
@@ -116,18 +114,18 @@ def segments(cmd):
             else: cur.append(tok)
         segs.append(cur)
     return segs
-# Printed PEELED of its wrappers, so the same gesture through direnv or through cd reads alike.
+# The WHOLE segment, wrappers included: the peel FINDS the gesture, it must not name it. Peeled,
+# two repositories read alike and the second opening left the count as a retry.
 def opens(toks):
     toks = list(toks)
     while toks:
-        if OPEN.match(" ".join(toks) + " "): return " ".join(toks)
-        if not PEEL.match(toks[0]): return ""
+        if OPEN.match(" ".join(toks) + " "): return True
+        if not PEEL.match(toks[0]): return False
         toks.pop(0)
-    return ""
+    return False
 for seg in segments(sys.stdin.read()):
-    hit = opens(seg)
-    if hit:
-        print(hit); break
+    if opens(seg):
+        print(" ".join(seg)); break
 ' || true)
 [ -n "$opens" ] || exit 0
 

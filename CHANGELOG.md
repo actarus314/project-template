@@ -69,6 +69,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ### Fixed
 - **Count an instruction to open a pull request when a word separates the verb from its target** — `ouvre et merge les pr` was missed, and the opening it authorised filed as unauthorised. The pattern now turns away bans and generic targets, and ignores harness-injected text.
 - **Stop counting a refused opening and its retry as two**, where the first consumed the order and the second was filed as unauthorised. An order also no longer outlives the session it was given in.
+- **Keep two openings towards different repositories apart**, where the retry fingerprint dropped the wrappers and with them the target, so the second one left the count entirely.
 - **Stop a pinned tool that never arrived from reading as a check that found something**: it exits 3 now, judged on the state on disk.
   `repo/` blocks on a 3; the workspace gate lets the note through, offline, naming what did not run.
 - **Make both skills fire on the phrases they were written for**, where their `description` sat folded onto the `name` line.
