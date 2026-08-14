@@ -28,6 +28,16 @@ if [ -f CHANGELOG.md ]; then
       n && /^[[:space:]]/ {n += length(l); next}
       n {if (n > cap) printf "%s %s (%d) ", w, lbl, n; n=0}
       END {if (n > cap) printf "%s %s (%d) ", w, lbl, n}' CHANGELOG.md || true)
+  # The summary a version opens on, and which release-notes.sh copies into the Release. THREE lines
+  # is the maintainer's objective, not an average: past that it stops being scannable, which is the
+  # only thing it is for. Unbounded, it would grow back into the copy that was just removed.
+  scap="${CHANGELOG_SUMMARY_CAP:-3}"
+  long_sum=$(awk -v cap="$scap" '
+      /^## \[/ {if (in_v && n > cap) printf "%s (%d) ", ver, n
+                ver=$0; sub(/^## \[/,"",ver); sub(/\].*/,"",ver); in_v=1; n=0; next}
+      in_v && /^### / {if (n > cap) printf "%s (%d) ", ver, n; in_v=0; n=0; next}
+      in_v && /^> / {n++}
+      END {if (in_v && n > cap) printf "%s (%d) ", ver, n}' CHANGELOG.md || true)
   no_ref=$(awk '
       /^## \[Unreleased\]/ {o=1; next} /^## \[/ {o=0}
       o {next}
@@ -58,6 +68,13 @@ if [ -f CHANGELOG.md ]; then
   if [ -n "$no_link" ]; then
     echo "✗ CHANGELOG heading without its inline Release link: ${no_link}" >&2
     echo "  Seal it as: ## [X.Y.Z](<repo-url>/releases/tag/vX.Y.Z) - <date>" >&2
+    exit 1
+  fi
+  if [ -n "$long_sum" ]; then
+    echo "✗ CHANGELOG version summary past ${scap} lines:" >&2
+    printf '    %s\n' "$long_sum" >&2
+    echo "  It opens a version with what it is worth scanning for, and the Release copies it verbatim." >&2
+    echo "  What does not fit is already below, as an entry: the summary points, it does not list." >&2
     exit 1
   fi
   if [ -n "$long" ]; then
@@ -98,7 +115,7 @@ if [ -f CHANGELOG.md ]; then
     echo "  Merge them: one ### per type, in the order Added / Changed / Deprecated / Removed / Fixed / Security." >&2
     exit 1
   fi
-  echo "  (CHANGELOG: ${n_entries} entr(y|ies) read, every version — one section per type, none past ${cap} char. excluding its reference, each opening on a verb and on the effect, every sealed one citing a merged pull request whose label matches its URL. Which section an entry belongs to, and whether it is TRUE, are judgements no check reads.)"
+  echo "  (CHANGELOG: ${n_entries} entr(y|ies) read, every version — one section per type, no summary past ${scap} lines, no entry past ${cap} char. excluding its reference, each opening on a verb and on the effect, every sealed one citing a merged pull request whose label matches its URL. Which section an entry belongs to, and whether it is TRUE, are judgements no check reads.)"
 fi
 
 published=()

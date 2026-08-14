@@ -10,10 +10,6 @@
 
 <!-- Options considered and dropped, each with its reason. "Nothing" is a valid answer. -->
 
-## Checklist
+<!-- No checklist: `check.sh` runs the secret scan, the language rule and the changelog rule, and it
+     BLOCKS. A box ticked by whoever wrote the change attests to nothing the gate does not decide. -->
 
-- [ ] Tested (tests/typecheck green, or manually verified — adjust to project)
-- [ ] No secrets, API keys, or `.env`/`.envrc` content in the diff
-- [ ] Code & comments in English
-- [ ] Vendored files untouched (if any)
-- [ ] CHANGELOG updated for a user-facing change
