@@ -13,7 +13,7 @@ The first answer to that was to demand the read and refuse until it happened. It
 
 **And the gesture being demanded had gone hollow.** This check reads the tool CALL, never its result — so a `Read` the harness itself rejects still counts as one. A guard satisfiable by an empty gesture is no longer guarding.
 
-So the refusal still fires, and the block is unchanged: the write does not happen. What travels back is the rule itself, in a few lines, at the moment it applies.
+So the refusal still fires, and it still blocks: the action does not happen. What travels back is the rule itself, in a few lines, at the moment it applies.
 
 ## Two tiers, and only one of them can be summarised
 
@@ -39,7 +39,7 @@ This check writes plain text on stderr and exits 2. Measured on the version this
 
 ## Testing it requires an isolated state directory, and that is not tidiness
 
-The check dates its state from the reads it finds in the transcript. Run against the real state directory, a test arms it from **the session's own opening reads** — and it then refuses writes for the rest of that session, with no way back short of re-reading the documents.
+The check dates its state from the reads it finds in the transcript. Run against the real state directory, a test arms it from **the session's own opening reads** — and the session's next action is then refused, on a state no one meant to touch.
 
 `XDG_STATE_HOME=$(mktemp -d)` is therefore the condition for testing it at all. Both directions are observable there and neither is observable in place: the refusal that carries the rule then falls silent on the next call, and the gesture tier that refuses twice in a row then falls silent once the read appears in the transcript.
 
