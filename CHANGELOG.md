@@ -8,6 +8,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 > ⚠️ **This file starts on 2026-07-28.** What came before was not reconstructed — doing so from memory would have produced a plausible but false history.
 > For that period, the pull requests are authoritative.
 
+## [Unreleased]
+
+### Fixed
+- **Let the closing-pass sequencer see the backlog it counts**, where its row pattern demanded a shape the tracking doc has never had.
+
 ## [1.6.0](https://github.com/actarus314/project-template/releases/tag/v1.6.0) - 2026-08-14
 
 ### Changed

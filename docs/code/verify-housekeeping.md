@@ -55,5 +55,13 @@ That is a limit, not an oversight: nothing arms a model's judgement.
 Prior art (`harness-engineering-skills`, `statewright`) carries four invariants. One is in. The other three all require **fresh subagents** — an evaluator session that cannot be reused between cycles, a fresh agent per checkpoint so the judge is not also the producer, and tools restricted per phase.
 They are not oversights and they are not refused: the maintainer's own arbitration was **the closing pass first, see whether it works, extend afterwards**. Extending is where they belong, and the question to settle then is whether a judge that costs an agent per cycle buys more than a coverage count that costs nothing.
 
+## What separates a backlog row from an archive one
+
+The sequencer counts coverage, so it first has to SEE the entries — and it saw none. Measured on 2026-08-12: the row pattern required a closing pipe straight after the number (`| **30** |`), while every row of that tracking doc carries its tag right after it (`| **30** \`G\` |`), plus a `▶` on the current one. **`items` came out empty, in 30 consecutive revisions** — the guard existing to stop a closed entry sleeping in the backlog was blind to the backlog, and asked for coverage of the 2 section titles alone.
+
+So the pattern was the one at fault, never the document: asking it to take a shape it has never had, once, would have meant rewriting it against its own history.
+
+🔴 **Widening it is what has to be done carefully**, and the naive widening was measured too: any bold number anywhere in the row swallows the archive table — **48 entries instead of 24**, among them `0.0` and `454`, read out of `v1.5.0` and a measurement. Two things separate the two tables, and both are required: the number **opens** the first cell (a `▶` aside), and its bold holds **nothing but** numbers. An archive row opens on a title, so it never matches.
+
 Wiring (the settings file is local, never versioned — see https://github.com/actarus314/project-template/blob/main/docs/claude-code-setup.md):
 "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "<abs>/verify-housekeeping.sh" } ] } ] }
