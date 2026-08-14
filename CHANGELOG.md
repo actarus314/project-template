@@ -26,6 +26,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [1.6.0](https://github.com/actarus314/project-template/releases/tag/v1.6.0) - 2026-08-14
 
+> Every rule written in three documents at once now has a single owner, the others pointing at it.
+> The neighbouring workspace is gated at each commit, and a session says when the template has moved on.
+> Searching for what exists before building anything is versioned, so a clone finally reads it.
+
 ### Changed
 - **Bump `renovate` 44.13.1 → 44.14.10**, the validator every `renovate.json` is read by — the CI pin here, and the fallback inside `check.sh`, which travels: a project generated from now on validates its own config against the newer schema. ([#128](https://github.com/actarus314/project-template/pull/128))
 - **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
@@ -109,6 +113,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
 
+> The commit subject, the pull-request title and the Release note are held to a stated form, refused before anything is pushed.
+> A closing stage must show it re-read the settled facts and the traps, and that it actually shrank the tracking doc.
+> The commit gate runs in 3,95 s instead of 9,1 s, for identical verdicts.
+
 ### Added
 - **Ask a closing stage whether it re-read the settled facts and the traps kept beside the tracking doc.**
   Only where those files exist, only over the interval they actually spanned, and a file younger than it is named in the verdict rather than silently skipped. ([#125](https://github.com/actarus314/project-template/pull/125))
@@ -183,6 +191,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [1.4.1](https://github.com/actarus314/project-template/releases/tag/v1.4.1) - 2026-08-07
 
+> A generated project is born readable: its `CLAUDE.md` is committed, and it ships the notes and the script its own server needs.
+> Every flag used to generate a project is stamped into it, not only the template version.
+> Projects generated since `v1.3.0` were born with their first pull request blocked, which this release repairs.
+
 ### Added
 - **Record every flag used to generate a project, not only the template version.**
   The options were deduced from the tree, unreliable once a default changes.
@@ -249,6 +261,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Each carried a message meant to fire when a pipeline reads nothing, but the script exited before that message could print — the same silent death one sibling check had already met and documented, uncarried to the other two. ([#117](https://github.com/actarus314/project-template/pull/117))
 
 ## [1.4.0](https://github.com/actarus314/project-template/releases/tag/v1.4.0) - 2026-08-06
+
+> The closing pass arrives: it brings the tracking doc back in line with the work, and a turn cannot end until it has.
+> Checks start watching the work itself — a deleted comment block, a file born over-commented, finished items left among the open ones.
+> Every check declares whether it blocks, and that claim is confronted twice.
 
 ### Added
 - **Ask what became of a deleted comment block.**
@@ -334,6 +350,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **~~Fix every automated pull request being red on a check nothing could satisfy.~~** *(Superseded by the line above — the diagnosis stands.)* A dependency bump touches exactly the paths counted as user-visible, and no bot writes prose. ([#103](https://github.com/actarus314/project-template/pull/103))
 
 ## [1.3.0](https://github.com/actarus314/project-template/releases/tag/v1.3.0) - 2026-08-05
+
+> Every check travels into a generated project, with a gate waiting for it there.
+> Guards appear on what nothing watched: French in published content, invariants that break silently, the same fact restated twice.
+> Sixteen control durations were re-measured, and several checks cut by half or better.
 
 ### Added
 - **Make every tracked executable answer `--version`.**
@@ -522,6 +542,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [1.2.0](https://github.com/actarus314/project-template/releases/tag/v1.2.0) - 2026-08-04
 
+> The tree-reading checks run at every commit and block, instead of once a day.
+> New guards cover what nothing saw: dead links, files named like secrets, the neighbouring workspace, dated narrative in comments.
+> Running them in parallel roughly halves the gate, from 6,25 s to 3,43 s.
+
 ### Added
 - **Document the two cases where a missing workflow is normal, not a failed dispatch.**
   `Publish image` is absent from a push to `main` by design, and CodeQL's default setup never runs on a pull request targeting `develop`.
@@ -607,6 +631,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ## [1.1.0](https://github.com/actarus314/project-template/releases/tag/v1.1.0) - 2026-08-02
 
+> The last French documents become English, and the README carries both languages, English first.
+> The second person is refused in versioned content, and blocked.
+> A ruleset requiring a status check no job produces is refused before it can lock the repository.
+
 ### Added
 - **State in the standard that `develop` reading as "N commits behind `main`" is structural, not a bug.**
   The promotion's merge commit lands on `main` only, so the gap grows every cycle and zero is unreachable.
@@ -633,6 +661,10 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   It now refuses first; `--dry-run` reports without writing. ([#67](https://github.com/actarus314/project-template/pull/67))
 
 ## [1.0.0](https://github.com/actarus314/project-template/releases/tag/v1.0.0) - 2026-07-31
+
+> The first published version: community health files, two licenses, and the repository switched to English.
+> The version comes from a single source, the git tag, and every generated project is stamped with the template that made it.
+> The PAT recipes were corrected in four places, two of them read at creation time.
 
 First tagged version.
 The repository went public on this date: everything below had landed before the flip, and is sealed here rather than reconstructed.
