@@ -199,8 +199,8 @@ jobs:
             exit 0
           fi
           # Whoever deploys this reads the release, not the workflow, so the pinned image reference
-          # comes FIRST. Everything under it is release-notes.sh's: the version's CHANGELOG block
-          # and the auto-generated pull-request list, the Release owning nothing of its own.
+          # comes FIRST. Everything under it is release-notes.sh's: the three lines the version opens
+          # on and the auto-generated pull-request list, the Release owning nothing of its own.
           # The fences are escaped inside a DOUBLE-quoted string: in a single-quoted one, shellcheck
           # reads them as a command substitution that will not expand (SC2016) and fails the lint.
           {

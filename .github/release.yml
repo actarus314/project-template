@@ -9,8 +9,11 @@
 changelog:
   categories:
     - title: Changes
-      labels: ['*']
+      labels:
+        - '*'
       exclude:
-        labels: [dependencies]
+        labels:
+          - dependencies
     - title: Dependencies
-      labels: [dependencies]
+      labels:
+        - dependencies

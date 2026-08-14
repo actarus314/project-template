@@ -15,7 +15,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 > The rule itself is now handed over on a session's first action.
 
 ### Changed
-- **Stop the Release note from repeating the changelog it links to**, where it carried both and ran to 10 606 characters for `v1.6.0`: it now holds GitHub's pull-request list, grouped by a new `.github/release.yml`, then a link to the entries frozen at the tag and one to every commit.
+- **Stop the Release note from repeating the changelog it links to**, where carrying both ran to 10 606 characters for `v1.6.0`: it now holds GitHub's pull-request list, dependency bots in their own section, then links to the entries frozen at the tag and to every commit.
 - **Open a version on three lines that say what it is worth scanning for**, copied verbatim into its Release and refused past a fourth — the only hand-written lines of a note, where a title would have elected one change out of 44.
 - **Drop the pull-request checklist**, whose five boxes were ticked by whoever wrote the change and attested to nothing `check.sh` does not block on.
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.

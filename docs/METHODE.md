@@ -111,7 +111,7 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 | **The commit** | the intention — what was broken, why this solution | the *how* *(the diff shows it)* · the story of the search |
 | **The pull request** | the **demonstration** — what was measured, what was ruled out, how to verify | a retelling of the diff |
 | **`CHANGELOG.md`** | the **effect** for whoever uses the repo, capped, ending on the pull request that delivered it *(standard §16)* | the demonstration |
-| **The GitHub Release** | **nothing of its own** — the auto-generated pull-request list, plus the version's CHANGELOG block, copied | prose written for the occasion |
+| **The GitHub Release** | **nothing of its own** — the three lines the version opens on, copied, then the auto-generated pull-request list and a link back to the entries | prose written for the occasion, and the changelog repeated rather than linked |
 
 **A commit subject is an imperative sentence of at most 72 characters**, capitalised, no final full stop, then a blank line — where that wall comes from: [`docs/code/verify-commit-form.md`](code/verify-commit-form.md).
 
