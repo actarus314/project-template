@@ -70,8 +70,10 @@ def ordered(txt):
     return bool(RESULT.search(txt))
 sys.exit(7 if ordered(txt) else 0)
 ' && rc=0 || rc=$?
-  # A fresh order reopens the count: the previous opening is no longer what a retry would repeat.
-  [ "${rc:-0}" = 7 ] && { mkdir -p "$STATE_DIR"; printf '%s\n%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SESSION" > "$TOKEN"; rm -f "$LAST"; }
+  # ANY prompt reopens the count, armed or not: a retry follows its refusal within the same turn,
+  # so once the maintainer has spoken again, the next identical opening is a second one.
+  rm -f "$LAST"
+  [ "${rc:-0}" = 7 ] && { mkdir -p "$STATE_DIR"; printf '%s\n%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SESSION" > "$TOKEN"; }
   exit 0
 fi
 
