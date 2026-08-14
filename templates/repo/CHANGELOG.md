@@ -9,10 +9,6 @@ it states what changed for a user of the project, not what was merged.
 
 ## [Unreleased]
 
-<!-- Up to THREE lines quoted with `>`, opening the version: what it is worth scanning for.
-     `release-notes.sh` copies them verbatim into the Release, and they are the only lines of it
-     written by hand. The summary points; the entries below list. -->
-
 ### Added
 ### Changed
 ### Fixed
