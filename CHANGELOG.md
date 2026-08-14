@@ -8,88 +8,88 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 > ⚠️ **This file starts on 2026-07-28.** What came before was not reconstructed — doing so from memory would have produced a plausible but false history.
 > For that period, the pull requests are authoritative.
 
-## [Unreleased]
+## [1.6.0](https://github.com/actarus314/project-template/releases/tag/v1.6.0) - 2026-08-14
 
 ### Changed
 - **Bump `renovate` 44.13.1 → 44.14.10**, the validator every `renovate.json` is read by — the CI pin here, and the fallback inside `check.sh`, which travels: a project generated from now on validates its own config against the newer schema. ([#128](https://github.com/actarus314/project-template/pull/128))
 - **Give the update policy a single owner**, where it was written almost word for word in three documents with no cross-reference.
-  The runbook and the controls document now point at it instead of restating it.
-- **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green.
+  The runbook and the controls document now point at it instead of restating it. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Give the green-CI reading a single owner too**, the runbook keeping the gesture and the agent file what counts as green. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Separate the trap of a gesture from the trap that belongs to none**, the first staying with its step in the runbook.
-  The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating.
-- **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason.
-- **Ship the code of conduct with the private reporting channel** a solo-maintained project needs, where the template still sent every report through the maintainer.
-- **Say in the changelog template that an entry is capped at 300 characters**, which the check that travels with it already refused.
-- **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds.
+  The method handed pitfalls to both roles, so the same trap was written twice with nothing arbitrating. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **State the ghcr default in one place**, the runbook keeping the gesture and pointing at the reason. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Ship the code of conduct with the private reporting channel** a solo-maintained project needs, where the template still sent every report through the maintainer. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Say in the changelog template that an entry is capped at 300 characters**, which the check that travels with it already refused. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Declare that the PAT table exists in three places on purpose**, the third being the copy a generated project holds. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Give concision a test that decides**: remove the word, the sentence, the line, and keep the removal if nothing breaks.
-  The rule asked for concision without saying how to settle a case, so every trim was an argument.
+  The rule asked for concision without saying how to settle a case, so every trim was an argument. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Split four comment blocks from the notes that repeated them**, the comment keeping the bare constraint and the note what it took to get there.
-  The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49.
+  The closest pair said the same thing twice at 0.88 similarity; the highest left is 0.49. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Say beside each adjustable threshold why it can be moved**, where eight of the thirteen stood bare.
-  An exception with no reason on the spot reads as an oversight, and gets widened or deleted at random.
+  An exception with no reason on the spot reads as an oversight, and gets widened or deleted at random. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **State the search-before-building rule in the method**, where it lived in a machine-local file that no clone and no generated project ever read.
-  It now covers the whole undertaking, not just the choice of a tracking tool, and says to read the inventory rather than a remembered count.
+  It now covers the whole undertaking, not just the choice of a tracking tool, and says to read the inventory rather than a remembered count. ([#130](https://github.com/actarus314/project-template/pull/130))
 - **Give the work in flight a place of its own**, one folder per open stage, named like the archive it becomes.
-  Closing a stage turns into moving that folder, instead of picking files out of a root.
+  Closing a stage turns into moving that folder, instead of picking files out of a root. ([#130](https://github.com/actarus314/project-template/pull/130))
 - **Stop the project skill from naming a discovery tool**, which was a broken symlink on the machine that prescribed it.
-  A rule that names its instrument dies with it; the gesture stays, the tool no longer does.
+  A rule that names its instrument dies with it; the gesture stays, the tool no longer does. ([#130](https://github.com/actarus314/project-template/pull/130))
 - **Stop a renamed archive folder from reading as a stage that just closed**, which asked the tracking doc to shrink for work closed a month earlier.
-  What git reports as a rename leaves the set; an archive folder that is genuinely new still triggers the verdict.
+  What git reports as a rename leaves the set; an archive folder that is genuinely new still triggers the verdict. ([#134](https://github.com/actarus314/project-template/pull/134))
 
 ### Added
 - **Gate the workspace's own commits**, which the checks reading it never covered: they ran only when `repo/` was committed too, and nothing scanned its staged content for secrets.
-  A generated project is armed from its first commit; one armed at nothing is warned about, never blocked.
+  A generated project is armed from its first commit; one armed at nothing is warned about, never blocked. ([#133](https://github.com/actarus314/project-template/pull/133))
 - **Fire a project's version check when a session opens**, from the plugin's own hook rather than from anything the project has to install.
-  A project carrying no such check triggers nothing, and says nothing.
+  A project carrying no such check triggers nothing, and says nothing. ([#132](https://github.com/actarus314/project-template/pull/132))
 - **Tell whoever opens a session in a generated project that its template has moved on**, naming what was read and linking the release that changed it.
-  The project itself receives nothing: without the plugin, it knows nothing. The comparison is against the latest release, never against `main`.
+  The project itself receives nothing: without the plugin, it knows nothing. The comparison is against the latest release, never against `main`. ([#132](https://github.com/actarus314/project-template/pull/132))
 - **Warn at session start when the plugin itself is behind**, from its own repository, so the line shows in any folder and not only in a generated project.
-  Claude Code does not auto-update a third-party marketplace. A manifest declaring no repository is said so, never guessed at.
+  Claude Code does not auto-update a third-party marketplace. A manifest declaring no repository is said so, never guessed at. ([#132](https://github.com/actarus314/project-template/pull/132))
 - **Show in one place which generated projects run behind the template**, with `./fleet.sh`, reading the projects the harness has already seen.
-  A moved project leaves a dead entry, counted under the table; one never opened with Claude Code is invisible, and cannot be counted at all.
+  A moved project leaves a dead entry, counted under the table; one never opened with Claude Code is invisible, and cannot be counted at all. ([#132](https://github.com/actarus314/project-template/pull/132))
 - **State that reading a mechanism means reading its file whole**, where an exact citation was passing for a verified argument.
-  Content needs the passage; behaviour needs the whole file, and past 25 000 tokens a read is silently truncated.
-- **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one.
+  Content needs the passage; behaviour needs the whole file, and past 25 000 tokens a read is silently truncated. ([#131](https://github.com/actarus314/project-template/pull/131))
+- **Declare what a `SKILL.md` owes**, which no document stated while the runbook depended on one. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Allow the README to restate a description, never a rule**, the line that was practised without being written.
-  A visitor never clones, so sending them elsewhere to learn what a folder holds points at a file they will not open.
+  A visitor never clones, so sending them elsewhere to learn what a folder holds points at a file they will not open. ([#129](https://github.com/actarus314/project-template/pull/129))
 
-- **Refuse a skill front matter whose `description` is folded onto the `name` line**, a break that raises no error.
+- **Refuse a skill front matter whose `description` is folded onto the `name` line**, a break that raises no error. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Refuse the loss of the one address a generated project has** for the documents it never receives.
-  Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once.
-- **Ship `check.sh` and `open-pr.sh` with their own notes**, which stayed behind while both scripts travelled.
+  Its notes name them, which is allowed; only the charter says where to read them, so that line going missing silences every pointer at once. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Ship `check.sh` and `open-pr.sh` with their own notes**, which stayed behind while both scripts travelled. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Tell a generated project where the documents it does not hold can be read**, from the notes charter, at a link pinned to the version it was born from.
-  Those notes name the method and the controls document, which never travel.
+  Those notes name the method and the controls document, which never travel. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Refuse a pointer that credits a document with a formula it does not carry.**
   A link is checked, an attribution is not, and one stayed false while every link around it resolved.
-  Only a quoted formula counts; a paraphrase would need a judgement.
+  Only a quoted formula counts; a paraphrase would need a judgement. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Refuse an open action sitting outside the tracking doc**, in a file pledging to hold none or in an archive still being written.
   Splitting that doc into neighbours recreates the separate backlog the method forbids.
-  Only a leftover declaring itself matches.
+  Only a leftover declaring itself matches. ([#129](https://github.com/actarus314/project-template/pull/129))
 
 ### Fixed
-- **Stop asking for the runbook when a command merely NAMES a lifecycle script**, a `grep` or a `wc` paying the same price as a real invocation — the gesture is now read in command position, wrappers peeled.
-- **Say when a hook has no interpreter instead of measuring nothing**: two of them recorded no line at all without `python3`, leaving a journal that looked healthy.
-- **Refuse to guess the event on an unreadable payload**, where the housekeeping hook fell back to the one branch that can block — including during a forced compaction it must never block.
-- **Require the `# blocking:` header from every check, hooks included**, which the cross-check exempted in bulk: two shipped without one.
-- **Count an instruction to open a pull request when a word separates the verb from its target** — `ouvre et merge les pr` was missed, and the opening it authorised filed as unauthorised. The pattern now turns away bans and generic targets, and ignores harness-injected text.
-- **Stop counting a refused opening and its retry as two**, where the first consumed the order and the second was filed as unauthorised. An order also no longer outlives the session it was given in.
-- **Keep two openings towards different repositories apart**, where the retry fingerprint dropped the wrappers and with them the target, so the second one left the count entirely.
+- **Stop asking for the runbook when a command merely NAMES a lifecycle script**, a `grep` or a `wc` paying the same price as a real invocation — the gesture is now read in command position, wrappers peeled. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Say when a hook has no interpreter instead of measuring nothing**: two of them recorded no line at all without `python3`, leaving a journal that looked healthy. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Refuse to guess the event on an unreadable payload**, where the housekeeping hook fell back to the one branch that can block — including during a forced compaction it must never block. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Require the `# blocking:` header from every check, hooks included**, which the cross-check exempted in bulk: two shipped without one. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Count an instruction to open a pull request when a word separates the verb from its target** — `ouvre et merge les pr` was missed, and the opening it authorised filed as unauthorised. The pattern now turns away bans and generic targets, and ignores harness-injected text. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Stop counting a refused opening and its retry as two**, where the first consumed the order and the second was filed as unauthorised. An order also no longer outlives the session it was given in. ([#135](https://github.com/actarus314/project-template/pull/135))
+- **Keep two openings towards different repositories apart**, where the retry fingerprint dropped the wrappers and with them the target, so the second one left the count entirely. ([#135](https://github.com/actarus314/project-template/pull/135))
 - **Stop a pinned tool that never arrived from reading as a check that found something**: it exits 3 now, judged on the state on disk.
-  `repo/` blocks on a 3; the workspace gate lets the note through, offline, naming what did not run.
+  `repo/` blocks on a 3; the workspace gate lets the note through, offline, naming what did not run. ([#133](https://github.com/actarus314/project-template/pull/133))
 - **Make both skills fire on the phrases they were written for**, where their `description` sat folded onto the `name` line.
-  YAML read the pair as one key, so the field the assistant consults before invoking a skill did not exist — the skill loaded and listed, and never triggered.
-- **Stop reading a YAML front matter as prose**, where the sentence-per-line check saw its two keys as one sentence cut in half.
+  YAML read the pair as one key, so the field the assistant consults before invoking a skill did not exist — the skill loaded and listed, and never triggered. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Stop reading a YAML front matter as prose**, where the sentence-per-line check saw its two keys as one sentence cut in half. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Stop sending a generated project's secrets file to a document it never receives**, named there three times.
-  The permission matrix is reached at a link pinned to the version the project was born from.
-- **Repair the sentence explaining why a generated `CLAUDE.md` is versioned**, which stated the opposite of its own reason.
+  The permission matrix is reached at a link pinned to the version the project was born from. ([#129](https://github.com/actarus314/project-template/pull/129))
+- **Repair the sentence explaining why a generated `CLAUDE.md` is versioned**, which stated the opposite of its own reason. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **Stop reporting a stage that did prune the tracking doc, once the next stage reopens work.**
   The comparison now asks whether the hot side ever dropped below its pre-closure size, instead of weighing it today.
-  It still refuses a closure that never pruned.
+  It still refuses a closure that never pruned. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **See an opening spread over several lines, the shape most commands take.**
   A newline ends a command, and the tokeniser swallowed it as whitespace.
-  Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12.
+  Replayed against the pull requests the forge recorded, the instrument saw 8 openings of 13; it now sees 12. ([#129](https://github.com/actarus314/project-template/pull/129))
 - **See the work in flight once it sits in a subfolder.**
-  Reading the workspace root alone, the closure check found nothing under a folder and announced that nothing was left — it failed by passing.
+  Reading the workspace root alone, the closure check found nothing under a folder and announced that nothing was left — it failed by passing. ([#130](https://github.com/actarus314/project-template/pull/130))
 
 ## [1.5.0](https://github.com/actarus314/project-template/releases/tag/v1.5.0) - 2026-08-08
 
