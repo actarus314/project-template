@@ -19,9 +19,11 @@ JOURNAL="$STATE_DIR/controls-log.tsv"
 [ -f "$STATE_DIR/journal-on" ] || JOURNAL=""
 TOKEN="$STATE_DIR/pr-instruction-$(printf '%s' "$PROJECT" | tr '/' '-').token"
 
+# The label of a generation is never a PREFIX of an earlier one — readings that must not be summed
+# cannot share a name a grep would sweep up together.
 record() {   # <rc> <reason>
   [ -n "$JOURNAL" ] || return 0
-  printf '%s\thook\tpr opened\t%s\t\t%s\t%s\n' \
+  printf '%s\thook\tpull request opened\t%s\t\t%s\t%s\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$PROJECT" >> "$JOURNAL"
 }
 
@@ -37,10 +39,32 @@ try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
 META = {"hook_event_name", "session_id", "transcript_path", "cwd", "trigger", "permission_mode"}
 txt = " ".join(v for k, v in ev.items() if k not in META and isinstance(v, str))
-# Measured over 1281 real messages: 40 matches. The forms it misses are known and counted — an order
-# carried by its expected RESULT ("une PR par repo", "promeus") names no opening verb at all.
-PAT = r"(ouvre|ouvrir|cr[ée]{2}|cr[ée]er|lance|fais|pr[ée]pare)\s+(la|les|une|le)?\s*(pr|pull request)|open-pr\.sh|une pr par|en une pr|promeus|promeut"   # fr-pattern
-sys.exit(7 if re.search(PAT, txt, re.I) else 0)
+# This event also fires on text the HARNESS injects, which the maintainer never typed — an agent
+# reporting back quotes the gesture, and an authorisation granted by machine noise reads as an order.
+INJECTED = ("<task-notification>", "<system-reminder>", "<local-command-stdout>", "<command-name>")
+if any(t in txt for t in INJECTED): sys.exit(0)
+# The verb and its target, up to 3 words apart, both on word boundaries. The measures that set the
+# gap, and the cases each rule below answers for: docs/code/verify-pr-instruction.md.
+VERB = r"ouvre|ouvres|ouvrir|cr[ée]{2}|cr[ée]er|cr[ée]es|lance|lancer|fais|faire|pr[ée]pare|pr[ée]parer"   # fr-pattern
+ORDER = re.compile(r"\b(" + VERB + r")\b((?:\s+\S+){0,3}?)\s+(prs?|pull\s+requests?)\b", re.I)
+# Orders carried by their expected RESULT, which name no opening verb at all.
+RESULT = re.compile(r"open-pr\.sh|une pr par|en une pr|promeus|promeut", re.I)   # fr-pattern
+# Three disqualifiers, read within the CLAUSE only. Widening the gap without them inverts the verdict:
+# a ban on opening would arm the token, which is worse than the false negative being fixed.
+NEG = re.compile(r"\b(ne|sans|pas|plus|jamais|ni|aucune?|arr[êe]te[rz]?|arr[êe]tes|stop|[ée]vite[rz]?|inutile)\b|\bn[\x27\u2019]", re.I)   # fr-pattern
+GENERIC = re.compile(r"\b(des|de|d[\x27\u2019])$", re.I)   # "des PR" names the class; an order names the object   # fr-pattern
+THIRD = re.compile(r"\b(renovate|dependabot|le bot|un bot|github)\b", re.I)   # a third party OPENS, it does not order   # fr-pattern
+CLAUSE = re.compile(r"[.,;:!?\n—]|(?<=\s)-(?=\s)")
+def ordered(txt):
+    for m in ORDER.finditer(txt):
+        head = txt[:m.start(1)]
+        cut = max([c.end() for c in CLAUSE.finditer(head)] or [0])
+        window, gap = head[cut:][-60:], m.group(2)
+        if NEG.search(window) or NEG.search(gap): continue
+        if GENERIC.search(gap.strip()) or THIRD.search(window): continue
+        return True
+    return bool(RESULT.search(txt))
+sys.exit(7 if ordered(txt) else 0)
 ' && rc=0 || rc=$?
   [ "${rc:-0}" = 7 ] && { mkdir -p "$STATE_DIR"; date -u +%Y-%m-%dT%H:%M:%SZ > "$TOKEN"; }
   exit 0
