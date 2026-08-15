@@ -128,6 +128,47 @@ $stale"
 $(printf '%s\n' "$dup" | sed 's/^/  /')"
     fi
     read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s), duplicates only"
+
+    # The FORM of a task, five rules, each binary. A task
+    # opens on a mark and a number, then an infinitive verb; it holds no link and no more than 72
+    # characters — the commit-subject limit, since a subject and a task are the same object. What is
+    # NOT here is "no retelling", which is a judgement. Why 72 and not a measured cap: verify-workspace.md.
+    bad=$(awk -F'|' '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        row = $0; n = split($4, seg, "<br>")
+        for (i = 1; i <= n; i++) {
+          s = seg[i]; gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+          if (s !~ /^(✅|⬜)/) continue                      # not a task line: the cell may open on a label
+          t = s; sub(/^(✅|⬜)[[:space:]]*/, "", t)
+          if (t !~ /^\*\*[0-9]+\.[0-9]+\*\*/) { print "  unnumbered: " substr(s,1,60); continue }
+          sub(/^\*\*[0-9]+\.[0-9]+\*\*[[:space:]]*/, "", t)
+          sub(/^\*\*[^*]+\*\*[[:space:]]*:[[:space:]]*/, "", t)   # an owner prefix is not the verb
+          if (t ~ /\]\(/) print "  holds a link: " substr(t,1,50)
+          bare = t; gsub(/\*|`|\*\*/, "", bare)
+          if (length(bare) > 72) print "  " length(bare) " char.: " substr(bare,1,50)
+          w = t; sub(/[[:space:]].*$/, "", w); gsub(/\*|`/, "", w)
+          if (w !~ /(er|ir|re|oir)$/) print "  not an infinitive: " w
+        }
+      }' "$track" || true)
+    if [ -n "$bad" ]; then
+      say "a task is out of form in $(basename "$track") — numbered, opening on an infinitive, no link, at most 72 characters:
+$bad"
+    fi
+
+    # A chantier folder carries its DETAILS.md — the file that reasons its tasks. Named exactly,
+    # never "a file": a stage folder already holds several, and presence of any proves nothing.
+    # Only a folder whose prefix names an OPEN chantier: a permanent side channel, a dead chantier
+    # and a folder that predates the numbering all carry none, and demanding one there invents work.
+    open_re=$(printf '%s\n' "$nums" | sed '/^$/d' | awk '{printf "%03d\n", $0}' | sort -u | paste -sd'|' -)
+    missing=$(cd "$ws" && for d in WIP/*/; do
+      p=${d#WIP/}; p=${p%%--*}
+      printf '%s' "$p" | tr '-' '\n' | grep -qE "^(${open_re})$" || continue
+      [ -f "$d/DETAILS.md" ] || printf '  %s\n' "$d"
+    done 2>/dev/null || true)
+    [ -n "$missing" ] && say "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
+$missing"
+    read_form=", task form"
   fi
 
   # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
@@ -152,5 +193,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

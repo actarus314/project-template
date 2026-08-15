@@ -7,7 +7,7 @@
 
 # PreToolUse DOES fire on a subagent launch (tool_name = Agent), with `prompt`, `model` and
 # `subagent_type` as separate fields in tool_input — measured, not assumed
-# (workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md).
+# (workspace/archives/009--2026-08-decoupage-par-sujet/SYNTHESE.md).
 # A WORKFLOW spawns subagents WITHOUT going through that tool, so watching `Agent` alone left the
 # rule unenforced on every one of them: what to read there, and what stays unproven, is in
 # docs/code/verify-delegation.md.

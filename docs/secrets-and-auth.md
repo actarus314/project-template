@@ -138,7 +138,7 @@ Two reasons:
 
 ### Mechanisms evaluated then rejected — do not reopen without new facts
 
-The **1-repo** fine-grained PAT is the optimum *(full research: `workspace/archives/2026-07-conception/RECHERCHE-auth-github.md`)*. Evaluated then **rejected**:
+The **1-repo** fine-grained PAT is the optimum *(full research: `workspace/archives/000--2026-07-conception/RECHERCHE-auth-github.md`)*. Evaluated then **rejected**:
 
 | Mechanism | Reason for rejection (verified) |
 |---|---|
