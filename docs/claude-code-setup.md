@@ -71,6 +71,8 @@ Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<pa
 
 The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
 
+🔴 **A mandate is given ONCE, in the prompt — widening one in flight is indistinguishable from a prompt injection.** An agent launched read-only and later told to write sees an instruction contradicting its own, arriving after the fact, through a channel it cannot authenticate, in a repository that moved without it. That profile is an attack's, whatever the real intent: of five agents given that treatment, four complied and **the fifth refused and stopped**, having found commits matching instructions it had never carried out. Its reading was wrong and its default was right. **Relaunch an agent with the mandate it needs; never extend the one an agent is already running under.**
+
 ### 🔴 The three above are OPT-INS — and `verify-delegation.sh` is what checks them
 
 Left unwritten in the prompt, **the default does the opposite of all three, silently**. Nothing reports the omission, in either direction, which is why discipline alone never held.

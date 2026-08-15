@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **State that a subagent's mandate is given once, in its prompt**, widening one in flight being indistinguishable from a prompt injection: of five agents treated that way, the one that refused and stopped had the right default.
 - **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
 - **Refuse a count inside an open task**, which goes false the moment the work advances and only ticks when all of it is done: a set that can be treated one at a time gets split, while a threshold keeps its number and a ticked task keeps its count.
 - **Refuse a chantier row that is not four columns**, one missing pipe having been enough to put a task where no rule could reach it — unnumbered, unmeasured, and about to make the next honest commit fail.
