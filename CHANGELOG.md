@@ -12,6 +12,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Changed
 - **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
+- **Refuse a count inside an open task**, which goes false the moment the work advances and only ticks when all of it is done: a set that can be treated one at a time gets split, while a threshold keeps its number and a ticked task keeps its count.
+- **Refuse a chantier row that is not four columns**, one missing pipe having been enough to put a task where no rule could reach it — unnumbered, unmeasured, and about to make the next honest commit fail.
 - **Refuse a chantier row pointing nowhere**, a stage folder holding nothing, and one carrying no chantier number: three digits then `--`, so a listing sorts by chantier and an empty folder never reads as one something was lost from.
 - **Refuse a `DETAILS.md` reasoning a task the tracking doc no longer carries**, which is the second backlog the method forbids — and it is the stale one that gets read first.
 - **Refuse a chantier folder with no `DETAILS.md`**, the file that reasons its tasks — named exactly, since a folder already holds several and the presence of any proves nothing.

@@ -135,18 +135,22 @@ $(printf '%s\n' "$dup" | sed 's/^/  /')"
     fi
     read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s), duplicates only"
 
-    # The FORM of a task, five rules, each binary. A task
-    # opens on a mark and a number, then an infinitive verb; it holds no link and no more than 72
-    # characters — the commit-subject limit, since a subject and a task are the same object. What is
-    # NOT here is "no retelling", which is a judgement. Why 72 and not a measured cap: verify-workspace.md.
+    # The FORM of a row and of a task, each rule binary. A row has FOUR columns — one missing pipe
+    # desynchronises every field, and the task past it is judged by nothing at all. A task opens on a
+    # mark and a number, then an infinitive verb; it holds no link, no more than 72 characters — the
+    # commit-subject limit, a subject and a task being the same object — and, while still OPEN, no
+    # COUNT of what it has to treat. What is NOT here is "no retelling", a judgement. Why: verify-workspace.md.
     bad=$(awk -F'|' -v self="$SELF" '
       index($0, self) { next }
       /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
-        row = $0; n = split($4, seg, "<br>")
+        tail = $NF; gsub(/[[:space:]]/, "", tail)
+        if (NF != 6 || tail != "") { print "  not four columns: " substr($2, 1, 20); next }
+        n = split($4, seg, "<br>")
         for (i = 1; i <= n; i++) {
           s = seg[i]; gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
           if (s !~ /^(✅|⬜)/) continue                      # not a task line: the cell may open on a label
+          open = (s ~ /^⬜/)
           t = s; sub(/^(✅|⬜)[[:space:]]*/, "", t)
           if (t !~ /^\*\*[0-9]+\.[0-9]+\*\*/) { print "  unnumbered: " substr(s,1,60); continue }
           sub(/^\*\*[0-9]+\.[0-9]+\*\*[[:space:]]*/, "", t)
@@ -156,10 +160,14 @@ $(printf '%s\n' "$dup" | sed 's/^/  /')"
           if (length(bare) > 72) print "  " length(bare) " char.: " substr(bare,1,50)
           w = t; sub(/[[:space:]].*$/, "", w); gsub(/\*|`/, "", w)
           if (w !~ /(er|ir|re|oir)$/) print "  not an infinitive: " w
+          # fr-pattern: a definite article before a number names a SET of objects to treat, which
+          # can be split; a bare number is a threshold, which cannot. A ticked task keeps its count.
+          if (open && bare ~ /(les|des|ces|ses) ([0-9]+|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze) /)
+            print "  holds a count, so it can be split: " substr(bare,1,50)
         }
       }' "$track" || true)
     if [ -n "$bad" ]; then
-      say "a task is out of form in $(basename "$track") — numbered, opening on an infinitive, no link, at most 72 characters:
+      say "a row or a task is out of form in $(basename "$track") — four columns; a task is numbered, opens on an infinitive, holds no link, no count, at most 72 characters:
 $bad"
     fi
 
@@ -221,15 +229,21 @@ $nodetail"
 $orphan"
     fi
     read_form=", task form, detail column, $(printf '%s\n' "$cited" | sed '/^$/d' | wc -l | tr -d ' ') reasoned task(s)"
-    exempt=$((exempt + $(grep -cF -- "$SELF" "$track" 2>/dev/null || true)))
+    # Counted INSIDE the section these rules read: a marker anywhere else skips nothing, and a
+    # verdict publishing a number larger than what it really skipped is a verdict that lies.
+    exempt=$((exempt + $(awk -v self="$SELF" '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && index($0, self) { n++ } END { print n + 0 }' "$track" || true)))
   fi
 
   # A folder holding nothing is worse than none: it reads as a folder something was lost from.
   # And every folder is prefixed with the chantier number it serves, on three digits, so a listing
   # sorts by chantier — `000` where the number is impossible, which the July archives predate.
+  # Emptiness is asked of GIT, not of the disk: a `.DS_Store` the Finder drops is ignored by the
+  # neighbour and invisible to a commit, yet it makes an emptied folder look inhabited.
   empty=$(cd "$ws" && for d in WIP/*/; do
     [ -d "$d" ] || continue
-    find "$d" -type f -print -quit 2>/dev/null | grep -q . || printf '  %s\n' "$d"
+    git ls-files --cached --others --exclude-standard -- "$d" 2>/dev/null | grep -q . || printf '  %s\n' "$d"
   done || true)
   [ -n "$empty" ] && say "a WIP folder holds nothing — it reads as one something disappeared from:
 $empty"
