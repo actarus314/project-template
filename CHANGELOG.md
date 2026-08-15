@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Condition preferring a workflow on DECOMPOSABILITY**, where the delegation rule said "as much as possible": coordinated agents sharing files fall from 68,6 % to 30,0 % at four, and at equal token budget a single agent equals every multi-agent architecture measured.
 - **Make the Release note a WRITTEN one**, where it repeated the changelog it links to and ran to 10 606 characters for `v1.6.0`: a short paragraph, the highlights, then two links — the version's entries frozen at the tag, and its commits.
 - **Drop the pull-request checklist**, whose five boxes were ticked by whoever wrote the change and attested to nothing `check.sh` does not block on.
 - **Require an isolated worktree for `workspace/` too**, where the concurrent-work rule covered only `repo/`: the neighbour holds the tracking doc both sessions append to, carries no remote, and so has no server-side net that could ever see the collision.

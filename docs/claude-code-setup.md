@@ -67,7 +67,8 @@ Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<pa
 
 - The subagent **does the work itself**: it does not re-delegate, and it **does not call the advisor**.
 - It often runs on a **faster and cheaper** model *(Sonnet, or even Haiku)* — the orchestrator keeps the reasoning, the agent executes.
-- **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **as much as possible and as much as relevant**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass.
+- 🔴 **What decides is DECOMPOSABILITY into units that do not touch each other** — never "multi-agent or not". Where sub-tasks share files or interfaces, every measured source converges on the single agent: coordinated success falls monotonically — **68,6 %** at two agents, **46,5 %** at three, **30,0 %** at four *(650 real software tasks)* — and Anthropic names CODE as its own unfavourable case. Genuinely disjoint, read-only work *(several angles of one search)* is the favourable one.
+- **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **wherever that condition holds**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass. ⚠️ At EQUAL token budget a single agent equals or beats every multi-agent architecture tested — the gain is bought compute at ≈ **3,75×** the price, not a better architecture.
 
 The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
 
