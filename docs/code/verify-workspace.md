@@ -16,7 +16,7 @@ nothing named like a secret is tracked; a single tracking document.
 
 ## Silence is a choice, not an accident
 
-An absent neighbour and a clean neighbour produce the very same empty output. That is said out loud in the script rather than left to a mute exit, because this is the one check whose entire reason to exist is that nothing else looks over there — a silent no-op here would read exactly like "nothing to see" whether or not `../workspace` exists at all.
+An absent neighbour and a clean neighbour produce the very same empty output. The script says so rather than exiting mute: nothing else looks over there, so a silent no-op reads as "nothing to see" either way.
 
 ## A tracked NAME betrays, not the content
 
@@ -28,16 +28,15 @@ The rule — one tracking system, whichever it is — is `METHODE.md`'s to state
 
 **The `OTHERS` list cannot be complete** — no check can know every tracking tool that exists. So it is named in the verdict: whoever reads it sees what was looked for, and therefore what was not.
 
-**What the named list still cannot see**: every tracked top-level dot-directory, minus the editor and forge ones. Those are NAMED in `unlisted`, never counted as a fault by themselves — treating an unknown directory as a tracking system on sight would fire on the next editor or tool that ships one, and a guard that fires where it should not earns its own override. The path is filtered on `/`
-first because a tracked path holding a slash has a directory as its head, which is cheaper and more honest than testing the disk for a directory git tracks but the worktree happens not to hold.
+**What the named list still cannot see**: every tracked top-level dot-directory, minus the editor and forge ones. Those are NAMED in `unlisted`, never counted as a fault by themselves — treating an unknown directory as a tracking system on sight would fire on the next editor or tool that ships one, and a guard that fires where it should not earns its own override.
 
 ## Backlog hygiene: a form, not a state
 
 METHODE's rule — the backlog holds OPEN work only, a closed item leaves for the state section or an archive — is written in the tracking doc itself, because closure markers had once piled up inside the backlog until it stopped answering "where do I put the effort".
 
-It was broken again the same day, four markers deep, and no check noticed at the time: growth was measured at **+24 % against a 25 % threshold** — one point short — but growth is the SYMPTOM, not the rule. The rule itself is binary (a closed marker inside the open-work section), so it needs no threshold and no measure of its own. This is the shape a closing pass leaves behind when only its first half was done.
+It broke again the same day, four markers deep, unseen: growth read **+24 % against a 25 % threshold**, one point short — but growth is the SYMPTOM. The rule is binary (a closed marker inside the open-work section), so it needs no threshold at all. It is the shape a closing pass leaves when only its first half was done.
 
-⚠️ **What this cannot do, and must not be read as more than.** It matches a FORM, never a state: an item that is finished, left in place, and never marked at all is invisible to it. The marker is a habit of whoever writes the document, not a guarantee, and a check rested on a habit inherits that habit's reliability. Whether the backlog still describes the open work is the same question as whether the tracking doc is TRUE, which this whole file states is not verifiable.
+⚠️ **What this cannot do, and must not be read as more than.** It matches a FORM, never a state: an item that is finished, left in place, and never marked at all is invisible to it. The marker is a habit, not a guarantee, and a check rested on a habit inherits its reliability.
 
 ## The other direction: open work living OUTSIDE the tracking doc
 
@@ -47,7 +46,20 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 
 **A closing archive is read while still uncommitted** — the moment an action gets buried, and the only one worth looking at: an archive is immutable, so a committed one can never be repaired. Ten of the thirty already hold the pattern.
 
-🔴 **The pattern is narrow because the wide one was measured**: anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself. Only a leftover that declares itself matches. First run, it found an arbitration filed as a trap, left nowhere else.
+🔴 **The pattern is narrow because the wide one was measured**: anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself. Only a leftover that declares itself matches. 
 
 🔴 **The marker counts only at the START of a cell.** Anywhere else it is a MENTION, not a mark:
 the very row describing this rule quotes `des lignes passent à ✅`, and a loose match once read that sentence itself as a closed item. The same failure the forbidden-command hook pays for with heredocs, and the wiring check pays for with code lines — a literal appears in prose too.
+
+## The chantier number given twice
+
+A number identifies a chantier for good: an archive or a merged pull request written today must still resolve to the same work in six months. Nothing enforced it — the tracking doc holds the OPEN ones, the archives the CLOSED ones, and no place holds the union, so the rule ran on discipline, which METHODE says never holds.
+
+🔴 **It had already broken twice, and by hand.** Two July folders call themselves chantiers 2 and 3, both numbers handed out again on 2026-08-05. A third was live: 13 named a chantier closed on 05/08 **and** an open one restored on 08/08, the restoration re-taking a number freed three days earlier.
+
+**The number is read from the FIRST cell of a table row, never from prose** — a number in a sentence is a reference, not a claim to it.
+
+⚠️ **It compares OPEN rows to each other, and nothing else — the verdict says `duplicates only`, so the limit travels with the count.** Extending it to closed chantiers was written and dropped: an archive states its coverage in prose, and the one form that reads as a list is not one.
+Taken literally, one such sentence marks three OPEN chantiers as closed, and another says a chantier *is not* closed — which a loose pattern reads backwards. **The case that actually happened stays invisible to it, and saying so beats a pattern firing on the wrong rows.**
+
+➡️ **What would close the gap is a declaration, not a cleverer pattern** — an archive stating its chantiers in a field, the way a check declares `# blocking:`. Until then this half catches two live rows colliding, and the hard case stays a reading.

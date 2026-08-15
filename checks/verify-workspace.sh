@@ -112,6 +112,22 @@ else
 $stale"
     fi
     read_backlog=" backlog hygiene"
+
+    # A chantier number is never reused — an archive reference has to keep resolving, and one has
+    # already stopped: two numbers freed in July were handed out again in August, before the rule
+    # existed. Read from the FIRST cell of a table row, never from prose: a number in a sentence is
+    # a reference, not a claim to the number. Why only same-section duplicates: verify-workspace.md.
+    nums=$(awk '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        if (match($0, /\*\*[0-9]+(\.[0-9]+)?\*\*/)) print substr($0, RSTART + 2, RLENGTH - 4)
+      }' "$track" || true)
+    dup=$(printf '%s\n' "$nums" | sed '/^$/d' | sort | uniq -d)
+    if [ -n "$dup" ]; then
+      say "two open chantiers share a number in $(basename "$track") — a number is never reused, or an archive pointer stops resolving:
+$(printf '%s\n' "$dup" | sed 's/^/  /')"
+    fi
+    read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s), duplicates only"
   fi
 
   # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
@@ -136,5 +152,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

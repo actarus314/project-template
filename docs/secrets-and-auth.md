@@ -170,7 +170,7 @@ git config --local credential."https://github.com".helper ""
 git config --local --add credential."https://github.com".helper \
   '!f() { echo username=x-access-token; echo "password=${GITHUB_PAT}"; }; f'
 ```
-Then **prefix every `git`/`gh` call with `direnv exec`**: direnv evaluates `.envrc` *(the `allow` safety net respected)* and launches the command with `GITHUB_PAT`/`GH_TOKEN` in its env — the helper reads `GITHUB_PAT`.
+Then **prefix every `git`/`gh` call with `direnv exec`**, which evaluates `.envrc` *(the `allow` safety net respected)* and puts `GITHUB_PAT`/`GH_TOKEN` in the command's env for the helper to read.
 ```bash
 direnv exec . git push origin <ref>       # from repo/ — BARE URL, token via the helper
 direnv exec . gh pr create / gh pr merge   # gh via GH_TOKEN
