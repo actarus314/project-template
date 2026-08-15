@@ -175,9 +175,74 @@ $bad"
     done 2>/dev/null || true)
     [ -n "$missing" ] && say "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
 $missing"
-    read_form=", task form"
+    # The detail column carries a LINK, or the DASH that declares there is nothing to point at yet.
+    # A frozen chantier has no folder, and an empty one invented for the rule reads as a lost folder.
+    nodetail=$(awk -F'|' -v self="$SELF" '
+      index($0, self) { next }
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        d = $5; gsub(/^[[:space:]]+|[[:space:]]+$/, "", d)
+        if (d !~ /\]\(/ && d != "—") print "  " substr($2, 1, 20) " → " substr(d, 1, 40)
+      }' "$track" || true)
+    if [ -n "$nodetail" ]; then
+      say "a chantier row points nowhere in $(basename "$track") — a link, or the dash saying there is nothing yet:
+$nodetail"
+    fi
+
+    tasks=$(awk -F'|' -v self="$SELF" '
+      index($0, self) { next }
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        n = split($4, seg, "<br>")
+        for (i = 1; i <= n; i++) if (match(seg[i], /\*\*[0-9]+\.[0-9]+\*\*/)) print substr(seg[i], RSTART + 2, RLENGTH - 4)
+      }' "$track" | sort -u || true)
+
+    # A DETAILS.md reasons the tracking doc's tasks, so it names ONLY numbers that doc still carries
+    # — a task deleted there leaves a section reasoning nothing, and a renumbering leaves it lying.
+    # Read from the START of a heading: further in, a number is a citation (`arXiv:2603.00539`).
+    cited=$(cd "$ws" && for f in WIP/*/DETAILS.md; do
+      [ -f "$f" ] || continue
+      awk -v self="$SELF" -v f="$f" '
+        index($0, self) { next }
+        /^## / {
+          t = substr($0, 4)
+          while (match(t, /^[0-9]+\.[0-9]+/)) {
+            print substr(t, 1, RLENGTH) " " f
+            t = substr(t, RLENGTH + 1)
+            if (t ~ /^[[:space:]]*·/) sub(/^[[:space:]]*·[[:space:]]*/, "", t); else break
+          }
+        }' "$f"
+    done || true)
+    orphan=$(printf '%s\n' "$cited" | sed '/^$/d' | while read -r n f; do
+      printf '%s\n' "$tasks" | grep -qxF "$n" || printf '  %s reasoned in %s\n' "$n" "$f"
+    done || true)
+    if [ -n "$orphan" ]; then
+      say "a DETAILS.md reasons a task the tracking doc does not carry — it is a second backlog, and the stale one gets read first:
+$orphan"
+    fi
+    read_form=", task form, detail column, $(printf '%s\n' "$cited" | sed '/^$/d' | wc -l | tr -d ' ') reasoned task(s)"
     exempt=$((exempt + $(grep -cF -- "$SELF" "$track" 2>/dev/null || true)))
   fi
+
+  # A folder holding nothing is worse than none: it reads as a folder something was lost from.
+  # And every folder is prefixed with the chantier number it serves, on three digits, so a listing
+  # sorts by chantier — `000` where the number is impossible, which the July archives predate.
+  empty=$(cd "$ws" && for d in WIP/*/; do
+    [ -d "$d" ] || continue
+    find "$d" -type f -print -quit 2>/dev/null | grep -q . || printf '  %s\n' "$d"
+  done || true)
+  [ -n "$empty" ] && say "a WIP folder holds nothing — it reads as one something disappeared from:
+$empty"
+  unprefixed=$(cd "$ws" && for d in WIP/*/ archives/*/; do
+    [ -d "$d" ] || continue
+    b=${d%/}; b=${b##*/}
+    printf '%s' "$b" | grep -qE '^[0-9]{3}(-[0-9]{3})*--' || printf '  %s\n' "$d"
+  done || true)
+  [ -n "$unprefixed" ] && say "a stage folder carries no chantier number — three digits, then '--':
+$unprefixed"
+  # `|| true`: a workspace with neither directory — every generated one — makes `ls` fail, and
+  # pipefail would then kill this script with no verdict at all, which is how it was caught.
+  read_folders=", $(cd "$ws" && ls -d WIP/*/ archives/*/ 2>/dev/null | wc -l | tr -d ' ' || true) stage folder(s) named and non-empty"
 
   # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
   # empty boxes — and an archive only while UNCOMMITTED: a committed one is immutable, and ten of
@@ -204,5 +269,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_pledge:-}, $exempt line(s) exempted by a workspace-self marker — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-}, $exempt line(s) exempted by a workspace-self marker — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

@@ -12,6 +12,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Changed
 - **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
+- **Refuse a chantier row pointing nowhere**, a stage folder holding nothing, and one carrying no chantier number: three digits then `--`, so a listing sorts by chantier and an empty folder never reads as one something was lost from.
+- **Refuse a `DETAILS.md` reasoning a task the tracking doc no longer carries**, which is the second backlog the method forbids — and it is the stale one that gets read first.
 - **Refuse a chantier folder with no `DETAILS.md`**, the file that reasons its tasks — named exactly, since a folder already holds several and the presence of any proves nothing.
 - **Refuse a chantier number given twice in the tracking doc**, where nothing enforced that a number identifies a chantier for good: two numbers freed in July were handed out again in August, and one named both a closed and an open chantier for a week.
 - **Make the Release note a WRITTEN one**, where it repeated the changelog it links to and ran to 10 606 characters for `v1.6.0`: a short paragraph, the highlights, then two links — the version's entries frozen at the tag, and its commits.

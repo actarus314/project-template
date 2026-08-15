@@ -4,9 +4,7 @@
 
 ## Why this check exists at all
 
-Why `workspace/` has no remote is stated once, in `AGENTS.md`. What it costs: no remote means no diff-vs-origin, no CI, no pull request, and `check.sh` runs inside `repo/` without looking beside it — missed **four times** before this check existed.
-
-*(What it can and cannot verify is the script's own header, and stays there.)*
+Why `workspace/` has no remote is stated once, in `AGENTS.md`. What it costs: no remote means no diff-vs-origin, no CI, no pull request, and `check.sh` runs inside `repo/` without looking beside it — missed **four times** before this check existed. *(What it can and cannot verify is the script's own header, and stays there.)*
 
 ## A tracked NAME betrays, not the content
 
@@ -24,7 +22,7 @@ METHODE's rule — the backlog holds OPEN work only — is written in the tracki
 
 It broke again the same day, four markers deep, unseen: growth read **+24 % against a 25 % threshold** — but growth is the SYMPTOM. The rule is binary, so it needs no threshold at all.
 
-⚠️ **What this cannot do, and must not be read as more than.** It matches a FORM, never a state: an item that is finished, left in place, and never marked at all is invisible to it. The marker is a habit, not a guarantee, and a check rested on a habit inherits its reliability.
+⚠️ **It matches a FORM, never a state**: an item finished, left in place and never marked at all is invisible to it. The marker is a habit, and a check rested on a habit inherits its reliability.
 
 🔴 **And it counts only at the START of a cell.** Anywhere else the marker is a MENTION: the very row describing this rule quotes `des lignes passent à ✅`, and a loose match once read that sentence itself as a closed item.
 
@@ -38,9 +36,7 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 
 ## A document has to be able to document the guard that reads it
 
-Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction — the same failure the forbidden-command hook pays for with heredocs, and the wiring check with code lines. **A line carrying `<!-- workspace-self -->` is skipped**, by every rule here that reads a line, and the verdict publishes how many.
-
-**The convention is already here**: `verify-tone` has its `ALLOW`, `verify-language` its `fr-pattern`. Per LINE, never per file — a file-wide exemption silences the rules for everything the file goes on to say.
+Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction — the same failure the forbidden-command hook pays for with heredocs, and the wiring check with code lines. **A line carrying `<!-- workspace-self -->` is skipped**, by every rule here that reads a line, and the verdict publishes how many. **The convention is already here** — `verify-tone`'s `ALLOW`, `verify-language`'s `fr-pattern` — and it is per LINE: a file-wide exemption would silence the rules for everything else the file says.
 
 ## The chantier number given twice
 
@@ -50,7 +46,7 @@ A number identifies a chantier for good — an archive written today must still 
 
 ⚠️ **It compares OPEN rows only, and the verdict says `duplicates only`.** Extending it to closed chantiers was written and dropped: archives state coverage in prose, one such sentence marking three OPEN chantiers as closed and another saying a chantier *is not* closed. **The case that happened stays invisible, and saying so beats a pattern firing on the wrong rows.**
 
-➡️ **What would close the gap is a declaration, not a cleverer pattern** — an archive stating its chantiers in a field, the way a check declares `# blocking:`. Until then this half catches two live rows colliding, and the hard case stays a reading.
+➡️ **What would close it is a declaration, not a cleverer pattern**: an archive stating its chantiers in a field, the way a check declares `# blocking:`.
 
 ## The FORM of a task, and why only five rules of it are here
 
@@ -61,3 +57,9 @@ Seven rules were settled; two were already armed elsewhere, five are here. A tas
 **The infinitive is the only binary substitute for "no retelling"**, which is a judgement and stays unarmed. An owner prefix is stripped first: `**Name** :` is not the verb, and the two tasks that failed were that shape.
 
 **The `DETAILS.md` rule names the file, never "a file"**: a stage folder holds several. ⚠️ **It applies only where the prefix names an OPEN chantier** — a side channel, a dead chantier and a pre-numbering folder carry none, and demanding one there invents work.
+
+## Four more rules, and what each refuses
+
+- **The detail column carries a link, or the DASH saying there is nothing to point at yet.** A frozen chantier has no folder, and one invented to satisfy the rule reads as a folder something was lost from — which is why an empty `WIP/` folder is refused outright.
+- **A stage folder is prefixed with its chantier number, three digits then `--`.** `000` where the number is impossible: the July archives predate the numbering, and a retroactive number would collide with one since reassigned.
+- **A `DETAILS.md` names only numbers the tracking doc still carries**, or a deleted task leaves a section reasoning nothing — the second backlog METHODE forbids. Numbers are read from the START of a heading: further in, a number is a citation, `arXiv:2603.00539` having been the false positive that showed it.
