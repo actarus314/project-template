@@ -26,7 +26,7 @@ It broke again the same day, four markers deep: growth read **+24 % against a 25
 
 ## The other direction: open work living OUTSIDE the tracking doc
 
-Splitting the tracking doc into neighbours recreates the separate backlog METHODE forbids. **A file DECLARES it holds none**, with `<!-- no-open-work -->`, and only declared files are read — a name would be wrong twice over, METHODE making those names a default and the conformity checklist beside them carrying **58 empty boxes**.
+Splitting the tracking doc into neighbours recreates the separate backlog METHODE forbids. **A file DECLARES it holds none**, with `<!-- no-open-work -->`, and only declared files are read — a name would be wrong twice over, those names being a METHODE default and the checklist beside them carrying **58 empty boxes**.
 
 **A closing archive is read while still uncommitted** — the only moment worth looking at, an archive being immutable once committed.
 
@@ -34,7 +34,7 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 
 ## A document has to be able to document the guard that reads it
 
-Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction. **A line carrying `<!-- workspace-self -->` is skipped**, by every rule here that reads a line, and the verdict publishes how many — counted inside the section those rules read, since a marker anywhere else skips nothing and a published number larger than what was skipped is a verdict that lies. **The convention is already here** — `verify-tone`'s `ALLOW`, `verify-language`'s `fr-pattern` — and it is per LINE: a file-wide exemption would silence the rules for everything else the file says.
+Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction. **A line carrying `<!-- workspace-self -->` is skipped by every rule here that reads a line — except one.** A stage file holds no task, quoted or not, so no legitimate mark needs protecting and an exemption would reopen the second backlog. The verdict counts what it skipped, inside the section those rules read: a number larger than that is a verdict lying. **The convention is already here** — `verify-tone`'s `ALLOW`, `verify-language`'s `fr-pattern` — and it is per LINE: a file-wide exemption would silence the rules for everything else the file says.
 
 ## The chantier number given twice
 
@@ -53,6 +53,6 @@ A task opens on a mark and a `chantier.rank` number, then an **infinitive verb**
 - **An OPEN task holds no count.** "the 7 pitfalls" names a set that can be treated one at a time; "72 characters" is a threshold that cannot be split, and the definite article separates them. A ticked task keeps its count: what is done no longer goes stale.
 - **The detail column carries a link, or the DASH saying there is nothing to point at yet** — a frozen chantier has no folder, and one invented to satisfy the rule reads as a folder something was lost from.
 - **A stage folder is prefixed with its chantier number, three digits then `--`**, and holds at least one file. `000` where the number is impossible: the July archives predate the numbering, and a retroactive number would collide with one since reassigned.
-- **Emptiness is asked of git, not of the disk** — a `.DS_Store` is ignored by the neighbour and invisible to a commit, and made an emptied folder look inhabited.
+- **Emptiness is asked of git, not of the disk** — a `.DS_Store` is invisible to a commit, and made an emptied folder look inhabited.
 - **A `DETAILS.md` names only numbers the tracking doc still carries**, or a deleted task leaves a section reasoning nothing. Numbers are read from the START of a heading: further in, a number is a citation, `arXiv:2603.00539` having shown it.
 - **That rule names the file, never "a file"**: a stage folder holds several, and it applies only where the prefix names an OPEN chantier — a side channel, a dead chantier and a pre-numbering folder carry none.

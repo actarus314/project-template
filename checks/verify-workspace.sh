@@ -282,9 +282,11 @@ $unprefixed"
   if [ -n "$watched" ]; then
     # A leftover DECLARES itself, and it declares itself with the MARK the tracking doc gives a task.
     # A turn of phrase is met inside a quotation as readily as inside an instruction (verify-workspace.md).
+    # 🔴 The only rule here the exemption marker does NOT lift: a stage file holds no task, quoted or
+    # not, so there is no legitimate mark to protect — and an exemption would reopen the second backlog.
     open_work=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
       | xargs -0 grep -nE '(⬜|^[[:space:]]*[-*] \[ \])' 2>/dev/null \
-      | grep -vF -- "$SELF" | cut -c1-120 || true)
+      | cut -c1-120 || true)
     [ -n "$open_work" ] && say "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
 $open_work"
     read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
