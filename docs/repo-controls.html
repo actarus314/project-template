@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:b8a99e1732d5ce0404a5d745dd97d4f4728f981dfd470d3470d37eb1ee86c14c
+  checksum-source-md: sha256:8d0b0b36598ef6e7d9ec4c599e25cfb7e22cf036becf3ca9a72257deffb2e824
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -614,7 +614,6 @@
     <p>Isolating it <strong>trades a silent overwrite for an explicit merge, and that is the whole gain</strong> — two trees produce two versions of the tracking doc, which git reports instead of one quietly winning. <em>Lived on 2026-08-15: two sessions wrote into <code>SUIVI.md</code> minutes apart. Nothing was lost because the two inserts landed in different rows — by luck, not by design, and a batch of house checks went red mid-run while the file moved underneath it.</em></p>
     <p><strong>Put the worktree BESIDE the two repos, never inside either</strong> — a sibling of <code>repo/</code> keeps <code>../workspace</code> resolving to the same neighbour, which the checks reading it depend on. Elsewhere, they run against a neighbour that is not there.</p>
     <p><strong><code>./check.sh --house</code> calls two invariants broken from a worktree, and there it is not lying</strong>: the skill symlinks and the workspace's <code>core.hooksPath</code> point at the <strong>main</strong> tree, because that is where they were set. Nothing is unplugged — but a skill or a hook <strong>edited in a worktree is not the one that runs</strong>, which is what those two verdicts are worth reading as.</p>
-    <p><strong>The COMMIT gate is another matter, and there it does lie — commit from the main tree until this is closed.</strong> Git hands a hook <code>GIT_INDEX_FILE</code> <strong>relative</strong> in an ordinary repository and <strong>absolute</strong> in a worktree; absolute, it survives <code>git -C</code>, so every check reading the neighbour reads <strong>this</strong> repository's index instead. Measured: <code>verify-workspace.sh</code> then reports a secret-named file and stray open work that exist here and not there — and the same variable set by hand, from the main tree, reproduces it exactly. <strong>The guard on <code>workspace/</code> holds by the accident that this path is usually relative</strong>, which is worth knowing before trusting any verdict it gives from a worktree.</p>
     <p>A worktree shares <code>.git</code> (objects, branches, remotes) but has its <strong>own folder and its own <code>HEAD</code></strong> — editing, committing, pushing, opening a PR without ever touching the other tree. Cleanup: <code>git worktree remove &lt;path&gt;</code> + delete the branch.</p>
     <p>Deploying from a worktree without poisoning the main folder's <code>./data</code>: <code>docker build</code> <strong>from the worktree</strong> (the image is baked), then <code>docker compose up -d</code> <strong>from the main folder</strong> (that's where the real volumes are).</p>
   </div>

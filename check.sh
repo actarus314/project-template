@@ -11,11 +11,10 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # Judge the repository this file sits in, never one named by the environment. A git hook exports
-# GIT_DIR, absolute inside a worktree, so it outlives the `cd` above — and a check on a GENERATED
-# project then reads the caller's repository instead, returning a verdict about the wrong tree.
-# GIT_INDEX_FILE is deliberately left alone: during a commit it names the index being built, which
-# is exactly what the staged-content checks are meant to read.
-unset GIT_DIR GIT_WORK_TREE
+# GIT_DIR and GIT_INDEX_FILE, both ABSOLUTE as soon as the commit is partial, so a check reading
+# the NEIGHBOURING repository reads this one's index and judges the wrong tree. The list lives
+# HERE and nowhere else: every check is reached through this file (docs/code/check.md).
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_PREFIX
 
 CI=.github/workflows/ci.yml
 CACHE=.ci-tools
