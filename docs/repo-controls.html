@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:8d0b0b36598ef6e7d9ec4c599e25cfb7e22cf036becf3ca9a72257deffb2e824
+  checksum-source-md: sha256:6d87e49b7984f1d5d8c0ebc05a216751826143b5861cc311477fcbd7b6dd6be3
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1703,7 +1703,7 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-checks-wiring.sh</code></td>
-          <td>a control declared nowhere, or <strong>the gate missing from a workflow</strong></td>
+          <td>a control declared nowhere, <strong>the gate missing from a workflow</strong>, or <strong>a check called outside <code>check.sh</code></strong> <em>(which would inherit the git environment that file clears, and judge another repository — one declared exception, <code>commit-msg</code>, which hands over a message and reads no index)</em></td>
           <td class="h">both</td>
           <td>every commit</td>
           <td class="p">✅</td>

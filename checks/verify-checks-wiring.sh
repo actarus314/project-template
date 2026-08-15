@@ -14,7 +14,7 @@ fi
 command -v python3 >/dev/null 2>&1 || { echo "  (no python3 — skipped)"; exit 0; }
 
 python3 - <<'PY'
-import re, pathlib, sys
+import re, pathlib, sys, subprocess
 
 DOOR   = "check.sh --house"
 TABLE  = pathlib.Path("docs/repo-controls.md")
@@ -166,6 +166,43 @@ if RUNNER.exists() and HOOK.exists():
     read.append(f"the neighbour's gate and the runner on {VAR}")
 else:
     unread.append(f"{VAR} (no {HOOK} or no {RUNNER} here)")
+
+# ── 6. Every check is reached THROUGH the door, which is what clears the git environment ──────
+# The runner clears GIT_DIR, GIT_INDEX_FILE and three siblings before starting anything. A check
+# called directly inherits them instead, and answers about whatever repository they name — measured
+# on 10 of them. Nothing reaches them that way today; this is what keeps that true, and it is one
+# place rather than the same clearing copied into every check that travels (docs/code/check.md).
+CALL = re.compile(r'(?:^|[;&|]|\bif\s|\bthen\s|\belif\s|\$\()\s*!?\s*(?:\./)?(?:checks/)?(verify-[a-z-]+\.sh)\b')
+# The one caller allowed past it, with the reason it is harmless: commit-msg hands over a MESSAGE,
+# and that check reads no index — it cannot answer about the wrong repository.
+ALLOWED = {(".githooks/commit-msg", "verify-commit-form.sh")}
+try:
+    tracked = subprocess.run(["git", "ls-files"], capture_output=True, text=True,
+                             check=True).stdout.split()
+except (OSError, subprocess.CalledProcessError):
+    tracked = []
+if tracked:
+    seen = 0
+    for f in tracked:
+        p = pathlib.Path(f)
+        if p.suffix in (".md", ".html", ".json") or f == str(RUNNER) or not p.exists():
+            continue
+        try:
+            lines = p.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        seen += 1
+        for n, l in enumerate(lines, 1):
+            if l.lstrip().startswith("#"):
+                continue
+            for m in CALL.finditer(l):
+                if (f, m.group(1)) not in ALLOWED:
+                    bad.append(f"{f}:{n} calls {m.group(1)} outside {RUNNER} — it would inherit "
+                               f"the git environment that file clears, and judge another repository")
+    read.append(f"{seen} tracked file(s) for a call bypassing the door "
+                f"({len(ALLOWED)} declared exception)")
+else:
+    unread.append("calls bypassing the door (git lists no file here)")
 
 for b in bad:
     print(f"✗ {b}")
