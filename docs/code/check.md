@@ -16,6 +16,12 @@ are on any macOS or Linux; shipping Go or Rust would mean per-platform binaries,
 (~360 ms if all of them run, under a tenth of the gate); several scripts start it three or four times to read three fields of the same payload. One launch per script would return most of that.
 The hooks start it 25 more times — outside the gate, but on every turn.
 
+## Why `GIT_INDEX_FILE` is cleared
+
+Measured 2026-08-15: git exports it *relative* only for a hand-staged commit; `commit -a` and `commit <path>` export it **absolute**, no worktree needed, and that survives `git -C`. Under it **11 of the 22 house checks** answered about the wrong repository, 8 staying green on a false count.
+
+Its ground had no user: through a real partial commit, with the variable then without, **0 check changed verdict**. Nothing is reinjected. Wrapping each `git -C` was dropped — seven files, no cover for the next.
+
 ## The two checks that GENERATE a project run in the parallel lot
 
 They were once run alone, after the lot, on the stated grounds that they generate a whole project.

@@ -29,9 +29,8 @@ if ! output=$(gitleaks git --staged --no-banner --redact 2>&1); then
   exit 1
 fi
 
-# git exports its environment to a hook, and check.sh runs git in the OTHER repository, where with
-# `commit -a` these name THIS workspace's in-flight index — which the checks would then overwrite.
-unset GIT_INDEX_FILE GIT_DIR GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY
+# git's exported environment names THIS workspace, and check.sh runs git in the other repository:
+# it clears that itself, in one place, so no second list here can drift from it.
 
 # Said out loud: from here, an absent neighbour and a check.sh stripped of its bit look alike.
 if [ ! -x "$gate" ]; then
