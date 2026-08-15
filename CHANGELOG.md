@@ -22,6 +22,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Drop the pull-request checklist**, whose five boxes were ticked by whoever wrote the change and attested to nothing `check.sh` does not block on.
 - **Require an isolated worktree for `workspace/` too**, where the concurrent-work rule covered only `repo/`: the neighbour holds the tracking doc both sessions append to, carries no remote, and so has no server-side net that could ever see the collision.
 - **Refuse a check called outside `check.sh`**, where only that file clears the inherited git environment: called directly, a check reads whatever repository the environment names, and 10 of the 22 then answer about the wrong one — 8 while staying green on a false count.
+- **Warn, at the sealing step, that a branch opened before it lands its entries in the version already published**: the two changelog headings sit one line apart, so a three-way merge reports nothing and delivers them twice.
 - **Seal the version BEFORE tagging it, where the runbook tagged first**: every tag captured a CHANGELOG and a plugin manifest still one version behind, and `main` stayed red a whole pull-request cycle while the plugin announced an update that pulling it would not deliver.
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
