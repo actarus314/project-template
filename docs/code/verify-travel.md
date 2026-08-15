@@ -6,7 +6,7 @@
 
 A path that resolves here but not where the file lands. Several files travel into every generated project — `check.sh`, `verify-tone.sh`, everything under `templates/` — and a path written in one of them is read by whoever holds that copy, in a project that carries neither `docs/` nor `templates/`.
 
-A grep of the tree cannot see this: it proves no file names a deleted doc, but it is blind to a path that stays written and simply resolves nowhere once it has travelled. That blindness cost two fixes — see `workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md`. The only way to see it is to generate a project and read the paths from there.
+A grep of the tree cannot see this: it proves no file names a deleted doc, but it is blind to a path that stays written and simply resolves nowhere once it has travelled. That blindness cost two fixes — see `workspace/archives/009--2026-08-decoupage-par-sujet/SYNTHESE.md`. The only way to see it is to generate a project and read the paths from there.
 
 ## The signal is a differential
 
@@ -14,7 +14,7 @@ A path is reported only when it resolves in the template AND fails in the genera
 
 ## One generation is not enough, for two opposite reasons
 
-Because the signal is a differential, the poorest tree is the harshest: `generic` ships no capability at all, so a path that survives everywhere else dies there. And a capability brings files of its own — `pages.yml`, `docker-publish.yml` — whose paths are read by nobody unless a variant carrying them is generated. This is not combinatorics: what has to be covered is the set of files that can land, not the set of flag combinations. One generation per toolchain, plus one carrying every capability at once, is what reaches every file. What a single `--type node` run left unread — see `workspace/archives/2026-08-audit-des-controles/SYNTHESE.md`.
+Because the signal is a differential, the poorest tree is the harshest: `generic` ships no capability at all, so a path that survives everywhere else dies there. And a capability brings files of its own — `pages.yml`, `docker-publish.yml` — whose paths are read by nobody unless a variant carrying them is generated. This is not combinatorics: what has to be covered is the set of files that can land, not the set of flag combinations. One generation per toolchain, plus one carrying every capability at once, is what reaches every file. What a single `--type node` run left unread — see `workspace/archives/000--2026-08-audit-des-controles/SYNTHESE.md`.
 
 ## Declaring a path deliberately absent
 

@@ -11,7 +11,7 @@ That measured a rule freshly tidied, not a rule kept. Three violations appeared 
 
 THE DISCRIMINATOR, and it comes from the one conforming case rather than from theory:
 
-# (Full-Renovate switch, 2026-07 — see workspace/archives/2026-07-autodetection/SYNTHESE.md.)
+# (Full-Renovate switch, 2026-07 — see workspace/archives/000--2026-07-autodetection/SYNTHESE.md.)
 
 A date is allowed IFF the same line points into `archives/`. One line, one pointer, the story lives where stories live. Anything else with a date in a comment is the narrative itself.
 

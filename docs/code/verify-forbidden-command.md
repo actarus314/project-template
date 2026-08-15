@@ -25,4 +25,4 @@ A rule refusing a **second pull request on the same undertaking** was tried thre
 - **ASK the maintainer** — ruled out by the maintainer: escalation is a last resort, never routine.
   Asking at every opening adds a decision to the person who wanted fewer of them.
 
-Nothing viable was left, and this file's own rule is that a verdict which is neither mechanical nor affordable does not belong in it. The cost named afterwards is the full open+merge **cycle** — 48 % of pull requests carry a single commit — a grouping discipline upstream, not a gate at opening time. Fuller account: `workspace/archives/2026-08-controles-du-travail/SYNTHESE.md`.
+Nothing viable was left, and this file's own rule is that a verdict which is neither mechanical nor affordable does not belong in it. The cost named afterwards is the full open+merge **cycle** — 48 % of pull requests carry a single commit — a grouping discipline upstream, not a gate at opening time. Fuller account: `workspace/archives/003-004-013-017-018-019--2026-08-controles-du-travail/SYNTHESE.md`.

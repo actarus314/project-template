@@ -13,7 +13,7 @@ fi
 
 ws=../workspace
 # An absent neighbour and a clean one produce the same empty output — said out loud on purpose,
-# since this is the one check whose whole reason to exist is looking over there (verify-workspace.md).
+# since this is the one check whose whole reason to exist is looking over there.
 [ -d "$ws" ] || { echo "  (no $ws beside this repo — nothing to check)"; exit 0; }
 
 fail=0
@@ -112,7 +112,147 @@ else
 $stale"
     fi
     read_backlog=" backlog hygiene"
+
+    # A chantier number is never reused — an archive reference has to keep resolving, and one has
+    # already stopped: two numbers freed in July were handed out again in August, before the rule
+    # existed. Read from the FIRST cell of a table row, never from prose: a number in a sentence is
+    # a reference, not a claim to the number. Why only same-section duplicates: verify-workspace.md.
+    nums=$(awk '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        if (match($0, /\*\*[0-9]+(\.[0-9]+)?\*\*/)) print substr($0, RSTART + 2, RLENGTH - 4)
+      }' "$track" || true)
+    dup=$(printf '%s\n' "$nums" | sed '/^$/d' | sort | uniq -d)
+    if [ -n "$dup" ]; then
+      say "two open chantiers share a number in $(basename "$track") — a number is never reused, or an archive pointer stops resolving:
+$(printf '%s\n' "$dup" | sed 's/^/  /')"
+    fi
+    # The CLOSED numbers, read from the archive folder prefixes — the declaration this half was
+    # missing, and the reason it could only compare open rows to each other. `000` names a folder
+    # that predates the numbering and claims nothing, so it drops out.
+    closed=$(cd "$ws" && ls -d archives/*/ 2>/dev/null | while read -r d; do
+      b=${d#archives/}; printf '%s\n' "${b%%--*}" | tr '-' '\n'
+    done | sed 's/^0*//' | grep -v '^$' | sort -u || true)
+    reused=$(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | comm -12 - <(printf '%s\n' "$closed") || true)
+    if [ -n "$reused" ]; then
+      say "an open chantier reuses a number an archive already closed — a pointer written today stops resolving:
+$(printf '%s\n' "$reused" | sed 's/^/  /')"
+    fi
+    read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s) against $(printf '%s\n' "$closed" | sed '/^$/d' | wc -l | tr -d ' ') closed in archive prefixes"
+
+    # The FORM of a row and of a task, each rule binary. A row has FOUR columns — one missing pipe
+    # desynchronises every field, and the task past it is judged by nothing at all. A task opens on a
+    # mark and a number, then an infinitive verb; it holds no link, no more than 72 characters — the
+    # commit-subject limit, a subject and a task being the same object — and, while still OPEN, no
+    # COUNT of what it has to treat. What is NOT here is "no retelling", a judgement. Why: verify-workspace.md.
+    bad=$(awk -F'|' '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        tail = $NF; gsub(/[[:space:]]/, "", tail)
+        if (NF != 6 || tail != "") { print "  not four columns: " substr($2, 1, 20); next }
+        n = split($4, seg, "<br>")
+        for (i = 1; i <= n; i++) {
+          s = seg[i]; gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+          if (s !~ /^(✅|⬜)/) continue                      # not a task line: the cell may open on a label
+          open = (s ~ /^⬜/)
+          t = s; sub(/^(✅|⬜)[[:space:]]*/, "", t)
+          if (t !~ /^\*\*[0-9]+\.[0-9]+\*\*/) { print "  unnumbered: " substr(s,1,60); continue }
+          sub(/^\*\*[0-9]+\.[0-9]+\*\*[[:space:]]*/, "", t)
+          sub(/^\*\*[^*]+\*\*[[:space:]]*:[[:space:]]*/, "", t)   # an owner prefix is not the verb
+          if (t ~ /\]\(/) print "  holds a link: " substr(t,1,50)
+          bare = t; gsub(/\*|`|\*\*/, "", bare)
+          if (length(bare) > 72) print "  " length(bare) " char.: " substr(bare,1,50)
+          w = t; sub(/[[:space:]].*$/, "", w); gsub(/\*|`/, "", w)
+          if (w !~ /(er|ir|re|oir)$/) print "  not an infinitive: " w
+          # fr-pattern: a definite article before a number names a SET of objects to treat, which
+          # can be split; a bare number is a threshold, which cannot. A ticked task keeps its count.
+          if (open && bare ~ /(les|des|ces|ses) ([0-9]+|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze) /)
+            print "  holds a count, so it can be split: " substr(bare,1,50)
+        }
+      }' "$track" || true)
+    if [ -n "$bad" ]; then
+      say "a row or a task is out of form in $(basename "$track") — four columns; a task is numbered, opens on an infinitive, holds no link, no count, at most 72 characters:
+$bad"
+    fi
+
+    # A chantier folder carries its DETAILS.md — the file that reasons its tasks. Named exactly,
+    # never "a file": a stage folder already holds several, and presence of any proves nothing.
+    # Only a folder whose prefix names an OPEN chantier: a permanent side channel, a dead chantier
+    # and a folder that predates the numbering all carry none, and demanding one there invents work.
+    open_re=$(printf '%s\n' "$nums" | sed '/^$/d' | awk '{printf "%03d\n", $0}' | sort -u | paste -sd'|' -)
+    missing=$(cd "$ws" && for d in WIP/*/; do
+      p=${d#WIP/}; p=${p%%--*}
+      printf '%s' "$p" | tr '-' '\n' | grep -qE "^(${open_re})$" || continue
+      [ -f "$d/DETAILS.md" ] || printf '  %s\n' "$d"
+    done 2>/dev/null || true)
+    [ -n "$missing" ] && say "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
+$missing"
+    # The detail column carries a LINK, or the DASH that declares there is nothing to point at yet.
+    # A frozen chantier has no folder, and an empty one invented for the rule reads as a lost folder.
+    nodetail=$(awk -F'|' '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        d = $5; gsub(/^[[:space:]]+|[[:space:]]+$/, "", d)
+        if (d !~ /\]\(/ && d != "—") print "  " substr($2, 1, 20) " → " substr(d, 1, 40)
+      }' "$track" || true)
+    if [ -n "$nodetail" ]; then
+      say "a chantier row points nowhere in $(basename "$track") — a link, or the dash saying there is nothing yet:
+$nodetail"
+    fi
+
+    tasks=$(awk -F'|' '
+      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
+        n = split($4, seg, "<br>")
+        for (i = 1; i <= n; i++) if (match(seg[i], /\*\*[0-9]+\.[0-9]+\*\*/)) print substr(seg[i], RSTART + 2, RLENGTH - 4)
+      }' "$track" | sort -u || true)
+
+    # A DETAILS.md reasons the tracking doc's tasks, so it names ONLY numbers that doc still carries
+    # — a task deleted there leaves a section reasoning nothing, and a renumbering leaves it lying.
+    # Read from the START of a heading: further in, a number is a citation (`arXiv:2603.00539`).
+    cited=$(cd "$ws" && for f in WIP/*/DETAILS.md; do
+      [ -f "$f" ] || continue
+      awk -v f="$f" '
+          /^## / {
+          t = substr($0, 4)
+          while (match(t, /^[0-9]+\.[0-9]+/)) {
+            print substr(t, 1, RLENGTH) " " f
+            t = substr(t, RLENGTH + 1)
+            if (t ~ /^[[:space:]]*·/) sub(/^[[:space:]]*·[[:space:]]*/, "", t); else break
+          }
+        }' "$f"
+    done || true)
+    orphan=$(printf '%s\n' "$cited" | sed '/^$/d' | while read -r n f; do
+      printf '%s\n' "$tasks" | grep -qxF "$n" || printf '  %s reasoned in %s\n' "$n" "$f"
+    done || true)
+    if [ -n "$orphan" ]; then
+      say "a DETAILS.md reasons a task the tracking doc does not carry — it is a second backlog, and the stale one gets read first:
+$orphan"
+    fi
+    read_form=", task form, detail column, $(printf '%s\n' "$cited" | sed '/^$/d' | wc -l | tr -d ' ') reasoned task(s)"
   fi
+
+  # A folder holding nothing is worse than none: it reads as a folder something was lost from.
+  # And every folder is prefixed with the chantier number it serves, on three digits, so a listing
+  # sorts by chantier — `000` where the number is impossible, which the July archives predate.
+  # Emptiness is asked of GIT, not of the disk: a `.DS_Store` the Finder drops is ignored by the
+  # neighbour and invisible to a commit, yet it makes an emptied folder look inhabited.
+  empty=$(cd "$ws" && for d in WIP/*/; do
+    [ -d "$d" ] || continue
+    git ls-files --cached --others --exclude-standard -- "$d" 2>/dev/null | grep -q . || printf '  %s\n' "$d"
+  done || true)
+  [ -n "$empty" ] && say "a WIP folder holds nothing — it reads as one something disappeared from:
+$empty"
+  unprefixed=$(cd "$ws" && for d in WIP/*/ archives/*/; do
+    [ -d "$d" ] || continue
+    b=${d%/}; b=${b##*/}
+    printf '%s' "$b" | grep -qE '^[0-9]{3}(-[0-9]{3})*--' || printf '  %s\n' "$d"
+  done || true)
+  [ -n "$unprefixed" ] && say "a stage folder carries no chantier number — three digits, then '--':
+$unprefixed"
+  # `|| true`: a workspace with neither directory — every generated one — makes `ls` fail, and
+  # pipefail would then kill this script with no verdict at all, which is how it was caught.
+  read_folders=", $(cd "$ws" && ls -d WIP/*/ archives/*/ 2>/dev/null | wc -l | tr -d ' ' || true) stage folder(s) named and non-empty"
 
   # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
   # empty boxes — and an archive only while UNCOMMITTED: a committed one is immutable, and ten of
@@ -125,10 +265,10 @@ $stale"
   closing=$(cd "$ws" && git ls-files --others --exclude-standard -- '*archives/*.md' 2>/dev/null || true)
   watched=$(printf '%s\n%s\n' "$pledged" "$closing" | sed '/^$/d' | sort -u)
   if [ -n "$watched" ]; then
-    # fr-pattern: the documents it reads are French. A leftover DECLARES itself — an infinitive
-    # opening a bullet would match half the prose (measured: verify-workspace.md).
+    # A leftover DECLARES itself, and it declares itself with the MARK the tracking doc gives a task.
+    # A turn of phrase is met inside a quotation as readily as inside an instruction (verify-workspace.md).
     open_work=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
-      | xargs -0 grep -nEi '(rest(e|ent) (encore )?à |^[[:space:]]*[-*] \[ \])' 2>/dev/null \
+      | xargs -0 grep -nE '(⬜|^[[:space:]]*[-*] \[ \])' 2>/dev/null \
       | cut -c1-120 || true)
     [ -n "$open_work" ] && say "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
 $open_work"
@@ -136,5 +276,5 @@ $open_work"
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

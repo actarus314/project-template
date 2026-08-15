@@ -11,14 +11,25 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Have a stage's detail file point at the settled fact or trap its tasks touch**, where both files were read only at the closure: an objection settled a week earlier brought a design down, and was found again only while closing it.
+- **State that a subagent's mandate is given once, in its prompt**, widening one in flight being indistinguishable from a prompt injection: of five agents treated that way, the one that refused and stopped had the right default.
+- **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
+- **Refuse a count inside an open task**, which goes false the moment the work advances and only ticks when all of it is done: a set that can be treated one at a time gets split, while a threshold keeps its number and a ticked task keeps its count.
+- **Refuse a chantier row that is not four columns**, one missing pipe having been enough to put a task where no rule could reach it — unnumbered, unmeasured, and about to make the next honest commit fail.
+- **Refuse a chantier row pointing nowhere**, a stage folder holding nothing, and one carrying no chantier number: three digits then `--`, so a listing sorts by chantier and an empty folder never reads as one something was lost from.
+- **Refuse a `DETAILS.md` reasoning a task the tracking doc no longer carries**, which is the second backlog the method forbids — and it is the stale one that gets read first.
+- **Refuse a chantier folder with no `DETAILS.md`**, the file that reasons its tasks — named exactly, since a folder already holds several and the presence of any proves nothing.
+- **Refuse a chantier number given twice**, whether the other holder is open or already closed: numbering the archive folders turned the union into a folder listing, where reading closed chantiers out of prose had been tried and dropped. It found two live reuses.
 - **Make the Release note a WRITTEN one**, where it repeated the changelog it links to and ran to 10 606 characters for `v1.6.0`: a short paragraph, the highlights, then two links — the version's entries frozen at the tag, and its commits.
 - **Drop the pull-request checklist**, whose five boxes were ticked by whoever wrote the change and attested to nothing `check.sh` does not block on.
 - **Require an isolated worktree for `workspace/` too**, where the concurrent-work rule covered only `repo/`: the neighbour holds the tracking doc both sessions append to, carries no remote, and so has no server-side net that could ever see the collision.
 - **Refuse a check called outside `check.sh`**, where only that file clears the inherited git environment: called directly, a check reads whatever repository the environment names, and 10 of the 22 then answer about the wrong one — 8 while staying green on a false count.
+- **Warn, at the sealing step, that a branch opened before it lands its entries in the version already published**: the two changelog headings sit one line apart, so a three-way merge reports nothing and delivers them twice.
 - **Seal the version BEFORE tagging it, where the runbook tagged first**: every tag captured a CHANGELOG and a plugin manifest still one version behind, and `main` stayed red a whole pull-request cycle while the plugin announced an update that pulling it would not deliver.
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
 ### Fixed
+- **Stop a quoted rule from reading as open work in `workspace/`**: a leftover is recognised by the mark the tracking doc gives a task, never by a turn of phrase — which was met inside a quotation as readily as inside an instruction, and blocked three commits in one day.
 - **Stop the runbook from prescribing a Release note that publishes empty**, its command omitting the written text on stdin while it and the method still described the generated note they no longer produce.
 - **Stop a git hook's inherited `GIT_DIR` from capturing the generator and the door**: absolute inside a worktree, it outlived every `cd`, wrote two commits onto the caller's branch, flipped its `core.bare`, and had a generated project's checks judge the wrong tree.
 - **Stop an inherited `GIT_INDEX_FILE` from having the checks report on the wrong repository**: absolute as soon as a commit is partial, `git commit -a` being enough and no worktree needed, it survived `git -C` — and 11 of the 22 house checks read this index while judging the neighbour.
