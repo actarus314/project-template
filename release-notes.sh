@@ -34,7 +34,7 @@ fi
 
 if [ -n "$body" ]; then printf '%s\n\n' "$body"; fi
 
-# 🔴 Pinned to the TAG, no anchor: at that point the entries lead the file, under `Unreleased`.
+# 🔴 Pinned to the TAG, no anchor: the sealed heading leads the file, and a tagged file cannot rot.
 printf '**What changed, entry by entry**: https://github.com/%s/blob/%s/CHANGELOG.md\n' "$REPO" "$TAG"
 if [ -n "$PREV" ]; then
   printf '**Every commit in this version**: https://github.com/%s/compare/%s...%s\n' "$REPO" "$PREV" "$TAG"

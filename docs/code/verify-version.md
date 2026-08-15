@@ -6,6 +6,12 @@
 
 That the tag is the single source, and why, belong elsewhere. **What this script owns is the consequence**: everything able to READ the tag does so, so the only possible drift sits in the places that must carry a COPY by their nature — and those three are exactly what it compares: the CHANGELOG heading, each shipped script's own `--version` answer, and the plugin manifest.
 
+## Why one untagged heading is AMBER, and two are red
+
+RUNBOOK §3 seals before tagging, so the newest heading has no tag for one command's length. Comparing it to the newest tag made that state red — which forced the old order, and left every tag carrying a manifest one version behind.
+
+**Existence is the oracle, and no version is compared to another**: each heading is asked whether `refs/tags/v<heading>` exists. At most one may be missing, and it must be the newest — two means a sealed version never got tagged. No threshold, and no semver comparator to ship everywhere.
+
 ## Each shipped script must print the version
 
 DERIVED, never written, and with NO extension filter: what git tracks as EXECUTABLE, whatever the language. Filtering on `*.sh` would presume the project is written in shell, which this template travels far past.

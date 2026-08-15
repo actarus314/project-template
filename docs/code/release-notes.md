@@ -20,9 +20,9 @@ So this script takes the written half on **stdin** and appends the half that is 
 
 ## 🔴 The changelog link points at the TAG, and carries no anchor
 
-RUNBOOK §3 tags **before** sealing. At the instant a note is published there is no `## [X.Y.Z]` heading yet: the entries sit under `Unreleased`, at the top of the file, so opening it at the tag lands on them.
+RUNBOOK §3 seals **before** tagging, so at the instant a note is published the heading `## [X.Y.Z]` exists and leads the file. The bare link lands on it either way — which is why the inversion changed nothing here, only the reason.
 
-An anchor would name a heading that does not exist yet; one aimed at a branch would rot the day a heading changes — **silently, no check reading a link that lives in a release rather than a versioned file.** Pinned to the tag, that file can never change again.
+The anchor stays off for the reason that outlived the order: one aimed at a branch would rot the day a heading changes — **silently, since no check reads a link that lives in a release rather than in a versioned file.** Pinned to the tag, the file can never change again, so the link cannot rot at all.
 
 ## Empty stdin prints the links alone, and says so
 
