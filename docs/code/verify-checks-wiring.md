@@ -1,5 +1,11 @@
 # `checks/verify-checks-wiring.sh` — why it is written this way
 
+## Why a call bypassing the door is a fault, when nothing makes one today
+
+Five git variables are wiped by the runner before anything starts, so a control reached that way judges the tree it sits in. Bypassed, it inherits them and reports on whichever tree they point at — seen on 10 of the 22, 8 of which stayed green while publishing a wrong count.
+
+Exactly one bypass exists, `commit-msg` → `verify-commit-form.sh`, and it is harmless: that one opens no index. This part therefore protects a premise instead of mending anything — the option it replaces was that same wiping duplicated across 28 travelling files. Matching happens in **command position**, so a path sitting in prose, or passed to `cp`, is not one.
+
 > Convention: [`README.md`](README.md).
 
 ## The checks are declared, and the DOOR that runs them is where it belongs
