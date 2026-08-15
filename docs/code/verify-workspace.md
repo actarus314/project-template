@@ -42,7 +42,7 @@ A number identifies a chantier for good: an archive written today must still res
 
 🔴 **It had already broken twice, found by hand**: two July folders claim numbers the project later reassigned, and one number named a closed chantier and an open one at once. **It is read from the FIRST cell of a table row, never from prose** — a number in a sentence is a reference, not a claim to it.
 
-⚠️ **It compares OPEN rows only, and the verdict says `duplicates only`.** Extending it to closed chantiers was written and dropped: archives state coverage in prose, one such sentence marking three OPEN chantiers as closed and another saying a chantier *is not* closed. **What closes that gap is a declaration, not a cleverer pattern** — and prefixing every archive folder with its number, done since, is exactly that declaration.
+⚠️ **Reading closed chantiers out of PROSE was written and dropped**: one archive sentence marks three OPEN chantiers as closed, another says a chantier *is not* closed. **What closed the gap is a declaration** — every archive folder now carries its numbers in its prefix, so the union is a folder listing, and `000` claims nothing. It found the two live reuses left: one certain, one whose number no archive ever wrote down.
 
 ## The FORM of a row, and of a task
 

@@ -133,7 +133,18 @@ $stale"
       say "two open chantiers share a number in $(basename "$track") — a number is never reused, or an archive pointer stops resolving:
 $(printf '%s\n' "$dup" | sed 's/^/  /')"
     fi
-    read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s), duplicates only"
+    # The CLOSED numbers, read from the archive folder prefixes — the declaration this half was
+    # missing, and the reason it could only compare open rows to each other. `000` names a folder
+    # that predates the numbering and claims nothing, so it drops out.
+    closed=$(cd "$ws" && ls -d archives/*/ 2>/dev/null | while read -r d; do
+      b=${d#archives/}; printf '%s\n' "${b%%--*}" | tr '-' '\n'
+    done | sed 's/^0*//' | grep -v '^$' | sort -u || true)
+    reused=$(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | comm -12 - <(printf '%s\n' "$closed") || true)
+    if [ -n "$reused" ]; then
+      say "an open chantier reuses a number an archive already closed — a pointer written today stops resolving:
+$(printf '%s\n' "$reused" | sed 's/^/  /')"
+    fi
+    read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s) against $(printf '%s\n' "$closed" | sed '/^$/d' | wc -l | tr -d ' ') closed in archive prefixes"
 
     # The FORM of a row and of a task, each rule binary. A row has FOUR columns — one missing pipe
     # desynchronises every field, and the task past it is judged by nothing at all. A task opens on a
