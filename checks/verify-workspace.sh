@@ -13,11 +13,15 @@ fi
 
 ws=../workspace
 # An absent neighbour and a clean one produce the same empty output — said out loud on purpose,
-# since this is the one check whose whole reason to exist is looking over there (verify-workspace.md).
+# since this is the one check whose whole reason to exist is looking over there.
 [ -d "$ws" ] || { echo "  (no $ws beside this repo — nothing to check)"; exit 0; }
 
 fail=0
 not_read=""
+# A line QUOTING what a rule below matches carries this marker and is skipped. Without it a document
+# cannot document itself — writing what the guard looks for is enough to trip it (verify-workspace.md).
+SELF='<!-- workspace-self -->'
+exempt=0
 say() { echo "✗ workspace/: $1" >&2; fail=1; }
 # A verdict on the NEIGHBOUR's local config, which no commit here can repair and which this
 # repository never receives through a diff — blocking on it stops the work in repo/ for a fault
@@ -103,7 +107,8 @@ else
   else
     # Marks only at the START of a cell — elsewhere it's prose quoting the rule, not a mark
     # (incident: verify-workspace.md).
-    stale=$(awk '
+    stale=$(awk -v self="$SELF" '
+      index($0, self) { next }
       /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }
       inside && /^\|/ && /\|[[:space:]]*(✅|✔|☑|~~|LIVRÉ|LIVRE|DONE|FAIT|TERMINÉ|TERMINE|CLOS)/ { print NR ": " substr($0, 1, 72) }   # fr-pattern: the doc it reads is French
     ' "$track" || true)
@@ -117,7 +122,8 @@ $stale"
     # already stopped: two numbers freed in July were handed out again in August, before the rule
     # existed. Read from the FIRST cell of a table row, never from prose: a number in a sentence is
     # a reference, not a claim to the number. Why only same-section duplicates: verify-workspace.md.
-    nums=$(awk '
+    nums=$(awk -v self="$SELF" '
+      index($0, self) { next }
       /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         if (match($0, /\*\*[0-9]+(\.[0-9]+)?\*\*/)) print substr($0, RSTART + 2, RLENGTH - 4)
@@ -133,7 +139,8 @@ $(printf '%s\n' "$dup" | sed 's/^/  /')"
     # opens on a mark and a number, then an infinitive verb; it holds no link and no more than 72
     # characters — the commit-subject limit, since a subject and a task are the same object. What is
     # NOT here is "no retelling", which is a judgement. Why 72 and not a measured cap: verify-workspace.md.
-    bad=$(awk -F'|' '
+    bad=$(awk -F'|' -v self="$SELF" '
+      index($0, self) { next }
       /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         row = $0; n = split($4, seg, "<br>")
@@ -169,6 +176,7 @@ $bad"
     [ -n "$missing" ] && say "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
 $missing"
     read_form=", task form"
+    exempt=$((exempt + $(grep -cF -- "$SELF" "$track" 2>/dev/null || true)))
   fi
 
   # An OPEN action outside the tracking doc. Declared files only — a checklist legitimately carries
@@ -182,16 +190,19 @@ $missing"
   closing=$(cd "$ws" && git ls-files --others --exclude-standard -- '*archives/*.md' 2>/dev/null || true)
   watched=$(printf '%s\n%s\n' "$pledged" "$closing" | sed '/^$/d' | sort -u)
   if [ -n "$watched" ]; then
-    # fr-pattern: the documents it reads are French. A leftover DECLARES itself — an infinitive
-    # opening a bullet would match half the prose (measured: verify-workspace.md).
+    # A leftover DECLARES itself, and it declares itself with the MARK the tracking doc gives a task.
+    # A turn of phrase is met inside a quotation as readily as inside an instruction (verify-workspace.md).
     open_work=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
-      | xargs -0 grep -nEi '(rest(e|ent) (encore )?à |^[[:space:]]*[-*] \[ \])' 2>/dev/null \
-      | cut -c1-120 || true)
+      | xargs -0 grep -nE '(⬜|^[[:space:]]*[-*] \[ \])' 2>/dev/null \
+      | grep -vF -- "$SELF" | cut -c1-120 || true)
     [ -n "$open_work" ] && say "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
 $open_work"
     read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
+    marked=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
+      | xargs -0 grep -hoF -- "$SELF" 2>/dev/null | wc -l | tr -d ' ' || true)
+    exempt=$((exempt + marked))
   fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_pledge:-}, $exempt line(s) exempted by a workspace-self marker — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

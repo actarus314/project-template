@@ -22,6 +22,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
 ### Fixed
+- **Stop a quoted rule from reading as open work in `workspace/`**: a leftover is recognised by the mark the tracking doc gives a task, never by a turn of phrase — which was met inside a quotation as readily as inside an instruction, and blocked three commits in one day.
+- **Let a document explain the guard that reads it**, with a per-line `<!-- workspace-self -->` marker every form rule skips and the verdict counts: without it, writing what a guard looks for was enough to trip it.
 - **Stop the runbook from prescribing a Release note that publishes empty**, its command omitting the written text on stdin while it and the method still described the generated note they no longer produce.
 - **Stop a git hook's inherited `GIT_DIR` from capturing the generator and the door**: absolute inside a worktree, it outlived every `cd`, wrote two commits onto the caller's branch, flipped its `core.bare`, and had a generated project's checks judge the wrong tree.
 - **Stop an inherited `GIT_INDEX_FILE` from having the checks report on the wrong repository**: absolute as soon as a commit is partial, `git commit -a` being enough and no worktree needed, it survived `git -C` — and 11 of the 22 house checks read this index while judging the neighbour.

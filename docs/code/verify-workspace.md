@@ -6,13 +6,7 @@
 
 Why `workspace/` has no remote is stated once, in `AGENTS.md`. What it costs: no remote means no diff-vs-origin, no CI, no pull request, and `check.sh` runs inside `repo/` without looking beside it — missed **four times** before this check existed.
 
-Mechanically verifiable, and only that: it is a git repository; it has NO remote; nothing named like a secret is tracked; one tracking document.
-
-⚠️ NOT verifiable, and never to be promised: whether what the tracking document **says** is true.
-
-## Silence is a choice, not an accident
-
-An absent neighbour and a clean one produce the same empty output. The script says so rather than exiting mute: nothing else looks over there, so a silent no-op reads as "nothing to see" either way.
+*(What it can and cannot verify is the script's own header, and stays there.)*
 
 ## A tracked NAME betrays, not the content
 
@@ -32,16 +26,21 @@ It broke again the same day, four markers deep, unseen: growth read **+24 % agai
 
 ⚠️ **What this cannot do, and must not be read as more than.** It matches a FORM, never a state: an item that is finished, left in place, and never marked at all is invisible to it. The marker is a habit, not a guarantee, and a check rested on a habit inherits its reliability.
 
+🔴 **And it counts only at the START of a cell.** Anywhere else the marker is a MENTION: the very row describing this rule quotes `des lignes passent à ✅`, and a loose match once read that sentence itself as a closed item.
+
 ## The other direction: open work living OUTSIDE the tracking doc
 
 Splitting the tracking doc into neighbours recreates the separate backlog METHODE forbids. **A file DECLARES it holds none**, with `<!-- no-open-work -->`, and only declared files are read — a name would be wrong twice over, METHODE making those names a default and the conformity checklist beside them carrying **58 empty boxes**.
 
 **A closing archive is read while still uncommitted** — the only moment worth looking at, an archive being immutable once committed.
 
-🔴 **The pattern is narrow because the wide one was measured**: anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself. Only a leftover that declares itself matches. 
+🔴 **Two patterns were measured before the mark was used.** Anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself. Narrowing it to a turn of phrase kept the same flaw, since one is met inside a quotation exactly as inside an instruction — **three commits blocked in one day**, the third on the file explaining the guard, and each repaired by rewording rather than by the guard. It matches the **mark** a task carries, `⬜` and the empty checkbox: a mark is declared, a phrase is met.
 
-🔴 **The marker counts only at the START of a cell.** Anywhere else it is a MENTION, not a mark:
-the very row describing this rule quotes `des lignes passent à ✅`, and a loose match once read that sentence itself as a closed item. The same failure the forbidden-command hook pays for with heredocs, and the wiring check pays for with code lines — a literal appears in prose too.
+## A document has to be able to document the guard that reads it
+
+Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction — the same failure the forbidden-command hook pays for with heredocs, and the wiring check with code lines. **A line carrying `<!-- workspace-self -->` is skipped**, by every rule here that reads a line, and the verdict publishes how many.
+
+**The convention is already here**: `verify-tone` has its `ALLOW`, `verify-language` its `fr-pattern`. Per LINE, never per file — a file-wide exemption silences the rules for everything the file goes on to say.
 
 ## The chantier number given twice
 
