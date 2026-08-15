@@ -32,9 +32,10 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 
 🔴 **Two patterns were measured before the mark.** Anything resembling an action returned **7 hits for 1 real leftover**, the other six being the rule quoting itself; narrowing it to a turn of phrase kept the flaw, one being met inside a quotation as readily as inside an instruction — **three commits blocked in one day**, the third on the file explaining the guard. It matches the **mark** a task carries: a mark is declared, a phrase is met.
 
-## A document has to be able to document the guard that reads it
+## A stage file holds no task, so no exemption protects one
 
-Writing what a form rule looks for is enough to trip it, and no rule can tell a quotation from an instruction. **A line carrying `<!-- workspace-self -->` is skipped by every rule here that reads a line — except one.** A stage file holds no task, quoted or not, so no legitimate mark needs protecting and an exemption would reopen the second backlog. The verdict counts what it skipped, inside the section those rules read: a number larger than that is a verdict lying. **The convention is already here** — `verify-tone`'s `ALLOW`, `verify-language`'s `fr-pattern` — and it is per LINE: a file-wide exemption would silence the rules for everything else the file says.
+A per-line exemption marker was built here — writing what a form rule looks for is enough to trip it — then **removed the same day, and the reason is worth keeping**: the rules that would honour it read only the tracking table and the `DETAILS.md` headings, neither of which documents its own rules. Zero lines ever used it.
+➡️ **The one file that does hold marks — a stage file quoting the tracking doc — is where no exemption belongs**: it carries no task, quoted or not, and one there reopens the second backlog. **Naming a mark instead of showing it** costs nothing.
 
 ## The chantier number given twice
 
