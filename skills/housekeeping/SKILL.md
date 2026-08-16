@@ -24,7 +24,7 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 | Question | Where it is read |
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
-| a local branch never pushed — and is its content anywhere on the server? | `checks/verify-orphan-branch.sh` *(the question alone was asked here for weeks, with no verdict attached: nine such branches went unnamed for two months — [`docs/code/verify-orphan-branch.md`](../../docs/code/verify-orphan-branch.md))* |
+| a local branch never pushed, a worktree directory left behind — and is any of it anywhere on the server? | `checks/verify-leftovers.sh` *(the question alone was asked here for weeks, with no verdict attached: nine such branches went unnamed for two months — [`docs/code/verify-leftovers.md`](../../docs/code/verify-leftovers.md))* |
 | a local branch whose remote is GONE — it finished its life | `prune-dead-branches.sh`, below *(never `--merged main`: the script says why)* |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |

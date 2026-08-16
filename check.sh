@@ -475,11 +475,11 @@ if [ -x checks/verify-workspace.sh ]; then
   if reap verify-workspace; then ok "workspace"; else ko "workspace"; fi
 fi
 
-# verify-orphan-branch.sh — a branch that never had an upstream is invisible to the two guards that
-# read branches: one starts from `: gone]`, the other from the current branch only.
-if [ -x checks/verify-orphan-branch.sh ]; then
-  note "verify-orphan-branch.sh — a branch never pushed, and what its content is worth (advisory)"
-  if reap verify-orphan-branch; then ok "orphan branches"; else ko "orphan branches"; fi
+# verify-leftovers.sh — what an agent's work leaves behind, which no other guard reads: a branch
+# that never had an upstream, and a worktree directory git never registered.
+if [ -x checks/verify-leftovers.sh ]; then
+  note "verify-leftovers.sh — a branch never pushed, a worktree directory left behind (advisory)"
+  if reap verify-leftovers; then ok "nothing left behind"; else ko "something left behind"; fi
 fi
 
 # verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project

@@ -30,7 +30,7 @@ done
 gone=$(git branch -vv | grep ': gone]' | awk '{print $1}' | tr -d '*' || true)
 
 # A branch that NEVER had an upstream satisfies neither condition above. Its own test is a THIRD
-# one, reading the CONTENT rather than the server's branch state: docs/code/verify-orphan-branch.md.
+# one, reading the CONTENT rather than the server's branch state: docs/code/verify-leftovers.md.
 orphan=$(git for-each-ref --format='%(refname:short)%09%(upstream:short)' refs/heads/ |
          awk -F'\t' 'NF<2 || $2==""{print $1}' || true)
 [ -n "$gone$orphan" ] || { echo "✓ no dead local branch — read: every local branch's upstream"; exit 0; }
@@ -43,7 +43,7 @@ for b in $gone $orphan; do
   # Which of the two routes this branch came in by decides which proof it owes.
   if printf '%s\n' $orphan | grep -qx "$b"; then
     # `|| true` is load-bearing: without it `set -e` kills the script mid-list on the ordinary case
-    # — no remote ref contains this branch (docs/code/verify-orphan-branch.md).
+    # — no remote ref contains this branch (docs/code/verify-leftovers.md).
     reached=$(for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/ | grep -v '/HEAD$'); do
                 git merge-base --is-ancestor "$b" "$r" 2>/dev/null && { echo "$r"; break; }; done || true)
     if [ -z "$reached" ] && [ -z "$(git cherry "$DEFAULT" "$b" 2>/dev/null | grep '^+' || true)" ]; then

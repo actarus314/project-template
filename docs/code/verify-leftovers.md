@@ -1,6 +1,8 @@
-# `checks/verify-orphan-branch.sh` — why it is written this way
+# `checks/verify-leftovers.sh` — why it is written this way
 
 > Convention: [`README.md`](README.md).
+
+**Two halves under one name, and the name is what they share**: an agent's work leaves things behind, and nothing reads them. A branch that never had an upstream is one; a worktree directory git never registered is the other. They are kept in one check because the question is identical — *does this exist anywhere but here, and is it worth keeping?* — and splitting them would have produced two guards answering it in two ways.
 
 ## The gap it fills, and why neither neighbour could have seen it
 
@@ -43,6 +45,16 @@ Measured at **0,04 s**: `is-ancestor` against every remote-tracking ref is nearl
 The same test arms the deletion: never pushed **and** content reachable → the branch goes, on the proof rather than on the maintainer's memory of having checked.
 
 🔴 **Written first without `|| true` on the substitution that searches the remote refs, the script died mid-list under `set -e`** — the loop's last command fails whenever no remote ref contains the branch, which is the ordinary case for the branch it had just decided to KEEP. It exited non-zero, printed nothing, and examined none of the branches after it. A bench with three branches — one an ancestor, one squashed, one unique — caught it; the check alone would not have, since the two run different code over the same question.
+
+## The second half: the directory, and where the NATIVE tools stop
+
+**Most of this is already handled, and that is why the remainder is narrow.** The harness removes a worktree it created if nothing changed in it; `git worktree prune` drops the entries whose directory is gone. What neither touches is a directory that was **modified** and that git **never registered** — absent from `worktree list`, therefore invisible to `prune`, and left on disk indefinitely.
+
+Measured on this machine: two repositories held such directories — ten in one, two in the other — **1,5 GB together**, the oldest six weeks old, and in both cases every source file inside was already in the server's history. The bulk is `node_modules`, which a backup re-synchronises for as long as it sits there.
+
+⚠️ **`du` runs on the STRAYS only.** It walks the tree, and these directories hold dependency trees; a repository with nothing left behind pays nothing for this half. That is also why the size is reported and not judged — the same reason the age is.
+
+🔴 **`git worktree list`'s first line is the repository ITSELF.** Counting registered worktrees against it printed *"1 registered"* where no live worktree existed at all — a verdict that reads as reassuring while describing nothing. The count is now taken against the directories examined.
 
 ## Why it is advisory
 

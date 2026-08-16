@@ -11,7 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
-- **Name the local branch that never had an upstream, and say whether the server already holds its content** — a category both branch guards were built to miss. Reachable, the closing pass deletes it on that proof; found nowhere, it is kept and named as the only copy there is.
+- **Name what an agent's work leaves behind** — a local branch that never had an upstream, and a worktree directory git never registered, which neither the harness nor `git worktree prune` removes. Content on the server, the pass deletes it; found nowhere, it is kept as the only copy.
 
 ### Changed
 - **Condition preferring a workflow on DECOMPOSABILITY**, where the delegation rule said "as much as possible": coordinated agents sharing files fall from 68,6 % to 30,0 % at four, and at equal token budget a single agent equals every multi-agent architecture measured.
