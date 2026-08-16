@@ -149,21 +149,11 @@ for label, files, weighed_on in GROUPS:
         norm = math.sqrt(sum(x * x for x in v.values())) or 1.0
         vecs.append({w: x / norm for w, x in v.items()})
 
-    # A paragraph LINKING to the other document is the pointer METHODE prescribes, not a copy. But a
-    # name worn by several files names a KIND, not a target, so it must carry its folder to exempt
-    # anything — "a `DETAILS.md`" bought 6 766 exemptions on its own. Measured: verify-echo.md.
-    import os.path
-    shared = {b for b, c in collections.Counter(os.path.basename(f) for f in files).items() if c > 1}
-
-    def points_at(text, other_path):
-        base = os.path.basename(other_path)
-        if base in shared:
-            base = f"{os.path.basename(os.path.dirname(other_path))}/{base}"
-        return f"]({base}" in text or f"](./{base}" in text or f"`{base}`" in text
+    # NOTHING is exempted for carrying a link: a pointer REPLACES the fact, it does not accompany
+    # it, and the exemption protected seven passages that pointed AND restated. Why: verify-echo.md.
 
     # An INVERTED INDEX rather than every pair: two paragraphs sharing no word score zero, so they
-    # are never visited. Headers and the bilingual halves leave the index outright; the pointer test
-    # now runs only on what crosses the dial. Identical result, 4x faster: verify-echo.md.
+    # are never visited, and headers and the bilingual halves leave it outright. 4x faster.
     langs = [language(d[1]) for d in docs]        # computed once per paragraph, never per pair
     postings = collections.defaultdict(list)
     for idx, (_, _, header) in enumerate(docs):
@@ -180,13 +170,7 @@ for label, files, weighed_on in GROUPS:
                 iq, xq = lot[q]
                 acc[(ip, iq) if ip < iq else (iq, ip)] += xp * xq
 
-    pairs = []
-    for (i, j), s in acc.items():
-        if s < THRESHOLD:
-            continue
-        if points_at(docs[i][1], docs[j][0]) or points_at(docs[j][1], docs[i][0]):
-            continue
-        pairs.append((s, i, j))
+    pairs = [(s, i, j) for (i, j), s in acc.items() if s >= THRESHOLD]
     pairs.sort(reverse=True)
     total += len(pairs)
     if pairs:

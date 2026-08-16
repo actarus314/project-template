@@ -29,6 +29,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
 ### Fixed
+- **Stop a link from exempting a restatement**: naming the other document left a paragraph alone, since pointing at a fact is what the method prescribes — but a pointer replaces that fact, it does not accompany it. Seven passages pointed AND restated, one writing a closed list out in full twice.
 - **Stop the growth guard from punishing the smallest document**: 25 % of a 3.6 KB note is a paragraph and a half, against fifteen for a 30 KB one. A 1 500-character floor suspends the ratio below it, and the percentage tightens to 15 %, which holds the big files alone.
 - **Keep comparing every paragraph at every commit, four times faster**: the same-fact check reached its pairs one by one, for 2.2 s of the gate. An inverted index skips those sharing no word — same result, 0.5 s — where narrowing it to touched files would have moved cover to the pull request.
 - **Stop a restatement from buying its exemption by naming a file KIND**: with 26 files called `DETAILS.md`, citing that name exempted 6 766 pairs and a planted restatement went unreported. A shared name carries its folder now; headers, which a convention makes identical, are exempted instead.
