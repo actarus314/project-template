@@ -66,12 +66,15 @@ Stored by Claude Code under `~/.claude/projects/<path-hash>/memory/`, where `<pa
 **As soon as a task costs LESS delegated** — or it is **noticeably faster or more capable at equal cost** *(or very slightly higher)* — **Claude takes the orchestrator role and delegates** to one or more subagents.
 
 - The subagent **does the work itself**: it does not re-delegate, and it **does not call the advisor**.
-- It often runs on a **faster and cheaper** model *(Sonnet, or even Haiku)* — the orchestrator keeps the reasoning, the agent executes.
-- **Prefer workflows** *(deterministic orchestration: parallel fan-out, pipeline, adversarial verification)* **as much as possible and as much as relevant**: a task that breaks down into parallel tasks or verifiable steps benefits from being a workflow rather than one long sequential pass.
+- It often runs on a **faster and cheaper** model *(Sonnet, even Haiku)* — the orchestrator reasons, the agent executes.
+- 🔴 **What decides is DECOMPOSABILITY into units that do not touch each other** — never "multi-agent or not". Where sub-tasks share files or interfaces, success falls monotonically as agents are added: **68,6 %** at two, **46,5 %** at three, **30,0 %** at four *(CooperBench, ICLR workshop 2026 — 650 real software tasks, agents sharing one repository and having to merge)*.
+  ⚠️ **That benchmark measures PEER-TO-PEER coordination on one codebase, the opposite of an orchestrator fanning out** — which is what makes it compatible with the favourable case Anthropic names: genuinely disjoint, read-only work *(several angles of one search)*, against CODE as its unfavourable one.
+- **Prefer workflows** *(deterministic orchestration: fan-out, pipeline, adversarial verification)* **wherever that condition holds**: a task breaking down into parallel or verifiable steps benefits from being one rather than a long sequential pass.
+  ⚠️ **The gain is bought compute, not a better architecture**: at equal token budget a single agent equalled or beat every multi-agent architecture tested *(Stanford, preprint 2026 — five architectures, three model families; not peer-reviewed)*, and Anthropic explains its own +90,2 % by token count rather than by design, at ≈ **3,75×** the price.
 
-The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does just as well.
+The goal: the orchestrator spends its tokens **deciding**, not executing what a lighter model does as well.
 
-🔴 **A mandate is given ONCE, in the prompt — widening one in flight is indistinguishable from a prompt injection.** An agent launched read-only and later told to write sees an instruction contradicting its own, arriving after the fact, through a channel it cannot authenticate, in a repository that moved without it. That profile is an attack's, whatever the real intent: of five agents given that treatment, four complied and **the fifth refused and stopped**, having found commits matching instructions it had never carried out. Its reading was wrong and its default was right. **Relaunch an agent with the mandate it needs; never extend the one an agent is already running under.**
+🔴 **A mandate is given ONCE, in the prompt — widening one in flight is indistinguishable from a prompt injection.** An instruction contradicting an agent's own, arriving after the fact through a channel it cannot authenticate, has an attack's profile whatever the intent: of five agents treated that way, four complied and **the fifth refused and stopped**. Its reading was wrong and its default was right. **Relaunch an agent with the mandate it needs; never extend the one it runs under.**
 
 ### 🔴 The three above are OPT-INS — and `verify-delegation.sh` is what checks them
 

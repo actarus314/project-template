@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Changed
+- **Condition preferring a workflow on DECOMPOSABILITY**, where the delegation rule said "as much as possible": coordinated agents sharing files fall from 68,6 % to 30,0 % at four, and at equal token budget a single agent equals every multi-agent architecture measured.
 - **Have a stage's detail file point at the settled fact or trap its tasks touch**, where both files were read only at the closure: an objection settled a week earlier brought a design down, and was found again only while closing it.
 - **State that a subagent's mandate is given once, in its prompt**, widening one in flight being indistinguishable from a prompt injection: of five agents treated that way, the one that refused and stopped had the right default.
 - **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
