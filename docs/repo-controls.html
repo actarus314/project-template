@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:23f67de85b0e456aa0fea2be457b099cfb0572083d94a41bfa1172c43716e7d3
+  checksum-source-md: sha256:c165f2163b52525a2ce0e51baf07cccf757a8c75e80647a327abacd0c48b2e46
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1860,6 +1860,16 @@
           <td><strong>needs watching</strong> — the trigger is measured (a merged PR loses to a random instant by 11 points; a release wins), but the invariant has never yet been violated: 3 closed stages, 3 archives</td>
           <td class="t">0,05 s</td>
           <td>⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart</td>
+        </tr>
+        <tr>
+          <td class="w"><code>checks/verify-leftovers.sh</code></td>
+          <td>what an agent's work leaves behind — a local branch that <strong>never had an upstream</strong> (reachable from a remote ref: bin it · found nowhere: it is the only copy), and a <strong>worktree directory git never registered</strong>, which neither the harness's own cleanup nor <code>git worktree prune</code> removes</td>
+          <td class="h">local</td>
+          <td>every commit</td>
+          <td class="p">✅</td>
+          <td><strong>needs watching</strong> — the branch CHECKED OUT is exempt, or the check would speak at every commit of ordinary work, which is how a guard gets disarmed. Its second instrument is patch-id, blind to a rebase that resolved a conflict — the error then falls on the safe side, <em>only copy</em>. Sizes and ages are <strong>published and never judged</strong>: no measurement here says when a leftover becomes a problem</td>
+          <td class="t">0,10 s</td>
+          <td>⚠️ advisory — work not pushed yet is ordinary, and only the maintainer tells which is which</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-housekeeping.sh</code></td>

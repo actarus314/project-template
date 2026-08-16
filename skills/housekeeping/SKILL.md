@@ -24,7 +24,7 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 | Question | Where it is read |
 |---|---|
 | anything uncommitted? | `git status --porcelain` |
-| a local branch never pushed? | `git rev-parse --verify origin/<branch>` |
+| a local branch never pushed, a worktree directory left behind — and is any of it anywhere on the server? | `checks/verify-leftovers.sh` *(the question alone was asked here for weeks, with no verdict attached: nine such branches went unnamed for two months — [`docs/code/verify-leftovers.md`](../../docs/code/verify-leftovers.md))* |
 | a local branch whose remote is GONE — it finished its life | `prune-dead-branches.sh`, below *(never `--merged main`: the script says why)* |
 | commits pushed on one subject with no pull request open? | `gh pr list --head <branch>` |
 | commits landed since the tracking doc was last written to | `git log --since <last write to the tracking doc>` |
@@ -41,6 +41,8 @@ What the inventory brings back, per repository *(the code one and the neighbouri
 
 **Why two conditions.** `: gone]` says the remote disappeared, never that the work landed: a branch deleted by hand on the forge prints the same thing, and a local branch is the only copy there is.
 Unmerged, or unanswered, it is kept — the script's own refusals are in its header.
+
+**A THIRD route, for the branch that never had an upstream** — neither condition above can see it, since both start from a remote that once existed. It is deleted on a different proof, and only on it: its content is **reachable** from a remote ref, by ancestry or by patch-id. Found nowhere, it is kept and named as the only copy.
 
 ## Step 2 — the judgement, which stays here
 

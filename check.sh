@@ -475,6 +475,13 @@ if [ -x checks/verify-workspace.sh ]; then
   if reap verify-workspace; then ok "workspace"; else ko "workspace"; fi
 fi
 
+# verify-leftovers.sh — what an agent's work leaves behind, which no other guard reads: a branch
+# that never had an upstream, and a worktree directory git never registered.
+if [ -x checks/verify-leftovers.sh ]; then
+  note "verify-leftovers.sh — a branch never pushed, a worktree directory left behind (advisory)"
+  if reap verify-leftovers; then ok "nothing left behind"; else ko "something left behind"; fi
+fi
+
 # verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
 # this repo generates, and a generated project's code carries comments too.
 if [ -x checks/verify-narrative.sh ]; then
