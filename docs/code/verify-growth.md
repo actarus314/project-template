@@ -7,7 +7,7 @@
 Scripts are NOT here: a comment outgrowing its code is another question.
 Under one roof, gating the pair on prose blinded the script half on a commit touching only scripts.
 
-The rule — a closing stage makes the tracking doc SHRINK — is [`AGENTS.md`](../../AGENTS.md)'s. Being a rule of METHOD rather than of published style, it follows the method into the neighbouring workspace. Archives are cold.
+The rule — a closing stage makes the tracking doc SHRINK — is [`AGENTS.md`](../../AGENTS.md)'s, and `METHODE.md`'s discriminator is what sends it into the neighbouring workspace too. Archives are cold.
 
 ## Two halves, because each repository offers a different event
 
