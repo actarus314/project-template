@@ -4,7 +4,7 @@
 
 @AGENTS.md
 
-**That import is the only reason those rules are read at all.** Measured on 2026-08-06, on a clone of this repository: an agent starting there reported that `AGENTS.md` was *not* in its context — present on disk, and invisible. Nothing loads it on its own.
+**That import is the only reason those rules are read at all** — nothing loads `AGENTS.md` on its own, and [`docs/claude-code-setup.md`](docs/claude-code-setup.md) carries what was measured on a clone to establish it.
 
 This file is therefore **versioned**, and deliberately almost empty: it carries the import, and nothing else. What `AGENTS.md` holds — structure, commands, PR-only discipline, conventions, the do-not-break list — is **not** repeated here, because two copies drift.
 

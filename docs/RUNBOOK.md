@@ -273,7 +273,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 ## 5 · Evolving a live project
 
 **The archetype does not change — a capability is ACQUIRED.** *(`repo-controls.md`, detailed checklists)*
-🔴 **"Capability" is a CLOSED list of three: Pages · published image · staging host.** Adding a tool — a task tracker, a linter, a library — is **not** one, follows none of this section, and starts by checking what already exists *(`METHODE.md`)*.
+🔴 **What counts as a capability is a CLOSED list, and `repo-controls.md` holds it** with the checklists. Anything outside it — a tool, a tracker, a linter — follows none of this section, and starts by checking what already exists *(`METHODE.md`)*.
 
 | Need | Capability | ⚠️ The trap |
 |---|---|---|
@@ -337,4 +337,4 @@ The project carries the version it was born from *(the stamp in its `AGENTS.md`)
 >
 > ⛔ **What the org does NOT bring, despite appearances**: **org rulesets** require **Team** *(explicit banner on `/settings/rules`)* · a **code security configuration** only replaces the repo action from **several** repos onward *(below that, `configure-repo.sh` already does everything)* · the **"Advanced Security"** screen suggests **Dependabot** is behind the paywall: **that is false**, it is free, private included — it is `/settings/security_analysis` that tells the truth.
 
-> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `secrets-and-auth.md`. *(In a word: **revoking is binary; downgrading rights is not** — and a manual removal is forgettable.)*
+> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `secrets-and-auth.md`.

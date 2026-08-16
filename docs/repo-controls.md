@@ -566,10 +566,8 @@ On a private/Free repo, **there is no ruleset at all**. Every control **runs**, 
 | **No direct push to `main`/`develop`** | **`pre-push`** hook — *the substitute for the missing ruleset* | `--no-verify` (**a decision, not an accident**) |
 | **Never merge a red PR** | ❗ **human rule** — verify that **every expected workflow** is `completed / success` *(command below — above all **not** `gh pr checks`)* | nothing stops it server-side |
 
-> 🔴 **`gh pr checks <n>` is UNUSABLE with this standard's PAT**, and so is `gh pr view <n>` alone — the permission both need cannot be granted at all *(`secrets-and-auth.md`)*.
-> **Nothing has to be added to the PAT for that**: the command that replaces them needs only `Actions: read`, already in the matrix.
-> **The command itself is a gesture** *(`RUNBOOK.md` §2)*, and **what counts as green** — the exact set of workflows, and why a missing one is not a green — is [`AGENTS.md`](../AGENTS.md#discipline-pr-only)'s.
-> What belongs HERE is only this: in private, **nothing on the server enforces it**.
+> **Why that command and not the obvious one** is `secrets-and-auth.md`'s, **the gesture** is `RUNBOOK.md` §2's, and **what counts as green** is [`AGENTS.md`](../AGENTS.md#discipline-pr-only)'s.
+> 🔴 What belongs HERE is only this: in private, **nothing on the server enforces any of it**.
 
 The `pre-push` hook **lets branch creation through** (otherwise a fresh repo's first push would be impossible) and **stays active in public** — the server then refuses the same push, but the local message is far clearer. *Defense in depth.*
 

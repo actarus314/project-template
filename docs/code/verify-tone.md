@@ -12,7 +12,7 @@ Shared, like `verify-version.sh`: called by `./check.sh` AND by the CI, so the r
 
 ## Why it stops at `repo/`, and that is not an oversight
 
-The neighbouring `workspace/` is left alone deliberately. The second person is a rule of **published style**, paired with the one imposing English on versioned content — and `METHODE.md` states the discriminator that decides any perimeter: a rule of method travels everywhere, a rule of published style **stops where publication stops**. `workspace/` is deliberately in French and never leaves the machine, so extending the check there would import a rule from a perimeter explicitly exempt from its twin. *(Measured: 23 hits there, mostly quotations — an npm error message, the text of a stub.)*
+The neighbouring `workspace/` is left alone deliberately, and `METHODE.md` holds the discriminator that decides it. Applied here: the second person is published style, paired with the rule imposing English, so this check reaches exactly as far as publication does. `workspace/` never leaves the machine, and extending it there would import a rule from a perimeter its twin already exempts. *(Measured: 23 hits there, mostly quotations — an npm error message, the text of a stub.)*
 
 ## Why `-i`, and why the exceptions keep their case
 
