@@ -2,28 +2,34 @@
 
 > Convention: [`README.md`](README.md).
 
-## What it looks for
+## What it looks for, and why TF-IDF rather than embeddings
 
-Two paragraphs stating the same fact in different words — not a verbatim copy, which METHODE's link rule already catches (measured across the living documents: two lines, both commands quoted where they run). The restatement is what no diff or copy-paste detector can see: two passages carrying the same fact without sharing a sentence.
+Two paragraphs stating the same fact in different words — not a verbatim copy, which METHODE's link rule already catches. The restatement is what no diff can see: the same fact without a shared sentence.
 
-## Why TF-IDF, not embeddings
+Sentence embeddings were tried first and do not work here: a static model flagged six percent of every possible pair, and what it alone reported was noise. The reason is structural, so no tuning reaches it — every document here talks about GitHub, CI and security, and the shared domain vocabulary drowns the signal. Twelve prose linters were examined too; none compares two passages at all. What works instead is cheaper: a restatement reuses the technical vocabulary — `develop`, `staging`, `--artefact` — so it gives itself away without anything needing to understand it.
 
-Sentence embeddings were tried first, and do not work here. A static embedding model run over this corpus flagged 1840 pairs against this file's 45 — six percent of every possible pair — and the pairs it alone reported were noise ("consequences not to miss" matched against "gitleaks on every ref", at 0.94). The reason is structural: every document here talks about GitHub, CI and security, so the shared domain vocabulary drowns the signal. Twelve prose linters were examined too; none compares two passages at all — their "redundancy" is a pleonasm inside one phrase.
+What a link POINTS AT is excluded from that vocabulary, its text kept. A target is a path, and two paragraphs each pointing at a third document scored 0.40 on that document's folder name — `respect`, `regles`, words neither author wrote, where their own prose scored 0.25. Scoring the pointer punished the very shape `METHODE.md` asks for.
 
-What works instead is cheaper: weigh each word by how rare it is across the corpus, and compare paragraphs on that. A restatement reuses the technical vocabulary — `develop`, `staging`, `--artefact` — so it gives itself away without anything needing to understand it.
+## The threshold is a dial, and why it blocks anyway
 
-## The threshold is a dial, not a verdict
+Measured in both directions. A restatement reworded on purpose ("container runtime" for Docker) scored 0.32 — first against what it restated, but under the 0.40 default: below the dial, the rest stays judgement, stated outright. And of 21 pairs at 0.40, 10 were real and the lowest scored 0.40 exactly, so raising it trades 3 real findings for 2 false. What moved instead was the corpus — a skill restates the runbook by design, so that pattern left it. A warning nobody must act on is a warning nobody reads.
 
-Measured, not guessed: a restatement that changes vocabulary on purpose ("container runtime" for Docker) was planted and scored 0.32 — ranked first against the paragraph it restated, but below the 0.40 default. 0.40 reports 20 pairs on this corpus; 0.30 reports 45 and catches that reworded case. Lowering the dial is the only way to see a deliberately reworded restatement — the rest stays judgement, which METHODE says outright.
+## What the weights are anchored to, and why it is not the working tree
 
-## Why blocking
+A score is not a property of two paragraphs but of two paragraphs **against a corpus**, since a word's weight is how rare it is there — so a growing corpus re-judges text nobody touched. Measured: one added document turned a pair between two untouched files from 0.3989 to 0.4012, not a word changed; 42 % more corpus moves a score by 0.078, enough that a commit refused at 0.49 came back green seconds later. A check that depends on what other sessions are typing gets worked around, and one that gets worked around stops being read.
 
-The noise was measured before flipping it: of the 21 pairs reported at the time, 10 were real restatements, 2 were shared vocabulary and 9 were legitimate. The lowest real one scored 0.40 — exactly the default — so raising the dial trades 3 real findings for 2 false ones, and the dial stayed put. What was removed instead was structural: a skill is walked step by step while acting, so it restates the runbook by design and cites it each time — that pattern was excluded from the corpus rather than the threshold moved. A warning nobody must act on is a warning nobody reads.
+The weights therefore come from **HEAD**, while what is JUDGED stays the working tree: the anchor is the instrument, not the object. A neighbour's uncommitted writing then moves no score at all (0.0000, against a new pair under the old anchor), for one `git cat-file --batch` per repository, and no pair crossed the threshold. A commit made here does move the anchor, deliberately: the complaint answered is "refused over what another session wrote", never "the weights never change". Two fallbacks stay on the tree and are worded apart — no commit at all, and nothing committed in this group — one wording for both having once had a committed repository report itself as having none.
+
+## What is exempted, and how narrow each exemption is kept
+
+**Carrying a link exempts nothing.** It used to, on the ground that pointing at a fact is what `METHODE.md` prescribes — but a pointer REPLACES the fact rather than accompanying it, and the exemption protected seven passages that pointed AND restated, one writing a closed list of three capabilities out in full in two documents at once. Measured before removal: no plain pointer is ever reported, sharing too few words with its target, so nothing following the rule is punished. The seven were rewritten.
+
+What IS exempt is a file's **header** — what stands before its first section, which a convention gives every file of a kind alike, so they restate each other by construction: of 201 pairs once surfaced, 200 were headers. A header is only recognised where a first section exists, or a file without one is read as all header.
+
+Every exemption and every group prints with the verdict, whatever it is: an exemption nobody counts grows until it covers the corpus, and a dropped empty group is indistinguishable from one never opened — the verdict once claimed "in either repository" with no neighbour at all.
 
 ## How the document set is built
 
-Detected, never listed. This used to read `docs/*.md` plus three names at the root, which presumes a project keeps its prose exactly where this one does — a project writing into `documentation/`, `guide/` or `wiki/` was invisible to it, entirely and quietly. What is read now is every tracked `.md`, grouped by the project it belongs to (`repo/`, `templates/`, and `workspace/` when the neighbour exists) and compared inside a group only — `templates/` mirrors this repo's own docs on purpose, so its `AGENTS.md` restating this repo's is the template working, not a defect, and a cross-group pair would share no vocabulary anyway.
+Pairs are reached through an inverted index: two paragraphs sharing no word score zero, so they are never visited. Identical result, 2.2 s down to 0.5 s — which is why the check still compares EVERYTHING at every commit. Narrowing it to the touched files would have bought that time by moving cover to the pull request.
 
-An empty group is kept, and reported, on purpose: dropping it here is what made a silent group indistinguishable from a group that was never read — with pairs found elsewhere, `workspace/`
-would simply not appear, and nothing would say whether it had come back clean or had never been opened. The same reasoning holds for the final verdict: it used to claim "in either repository" whether the neighbour was there or not, so an absent `workspace/` read exactly like a `workspace/`
-with nothing wrong in it. Both are printed unconditionally now, whatever the verdict.
+Detected, never listed — a hardcoded list presumes a project keeps its prose where this one does, leaving one that writes into `documentation/` or `wiki/` invisible, quietly. Every tracked `.md` is read, grouped by the project it belongs to (`repo/`, `templates/`, and `workspace/` when the neighbour exists) and compared inside a group only: `templates/` mirrors this repo's docs on purpose, so its `AGENTS.md` restating this one's is the template working.

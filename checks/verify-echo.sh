@@ -19,17 +19,64 @@ import re, subprocess, sys, os, glob, math, collections, pathlib
 
 THRESHOLD = float(os.environ.get("ECHO_THRESHOLD", "0.40"))
 
+# Yields (paragraph, is_header) — a header being what stands before the first section, and only
+# where such a section EXISTS: otherwise a file without one is read as all header, and leaves in
+# silence. Why headers are exempt at all, and what it cost to find out: verify-echo.md.
+def split_paragraphs(raw):
+    raw = re.sub(r"```.*?```", "", raw, flags=re.S)      # code blocks are quoted, not stated
+    blocks = re.split(r"\n\s*\n", raw)
+    sectioned = any(re.match(r"^##+ ", b.strip()) for b in blocks)
+    seen_section = not sectioned
+    for b in blocks:
+        if re.match(r"^##+ ", b.strip()):
+            seen_section = True
+        p = " ".join(b.split())
+        # Short fragments and table rows match each other on structure alone.
+        if len(p) > 180 and not p.startswith("|"):
+            yield p, not seen_section
+
+
 def paragraphs(path):
     try:
         raw = pathlib.Path(path).read_text(encoding="utf-8")
     except Exception:
         return
-    raw = re.sub(r"```.*?```", "", raw, flags=re.S)      # code blocks are quoted, not stated
-    for p in re.split(r"\n\s*\n", raw):
-        p = " ".join(p.split())
-        # Short fragments and table rows match each other on structure alone.
-        if len(p) > 180 and not p.startswith("|"):
-            yield p
+    yield from split_paragraphs(raw)
+
+
+# The WEIGHTING is read from HEAD; what is JUDGED stays the working tree. The anchor is the
+# instrument, not the object — a neighbour's uncommitted writing moved a score by 0.078, enough to
+# refuse a commit over what someone else was typing, and moves it by 0.0000 here. Why: verify-echo.md.
+def head_paragraphs(root="."):
+    names = subprocess.run(["git", "-C", root, "ls-tree", "-r", "--name-only", "HEAD"],
+                           capture_output=True, text=True)
+    if names.returncode != 0:                            # a repository with no commit yet
+        return None
+    files = [f for f in names.stdout.split("\n") if f.endswith(".md") and not SKIP.search(f)]
+    if not files:
+        return None
+    blobs = subprocess.run(["git", "-C", root, "cat-file", "--batch"],
+                           input="\n".join(f"HEAD:{f}" for f in files).encode(),
+                           capture_output=True).stdout   # BYTES: the sizes git prints are bytes
+    out, pos = [], 0
+    for f in files:
+        head = blobs.index(b"\n", pos)
+        fields = blobs[pos:head].split()
+        if len(fields) < 3:                              # `<sha> missing` — nothing to weigh
+            pos = head + 1
+            continue
+        size = int(fields[2])
+        path = f"{root}/{f}" if root != "." else f
+        # A header WEIGHS like any other text — it is corpus. It is only barred from being COMPARED.
+        out += [(path, p) for p, _ in split_paragraphs(blobs[head + 1:head + 1 + size].decode("utf-8", "replace"))]
+        pos = head + 1 + size + 1
+    return out
+
+# Excluded by NATURE, not by content: a CHANGELOG, an archive and a template accumulate
+# repeats by design, and CODE_OF_CONDUCT is third-party text not ours to reword (same
+# reasoning as the licence exception in verify-tone.sh).
+SKIP = re.compile(r"(^|/)(CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|archives?/|\.github/|skills/)")
+
 
 # Documents are detected, never listed, and each repository is compared only against itself
 # (one is English, the other deliberately French — see verify-echo.md).
@@ -38,20 +85,25 @@ def tracked_md(root="."):
                          capture_output=True, text=True)
     if out.returncode != 0:
         return []
-    # Excluded by NATURE, not by content: a CHANGELOG, an archive and a template accumulate
-    # repeats by design, and CODE_OF_CONDUCT is third-party text not ours to reword (same
-    # reasoning as the licence exception in verify-tone.sh).
-    skip = re.compile(r"(^|/)(CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|archives?/|\.github/|skills/)")
     return sorted(f"{root}/{f}" if root != "." else f
-                  for f in out.stdout.splitlines() if f and not skip.search(f))
+                  for f in out.stdout.splitlines() if f and not SKIP.search(f))
 
 # Grouped by the project a document belongs to, compared inside a group only (why: verify-echo.md).
-here = tracked_md()
-GROUPS = [("repo/", [f for f in here if not f.startswith("templates/")]),
-          ("templates/", [f for f in here if f.startswith("templates/")])]
+# A group is split the same way on both sides — the tree it judges, and the HEAD it weighs with.
+def own(files):
+    return [f for f in files if not f.startswith("templates/")]
+
+
+def tpl(files):
+    return [f for f in files if f.startswith("templates/")]
+
+
+here, head_here = tracked_md(), head_paragraphs()
+GROUPS = [("repo/", own(here), None if head_here is None else [d for d in head_here if not d[0].startswith("templates/")]),
+          ("templates/", tpl(here), None if head_here is None else [d for d in head_here if d[0].startswith("templates/")])]
 neighbour = pathlib.Path("../workspace").is_dir()
 if neighbour:
-    GROUPS.append(("workspace/", tracked_md("../workspace")))
+    GROUPS.append(("workspace/", tracked_md("../workspace"), head_paragraphs("../workspace")))
 
 FRENCH = re.compile(r"\b(les|des|une|est|pour|dans|avec|qui|que|sur|pas|plus|du|aux|ses|leur|jamais|sans|selon|chaque|ainsi|donc|cette|cet)\b", re.I)
 def language(text):
@@ -60,48 +112,65 @@ def language(text):
     return "fr" if len(FRENCH.findall(text)) >= 2 else "en"
 
 def words(s):
+    # A link's TARGET is a path, not prose — its folder name scored two paragraphs at 0.40 on words
+    # neither author wrote. The link TEXT stays. Pointer detection reads the raw paragraph, not this.
+    s = re.sub(r"\]\([^)]*\)", "] ", s)
     return [w for w in re.findall(r"[a-zà-ÿ]{4,}", re.sub(r"[`*_#>\[\]()]", " ", s.lower()))]
 
 total = 0
 read_out = []
-for label, files in GROUPS:
-    docs = [(f, p) for f in files for p in paragraphs(f)]
+for label, files, weighed_on in GROUPS:
+    docs = [(f, p, header) for f in files for p, header in paragraphs(f)]
     n = len(docs)
-    read_out.append(f"{label} {len(files)} file(s), {n} paragraph(s)")
+    # Two DISTINCT fallbacks, worded apart: one wording for both once had a committed repository
+    # report itself as having no commit at all. An anchor nobody can see reads as reproducible.
+    tree = [(f, p) for f, p, _ in docs]
+    if weighed_on is None:
+        anchor, anchored = tree, "the working tree (no commit yet)"
+    elif not weighed_on:
+        anchor, anchored = tree, "the working tree (nothing committed in this group yet)"
+    else:
+        anchor, anchored = weighed_on, f"HEAD ({len(weighed_on)} paragraph(s))"
+    # What was exempted is published: an exemption nobody counts grows until it covers the corpus.
+    heads = sum(1 for d in docs if d[2])
+    read_out.append(f"{label} {len(files)} file(s), {n} paragraph(s), weighed on {anchored}, "
+                    f"{heads} header(s) not compared")
     if n < 2:
         continue
-    toks = [words(p) for _, p in docs]
     df = collections.Counter()
-    for t in toks:
-        df.update(set(t))
+    for _, p in anchor:
+        df.update(set(words(p)))
+    weights = len(anchor)
 
     vecs = []
-    for t in toks:
-        tf = collections.Counter(t)
-        v = {w: (1 + math.log(c)) * math.log(n / (1 + df[w])) for w, c in tf.items()}
+    for _, p in tree:
+        tf = collections.Counter(words(p))
+        v = {w: (1 + math.log(c)) * math.log(weights / (1 + df[w])) for w, c in tf.items()}
         norm = math.sqrt(sum(x * x for x in v.values())) or 1.0
         vecs.append({w: x / norm for w, x in v.items()})
 
-    # A paragraph LINKING to the other document is the pointer METHODE prescribes, not a copy — a
-    # good pointer names its target, so excluding it is what lets the rule's own shape go unpunished.
-    import os.path
-    def points_at(text, other_path):
-        base = os.path.basename(other_path)
-        return f"]({base}" in text or f"](./{base}" in text or f"`{base}`" in text
+    # NOTHING is exempted for carrying a link: a pointer REPLACES the fact, it does not accompany
+    # it, and the exemption protected seven passages that pointed AND restated. Why: verify-echo.md.
 
-    pairs = []
-    # Computed ONCE per paragraph, not once per PAIR: the loop below is quadratic.
-    langs = [language(d[1]) for d in docs]
-    for i in range(n):
-        for j in range(i + 1, n):
-            # The README is bilingual by design, and its two halves restate each other on purpose.
-            if langs[i] != langs[j]:
-                continue
-            if points_at(docs[i][1], docs[j][0]) or points_at(docs[j][1], docs[i][0]):
-                continue
-            s = sum(vecs[i][w] * vecs[j].get(w, 0.0) for w in vecs[i])
-            if s >= THRESHOLD:
-                pairs.append((s, i, j))
+    # An INVERTED INDEX rather than every pair: two paragraphs sharing no word score zero, so they
+    # are never visited, and headers and the bilingual halves leave it outright. 4x faster.
+    langs = [language(d[1]) for d in docs]        # computed once per paragraph, never per pair
+    postings = collections.defaultdict(list)
+    for idx, (_, _, header) in enumerate(docs):
+        if header:
+            continue
+        for w, x in vecs[idx].items():
+            postings[(langs[idx], w)].append((idx, x))
+
+    acc = collections.defaultdict(float)
+    for lot in postings.values():
+        for p in range(len(lot)):
+            ip, xp = lot[p]
+            for q in range(p + 1, len(lot)):
+                iq, xq = lot[q]
+                acc[(ip, iq) if ip < iq else (iq, ip)] += xp * xq
+
+    pairs = [(s, i, j) for (i, j), s in acc.items() if s >= THRESHOLD]
     pairs.sort(reverse=True)
     total += len(pairs)
     if pairs:

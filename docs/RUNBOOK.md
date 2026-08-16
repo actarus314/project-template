@@ -233,6 +233,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 > 🔴 **THE SEALING COMES FIRST, THE TAG SECOND — the reverse of what this runbook prescribed until 2026-08-15.**
 > **What the old order cost**: the tag captured a tree whose `CHANGELOG.md` and `.claude-plugin/plugin.json` still carried the **previous** version — **six bumps out of six** lived in a later `Seal` commit — and `main` stayed red on `verify-version` for a whole pull-request cycle, during which the plugin told every install it had an update that pulling `main` would not deliver.
 > ⚠️ **The old order's REASON was real, and it is what changed**: sealing first created a heading whose tag did not exist, and `verify-version.sh` compared the newest heading to the newest tag, so the sealing PR was red and unmergeable *(verified on `v1.1.0`)*. **The check no longer compares the two.** It asks whether each versioned heading **HAS** a tag, and tolerates **exactly one** that does not — the newest, which is the sealing awaiting its tag.
+> ⚠️ **A branch opened BEFORE the sealing lands its entries inside the version already published.** `## [Unreleased]` and `## [X.Y.Z] - <date>` sit one line apart, so a three-way merge has no way to tell which side an entry belongs to — and it reports nothing. Lived twice: caught in pre-flight once, then on a branch whose entries were already on `main` in their rewritten form, where opening blind would have delivered them twice. **Merge `main` in and read the conflict before opening from a branch that is behind.**
 > ⚠️ **Between the merge of the sealing and the tag, the repository is half-published**, and every run says so **in AMBER**: green, and loud. That window is now **one command** long instead of a pull-request cycle. **A SECOND sealing with no tag turns it red** — a version that never got tagged is not a window, and no threshold is involved.
 | 4 | **the maintainer** | ⚠️ **1st release — VERIFY that the ghcr package is pullable, and act ONLY if it is not.** **`configure-repo.sh` runs the anonymous test itself** and only requests the action if it fails — so this step is usually a read. 🔴 **Whether an action is owed depends on the OWNER, not on the repo**: the two defaults, what a `403` costs, and the UI path when it is owed live in `repo-controls.md`, *"Version pin in production"*. |
 | 5 | Claude | Verify that the image is **actually pullable** — `configure-repo.sh` tests it **anonymously**, the way the prod host does. ⚠️ **A GREEN "Publish image" job PROVES NOTHING**: it can succeed while the image stays **unpullable** (private package). |
@@ -272,7 +273,7 @@ gh pr merge --squash                # ONLY if all expected workflows are complet
 ## 5 · Evolving a live project
 
 **The archetype does not change — a capability is ACQUIRED.** *(`repo-controls.md`, detailed checklists)*
-🔴 **"Capability" is a CLOSED list of three: Pages · published image · staging host.** Adding a tool — a task tracker, a linter, a library — is **not** one, follows none of this section, and starts by checking what already exists *(`METHODE.md`)*.
+🔴 **What counts as a capability is a CLOSED list, and `repo-controls.md` holds it** with the checklists. Anything outside it — a tool, a tracker, a linter — follows none of this section, and starts by checking what already exists *(`METHODE.md`)*.
 
 | Need | Capability | ⚠️ The trap |
 |---|---|---|
@@ -336,4 +337,4 @@ The project carries the version it was born from *(the stamp in its `AGENTS.md`)
 >
 > ⛔ **What the org does NOT bring, despite appearances**: **org rulesets** require **Team** *(explicit banner on `/settings/rules`)* · a **code security configuration** only replaces the repo action from **several** repos onward *(below that, `configure-repo.sh` already does everything)* · the **"Advanced Security"** screen suggests **Dependabot** is behind the paywall: **that is false**, it is free, private included — it is `/settings/security_analysis` that tells the truth.
 
-> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `secrets-and-auth.md`. *(In a word: **revoking is binary; downgrading rights is not** — and a manual removal is forgettable.)*
+> **Why the admin PAT is DISPOSABLE rather than downgraded afterward** → `secrets-and-auth.md`.

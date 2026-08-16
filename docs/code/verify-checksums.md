@@ -5,7 +5,7 @@
 ## What a checksum proves, and what it cannot
 
 A matching checksum proves the `.html` was touched after the `.md` changed. Nothing more: an assembly has already passed it GREEN with 29 % of the arriving facts missing — a whole block, sources included, rendered nowhere. Full account:
-`workspace/archives/2026-08-decoupage-par-sujet/SYNTHESE.md`.
+`workspace/archives/009--2026-08-decoupage-par-sujet/SYNTHESE.md`.
 
 ## Why coverage compares tokens, not sentences
 

@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:6d87e49b7984f1d5d8c0ebc05a216751826143b5861cc311477fcbd7b6dd6be3
+  checksum-source-md: sha256:23f67de85b0e456aa0fea2be457b099cfb0572083d94a41bfa1172c43716e7d3
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1330,7 +1330,7 @@
     <p>On a private repo on Free, GitHub would accept a direct push to <code>main</code>, and a red PR can be merged. A discipline that's only written down doesn't exist: it's carried by tools everywhere possible.</p>
     <p><strong>The <code>pre-commit</code> hook</strong> refuses a secret. <strong>The <code>pre-push</code> hook</strong> refuses direct writes to <code>main</code> — it's the missing ruleset, brought back onto the developer's machine. Both can be bypassed with <code>--no-verify</code>: a decision, not an accident.</p>
     <p><strong>Only one point stays human</strong>: never merge a red PR. No hook can intercept it, the merge happens server-side. The rule therefore lives in <code>AGENTS.md</code> and <code>CONTRIBUTING.md</code>, along with its command.</p>
-    <p>⚠️ <strong>This is not <code>gh pr checks &lt;n&gt;</code></strong>, and not <code>gh pr view &lt;n&gt;</code> alone either: the permission both need cannot be granted at all — the derivation belongs to <code>secrets-and-auth.md</code>. What belongs here is only that in private, nothing on the server enforces the rule.</p>
+    <p>⚠️ <strong>Why that command and not the obvious one</strong> belongs to <code>secrets-and-auth.md</code>, <strong>the gesture</strong> to <code>RUNBOOK.md</code> §2, and <strong>what counts as green</strong> to <code>AGENTS.md</code>. What belongs here is only that in private, nothing on the server enforces any of it.</p>
     <p><strong>Nothing to add to the PAT</strong> — the substitute needs only <code>Actions: read</code>, already in the matrix: <code>sha=$(gh pr view &lt;n&gt; --json headRefOid --jq .headRefOid)</code> then <code>gh run list --commit "$sha" --json workflowName,status,conclusion</code>. The <code>--json</code> form targets a field, so no rollup is requested — and it is what makes each workflow's <code>completed / success</code> readable one by one.</p>
     <p><strong>Green ⇔ every expected workflow is <code>completed / success</code></strong> — the exact set, and why a missing workflow is not a green, live in <code>AGENTS.md</code>, “Discipline — PR-only”.</p>
     <p>And CodeQL never ran during all that time — hence semgrep and osv-scanner, which <strong>continuously clear ground</strong> so that at the flip what's left is a residue, not an avalanche.</p>

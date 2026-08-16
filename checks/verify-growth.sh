@@ -14,8 +14,10 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# Adjustable. What this percentage punishes, and the floor it still lacks: verify-growth.md.
-THRESHOLD=${GROWTH_THRESHOLD:-25}
+# Adjustable, and they hold DISJOINT populations: the floor governs documents under 4x itself, the
+# percentage everything above. Why 15, why 1500, what neither catches: verify-growth.md.
+THRESHOLD=${GROWTH_THRESHOLD:-15}
+FLOOR=${GROWTH_FLOOR:-1500}
 COMPARED=0; NEWBORN=0
 
 # The tag gates the repo/ half ALONE. Exiting here would also skip the workspace half, which needs
@@ -50,7 +52,7 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
   ( cd "$dir" && tr '\n' '\0' < "$T/live" | xargs -0 grep -cH '' ) > "$T/now-lines" 2>/dev/null || true
   ( cd "$dir" && tr '\n' '\0' < "$T/live" | xargs -0 wc -c )       > "$T/now-bytes" 2>/dev/null || true
 
-  awk -v label="$label" -v threshold="$THRESHOLD" '
+  awk -v label="$label" -v threshold="$THRESHOLD" -v floor="$FLOOR" '
     function pct(now, before) { return int((now - before) * 100 / before) }
     FNR == 1 { stage++ }
     stage == 1 { live[$0] = 1; next }                                  # live
@@ -75,7 +77,8 @@ compare_tree() {         # <repository> <revision> <label> <ERE selecting the cu
         if (revl[p] <= 0 || revb[p] <= 0) continue
         pl = pct(nowl[p], revl[p]); pb = pct(nowb[p], revb[p])
         worst = (pb > pl) ? pb : pl
-        if (worst >= threshold + 0) {
+        # Below the floor the percentage does not decide — it is harshest on the smallest document.
+        if (worst >= threshold + 0 && nowb[p] - revb[p] >= floor + 0) {
           printf "  ↑ %-32s %4d → %4d lines (%+d%%), %6d → %6d bytes (%+d%%)\n",
                  label p, revl[p], nowl[p], pl, revb[p], nowb[p], pb
           n++
