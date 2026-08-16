@@ -475,6 +475,13 @@ if [ -x checks/verify-workspace.sh ]; then
   if reap verify-workspace; then ok "workspace"; else ko "workspace"; fi
 fi
 
+# verify-orphan-branch.sh — a branch that never had an upstream is invisible to the two guards that
+# read branches: one starts from `: gone]`, the other from the current branch only.
+if [ -x checks/verify-orphan-branch.sh ]; then
+  note "verify-orphan-branch.sh — a branch never pushed, and what its content is worth (advisory)"
+  if reap verify-orphan-branch; then ok "orphan branches"; else ko "orphan branches"; fi
+fi
+
 # verify-narrative.sh — travels with check.sh, like verify-tone.sh: METHODE holds for every project
 # this repo generates, and a generated project's code carries comments too.
 if [ -x checks/verify-narrative.sh ]; then
