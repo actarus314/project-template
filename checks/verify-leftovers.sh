@@ -64,13 +64,13 @@ if [ "${#REMOTES[@]}" -gt 0 ]; then
     echo "  (this branch is the only copy there is: submit it, push it, or drop it deliberately)"
     said=1
   fi
-  branch_read="$(git for-each-ref refs/heads/ | grep -c .) local branch(es) against ${#REMOTES[@]} remote-tracking ref(s), patch-id against $default${skipped:+; $skipped is checked out, left alone}"
+  # `|| true`: `grep -c` exits 1 on zero lines, which under CI is the ordinary state and kills the
+  # script inside the assignment (verify-leftovers.md).
+  branch_read="$(git for-each-ref refs/heads/ | grep -c . || true) local branch(es) against ${#REMOTES[@]} remote-tracking ref(s), patch-id against $default${skipped:+; $skipped is checked out, left alone}"
 fi
 
 # ── Half two: the worktree directory git never registered ────────────────────────────────────────
-# What the NATIVE tools already cover, and where they stop: an unchanged worktree is cleaned up by
-# the harness itself, and `git worktree prune` drops the dead ENTRIES. Neither removes a directory
-# that was modified and was never registered — invisible to `worktree list` and to `prune` alike.
+# Only what the native tools leave: a directory modified AND never registered (verify-leftovers.md).
 WT=.claude/worktrees
 dir_read="no $WT/ here"
 if [ -d "$WT" ]; then
@@ -80,11 +80,9 @@ if [ -d "$WT" ]; then
     [ -d "$d" ] || continue
     n_dirs=$((n_dirs + 1))
     abs=$(cd "$d" && pwd -P)
-    # Counted against the directories, never against `worktree list`, whose first line is the
-    # repository ITSELF: "1 registered" would read as one live worktree where there are none.
+    # Counted against the directories: `worktree list`'s first line is the repo ITSELF.
     printf '%s\n' "$registered" | grep -qxF "$abs" && { n_known=$((n_known + 1)); continue; }
-    # `du` runs on the strays ONLY: it walks the tree, and these hold node_modules. A repository
-    # with nothing left behind pays nothing for this half.
+    # `du` on the strays ONLY: they hold node_modules, and a clean repo must pay nothing here.
     stray="$stray $(basename "$d")($(du -sm "$d" 2>/dev/null | cut -f1) MB)"
   done
   if [ -n "$stray" ]; then
@@ -96,8 +94,7 @@ if [ -d "$WT" ]; then
   dir_read="$n_dirs directory(ies) under $WT/, $n_known of them a live worktree"
 fi
 
-# Sizes and ages are PUBLISHED and never judged: no measurement here says when a dormant branch or a
-# leftover directory becomes a problem, and a threshold picked to look reasonable is refused.
+# Sizes and ages are PUBLISHED, never judged: no measurement here sets a threshold.
 if [ "$said" -eq 0 ]; then
   echo "✓ nothing left behind — read: $branch_read; $dir_read"
 else

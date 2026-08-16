@@ -46,6 +46,8 @@ The same test arms the deletion: never pushed **and** content reachable → the 
 
 🔴 **Written first without `|| true` on the substitution that searches the remote refs, the script died mid-list under `set -e`** — the loop's last command fails whenever no remote ref contains the branch, which is the ordinary case for the branch it had just decided to KEEP. It exited non-zero, printed nothing, and examined none of the branches after it. A bench with three branches — one an ancestor, one squashed, one unique — caught it; the check alone would not have, since the two run different code over the same question.
 
+⚠️ **The same motif bit a SECOND time, in the check, and only under CI** — worth stating because the two forms look nothing alike: `grep -c` exits 1 on zero lines, so `x="$(… | grep -c .)"` kills the script. **Zero local branches is the CI's ordinary state**: `actions/checkout` leaves a detached HEAD on a `pull_request`. Locally there is always a branch, so it passed here and failed there — caught by `check.sh` comparing the declared `# blocking: no` to the real exit code, which is the one reading a declaration cannot do. **Every substitution whose last command may legitimately fail carries `|| true`, and the reason is written where it sits.**
+
 ## The second half: the directory, and where the NATIVE tools stop
 
 **Most of this is already handled, and that is why the remainder is narrow.** The harness removes a worktree it created if nothing changed in it; `git worktree prune` drops the entries whose directory is gone. What neither touches is a directory that was **modified** and that git **never registered** — absent from `worktree list`, therefore invisible to `prune`, and left on disk indefinitely.
