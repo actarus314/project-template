@@ -117,9 +117,9 @@ gh issue list && gh run list
 `repo/.envrc` embeds an **automatic alert**: GitHub returns the end date in the `GitHub-Authentication-Token-Expiration` header, read once a day (cached in `.git/`, never committed). At **J-14**, the terminal prints:
 
 ```
-  /!\  GITHUB_PAT expire dans 12 jour(s), le 2026-10-11.
-      Regenerer (90 j, memes permissions) : https://github.com/settings/personal-access-tokens
-      Puis : remplacer le PAT de ce .envrc + la date dans ../workspace/secrets.md
+  /!\  GITHUB_PAT expires in 12 day(s), on 2026-10-11.
+      Regenerate (90 days, same permissions): https://github.com/settings/personal-access-tokens
+      Then: replace the PAT in this .envrc + the date in ../workspace/secrets.md
 ```
 
 Silent when everything is fine, offline, or if the PAT doesn't expire. Distinct message if the PAT is **already** dead.
