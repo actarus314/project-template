@@ -64,7 +64,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 > **Everything the script LEARNS must FLOW BACK to the doc.** A fact living **only** in the script leaves the doc no longer enough to do the work by hand — wrong by omission.
 > ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
 
-> 🔴 **Where the comment stops and its note starts — both claimed "the constraint", with nothing arbitrating**: **32 pairs** of a script and its note scored as restating each other, up to 0,97.
+> 🔴 **Where the comment stops and its note starts — both claimed "the constraint", with nothing arbitrating**: **32 pairs** of a script and its note scored as restating each other, up to 0.97.
 > **The test is what the sentence CARRIES: a figure, an alternative ruled out, or an incident belongs to the note.** The comment keeps the constraint bare — enough not to break the line while editing it; the note keeps what it took to get there — enough to challenge the design. Neither is a summary of the other.
 
 A comment worth keeping states a constraint that would recur if ignored; one worth deleting recounts the incident, with its date and its evidence. **That narrative goes to the archive** — one line in the code, the story there — so deleting it loses nothing, it puts it in the right place. Both worked through on a real pair: [`docs/code/verify-narrative.md`](code/verify-narrative.md).

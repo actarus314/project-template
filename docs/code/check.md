@@ -25,7 +25,7 @@ Its ground had no user: through a real partial commit, with the variable then wi
 ## The two checks that GENERATE a project run in the parallel lot
 
 They were once run alone, after the lot, on the stated grounds that they generate a whole project.
-Run in sequence they dominated the gate by themselves — 5,9 s of 9,1 s — and nothing required it:
-each works inside its own `mktemp -d`, and the `check.sh` a generated project runs writes to *its* cache, since `CACHE` is a relative path. Moved into the lot, the gate went to 3,95 s with verdicts captured before and after and diffed as identical.
+Run in sequence they dominated the gate by themselves — 5.9 s of 9.1 s — and nothing required it:
+each works inside its own `mktemp -d`, and the `check.sh` a generated project runs writes to *its* cache, since `CACHE` is a relative path. Moved into the lot, the gate went to 3.95 s with verdicts captured before and after and diffed as identical.
 
 **What the loop really excludes is a hook**, and for a reason that has nothing to do with generating anything — `verify-checks-wiring.md` states it, and it is not restated here.

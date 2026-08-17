@@ -15,7 +15,7 @@ None of the three is a path. `verify-travel` was green throughout, and correctly
 
 ## Why the checks have to run THERE
 
-The third defect is the one that generalises. `verify-echo` scores paragraphs with TF-IDF, and the inverse-document-frequency term depends on the size of the corpus: a generated project holds about 200 paragraphs where this repository holds nearly 700, so the same pair of paragraphs scores 0,41 there and below the threshold here. **A threshold calibrated on this corpus does not transport.**
+The third defect is the one that generalises. `verify-echo` scores paragraphs with TF-IDF, and the inverse-document-frequency term depends on the size of the corpus: a generated project holds about 200 paragraphs where this repository holds nearly 700, so the same pair of paragraphs scores 0.41 there and below the threshold here. **A threshold calibrated on this corpus does not transport.**
 
 That is not fixable by picking a better number — the documentary composition of a generated project differs from ours, and differs again between two generated projects. What is fixable is the pair itself: deduplicating at the source corrects both repositories at once, which is the rule anyway.
 
@@ -24,7 +24,7 @@ that kills the script before its own message can be printed. The check was red, 
 
 ## One variant, said out loud
 
-`verify-travel` generates four combinations and pays 1,76 s for it, because a path can be written in a file that only one toolchain ships. A **door** does not work that way: the checks are the same 24 files whatever the toolchain, and every capability only adds content for them to read. So one generation answers the question, and the richest variant is the one that reads the most.
+`verify-travel` generates four combinations and pays 1.76 s for it, because a path can be written in a file that only one toolchain ships. A **door** does not work that way: the checks are the same 24 files whatever the toolchain, and every capability only adds content for them to read. So one generation answers the question, and the richest variant is the one that reads the most.
 
 The variant is named in the output, and in the failure message the exact command to replay it.
 A check that reports a red without saying how to reproduce it gets ignored on the second occurrence.
