@@ -26,7 +26,8 @@ MARKER = "fr-pattern"   # verify-tone.sh's marker: one convention, not two
 QUOTED = re.compile(r'"[^"]*"|`[^`]*`|\'[^\']*\'')
 # A decimal comma is French, carries no accent, and nothing else here reads it. The lookarounds
 # spare what is NOT a number: a regex quantifier {1,3}, a CSS rgba(16,21,28,.06), an argument
-# list substr(s,1,60). Three digits after the comma are a thousands separator, left alone.
+# list substr(s,1,60). Exactly three digits after the comma are left alone — 6,766 and 0,078
+# have the same shape, and no rule here tells them apart.
 DECIMAL = re.compile(r"(?<![\d.{,\-:($])\b\d{1,3},\d{1,2}\b(?![}\d,])")
 # The templates that stay French by rule (standard §1) — their decimals are French too.
 FR_FILE = re.compile(r"^templates/(workspace/|repo/\.envrc$)")
@@ -98,5 +99,6 @@ if dec_hits:
 
 print(f"✓ no accented French and no decimal comma in versioned content — read: {read} text file(s) "
       f"in repo/, {skipped} deliberate line(s) skipped (bilingual halves, workspace heredocs, "
-      f"fr-pattern markers). Unaccented French PROSE is NOT covered; a thousands separator is not judged.")
+      f"fr-pattern markers). Unaccented French PROSE is NOT covered, nor is a comma followed by "
+      f"exactly three digits — a thousands separator and a three-decimal number share that shape.")
 PY

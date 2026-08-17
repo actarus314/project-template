@@ -10,4 +10,4 @@ These notes **travel** into every generated project, so they are written to be r
 
 🔴 **A `blocking:` header describes the EXIT CODE, not the wording** — any non-zero is a KO. Three once printed *(advisory)* while refusing the commit.
 
-🔴 **A check imports nothing outside the standard library**, and all 29 hold that. They run at every commit, in CI, and in every generated project, so a third-party import is a dependency to install in each of them and a second way to skip in silence. **Ruling a tool out on that invariant is firmer than ruling it out on a measured rate**, which the next corpus moves.
+🔴 **A check imports nothing outside the standard library** — the sixteen carrying Python hold to it, the other thirteen are shell alone. They run at every commit, in CI, and in every generated project, so a third-party import is a dependency to install in each of them and a second way to skip in silence. **Ruling a tool out on that invariant is firmer than ruling it out on a measured rate**, which the next corpus moves.
