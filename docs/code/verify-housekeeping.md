@@ -9,7 +9,7 @@ The development admin falling behind the work: commits piling up with nothing wr
 
 THREE events, because there are three ways the pass gets missed. `Stop` catches the drift, turn after turn. `PreCompact` catches the cliff: compaction drops the conversation, and everything decided in it that was never written down goes with it. The pass is worth asking for again there even when the turn-by-turn guard has already asked and been answered — which is why the "asked once" latch below does not apply to it.
 
-🔴 `UserPromptSubmit` catches the third, and it exists because of a measured failure: the skill this routes to lists "je vais clear" among its own triggers, the maintainer wrote exactly that, and THE SKILL DID NOT FIRE. A skill is invoked by a model's judgement, never by a mechanism, and nothing arms that judgement the way `verify-do-not-break` arms a hook's wiring. Here the routing becomes mechanical: the event fires before the prompt is processed, carries `user_input`, and its stdout is one of the three whose stdout Claude actually SEES — so the instruction reaches the model rather than hoping the model reaches for it.
+🔴 `UserPromptSubmit` catches the third, and it exists because of a measured failure: the skill this routes to lists "je vais clear" among its own triggers, the maintainer wrote exactly that, and THE SKILL DID NOT FIRE. A skill is invoked by a model's judgement, never by a mechanism, and nothing arms that judgement the way `verify-do-not-break` arms a hook's wiring. Here the routing becomes mechanical: the event fires before the prompt is processed, carries `user_input`, and its stdout is one of the three whose stdout Claude actually SEES.
 
 It does NOT block: injecting the reminder is enough, and refusing a maintainer's prompt over a regex would be the guard earning its own bypass. The patterns are the strict ones measured across 1756 real human messages — 16 matches, 0,9 %, the same order as the end-of-turn signals. Loose wordings ("en ordre", a bare "clear") matched 82 times, most of them nothing to do with the pass.
 
@@ -29,6 +29,8 @@ S=4 → 11 times   S=5 → 4   S=6 → 3   S=7 → 3   S=8 → 3   S=10 → 2   
 S=6 is the LOWEST threshold at minimum noise: the count bottoms out at 3 from S=6 onward, so 8 or 10 buy no quiet and only arrive later. The 90th percentile of observed backlogs is 4, which puts 6 past ordinary drift and inside the real episodes. Moving it has to be re-measured the same way — on a dense day as well as on the average, since that is the difference the first reading missed.
 
 Other things worth saying — work left uncommitted, a branch never pushed — are REPORTED when the guard speaks, and never trigger it. Uncommitted work mid-session is the normal state of a working tree, and a guard firing on the normal state is one that gets bypassed within a day.
+
+⚠️ **That routing must not order the pass FIRST, and the wording used to.** It read *"invoke the skill now, before answering anything else"* — but the request arrives at the END of a list, after a push, a merge, a release, so the pass ran before the message had been read. More than once. **It names the destination, never the moment.**
 
 ## The sequencer — a step that skips itself, and nothing sees it
 
