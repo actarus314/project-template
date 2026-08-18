@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:8bfd302991d3b8ca5b64cd28f80bd98898276ed7d288ec530dfe51839c4cbb6f
+  checksum-source-md: sha256:1b1891425f31c09d058b38bc2664d8f75171fd0341eee531602ff30d32d8ff68
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1653,12 +1653,12 @@
         </tr>
         <tr>
           <td class="w"><code>checks/verify-language.sh</code></td>
-          <td><strong>accented</strong> French left in published content, <strong>and the French decimal comma</strong> — the language, which its neighbour above never looked at</td>
+          <td><strong>accented</strong> French left in published content, <strong>the decimal comma, and a percent glued to its value</strong> — the language, which its neighbour above never looked at</td>
           <td class="h">repo/ (English stops where publication stops)</td>
           <td>every commit</td>
           <td class="p">✅</td>
-          <td>needs watching — both signals are binary, but the decimal one's anchors are written by hand, to spare a regex quantifier, a CSS colour and an awk argument list. Unaccented French PROSE stays uncovered <strong>deliberately</strong>: swept for, nothing had been left behind, and a detector would cost the checks their one invariant. A comma followed by exactly three digits is not judged: a thousands separator and a three-decimal number share that shape</td>
-          <td class="t">0.09 s</td>
+          <td>needs watching — the three signals are binary, but their anchors are written by hand, to spare a regex quantifier, a CSS colour, an awk argument list and a line reference. <strong>The forms come from a reference, never from the corpus</strong> (SI brochure §5.4.4, NIST SI checklist §15-16), which is what showed the space before % had never been French. Unaccented French PROSE stays uncovered <strong>deliberately</strong>: swept for, nothing had been left behind, and a detector would cost the checks their one invariant</td>
+          <td class="t">0.12 s</td>
           <td>✅</td>
         </tr>
         <tr>

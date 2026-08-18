@@ -106,8 +106,8 @@ out = "\n".join(outputs) if outputs is not None else None
 found, tags = [], []          # tags name the SIGNAL, so the journal says which one to retune
 
 # Signal 1 — a defect asserted in the present tense, about a named file, left untouched.
-# The wide wording ("absent", "mort", "aveugle" in ordinary technical prose) fired on 14% of turns;
-# requiring the assertion form and a file reference brought it to 0.5%.
+# The wide wording ("absent", "mort", "aveugle" in ordinary technical prose) fired on 14 % of turns;
+# requiring the assertion form and a file reference brought it to 0.5 %.
 DEFECT = re.compile(r"(?:^|[.\n])[^.\n]{0,120}\b(?:est|sont|reste|restent|n'est pas|ne sont pas)\s+"
                     r"(?:\*\*)?(faux|périmée?s?|divergentes?|obsolètes?|incohérentes?|mortes?|absente?s?)\b", re.I)  # fr-pattern
 # HANDLED exempts on the WORD, never on proof: it takes the turn at its word that the defect was
@@ -129,8 +129,8 @@ if m and not HANDLED.search(msg) and FILEREF.search(msg) and not edited:
     tags.append("defect-unedited")
 
 # Signal 2 — a counted total that appears in no tool output. Restricted to numbers announced as a
-# total, or produced while a subagent was consulted: any counted number fired on 4.7% of turns,
-# this shape on 0.65%.
+# total, or produced while a subagent was consulted: any counted number fired on 4.7 % of turns,
+# this shape on 0.65 %.
 if out is not None:
     # A French thousands separator is a SPACE, so `5 300` used to be read as the total `300` — the
     # tail of a number, announced as if it were the whole. Groups are matched as one number.

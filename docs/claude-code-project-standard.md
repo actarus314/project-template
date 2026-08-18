@@ -41,6 +41,7 @@ Three things to distinguish clearly:
 > **Remaining exceptions**: the local file templates stay in French — `templates/repo/.envrc`, `templates/workspace/*`. *(`templates/repo/CLAUDE.md` left that list the day it stopped being a local file: it is committed in every generated project.)*
 > They are gitignored in the generated project and never reach GitHub.
 > **The bilingual `README.md` is a different kind of exception — deliberate, not a leftover**: it is the one **versioned** file allowed to carry French, in every project *(`README.md` here, `templates/repo/README.md` in each one generated)* — detail in §15.
+> **Numbers**: the decimal marker is the **point**, and a space separates a value from `%`. SI brochure §5.4.4 leaves the marker to the language — its English text uses the point where its French text uses the comma — while NIST's SI checklist §15 puts a space before a unit symbol and §16 groups digits with a space, **never a comma**. `verify-language.sh` refuses the other three forms.
 > **Tone**: never **2nd person** (`you/your`, `vous/tu/ton`) in versioned content **or in the app UI** — write "the user" / "l'utilisateur" or impersonal phrasing.
 
 ---

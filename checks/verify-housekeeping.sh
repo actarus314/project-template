@@ -87,7 +87,7 @@ if not any(re.search(p, txt, re.I) for p in PAT):
 print("[housekeeping] The maintainer just asked for the closing pass. Invoke the `housekeeping` "
       "skill now, before answering anything else — it carries the checklist and decides what "
       "actually needs writing. Measured: this request is followed by a write to the tracking doc "
-      "9 times out of 9, against 55% for an ordinary moment.")
+      "9 times out of 9, against 55 % for an ordinary moment.")
 sys.exit(7)                      # 7: matched, so the shell below records it
 ' && rc=0 || rc=$?
   if [ "${rc:-0}" = 7 ]; then

@@ -12,6 +12,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Added
 - **Name what an agent's work leaves behind** — a local branch that never had an upstream, and a worktree directory git never registered, which neither the harness nor `git worktree prune` removes. Content on the server, the pass deletes it; found nowhere, it is kept as the only copy.
+- **Refuse a percent glued to its value, and every decimal comma**: a value takes a space before `%`, and digits group by a space, never a comma (SI brochure §5.4.4, NIST §15-16). Neither form was ever French, unlike the comma.
 - **Refuse a French decimal comma in published content**, which carries no accent and which nothing read: 95 of the corpus's decimals were French against 14 English, and the mixture was arriving with new work. A thousands separator stays unjudged, that convention never having been settled.
 
 ### Changed

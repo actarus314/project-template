@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
 # French left in published content — the standard keeps repo/ in English.
-# TWO signals, both binary: the ACCENT, and the DECIMAL COMMA. Unaccented French PROSE is not
-# covered, and the verdict says so.
+# THREE signals, all binary: the ACCENT, the DECIMAL COMMA, and a PERCENT glued to its value.
+# Unaccented French PROSE is not covered, and the verdict says so.
 # 🔴 Four deliberate exemption classes, and why each one exists: docs/code/verify-language.md.
 
 set -euo pipefail
@@ -26,9 +26,13 @@ MARKER = "fr-pattern"   # verify-tone.sh's marker: one convention, not two
 QUOTED = re.compile(r'"[^"]*"|`[^`]*`|\'[^\']*\'')
 # A decimal comma is French, carries no accent, and nothing else here reads it. The lookarounds
 # spare what is NOT a number: a regex quantifier {1,3}, a CSS rgba(16,21,28,.06), an argument
-# list substr(s,1,60). Exactly three digits after the comma are left alone — 6,766 and 0,078
-# have the same shape, and no rule here tells them apart.
-DECIMAL = re.compile(r"(?<![\d.{,\-:($])\b\d{1,3},\d{1,2}\b(?![}\d,])")
+# list substr(s,1,60). A comma between digits is never a thousands separator either: the SI
+# proscribes it outright, so `6,766` is as wrong as `0,07` and both are refused.
+DECIMAL = re.compile(r"(?<![\d.{,\-:($])\b\d{1,3},\d+\b(?![}\d,])")
+# A percent sign glued to its value: NIST §15 puts a space between a value and its unit symbol.
+# Anchored on what precedes the NUMBER, to leave CSS (width:100%), a transform (translateX(-50%))
+# and a git format (%09%(refname)) alone.
+PERCENT = re.compile(r"(?<![:%\-\d.])\d+(?:\.\d+)?%")
 # The templates that stay French by rule (standard §1) — their decimals are French too.
 FR_FILE = re.compile(r"^templates/(workspace/|repo/\.envrc$)")
 
@@ -41,6 +45,7 @@ files = [f for f in out.stdout.splitlines() if f]
 read = skipped = 0
 hits = []
 dec_hits = []
+pct_hits = []
 
 for f in files:
     p = pathlib.Path(f)
@@ -78,6 +83,8 @@ for f in files:
         if not FR_FILE.match(f):
             for m in DECIMAL.finditer(bare):
                 dec_hits.append((f, i, m.group(0), line.strip()[:100]))
+            for m in PERCENT.finditer(bare):
+                pct_hits.append((f, i, m.group(0), line.strip()[:100]))
 
 if hits:
     print(f"✗ accented French in versioned content — {len(hits)} line(s):")
@@ -97,8 +104,16 @@ if dec_hits:
     print("  English writes the decimal point: 0.07 s, not 0,07 s.")
     sys.exit(1)
 
-print(f"✓ no accented French and no decimal comma in versioned content — read: {read} text file(s) "
-      f"in repo/, {skipped} deliberate line(s) skipped (bilingual halves, workspace heredocs, "
-      f"fr-pattern markers). Unaccented French PROSE is NOT covered, nor is a comma followed by "
-      f"exactly three digits — a thousands separator and a three-decimal number share that shape.")
+if pct_hits:
+    print(f"✗ percent sign glued to its value — {len(pct_hits)} occurrence(s):")
+    for f, i, num, line in pct_hits[:20]:
+        print(f"    {f}:{i}  {num}  in  {line}")
+    if len(pct_hits) > 20:
+        print(f"    … and {len(pct_hits) - 20} more")
+    print("  A value and its unit symbol are separated by a space: 25 %, not 25%.")
+    sys.exit(1)
+
+print(f"✓ no accented French, no decimal comma, no glued percent in versioned content — read: "
+      f"{read} text file(s) in repo/, {skipped} deliberate line(s) skipped (bilingual halves, "
+      f"workspace heredocs, fr-pattern markers). Unaccented French PROSE is NOT covered.")
 PY
