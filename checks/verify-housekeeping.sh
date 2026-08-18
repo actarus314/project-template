@@ -84,10 +84,11 @@ PAT = [
 if not any(re.search(p, txt, re.I) for p in PAT):
     sys.exit(0)
 # stdout on this event IS the context the model reads: state the instruction, not a hint.
-print("[housekeeping] The maintainer just asked for the closing pass. Invoke the `housekeeping` "
-      "skill now, before answering anything else — it carries the checklist and decides what "
-      "actually needs writing. Measured: this request is followed by a write to the tracking doc "
-      "9 times out of 9, against 55 % for an ordinary moment.")
+print("[housekeeping] The maintainer asked for the closing pass. The `housekeeping` skill carries "
+      "the checklist and decides what actually needs writing. Read the WHOLE message FIRST, and "
+      "run the pass where the message puts it: the request usually arrives last, after other "
+      "gestures that come before it. Measured: this request is followed by a write to the "
+      "tracking doc 9 times out of 9, against 55 % for an ordinary moment.")
 sys.exit(7)                      # 7: matched, so the shell below records it
 ' && rc=0 || rc=$?
   if [ "${rc:-0}" = 7 ]; then

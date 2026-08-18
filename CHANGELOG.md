@@ -35,6 +35,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Hand over the rule itself on the session's first action**, instead of ordering a re-read of the documents that carry it — a command now counts as much as an edit tool, and a lifecycle gesture still owes its runbook in full, that one being data no short form replaces.
 
 ### Fixed
+- **Stop the closing-pass routing from ordering the pass first**: it said to invoke the skill before answering anything else, but that request arrives at the end of a list, so the pass ran before the message had been read. It names the destination, never the moment.
 - **Show the PAT expiry alert as the template actually prints it**: the doc quoted it in French, the template turned English on 2026-07-31, and a documentation split moved the block on 2026-08-03 without rereading it.
 - **Stop a link from exempting a restatement**: naming the other document left a paragraph alone, since pointing at a fact is what the method prescribes — but a pointer replaces that fact, it does not accompany it. Seven passages pointed AND restated, one writing a closed list out in full twice.
 - **Stop the growth guard from punishing the smallest document**: 25 % of a 3.6 KB note is a paragraph and a half, against fifteen for a 30 KB one. A 1 500-character floor suspends the ratio below it, and the percentage tightens to 15 %, which holds the big files alone.
