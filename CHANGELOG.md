@@ -12,9 +12,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Added
 - **Name what an agent's work leaves behind** — a local branch that never had an upstream, and a worktree directory git never registered, which neither the harness nor `git worktree prune` removes. Content on the server, the pass deletes it; found nowhere, it is kept as the only copy.
+- **Refuse a percent glued to its value, and every decimal comma**: a value takes a space before `%`, and digits group by a space, never a comma (SI brochure §5.4.4, NIST §15-16). Neither form was ever French, unlike the comma.
+- **Refuse a French decimal comma in published content**, which carries no accent and which nothing read: 95 of the corpus's decimals were French against 14 English, and the mixture was arriving with new work. A thousands separator stays unjudged, that convention never having been settled.
 
 ### Changed
-- **Condition preferring a workflow on DECOMPOSABILITY**, where the delegation rule said "as much as possible": coordinated agents sharing files fall from 68,6 % to 30,0 % at four, and at equal token budget a single agent equals every multi-agent architecture measured.
+- **Condition preferring a workflow on DECOMPOSABILITY**, where the delegation rule said "as much as possible": coordinated agents sharing files fall from 68.6 % to 30.0 % at four, and at equal token budget a single agent equals every multi-agent architecture measured.
 - **Have a stage's detail file point at the settled fact or trap its tasks touch**, where both files were read only at the closure: an objection settled a week earlier brought a design down, and was found again only while closing it.
 - **State that a subagent's mandate is given once, in its prompt**, widening one in flight being indistinguishable from a prompt injection: of five agents treated that way, the one that refused and stopped had the right default.
 - **Refuse a task that is out of form in the tracking doc**, where five rules on how a task is written held on discipline alone: it opens on an infinitive verb, carries no link, and stays within the commit-subject limit of 72 characters.
@@ -34,6 +36,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Fixed
 - **Stop the closing-pass routing from ordering the pass first**: it said to invoke the skill before answering anything else, but that request arrives at the end of a list, so the pass ran before the message had been read. It names the destination, never the moment.
+- **Show the PAT expiry alert as the template actually prints it**: the doc quoted it in French, the template turned English on 2026-07-31, and a documentation split moved the block on 2026-08-03 without rereading it.
 - **Stop a link from exempting a restatement**: naming the other document left a paragraph alone, since pointing at a fact is what the method prescribes — but a pointer replaces that fact, it does not accompany it. Seven passages pointed AND restated, one writing a closed list out in full twice.
 - **Stop the growth guard from punishing the smallest document**: 25 % of a 3.6 KB note is a paragraph and a half, against fifteen for a 30 KB one. A 1 500-character floor suspends the ratio below it, and the percentage tightens to 15 %, which holds the big files alone.
 - **Keep comparing every paragraph at every commit, four times faster**: the same-fact check reached its pairs one by one, for 2.2 s of the gate. An inverted index skips those sharing no word — same result, 0.5 s — where narrowing it to touched files would have moved cover to the pull request.
@@ -163,7 +166,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Verify that closing a stage shrank the live tracking doc, instead of checking it against a date.**
   An archive is a directory being created, never a file named inside it; a closure not yet committed is read too.
   The `repo/` half is unchanged and now documented as weak. ([#122](https://github.com/actarus314/project-template/pull/122))
-- **Speed up the commit gate from 9,1 s to 3,95 s, with identical verdicts.**
+- **Speed up the commit gate from 9.1 s to 3.95 s, with identical verdicts.**
   The two checks that generate a whole project to test it now run inside the same parallel batch as the others, instead of afterward; each generates its project in its own temporary directory, so nothing conflicts. ([#120](https://github.com/actarus314/project-template/pull/120))
 - **Require the runbook to be read right before the action it governs, not earlier in the session.**
   An earlier read gives the same false confidence as a current one, without guaranteeing the gesture is still right.
@@ -321,7 +324,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   Three forms were tried and each ruled out; it stays a written convention and stops pretending to be a guard. ([#110](https://github.com/actarus314/project-template/pull/110))
 
 ### Fixed
-- **Correct four statements the documentation made that were no longer true**, each re-measured: a repo called private after it went public, a tool listed at its old path, a gate timed at 2,82 s against 3,65 s, a command missing a precondition. ([#115](https://github.com/actarus314/project-template/pull/115))
+- **Correct four statements the documentation made that were no longer true**, each re-measured: a repo called private after it went public, a tool listed at its old path, a gate timed at 2.82 s against 3.65 s, a command missing a precondition. ([#115](https://github.com/actarus314/project-template/pull/115))
 - **Document the standalone secret-scanning workflow instead of deleting it.**
   A sweep found it referenced nowhere and read as dead code; it is what an adopted repository uses when its own CI has no scan. ([#115](https://github.com/actarus314/project-template/pull/115))
 - **Stop a commented-out line from passing as a wired check.**
@@ -408,27 +411,27 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   An absolute ratio says nothing, since these scripts deliberately carry 28–56 % comment; what is watched is the gap between the two growth rates, which normally stays near zero. ([#91](https://github.com/actarus314/project-template/pull/91))
 
 ### Changed
-- **Make the comment-drift check count in bulk — 1,14 s → 0,53 s.**
+- **Make the comment-drift check count in bulk — 1.14 s → 0.53 s.**
   Four per-file forks become three bulk `git grep` calls per marker family.
   ⚠️ Counts used to key off argument order, which broke when a marker family produced several files or none; every count is tagged now. ([#99](https://github.com/actarus314/project-template/pull/99))
 - **Re-measure all sixteen control durations, as medians of three standalone runs.**
-  Their sum falls from 5,24 s to 3,89 s while gaining a check, and the ranking changes: the echo and growth checks are no longer where the prose said. ([#99](https://github.com/actarus314/project-template/pull/99))
+  Their sum falls from 5.24 s to 3.89 s while gaining a check, and the ranking changes: the echo and growth checks are no longer where the prose said. ([#99](https://github.com/actarus314/project-template/pull/99))
 - **Stop duplicating the git hooks under `templates/`.**
   `init-project.sh` now copies `.githooks/` from the root, like `check.sh`, `open-pr.sh` and `checks/`.
   The old duplicate had already drifted: same behaviour, different wording. ([#99](https://github.com/actarus314/project-template/pull/99))
-- **Make the growth check read both revisions in four calls total, not two per file.** 0,88 s → 0,17 s.
+- **Make the growth check read both revisions in four calls total, not two per file.** 0.88 s → 0.17 s.
   🔴 `git cat-file --batch` looked like the fix and was rejected: its stream mixes headers with raw bytes, so a file missing a trailing newline shifts every object after it. ([#99](https://github.com/actarus314/project-template/pull/99))
-- **Make the version check ask its scripts in parallel — 0,52 s → 0,27 s.**
+- **Make the version check ask its scripts in parallel — 0.52 s → 0.27 s.**
   Each answer lands in its own file rather than a shared pipe, since interleaved writes on a shared pipe can attribute one script's version to another. ([#99](https://github.com/actarus314/project-template/pull/99))
 - **Stop the echo check flagging the very pointer METHODE prescribes.**
   A paragraph that links to another document necessarily shares its vocabulary; such pointers are now excluded, and the French detector no longer misreads a bilingual document's French half as English. ([#96](https://github.com/actarus314/project-template/pull/96))
 - **Make the three advisory checks block instead of warn.**
   A warning nobody must act on is a warning nobody reads.
   The comment-drift check gained a floor in lines beside its percentage gap, and the echo check now excludes `CODE_OF_CONDUCT.md`, third-party text that restates itself by design. ([#96](https://github.com/actarus314/project-template/pull/96))
-- **Make the echo check 7× faster — 1,78 s → 0,25 s, same verdict.**
+- **Make the echo check 7× faster — 1.78 s → 0.25 s, same verdict.**
   It used to detect a paragraph's language once per compared pair inside a quadratic loop; now once per paragraph.
-  The CI gate's floor drops to 3,05 s. ([#96](https://github.com/actarus314/project-template/pull/96))
-- **Correct the control table's durations, off by 1,7× to 4,1×.**
+  The CI gate's floor drops to 3.05 s. ([#96](https://github.com/actarus314/project-template/pull/96))
+- **Correct the control table's durations, off by 1.7× to 4.1×.**
   They were single cold runs on a busy machine.
   They are medians of three now, and the table says so. ([#96](https://github.com/actarus314/project-template/pull/96))
 - **Make a hook declare itself with a `# hook: <event>` header line.**
@@ -470,7 +473,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   A `.linear/` folder read exactly like an empty workspace.
   Every tracked top-level dot-directory is now surfaced by name, minus the editor and forge ones. ([#99](https://github.com/actarus314/project-template/pull/99))
 - **Reconcile two sets of durations in `repo-controls.md` that disagreed.**
-  The per-control table had been re-measured; the prose two sections below had not, and still announced the echo check at its old 1,36 s and the gate at *"about 3,7 s"* where the table already said 3,05 s. ([#98](https://github.com/actarus314/project-template/pull/98))
+  The per-control table had been re-measured; the prose two sections below had not, and still announced the echo check at its old 1.36 s and the gate at *"about 3.7 s"* where the table already said 3.05 s. ([#98](https://github.com/actarus314/project-template/pull/98))
 - **Document the control journal in `repo-controls.md`, not only in the CHANGELOG.**
   `AGENTS.md` names that file as the sole owner of what controls cost.
   It now also states why the two figure sets differ: the table times a check alone, the journal times it inside the parallel lot. ([#98](https://github.com/actarus314/project-template/pull/98))
@@ -526,7 +529,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Make the travel check generate every project shape, not only one.**
   It used to generate a single `--type node` project, leaving three workflow templates unread.
   It now generates one project per toolchain, read from `init-project.sh`, not listed.
-  ⚠️ Real cost: 0,46 s → 1,66 s. ([#94](https://github.com/actarus314/project-template/pull/94))
+  ⚠️ Real cost: 0.46 s → 1.66 s. ([#94](https://github.com/actarus314/project-template/pull/94))
 - **Make the tone check catch the capitalised second person.**
   The capitalised forms at the start of a sentence went untouched while the lowercase ones were caught — and since this check travels, every generated project was equally blind. ([#93](https://github.com/actarus314/project-template/pull/93))
 - **Stop `check.sh` dropping the wiring check's own verdict.**
@@ -590,12 +593,12 @@ Each version links to its GitHub Release, which carries the auto-generated list 
   `git commit --no-verify` remains the way through. ([#88](https://github.com/actarus314/project-template/pull/88))
 - **Add `./check.sh --commit`, running only the checks meant for every commit.**
   A check that reads the tree still reads all of it, even here — narrowing it to the diff would miss a link broken in a file the diff never mentions. ([#88](https://github.com/actarus314/project-template/pull/88))
-- **Cut `check.sh`'s running time by about half (6,25 s to 3,43 s here; 2,08 s for `--commit`).**
+- **Cut `check.sh`'s running time by about half (6.25 s to 3.43 s here; 2.08 s for `--commit`).**
   Most of it was never a check: asking each Python tool its version booted an interpreter just to print a string. ([#88](https://github.com/actarus314/project-template/pull/88))
 - **Stop `configure-repo.sh` from asking GitHub the same question twice.**
   The repository's visibility, its branches and its workflows were each queried twice, though none of them can change while the script runs. ([#88](https://github.com/actarus314/project-template/pull/88))
 - **Run every check under `checks/` in parallel, alongside the external tools, not after them.**
-  Their combined time drops to the slowest one instead of the sum (0,90 s to 0,22 s).
+  Their combined time drops to the slowest one instead of the sum (0.90 s to 0.22 s).
   A missing output is treated as an error, never a silent pass. ([#88](https://github.com/actarus314/project-template/pull/88))
 - **Rebuild `.ci-tools/venv/` automatically once the project directory moves.**
   Moving the directory used to leave every absolute shebang under it pointing nowhere, `pip` included, with no automatic cure. ([#88](https://github.com/actarus314/project-template/pull/88))

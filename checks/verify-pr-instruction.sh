@@ -3,7 +3,7 @@
 # hook: UserPromptSubmit, PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # Pull requests opened with no instruction from the maintainer. It MEASURES, it does not refuse:
 # whether refusing is worth building is the question this instrument exists to answer.
-# The threshold that decides that, and why the old 49% is not the baseline: docs/code/verify-pr-instruction.md.
+# The threshold that decides that, and why the old 49 % is not the baseline: docs/code/verify-pr-instruction.md.
 
 set -euo pipefail
 

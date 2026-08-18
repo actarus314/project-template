@@ -38,7 +38,7 @@ A dormant orphan branch is the case that actually loses work, so *"inactive for 
 
 ## What it costs, and the shape that keeps it cheap
 
-Measured at **0,04 s**: `is-ancestor` against every remote-tracking ref is nearly free, and `git cherry` runs against **one** reference only — the default branch as the server names it (`refs/remotes/origin/HEAD`, then `origin/main`, then `origin/master`). Running patch-id against every remote ref instead is what would make this quadratic on a repository holding many.
+Measured at **0.04 s**: `is-ancestor` against every remote-tracking ref is nearly free, and `git cherry` runs against **one** reference only — the default branch as the server names it (`refs/remotes/origin/HEAD`, then `origin/main`, then `origin/master`). Running patch-id against every remote ref instead is what would make this quadratic on a repository holding many.
 
 ## The third route in `prune-dead-branches.sh`, and the bug the bench found
 
@@ -52,7 +52,7 @@ The same test arms the deletion: never pushed **and** content reachable → the 
 
 **Most of this is already handled, and that is why the remainder is narrow.** The harness removes a worktree it created if nothing changed in it; `git worktree prune` drops the entries whose directory is gone. What neither touches is a directory that was **modified** and that git **never registered** — absent from `worktree list`, therefore invisible to `prune`, and left on disk indefinitely.
 
-Measured on this machine: two repositories held such directories — ten in one, two in the other — **1,5 GB together**, the oldest six weeks old, and in both cases every source file inside was already in the server's history. The bulk is `node_modules`, which a backup re-synchronises for as long as it sits there.
+Measured on this machine: two repositories held such directories — ten in one, two in the other — **1.5 GB together**, the oldest six weeks old, and in both cases every source file inside was already in the server's history. The bulk is `node_modules`, which a backup re-synchronises for as long as it sits there.
 
 ⚠️ **`du` runs on the STRAYS only.** It walks the tree, and these directories hold dependency trees; a repository with nothing left behind pays nothing for this half. That is also why the size is reported and not judged — the same reason the age is.
 
