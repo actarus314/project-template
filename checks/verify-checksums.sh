@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Anti-drift safeguard between a docs/*.md (source of truth) and its hand-crafted docs/*.html.
 #
 # A docs/*.html carrying a `checksum-source-md: sha256:<hash>` header comment declares "I am the
-# view of that .md at THIS hash". No such line -> this file is not concerned, silent (the case for
-# every generated project: none of them ship one of these pairs).
+# view of that .md at THIS hash". No such line -> silent, the case in every generated project.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: claude-code-project-standard.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A path that resolves here but not where a generated project lands — why a grep of the tree can't
 # see it, the measured differential, and why one generation isn't enough: verify-travel.md.
 set -euo pipefail

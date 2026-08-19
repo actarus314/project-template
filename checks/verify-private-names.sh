@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Names that must not appear in a PUBLIC repository — private project names, hosts, people. gitleaks
 # reads token SHAPES and is blind to these by construction. Why the list lives outside the repo, and
 # how to word an entry: docs/code/verify-private-names.md.

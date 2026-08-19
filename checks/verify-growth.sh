@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A curated document that only ever grows — forbidden by METHODE: the hot side SHRINKS when a
 # stage closes. TWO halves, one observable event each:
 #   · repo/       — a .md grown by a percentage since the last release. Weak, and measured so.
@@ -14,9 +14,7 @@ if [ "${1:-}" = "--version" ]; then
   exit 0
 fi
 
-# Adjustable, and they hold DISJOINT populations: the floor governs documents under 4x itself, the
-# percentage everything above. Why 15, why 1500, what neither catches: verify-growth.md.
-
+# Adjustable, DISJOINT populations: the floor governs what is under 4x itself (verify-growth.md).
 # A TAG per rule: it is what reaches the journal, and CHECK_TAGS is absent outside check.sh.
 tag() { [ -n "${CHECK_TAGS:-}" ] && printf '%s\n' "$1" >>"$CHECK_TAGS"; return 0; }
 THRESHOLD=${GROWTH_THRESHOLD:-15}

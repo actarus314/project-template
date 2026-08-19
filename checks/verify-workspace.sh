@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place no other control can see (why: verify-workspace.md).
 # Verifiable only: git repo, no remote, no secret-named file tracked, one tracking system.
 # NOT verifiable, and never to be promised: whether the tracking document's CONTENT is true.

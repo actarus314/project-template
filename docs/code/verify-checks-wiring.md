@@ -35,3 +35,13 @@ A workflow that merely NAMES the door in a comment gates nothing: the step does 
 
 Section 2b already filtered comments before matching, for the same reason and with the reason written down; section 3, which guards the door itself, compared against the whole file text. The asymmetry was found by asking a fresh agent what the repo required when adding a check — it read the rule correctly, and reading the code afterwards showed a commented-out door would satisfy it.
 Both sections now judge code lines only.
+
+## `rule:` — the declaration that gives an armed rule an address
+
+A check enforces a rule; the rule belongs to a rule document, and the note explains what it cost to arrive at the code. Nothing tied the two: a check could refuse a commit for a rule stated in no document at all, leaving whoever was stopped to infer it from the refusal. Measured 2026-08-18 over the thirty armed checks: sixteen had all or part of their rule outside any rule document.
+
+The declaration sits **on the `# blocking:` line**, not on one of its own. A line of its own pushed six headers past the six-line block limit `verify-comment-drift` holds — the guard next door refusing what this one asked for.
+
+🔴 **It names a DOCUMENT, never a path.** `METHODE.md` and the standard do not travel into a generated project, so naming a path under `docs/` would be a pointer dying on landing — and `verify-travel` says so, which is how the first form was caught. What is refused is a check naming **its own note**: `docs/code/` owns no rule, by its own charter.
+
+⚠️ **What this attests is the DECLARATION, never that the text is on the page.** Reading a document to decide whether a rule is really stated there is a judgement, and a guard does not judge. It closes the case where nothing is named at all — which was fourteen checks out of thirty.

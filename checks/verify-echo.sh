@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Flags two paragraphs stating the same fact in different words — not a verbatim copy, which
 # METHODE's link rule already catches elsewhere. Why TF-IDF over embeddings, the threshold's
 # measured limit, and why blocking: verify-echo.md.

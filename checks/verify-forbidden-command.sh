@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hook: PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A PreToolUse hook on Bash: the commands this repo forbids, refused BEFORE they run — only when the
 # verdict is MECHANICAL. Why that is safe, what was measured, and a 4th rule tried and dropped:
 # verify-forbidden-command.md.

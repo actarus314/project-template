@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: claude-code-project-standard.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # French left in published content — the standard keeps repo/ in English.
 # THREE signals, all binary: the ACCENT, the DECIMAL COMMA, and a PERCENT glued to its value.
 # Unaccented French PROSE is not covered, and the verdict says so.

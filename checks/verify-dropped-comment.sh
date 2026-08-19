@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A comment block deleted with nowhere to say where it went. Why it asks for a DECLARATION rather
 # than measuring whether the text reappeared: docs/code/verify-dropped-comment.md
 set -euo pipefail

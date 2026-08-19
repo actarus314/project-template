@@ -12,6 +12,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Added
 - **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
+- **Refuse a check that names no rule document, or names its own note**: every check now declares where the rule it enforces is written, beside what it does with a verdict. The declaration is what is checked — whether the text is really on that page is a judgement, and a guard does not judge.
 - **Refuse a commit subject out of form in the neighbouring workspace too**, where the rule was declared on both repositories and armed on one: no hook passed the message there, and the check's other entry point anchors on an `origin/main` a repository with no remote never has.
 - **Record WHICH rule a check refused on**, where the journal held the control's name alone: one carrying nineteen rules said the same thing whatever bit, so no rule could be shown to have never fired. A single-rule check needs no change — its name is already the tag.
 
