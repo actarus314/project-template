@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Relative markdown links that resolve nowhere, and their anchors — in BOTH repos.
 #
 # A dead link is invisible: the reader lands nowhere and stops following pointers, hardest right

@@ -95,6 +95,9 @@ if declared:
     # PRESENCE is owed by EVERY check, hooks included — the table states the line sits next to
     # `# hook:`. Only the COMPARISON is meaningless for a hook, whose column reads `n/a`. Exempting
     # them from both is what let two checks ship with no declaration at all. (verify-checks-wiring.md)
+    TAG_NAME = r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+"
+    TAG_CALL = re.compile(rf'\btag\s+({TAG_NAME})\b|\btag\(([^)]*)\)|\bsay\s+"({TAG_NAME})"\s+"')
+    TAG_LIT  = re.compile(rf'"({TAG_NAME})"')
     for n in sorted(declared):
         p = pathlib.Path("checks") / f"{n}.sh"
         if not p.exists():
@@ -112,6 +115,25 @@ if declared:
         elif r.group(1).startswith("verify-") or "/" in r.group(1) or not r.group(1).endswith(".md"):
             bad.append(f"{n}.sh declares `# rule: {r.group(1)}`, which is not a rule document: "
                        f"a note or a script explains a rule, it never owns one")
+        # A TAG names the rule that bit, and a check carrying several owes one per rule. The count
+        # is DECLARED and compared to what the code emits, so a rule added to an existing check
+        # cannot arrive nameless — the case this whole undertaking exists to stop repeating.
+        # A tag is kebab-case: the hyphen is what keeps an ordinary word out of the count.
+        emitted = set()
+        for line in src.split("\n"):
+            if line.lstrip().startswith("#"):
+                continue
+            for mm in TAG_CALL.finditer(line):
+                if mm.group(1): emitted.add(mm.group(1))
+                if mm.group(3): emitted.add(mm.group(3))
+                if mm.group(2): emitted.update(TAG_LIT.findall(mm.group(2)))
+        t = re.search(r"^# blocking:.*?\btags: (\d+)", src, re.M)
+        if emitted and not t:
+            bad.append(f"{n}.sh emits {len(emitted)} tag(s) and declares no `tags:` count — "
+                       f"a rule added later then arrives with no name and no home")
+        elif t and int(t.group(1)) != len(emitted):
+            bad.append(f"{n}.sh declares `tags: {t.group(1)}` but emits {len(emitted)}: "
+                       f"a rule was added or removed without saying so")
         m = re.search(r"^# blocking: (yes|no)\b", src, re.M)
         if not m:
             bad.append(f"{n}.sh declares no `# blocking:` line — what it does with a verdict is "

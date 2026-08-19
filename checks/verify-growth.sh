@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A curated document that only ever grows — forbidden by METHODE: the hot side SHRINKS when a
 # stage closes. TWO halves, one observable event each:
 #   · repo/       — a .md grown by a percentage since the last release. Weak, and measured so.

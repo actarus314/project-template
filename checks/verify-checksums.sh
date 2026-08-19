@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Anti-drift safeguard between a docs/*.md (source of truth) and its hand-crafted docs/*.html.
 #
 # A docs/*.html carrying a `checksum-source-md: sha256:<hash>` header comment declares "I am the

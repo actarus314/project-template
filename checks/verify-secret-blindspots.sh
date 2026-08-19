@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 4   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Two places a secret can sit where gitleaks only scans file CONTENT: a file NAMED like a secret,
 # tracked; a token pasted into the remote URL. Why, and why nothing is printed: verify-secret-blindspots.md.
 set -euo pipefail

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A comment growing faster than the code under it, sitting above a level, or running too long.
 # Three limits: DRIFT since the last release, LEVEL (25 %) and longest BLOCK (6 lines); the last
 # two apply to TOUCHED files only.
