@@ -611,6 +611,7 @@ A private repo gains the three missing stages **all at once** by going public �
 - **Hook**: `repo/.githooks/pre-commit` — **versioned** (hence shared), enabled via `git config core.hooksPath .githooks` (set by `init-project.sh`; **a fresh clone must set it again**).
   It runs `gitleaks git --staged --redact`: **exit 1 → commit blocked**, silent when everything is fine. **Hard failure if gitleaks is missing** — a missing scanner must never look like a clean scan.
 - **Hook, the neighbour's**: `repo/.githooks-workspace/pre-commit` covers `workspace/`, which nothing else reads for content — `check.sh` scans from `repo/` outward, and the two name-matching checks match NAMES. It matters there because that repository is committed with `git add -A`, deliberately, its content being free-form.
+  **`commit-msg` sits beside it, and for a reason particular to this repository**: `verify-commit-form` has two entry points, and the neighbour had neither — no hook passed it a message, and its other entry point anchors on `origin/main`, which a repository with no remote never has. The subject form was therefore declared on both repositories and armed on one; a 79-character subject went in unopposed on 2026-08-19.
 - **CI**: **pinned `gitleaks` binary + verified checksum** (⚠️ **NOT `gitleaks-action`**: it requires a **license** on an **ORGANIZATION** repo → CI would be **red by default**), with `fetch-depth: 0` → scans the **full history**, on **both** toolchains.
 
 ### Why pre-commit alone isn't enough
