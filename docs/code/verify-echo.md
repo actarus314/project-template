@@ -22,9 +22,11 @@ The weights therefore come from **HEAD**, while what is JUDGED stays the working
 
 ## What is exempted, and how narrow each exemption is kept
 
-**Carrying a link exempts nothing.** It used to, on the ground that pointing at a fact is what `METHODE.md` prescribes — but a pointer REPLACES the fact rather than accompanying it, and the exemption protected seven passages that pointed AND restated, one writing a closed list of three capabilities out in full in two documents at once. Measured before removal: no plain pointer is ever reported, sharing too few words with its target, so nothing following the rule is punished. The seven were rewritten.
+**Both exemptions are stated in [`AGENTS.md`](../../AGENTS.md); what follows is only what it cost to settle them.**
 
-What IS exempt is a file's **header** — what stands before its first section, which a convention gives every file of a kind alike, so they restate each other by construction: of 201 pairs once surfaced, 200 were headers. A header is only recognised where a first section exists, or a file without one is read as all header.
+A link used to exempt, on the ground that pointing at a fact is what `METHODE.md` prescribes — but a pointer REPLACES the fact rather than accompanying it, and the exemption protected seven passages that pointed AND restated, one writing a closed list of three capabilities out in full in two documents at once. Measured before removal: no plain pointer is ever reported, sharing too few words with its target, so nothing following the rule is punished. The seven were rewritten.
+
+The header exemption comes from a count: of 201 pairs once surfaced, 200 were headers, which a convention gives every file of a kind alike. A header is only recognised where a first section exists, or a file without one is read as all header.
 
 Every exemption and every group prints with the verdict, whatever it is: an exemption nobody counts grows until it covers the corpus, and a dropped empty group is indistinguishable from one never opened — the verdict once claimed "in either repository" with no neighbour at all.
 
