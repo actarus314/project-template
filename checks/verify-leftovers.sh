@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: no   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: no   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # What an agent's work leaves behind, and what it is worth — advisory (why: verify-leftovers.md).
 # TWO halves, and neither is covered elsewhere: a local branch with no upstream, and a worktree
 # directory git never registered. Two verdicts on the first, never one: content already on the

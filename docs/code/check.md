@@ -29,3 +29,15 @@ Run in sequence they dominated the gate by themselves — 5.9 s of 9.1 s — and
 each works inside its own `mktemp -d`, and the `check.sh` a generated project runs writes to *its* cache, since `CACHE` is a relative path. Moved into the lot, the gate went to 3.95 s with verdicts captured before and after and diffed as identical.
 
 **What the loop really excludes is a hook**, and for a reason that has nothing to do with generating anything — `verify-checks-wiring.md` states it, and it is not restated here.
+
+## `CHECK_TAGS` — how the journal learns WHICH rule bit
+
+The journal records one line per CONTROL. A check carrying several rules therefore said `workspace` whether the tracking doc had two tracking systems or a task that opened on a noun — nineteen rules under one name, and no way to know which had ever bitten.
+
+`check.sh` hands every check in the lot a `CHECK_TAGS` path; the check appends one tag per rule that bit, `reap` reads the file into `LAST_TAGS`, and `ko()` puts it in the reason column **instead of** the control's own name.
+
+🔴 **The fallback is what keeps this small**: `${LAST_TAGS:-$1}` means a check with a single rule needs no change at all — its control name already identifies the rule. Only the eight carrying several were touched, not twenty-three.
+
+⚠️ **`CHECK_TAGS` is absent when a check runs outside `check.sh`** — by hand, or from the `pre-commit` hook. Every `tag` helper tests for it and returns 0, so the check behaves identically and prints the same message; the tag simply goes nowhere. **The six event-driven hooks are untouched**: each owns a `record()` writing that column directly, and three already tagged per rule before this existed.
+
+**Measured on the spot**: a task made to open on a noun journalled `task-not-infinitive task-form` where it had recorded `workspace`.

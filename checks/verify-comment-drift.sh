@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A comment growing faster than the code under it, sitting above a level, or running too long.
 # Three limits: DRIFT since the last release, LEVEL (25 %) and longest BLOCK (6 lines); the last
 # two apply to TOUCHED files only.
@@ -173,6 +173,15 @@ scan_touched() {         # <repository> <label>
   if [ "$n" -gt 0 ]; then
     LABEL="$label" LEVEL="$COMMENT_LEVEL" BLOCK="$COMMENT_BLOCK" python3 - "$list" <<'PY' || return 1
 import os, re, sys
+
+# Each rule carries a TAG, and it is what reaches the journal: three limits under one control
+# name left no way to know which of them bit. Absent CHECK_TAGS, the tag goes nowhere.
+def tag(name):
+    p = os.environ.get("CHECK_TAGS")
+    if p:
+        with open(p, "a") as fh:
+            fh.write(name + "\n")
+
 label = os.environ["LABEL"]; LEVEL = int(os.environ["LEVEL"]); BLOCK = int(os.environ["BLOCK"])
 bad = 0
 for line in open(sys.argv[1], encoding="utf-8"):
@@ -194,9 +203,11 @@ for line in open(sys.argv[1], encoding="utf-8"):
     pct = com * 100 // (com + code)
     name = path.split("/")[-1]
     if pct > LEVEL:
+        tag("comment-level")
         print(f"  ↑ {label}{name:<34} {pct}% comment (limit {LEVEL}%) — move the WHY to docs/, keep the constraint")
         bad += 1
     if longest > BLOCK:
+        tag("comment-block")
         print(f"  ↑ {label}{name:<34} a {longest}-line comment block (limit {BLOCK}) — split it or move it out")
         bad += 1
 sys.exit(1 if bad else 0)

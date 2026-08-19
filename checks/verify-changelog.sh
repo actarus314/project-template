@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A user-visible change without a CHANGELOG line — the case that happened: four checks shipped,
 # CHANGELOG untouched, and a missing line leaves the file perfectly plausible.
 # The perimeter is DETECTED, never listed: this travels where none of these paths exist.

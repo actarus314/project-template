@@ -75,6 +75,18 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
 - **Version**: the **git tag** is the single source — `./init-project.sh --version` reads it, never a stored literal. `verify-version.sh` *(run by `check.sh` and by the CI)* fails the build if the tag, the CHANGELOG and the scripts disagree. Releasing is a deliberate action: **RUNBOOK §3**.
   🔴 **A BOT's pull request gets that line committed ONTO ITS BRANCH, before the merge** — never in a later one. Renovate rebases only on a conflict or on request, so the commit survives; and where it does not, the check goes red again, which is the point. A line written afterwards is a discipline, not a guard.
 
+### What the checks enforce — the rules; every FIGURE is [`repo-controls.md`](docs/repo-controls.md)'s, read there and nowhere else
+
+- **A comment** does not outgrow its code since the last release, cross the matrix's share of its file, or hold a block past its line limit. **One that goes says where** — its `docs/code/` note, or a `drop:` declaration naming that file.
+- **A paragraph** does not restate another: a link to the original exempts nothing, and a file's header is never the comparison. **A curated document** does not only grow, and a closed stage prunes the hot side.
+- **A relative link and its anchor** resolve, and a pointer crediting a document with a quoted formula is checked against it. **An `.html` view** names an `.md` that exists, and follows it whenever it changes.
+- **A turn asserts nothing it did not run**: no defect stated and left untouched, no total absent from a tool output, no measurement rendered and never written down.
+- **The rule documents are read before writing**, the runbook before a lifecycle gesture, and **the development admin keeps pace with the work**.
+- **No private name** — project, host, person — reaches versioned content. **No file named like a secret** is tracked, no credential helper holds a literal token, and no machine path is published.
+- **`gh pr merge --admin` is never used**: it bypasses the only gate verifying the SHA256 of pinned assets.
+- **A generated project is born green**, its own CI playing the door, and **work leaves nothing behind**: no branch that never had an upstream, no worktree directory git never registered.
+- **A late template is announced, never fixed on the spot** — knowing is not doing.
+
 ## Do not break
 
 - **`~/.claude/CLAUDE.md` points via an ABSOLUTE path** to `docs/claude-code-project-standard.md`, `docs/METHODE.md` and `docs/RUNBOOK.md`. Moving them breaks **every** Claude Code session, **silently**.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The invariants of AGENTS.md, "Do not break" — plus the hooks, which fail the same silent way but
 # live outside any file this repo tracks. Why one script covers all of them, and the two incidents
 # that shaped the checks below: verify-do-not-break.md.

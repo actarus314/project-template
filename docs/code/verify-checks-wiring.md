@@ -35,3 +35,17 @@ A workflow that merely NAMES the door in a comment gates nothing: the step does 
 
 Section 2b already filtered comments before matching, for the same reason and with the reason written down; section 3, which guards the door itself, compared against the whole file text. The asymmetry was found by asking a fresh agent what the repo required when adding a check — it read the rule correctly, and reading the code afterwards showed a commented-out door would satisfy it.
 Both sections now judge code lines only.
+
+## `rule:` and `tags:` — an armed rule gets an address
+
+Measured 2026-08-18: of thirty armed checks, **sixteen** held all or part of their rule outside any rule document — a check could refuse a commit for a rule no document stated.
+
+Both sit **on the `# blocking:` line**: a line of their own pushed six headers past the block limit `verify-comment-drift` holds.
+
+🔴 **`rule:` names a DOCUMENT, never a path** — the standard does not travel, so a `docs/` path dies on landing, and `verify-travel` caught the first form. It refuses a check naming **its own note**, which owns no rule. **It attests the declaration, never that the text is on the page**: reading a document to find a rule there is a judgement.
+
+🔴 **`tags:` answers for the rule added to a check that ALREADY exists**, where `rule:` stays satisfied. The count is compared to what the code emits.
+
+⚠️ **The counter was wrong three times**: `git describe --tags` scored as ten rules, the word in prose as more, a tag in a conditional as half. **The hyphen of kebab-case is what excludes an ordinary word.** Normalising the emission instead broke the `&& say` short-circuits, and was reverted.
+
+📏 **Residue**: a single-rule check emits no tag, so gaining a second moves no count.

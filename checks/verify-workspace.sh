@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   tags: 20   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place no other control can see (why: verify-workspace.md).
 # Verifiable only: git repo, no remote, no secret-named file tracked, one tracking system.
 # NOT verifiable, and never to be promised: whether the tracking document's CONTENT is true.
@@ -18,23 +18,27 @@ ws=../workspace
 
 fail=0
 not_read=""
-say() { echo "✗ workspace/: $1" >&2; fail=1; }
+# Each rule carries a TAG, and it is what reaches the journal: nineteen rules under one control name
+# left no way to know which of them ever bit. Absent CHECK_TAGS — run by hand, or by the hook — the
+# tag goes nowhere and the message is unchanged.
+tag() { [ -n "${CHECK_TAGS:-}" ] && printf '%s\n' "$1" >>"$CHECK_TAGS"; return 0; }
+say() { tag "$1"; echo "✗ workspace/: $2" >&2; fail=1; }
 # A verdict on the NEIGHBOUR's local config, which no commit here can repair and which this
 # repository never receives through a diff — blocking on it stops the work in repo/ for a fault
 # sitting next door, and the exact command to repair it is in the message.
 warn() { echo "⚠ workspace/: $1" >&2; }
 
 if ! git -C "$ws" rev-parse --git-dir >/dev/null 2>&1; then
-  say "not a git repository — a plain folder has no history and no safety net"
+  say "no-git" "not a git repository — a plain folder has no history and no safety net"
 else
   remotes=$(git -C "$ws" remote 2>/dev/null || true)
   if [ -n "$remotes" ]; then
-    say "HAS A REMOTE ($(echo "$remotes" | tr '\n' ' ')) — it carries private names; this must never be pushed"
+    say "has-remote" "HAS A REMOTE ($(echo "$remotes" | tr '\n' ' ')) — it carries private names; this must never be pushed"
   fi
 
   # A tracked NAME betrays, not the content — gitleaks already scans content (verify-workspace.md).
   tracked=$(git -C "$ws" ls-files 2>/dev/null | grep -iE '(^|/)(secrets?|\.env)(\.[a-z]+)?$' || true)
-  [ -n "$tracked" ] && say "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
+  [ -n "$tracked" ] && say "secret-tracked" "tracks a secret-named file: $(echo "$tracked" | tr '\n' ' ')"
 
   # The workspace's own gate. The armed path is RESOLVED before being judged, because each way of
   # getting it wrong is silent on its own: an unset core.hooksPath runs the default hooks (there are
@@ -45,7 +49,7 @@ else
   if [ ! -f "$gate_dir/pre-commit" ]; then
     not_read="$not_read .githooks-workspace/pre-commit(absent here — nothing to arm)"
   elif [ ! -x "$gate_dir/pre-commit" ]; then
-    say "$gate_dir/pre-commit is not executable — git ignores a hook without that bit, and says nothing"
+    say "gate-not-armed" "$gate_dir/pre-commit is not executable — git ignores a hook without that bit, and says nothing"
   else
     hp=$(git -C "$ws" config --local --get core.hooksPath 2>/dev/null || true)
     # git honours an ABSOLUTE hooksPath; a relative one is read from the work tree's top level.
@@ -83,7 +87,7 @@ else
     fi
   done
   [ "$systems" -gt 1 ] &&
-    say "$systems tracking systems compete (${n} doc(s)${found_others:+, plus${found_others}}) — METHODE allows one, and the stale one gets read first"
+    say "two-tracking-systems" "$systems tracking systems compete (${n} doc(s)${found_others:+, plus${found_others}}) — METHODE allows one, and the stale one gets read first"
 
   # Named below, never counted as a fault by itself — this list of rival tools cannot be
   # complete, so the verdict publishes what it looked for (verify-workspace.md).
@@ -108,7 +112,7 @@ else
       inside && /^\|/ && /\|[[:space:]]*(✅|✔|☑|~~|LIVRÉ|LIVRE|DONE|FAIT|TERMINÉ|TERMINE|CLOS)/ { print NR ": " substr($0, 1, 72) }   # fr-pattern: the doc it reads is French
     ' "$track" || true)
     if [ -n "$stale" ]; then
-      say "closed items are sitting in the open-work section of $(basename "$track") — they belong in the state section or an archive:
+      say "closed-in-open-work" "closed items are sitting in the open-work section of $(basename "$track") — they belong in the state section or an archive:
 $stale"
     fi
     read_backlog=" backlog hygiene"
@@ -124,7 +128,7 @@ $stale"
       }' "$track" || true)
     dup=$(printf '%s\n' "$nums" | sed '/^$/d' | sort | uniq -d)
     if [ -n "$dup" ]; then
-      say "two open chantiers share a number in $(basename "$track") — a number is never reused, or an archive pointer stops resolving:
+      say "number-reused" "two open chantiers share a number in $(basename "$track") — a number is never reused, or an archive pointer stops resolving:
 $(printf '%s\n' "$dup" | sed 's/^/  /')"
     fi
     # The CLOSED numbers, read from the archive folder prefixes — the declaration this half was
@@ -135,7 +139,7 @@ $(printf '%s\n' "$dup" | sed 's/^/  /')"
     done | sed 's/^0*//' | grep -v '^$' | sort -u || true)
     reused=$(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | comm -12 - <(printf '%s\n' "$closed") || true)
     if [ -n "$reused" ]; then
-      say "an open chantier reuses a number an archive already closed — a pointer written today stops resolving:
+      say "number-reused" "an open chantier reuses a number an archive already closed — a pointer written today stops resolving:
 $(printf '%s\n' "$reused" | sed 's/^/  /')"
     fi
     read_numbers=", $(printf '%s\n' "$nums" | sed '/^$/d' | sort -u | wc -l | tr -d ' ') open chantier number(s) against $(printf '%s\n' "$closed" | sed '/^$/d' | wc -l | tr -d ' ') closed in archive prefixes"
@@ -171,7 +175,15 @@ $(printf '%s\n' "$reused" | sed 's/^/  /')"
         }
       }' "$track" || true)
     if [ -n "$bad" ]; then
-      say "a row or a task is out of form in $(basename "$track") — four columns; a task is numbered, opens on an infinitive, holds no link, no count, at most 72 characters:
+      # SIX rules answer under one message, and the journal would credit them all to one name.
+      # The tag comes from what the awk above printed — the wording IS the discriminator.
+      case "$bad" in *"not four columns"*)     tag four-columns;; esac
+      case "$bad" in *"unnumbered"*)           tag task-unnumbered;; esac
+      case "$bad" in *"holds a link"*)         tag task-holds-link;; esac
+      case "$bad" in *" char.:"*)              tag task-too-long;; esac
+      case "$bad" in *"not an infinitive"*)    tag task-not-infinitive;; esac
+      case "$bad" in *"holds a count"*)        tag task-holds-count;; esac
+      say "task-form" "a row or a task is out of form in $(basename "$track") — four columns; a task is numbered, opens on an infinitive, holds no link, no count, at most 72 characters:
 $bad"
     fi
 
@@ -185,7 +197,7 @@ $bad"
       printf '%s' "$p" | tr '-' '\n' | grep -qE "^(${open_re})$" || continue
       [ -f "$d/DETAILS.md" ] || printf '  %s\n' "$d"
     done 2>/dev/null || true)
-    [ -n "$missing" ] && say "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
+    [ -n "$missing" ] && say "no-details-file" "a chantier folder has no DETAILS.md — its tasks have nowhere to be reasoned:
 $missing"
     # The detail column carries a LINK, or the DASH that declares there is nothing to point at yet.
     # A frozen chantier has no folder, and an empty one invented for the rule reads as a lost folder.
@@ -196,7 +208,7 @@ $missing"
         if (d !~ /\]\(/ && d != "—") print "  " substr($2, 1, 20) " → " substr(d, 1, 40)
       }' "$track" || true)
     if [ -n "$nodetail" ]; then
-      say "a chantier row points nowhere in $(basename "$track") — a link, or the dash saying there is nothing yet:
+      say "detail-column" "a chantier row points nowhere in $(basename "$track") — a link, or the dash saying there is nothing yet:
 $nodetail"
     fi
 
@@ -226,7 +238,7 @@ $nodetail"
       printf '%s\n' "$tasks" | grep -qxF "$n" || printf '  %s reasoned in %s\n' "$n" "$f"
     done || true)
     if [ -n "$orphan" ]; then
-      say "a DETAILS.md reasons a task the tracking doc does not carry — it is a second backlog, and the stale one gets read first:
+      say "orphan-task-section" "a DETAILS.md reasons a task the tracking doc does not carry — it is a second backlog, and the stale one gets read first:
 $orphan"
     fi
     read_form=", task form, detail column, $(printf '%s\n' "$cited" | sed '/^$/d' | wc -l | tr -d ' ') reasoned task(s)"
@@ -241,14 +253,14 @@ $orphan"
     [ -d "$d" ] || continue
     git ls-files --cached --others --exclude-standard -- "$d" 2>/dev/null | grep -q . || printf '  %s\n' "$d"
   done || true)
-  [ -n "$empty" ] && say "a WIP folder holds nothing — it reads as one something disappeared from:
+  [ -n "$empty" ] && say "empty-wip-folder" "a WIP folder holds nothing — it reads as one something disappeared from:
 $empty"
   unprefixed=$(cd "$ws" && for d in WIP/*/ archives/*/; do
     [ -d "$d" ] || continue
     b=${d%/}; b=${b##*/}
     printf '%s' "$b" | grep -qE '^[0-9]{3}(-[0-9]{3})*--' || printf '  %s\n' "$d"
   done || true)
-  [ -n "$unprefixed" ] && say "a stage folder carries no chantier number — three digits, then '--':
+  [ -n "$unprefixed" ] && say "unprefixed-folder" "a stage folder carries no chantier number — three digits, then '--':
 $unprefixed"
   # `|| true`: a workspace with neither directory — every generated one — makes `ls` fail, and
   # pipefail would then kill this script with no verdict at all, which is how it was caught.
@@ -270,7 +282,7 @@ $unprefixed"
     open_work=$(cd "$ws" && printf '%s\n' "$watched" | tr '\n' '\0' \
       | xargs -0 grep -nE '(⬜|^[[:space:]]*[-*] \[ \])' 2>/dev/null \
       | cut -c1-120 || true)
-    [ -n "$open_work" ] && say "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
+    [ -n "$open_work" ] && say "open-work-outside" "open work is sitting outside $(basename "${track:-the tracking doc}") — it belongs in it, or nowhere:
 $open_work"
     read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
   fi

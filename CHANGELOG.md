@@ -8,6 +8,16 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 > ⚠️ **This file starts on 2026-07-28.** What came before was not reconstructed — doing so from memory would have produced a plausible but false history.
 > For that period, the pull requests are authoritative.
 
+## [Unreleased]
+
+### Added
+- **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
+- **State that a living document gives the total, not the split**: announcing a breakdown promises to maintain it, and one went stale in a day while its sum still added up — which is what let two wrong columns stand.
+- **Refuse a rule added to a check that already declares one**: each check states how many tags it emits, compared to what its code emits, so a rule cannot arrive armed and nameless. It locks the checks carrying several rules; one carrying a single rule is named by the check itself.
+- **Refuse a check that names no rule document, or names its own note**: every check now declares where the rule it enforces is written, beside what it does with a verdict. The declaration is what is checked — whether the text is really on that page is a judgement, and a guard does not judge.
+- **Refuse a commit subject out of form in the neighbouring workspace too**, where the rule was declared on both repositories and armed on one: no hook passed the message there, and the check's other entry point anchors on an `origin/main` a repository with no remote never has.
+- **Record WHICH rule a check refused on**, where the journal held the control's name alone: one carrying nineteen rules said the same thing whatever bit, so no rule could be shown to have never fired. A single-rule check needs no change — its name is already the tag.
+
 ## [1.7.0](https://github.com/actarus314/project-template/releases/tag/v1.7.0) - 2026-08-18
 
 ### Added

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Coherence guard for the version. THE SINGLE SOURCE IS THE GIT TAG — a ruleset makes it immutable,
 # while a CHANGELOG heading or a plugin manifest can be rewritten in any PR (why: verify-version.md).
 # Silent no-op until the first tag exists: nothing to compare before the first release.

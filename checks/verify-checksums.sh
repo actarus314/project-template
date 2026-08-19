@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Anti-drift safeguard between a docs/*.md (source of truth) and its hand-crafted docs/*.html.
 #
 # A docs/*.html carrying a `checksum-source-md: sha256:<hash>` header comment declares "I am the
-# view of that .md at THIS hash". No such line -> this file is not concerned, silent (the case for
-# every generated project: none of them ship one of these pairs).
+# view of that .md at THIS hash". No such line -> silent, the case in every generated project.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
+
+# Each rule carries a TAG, and it is what reaches the journal: one control name for several
+# rules left no way to know which of them ever bit. Absent CHECK_TAGS, the tag goes nowhere.
+tag() { [ -n "${CHECK_TAGS:-}" ] && printf '%s\n' "$1" >>"$CHECK_TAGS"; return 0; }
 
 # Usage:
 #   checks/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
@@ -68,6 +71,7 @@ for html in docs/*.html; do
 
   md="${html%.html}.md"
   if [ ! -f "$md" ]; then
+    tag html-names-missing-md
     echo "✗ $html references $md, not found" >&2
     fail=1
     continue
@@ -89,6 +93,7 @@ for html in docs/*.html; do
     echo "✓ $html up to date with $md"
     coverage "$md" "$html"
   else
+    tag html-behind-md
     echo "✗ $md changed since the last update of $html — carry the change over, then update the checksum with: checks/verify-checksums.sh --update" >&2
     fail=1
   fi

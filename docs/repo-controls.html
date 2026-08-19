@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:1b1891425f31c09d058b38bc2664d8f75171fd0341eee531602ff30d32d8ff68
+  checksum-source-md: sha256:ade831064bf716ce6a907dcf66fdd63d37f74d7624e02bef9f5a8f0243533f4e
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1388,8 +1388,9 @@
       <span class="cmd">gitleaks git --staged --redact</span>
     </div>
     <div class="step">
-      <b>Hook, the neighbour's — <code>.githooks-workspace/pre-commit</code></b>
+      <b>Hook, the neighbour's — <code>.githooks-workspace/pre-commit</code> and <code>commit-msg</code></b>
       <p>Covers <code>workspace/</code>, which nothing else reads for content: <code>check.sh</code> scans from <code>repo/</code> outward, and the two name-matching checks match NAMES. It matters there because that repository is committed with <code>git add -A</code>, deliberately, its content being free-form.</p>
+      <p><code>commit-msg</code> sits beside it for a reason particular to this repository: <code>verify-commit-form</code> has two entry points, and the neighbour had neither &mdash; no hook passed it a message, and its other entry point anchors on <code>origin/main</code>, which a repository with no remote never has. The subject form was declared on both repositories and armed on one; a 79-character subject went in unopposed on 2026-08-19.</p>
       <span class="cmd">gitleaks git --staged --redact</span>
     </div>
     <div class="step">

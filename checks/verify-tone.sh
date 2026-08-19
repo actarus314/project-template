@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: claude-code-project-standard.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Second person in versioned content (standard §1). Why it is written this way, and what the
 # exceptions cost: docs/code/verify-tone.md
 set -euo pipefail

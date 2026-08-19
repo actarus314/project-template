@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/

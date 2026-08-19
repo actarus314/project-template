@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: no   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: no   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # hook: UserPromptSubmit, PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # Pull requests opened with no instruction from the maintainer. It MEASURES, it does not refuse:
 # whether refusing is worth building is the question this instrument exists to answer.

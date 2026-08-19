@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Refuses a commit here whose subject is out of form. The rules are NOT here: this hands the message
+# to the code repository's checks/verify-commit-form.sh, the same file the CI runs, so the two
+# cannot drift. The neighbour has no origin/main, so the check's other entry point never fires here.
+set -euo pipefail
+
+if [ "${1:-}" = "--version" ]; then
+  echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
+  exit 0
+fi
+
+MSG="${1:?usage: commit-msg <message-file>}"
+
+# The hook's OWN location names the code repository; no sibling is guaranteed to be spelled `repo`.
+check="$(cd "$(dirname "$0")/.." && pwd)/checks/verify-commit-form.sh"
+
+# Silent where the check does not exist: a project generated before it shipped keeps committing.
+[ -x "$check" ] || exit 0
+
+if ! "$check" --message "$MSG"; then
+  echo
+  echo "✗ Commit blocked — the subject is what lands in the history."
+  echo "  Emergency: git commit --no-verify (a decision, not an accident)."
+  exit 1
+fi
+
+exit 0

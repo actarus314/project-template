@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (through `decision: block` on stdout — the exit stays 0, or the JSON is dropped)
+# blocking: yes   rule: AGENTS.md   (through `decision: block` on stdout — the exit stays 0, or the JSON is dropped)
 # hook: Stop — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 #   (detail: docs/code/verify-turn-claims.md)
 
