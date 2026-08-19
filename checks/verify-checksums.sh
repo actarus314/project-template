@@ -8,6 +8,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root, regardless of the caller's cwd
 
+# Each rule carries a TAG, and it is what reaches the journal: one control name for several
+# rules left no way to know which of them ever bit. Absent CHECK_TAGS, the tag goes nowhere.
+tag() { [ -n "${CHECK_TAGS:-}" ] && printf '%s\n' "$1" >>"$CHECK_TAGS"; return 0; }
+
 # Usage:
 #   checks/verify-checksums.sh             # checks; exits with an error (1) if a .md has drifted
 #   checks/verify-checksums.sh --update    # recomputes and rewrites the checksum in each .html
@@ -68,6 +72,7 @@ for html in docs/*.html; do
 
   md="${html%.html}.md"
   if [ ! -f "$md" ]; then
+    tag html-names-missing-md
     echo "✗ $html references $md, not found" >&2
     fail=1
     continue
@@ -89,6 +94,7 @@ for html in docs/*.html; do
     echo "✓ $html up to date with $md"
     coverage "$md" "$html"
   else
+    tag html-behind-md
     echo "✗ $md changed since the last update of $html — carry the change over, then update the checksum with: checks/verify-checksums.sh --update" >&2
     fail=1
   fi

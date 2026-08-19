@@ -12,6 +12,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Added
 - **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
+- **Record WHICH rule a check refused on**, where the journal held the control's name alone: one carrying nineteen rules said the same thing whatever bit, so no rule could be shown to have never fired. A single-rule check needs no change — its name is already the tag.
 
 ## [1.7.0](https://github.com/actarus314/project-template/releases/tag/v1.7.0) - 2026-08-18
 
