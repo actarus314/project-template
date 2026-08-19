@@ -14,6 +14,7 @@
 | **keep up to date** — the bump channels, Renovate, the PR checks | [`security-and-updates.md`](security-and-updates.md) *(+ its `.html` view)* |
 | **deploy** a self-hosted service | [`docker-hardening.md`](docker-hardening.md) |
 | **write** — where a fact lives, the tracking doc, archives, code comments | [`METHODE.md`](METHODE.md) |
+| **keep the tracking doc in FORM** — its rows, its tasks, its stage folders | [`tracking-doc.md`](tracking-doc.md) |
 | **act** — the gestures, in order, and who performs each | [`RUNBOOK.md`](RUNBOOK.md) |
 
 > 🔴 **The section NUMBERS below are stable.** A section that moved keeps its number here as a one-line pointer, so *"standard §12"* written in an archive, a memory or a merged pull request **still resolves**. Renumbering would have silently falsified every archive — and an archive is immutable.

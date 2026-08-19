@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Give the tracking doc's FORM its own subject file** (`docs/tracking-doc.md`): thirteen armed rules — the row, the numbered task, the stage folders — lived in no rule document, so a refusal named a rule nobody could read. The role stays `METHODE.md`'s.
 - **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
 - **State that a living document gives the total, not the split**: announcing a breakdown promises to maintain it, and one went stale in a day while its sum still added up — which is what let two wrong columns stand.
 - **Refuse a rule added to a check that already declares one**: each check states how many tags it emits, compared to what its code emits, so a rule cannot arrive armed and nameless. It locks the checks carrying several rules; one carrying a single rule is named by the check itself.

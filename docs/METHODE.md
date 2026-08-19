@@ -80,6 +80,8 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 `SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state **and "what's left to do"**. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
+**The FORM it takes is [`tracking-doc.md`](tracking-doc.md)'s** — armed there, and stated nowhere else.
+
 **The two rows above are a matter of SCALE, not a second system.** A new project keeps ONE file — three near-empty ones cost more to keep in step. The split comes when the doc stops answering *"what do I do next"* at a glance, measured here at **160 of 263 lines**.
 
 > ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, resumption — the rule below applies in full: **check what already exists, build custom only as a last resort, and say so.**
