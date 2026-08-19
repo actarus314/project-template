@@ -8,6 +8,11 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 > ⚠️ **This file starts on 2026-07-28.** What came before was not reconstructed — doing so from memory would have produced a plausible but false history.
 > For that period, the pull requests are authoritative.
 
+## [Unreleased]
+
+### Added
+- **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
+
 ## [1.7.0](https://github.com/actarus314/project-template/releases/tag/v1.7.0) - 2026-08-18
 
 ### Added
