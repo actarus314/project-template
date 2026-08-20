@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # hook: SessionStart, PreToolUse — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # On a refusal the rule itself goes out, in plain text on STDERR with exit 2 — the only channel that
 # reaches the model from here, and the one block a JSON field cannot override. Never print JSON: this

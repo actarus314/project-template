@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: no   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: no   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A stage that closed without leaving its archive behind — advisory (why: verify-stage-closure.md).
 # Carries only what verify-growth.sh cannot see — the two must never re-judge one question
 # (verify-stage-closure.md).

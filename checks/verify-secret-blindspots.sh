@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 4   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Two places a secret can sit where gitleaks only scans file CONTENT: a file NAMED like a secret,
 # tracked; a token pasted into the remote URL. Why, and why nothing is printed: verify-secret-blindspots.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # repo root: this script lives in checks/
+
+# Each rule carries a TAG, and it is what reaches the journal: one control name for several
+# rules left no way to know which of them ever bit. Absent CHECK_TAGS, the tag goes nowhere.
+tag() { [ -n "${CHECK_TAGS:-}" ] && printf '%s\n' "$1" >>"$CHECK_TAGS"; return 0; }
 
 if [ "${1:-}" = "--version" ]; then
   echo "project-template $(git describe --tags --abbrev=0 2>/dev/null || echo unreleased)"
@@ -28,6 +32,7 @@ scan() {
   hit=$(git -C "$dir" ls-files 2>/dev/null | grep -iE "$pattern" \
         | grep -vE '\.example$|gitleaksignore|^templates/|\.(md|txt|rst|html)$' || true)
   if [ -n "$hit" ]; then
+    tag secret-named-file
     echo "✗ $label tracks a secret-named file: $(echo "$hit" | tr '\n' ' ')" >&2
     fail=1
   fi
@@ -47,7 +52,7 @@ scan_config() {
     case "$url" in
       # CAPITALS, deliberately not angle brackets: this file travels, and the generator scans what
       # it just wrote for unsubstituted placeholders (why: verify-secret-blindspots.md).
-      *://*@*) echo "✗ $label remote '$name' carries credentials in its URL — strip it with: git -C $dir remote set-url $name https://github.com/OWNER/REPO.git" >&2; fail=1;;
+      *://*@*) tag credential-in-remote-url; echo "✗ $label remote '$name' carries credentials in its URL — strip it with: git -C $dir remote set-url $name https://github.com/OWNER/REPO.git" >&2; fail=1;;
     esac
   done < <(git -C "$dir" remote 2>/dev/null || true)
 
@@ -58,6 +63,7 @@ scan_config() {
     case "$helper" in
       *'${'*|'') ;;                                  # names a variable: the documented shape
       *ghp_*|*github_pat_*|*gho_*|*ghs_*)
+        tag literal-token-in-helper
         echo "✗ $label a credential helper holds a literal token — replace it with a variable reference" >&2; fail=1;;
     esac
   done < <(git -C "$dir" config --get-all 'credential.https://github.com.helper' 2>/dev/null || true)
@@ -72,6 +78,7 @@ scan_config ../workspace 'workspace/'
 home_paths=$(git ls-files -z | grep -zv '^CHANGELOG\.md$' \
   | xargs -0 grep -nE "/(Users|home)/[a-z][a-z0-9_-]+/" 2>/dev/null || true)
 if [ -n "$home_paths" ]; then
+  tag machine-path-published
   echo "✗ a machine path sits in versioned content — it says who wrote it and from where:" >&2
   printf '%s\n' "$home_paths" | head -10 >&2
   fail=1

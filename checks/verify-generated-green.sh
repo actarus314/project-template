@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A generated project is born GREEN, or its very first pull request is blocked: its own ci.yml
 # plays `check.sh --house`. Why the checks must run THERE: verify-generated-green.md.
 set -euo pipefail

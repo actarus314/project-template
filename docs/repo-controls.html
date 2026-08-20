@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:c165f2163b52525a2ce0e51baf07cccf757a8c75e80647a327abacd0c48b2e46
+  checksum-source-md: sha256:ade831064bf716ce6a907dcf66fdd63d37f74d7624e02bef9f5a8f0243533f4e
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1388,8 +1388,9 @@
       <span class="cmd">gitleaks git --staged --redact</span>
     </div>
     <div class="step">
-      <b>Hook, the neighbour's — <code>.githooks-workspace/pre-commit</code></b>
+      <b>Hook, the neighbour's — <code>.githooks-workspace/pre-commit</code> and <code>commit-msg</code></b>
       <p>Covers <code>workspace/</code>, which nothing else reads for content: <code>check.sh</code> scans from <code>repo/</code> outward, and the two name-matching checks match NAMES. It matters there because that repository is committed with <code>git add -A</code>, deliberately, its content being free-form.</p>
+      <p><code>commit-msg</code> sits beside it for a reason particular to this repository: <code>verify-commit-form</code> has two entry points, and the neighbour had neither &mdash; no hook passed it a message, and its other entry point anchors on <code>origin/main</code>, which a repository with no remote never has. The subject form was declared on both repositories and armed on one; a 79-character subject went in unopposed on 2026-08-19.</p>
       <span class="cmd">gitleaks git --staged --redact</span>
     </div>
     <div class="step">
@@ -1492,8 +1493,8 @@
   <p><strong>Reading the columns.</strong> <em>Looks for</em> is the defect, not the mechanism. <em>Where</em> is the machine that runs it. <em>Travels</em> says whether a generated project gets it. <em>Blocks</em> separates what stops a merge from what only draws a list. <em>Maturity</em> is the one thing no measurement gives: <strong>settled</strong> = its verdict rests on a fact (a path, a tag, a tracked file) and has held; <strong>needs watching</strong> = its verdict rests on a threshold or a wording chosen by hand, so it can be wrong in both directions.</p>
 
   <div class="note">
-    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1,7x to 4,1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 2,82 s, a commit on a clean tree in 1,12 s, the full lot in 5,63 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
-    <p>Anything under 0,4 s does not show at all.</p>
+    <h3>⏱ Durations are the MEDIAN of three consecutive runs, wall clock, measured 2026-08-05 (Darwin arm64). An earlier column held single cold runs on a busy machine and was wrong by 1.7x to 4.1x. They do not add up: check.sh starts them together, so the lot costs its slowest — the gate (--house) runs in 2.82 s, a commit on a clean tree in 1.12 s, the full lot in 5.63 s.<span class="tool">measured 2026-08-05, Darwin arm64</span></h3>
+    <p>Anything under 0.4 s does not show at all.</p>
   </div>
 
   <div class="note">
@@ -1502,7 +1503,7 @@
     <p>🔴 <strong>It lives OUTSIDE every repository, and that is the point.</strong> Telemetry is not repository content, and a journal kept under <code>.ci-tools/</code> was per-project as well as per-machine: the one question worth asking of it — <em>is this gate firing everywhere, or only here</em> — had nowhere to be answered. Every project running these checks appends to the <strong>same</strong> file, each line carrying the project it came from, and <code>--report</code> filters on the current one so a project's page still speaks for that project alone. The path is deliberately not named after this repository: the journal outlives the project that first wrote it.</p>
     <p><strong>Skips are recorded too, with the gate that decided them</strong> — the half a column of durations cannot show. A control that is only ever skipped costs nothing and guards nothing, and a journal holding verdicts alone cannot say so, because the line is simply absent. <strong>The six hooks record their own VERDICT</strong>, which <code>check.sh</code> cannot do: it never runs them. Recording the firing alone was the earlier design, and it answered the wrong question — <em>did the gate fire</em>, never <em>did it bite</em>, and a threshold is set on the second. A hook now writes <code>1</code> with the tag of the signal that caught, <code>0</code> when it looked and found nothing, and <code>skip</code> for a turn it never evaluated: a rate reads off <code>bit / fired</code> without counting the turns nobody looked at.</p>
     <p>🔴 <strong>OFF by default</strong> — a development instrument, not a permanent one. <code>--report --on</code> starts the recording, <code>--off</code> stops it, <code>--reset</code> clears it; while off it costs one file test per verdict.</p>
-    <p>⚠️ <strong>Its medians run about a fifth above the column above, and neither is wrong.</strong> The column times a check <strong>alone</strong>; the journal times it <strong>inside the parallel lot</strong>, where the checks contend for the machine. (Measured 2026-08-05: <code>verify-growth</code> 0,88 s alone against 1,10 s in the lot, <code>verify-comment-drift</code> 0,83 s against 1,03 s.) A duration quoted without its case is how a figure once got read as wrong by a factor of 2,7 when it was simply measuring something else.<span class="tool">measured 2026-08-05, Darwin arm64</span></p>
+    <p>⚠️ <strong>Its medians run about a fifth above the column above, and neither is wrong.</strong> The column times a check <strong>alone</strong>; the journal times it <strong>inside the parallel lot</strong>, where the checks contend for the machine. (Measured 2026-08-05: <code>verify-growth</code> 0.88 s alone against 1.10 s in the lot, <code>verify-comment-drift</code> 0.83 s against 1.03 s.) A duration quoted without its case is how a figure once got read as wrong by a factor of 2.7 when it was simply measuring something else.<span class="tool">measured 2026-08-05, Darwin arm64</span></p>
   </div>
 
   <div class="tablewrap">
@@ -1518,7 +1519,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,3 s</td>
+          <td class="t">0.3 s</td>
           <td>✅ <strong>the only local blocker</strong></td>
         </tr>
         <tr>
@@ -1648,17 +1649,17 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0.08 s</td>
           <td>✅</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-language.sh</code></td>
-          <td><strong>accented</strong> French left in published content — the language, which its neighbour above never looked at</td>
+          <td><strong>accented</strong> French left in published content, <strong>the decimal comma, and a percent glued to its value</strong> — the language, which its neighbour above never looked at</td>
           <td class="h">repo/ (English stops where publication stops)</td>
           <td>every commit</td>
           <td class="p">✅</td>
-          <td>needs watching — the accent is the cheap half of the signal: unaccented French passes, and the verdict says so rather than claiming the language is covered</td>
-          <td class="t">0,07 s</td>
+          <td>needs watching — the three signals are binary, but their anchors are written by hand, to spare a regex quantifier, a CSS colour, an awk argument list and a line reference. <strong>The forms come from a reference, never from the corpus</strong> (SI brochure §5.4.4, NIST SI checklist §15-16), which is what showed the space before % had never been French. Unaccented French PROSE stays uncovered <strong>deliberately</strong>: swept for, nothing had been left behind, and a detector would cost the checks their one invariant</td>
+          <td class="t">0.12 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1668,7 +1669,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,09 s</td>
+          <td class="t">0.09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1678,7 +1679,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — its sentence-end pattern is a wording chosen by hand, tuned until <code>CHANGELOG.md</code> read clean before being extended to a fence or a comment nested inside a blockquote</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0.08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1688,7 +1689,7 @@
           <td>every commit</td>
           <td class="p">✅ <span class="tool">the gate half warns: it judges the neighbour's local config, which no commit here can repair</span></td>
           <td><strong>needs watching</strong> — the list of rival tools cannot be complete, and it names what it looked for. Both hygiene halves match a FORM, never a state: an unmarked closed item, or a leftover that never declares itself, stays invisible</td>
-          <td class="t">0,11 s</td>
+          <td class="t">0.11 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1698,7 +1699,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,09 s</td>
+          <td class="t">0.09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1708,7 +1709,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,04 s</td>
+          <td class="t">0.04 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1718,7 +1719,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,04 s</td>
+          <td class="t">0.04 s</td>
           <td>✅ <em>(nothing to read under CI, and it says so)</em></td>
         </tr>
         <tr>
@@ -1728,7 +1729,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,06 s</td>
+          <td class="t">0.06 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1738,7 +1739,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — a matching checksum proves the file was touched, never that it says the same thing</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0.08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1748,7 +1749,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">0,09 s</td>
+          <td class="t">0.09 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1758,7 +1759,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — it reads a list that lives OUTSIDE the repo (<code>../workspace/private-names.txt</code>), and says so when there is none. A pattern too broad gets the guard worked around; the list carries that warning</td>
-          <td class="t">0,10 s</td>
+          <td class="t">0.10 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1768,7 +1769,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(perimeter detected, and measured: 3 of the last 40 PRs)</em> — ⚠️ the cap is <strong>300, from <a href="https://common-changelog.org/">Common Changelog</a></strong>; the earlier 750 was the corpus's own third quartile, which endorses the drift it was meant to correct</td>
-          <td class="t">0,08 s</td>
+          <td class="t">0.08 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1778,7 +1779,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — 🔴 <strong>what reaches the default branch depends on the repository's MERGE METHOD</strong>, which this check never reads: under squash these subjects are discarded and the pull-request title takes their place (here, squash-only: all 40 of the last subjects on <code>main</code> are titles, 25 past 72), under a merge commit they land as written. <code>open-pr.sh</code> therefore refuses the same four things on the title. Bots and git's own subjects are exempt, or every Renovate pull request would go red</td>
-          <td class="t">0,17 s</td>
+          <td class="t">0.17 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1788,7 +1789,7 @@
           <td>a <code>.md</code> moved, <strong>here or in the workspace</strong></td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the 25 % threshold is a judgement call, and the <code>repo/</code> half is <strong>measured weak</strong> (the reference moves at every release: +327 % went unseen). The <code>workspace/</code> half carries no threshold at all — and it is <strong>answered LOCALLY only</strong>: the CI has no workspace beside it, and says so rather than passing in silence</td>
-          <td class="t">0,20 s</td>
+          <td class="t">0.20 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1798,7 +1799,7 @@
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — it compares PERCENTAGES, so it over-reports on a small file: measured 2026-08-05, +134 % of comment against +94 % of code was <strong>34 lines against 36</strong></td>
-          <td class="t">0,53 s</td>
+          <td class="t">0.53 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1808,7 +1809,7 @@
           <td>a <code>.sh</code> moved</td>
           <td class="p">✅</td>
           <td><strong>settled</strong> — the threshold is 5 lines, and the measurement that set it lives in its note. <code>&lt;reference&gt;...HEAD</code>, so at <code>pre-commit</code> it judges the commits ALREADY made — the deletion being committed right now is judged at the next commit, or by the CI (deliberate: the <code>drop:</code> lives in a commit message the hook cannot read)</td>
-          <td class="t">0,10 s</td>
+          <td class="t">0.10 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1818,7 +1819,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td>settled <em>(needs <code>fetch-tags</code>, or it passes by finding nothing)</em></td>
-          <td class="t">0,34 s</td>
+          <td class="t">0.34 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1827,8 +1828,8 @@
           <td class="h">both</td>
           <td>a <code>.md</code> moved</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — measured limit: a restatement that changes vocabulary scores 0,32 against a 0,40 threshold</td>
-          <td class="t">0,26 s</td>
+          <td><strong>needs watching</strong> — measured limit: a restatement that changes vocabulary scores 0.32 against a 0.40 threshold</td>
+          <td class="t">0.26 s</td>
           <td>✅ (made blocking 2026-08-05)</td>
         </tr>
         <tr>
@@ -1838,7 +1839,7 @@
           <td><code>templates/</code>, <code>checks/</code> moved</td>
           <td class="p">✅</td>
           <td>settled</td>
-          <td class="t">1,76 s</td>
+          <td class="t">1.76 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1848,7 +1849,7 @@
           <td><code>templates/</code>, <code>checks/</code>, <code>docs/code/</code> moved</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — it generates ONE variant (the richest), where <code>verify-travel</code> covers four: enough to answer "does the door pass on landing?", not enough to claim per-toolchain coverage. First run found <strong>three</strong> defects at once, two of them checks exiting non-zero without printing a line</td>
-          <td class="t">3,18 s</td>
+          <td class="t">3.18 s</td>
           <td>✅</td>
         </tr>
         <tr>
@@ -1858,7 +1859,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the trigger is measured (a merged PR loses to a random instant by 11 points; a release wins), but the invariant has never yet been violated: 3 closed stages, 3 archives</td>
-          <td class="t">0,05 s</td>
+          <td class="t">0.05 s</td>
           <td>⚠️ advisory — a patch release does not always close a stage, and nothing mechanical tells the two apart</td>
         </tr>
         <tr>
@@ -1868,7 +1869,7 @@
           <td>every commit</td>
           <td class="p">✅</td>
           <td><strong>needs watching</strong> — the branch CHECKED OUT is exempt, or the check would speak at every commit of ordinary work, which is how a guard gets disarmed. Its second instrument is patch-id, blind to a rebase that resolved a conflict — the error then falls on the safe side, <em>only copy</em>. Sizes and ages are <strong>published and never judged</strong>: no measurement here says when a leftover becomes a problem</td>
-          <td class="t">0,10 s</td>
+          <td class="t">0.10 s</td>
           <td>⚠️ advisory — work not pushed yet is ordinary, and only the maintainer tells which is which</td>
         </tr>
         <tr>
@@ -2036,13 +2037,13 @@
     <h3>🔴 A commit in the neighbouring <code>workspace/</code> fires that first rhythm too</h3>
     <p>Same <code>--commit</code>, through a gate of its own: <code>repo/.githooks-workspace/pre-commit</code>, armed over there by a <strong>LOCAL</strong> <code>core.hooksPath</code>. <code>init-project.sh</code> sets it; a fresh clone and an assisted regeneration arrive unarmed, and <code>verify-workspace.sh</code> <strong>warns</strong> without blocking — no commit here repairs the neighbour's config. It scans that repository's staged content with <code>gitleaks</code> first, then runs the same lot, since <code>check.sh</code> already reads both dirty trees.</p>
     <p><strong>What it does NOT wake are the two checks that GENERATE a project.</strong> They answer about the code tree, and work in flight next door cannot change their verdict — so the gate states WHERE the commit is being made, through <code>CHECK_COMMIT_IN</code>, and <code>verify-checks-wiring.sh</code> fails the build the day either half stops naming it. Dropped, the fallback is silent: a note commit would wake both again, at <strong>2 260 ms</strong> and <strong>3 476 ms</strong> measured.</p>
-    <p><strong>Cost: 2,1 s — a floor, never a ceiling</strong>, <code>--commit</code> being the mode that fetches the external tools.</p>
+    <p><strong>Cost: 2.1 s — a floor, never a ceiling</strong>, <code>--commit</code> being the mode that fetches the external tools.</p>
     <p>🔴 <strong>A pinned tool that never ARRIVES exits <code>3</code>, which is not a gap.</strong> <code>check.sh</code> judges that on the STATE on disk, never on the fetch's exit code: inside a list ending in <code>||</code>, bash turns <code>set -e</code> off within the function called, so a dead <code>curl</code> used to reach <code>✓ ready</code>. <strong>repo/ blocks on a 3 like on anything else; the workspace gate lets the commit through</strong> and names the checks that did not run — that repository holds the tracking and the archives, written wherever the maintainer happens to be, and its secret scan runs on the system's own <code>gitleaks</code>, offline. <span class="tool">why the gate lives in repo/, and what it buys: docs/code/init-project.md</span></p>
   </div>
 
   <div class="note">
     <h3>⏱ What a commit costs, by what it touches <span class="tool">medians of three, measured 2026-08-05, Darwin arm64</span></h3>
-    <p>🔴 <strong>A duration only means something alongside WHAT MOVED.</strong> The same <code>--commit</code> spans 1,09 s to 5,43 s, and a figure once quoted without its case was read as wrong by a factor of 2,7 when it was simply measuring another one.</p>
+    <p>🔴 <strong>A duration only means something alongside WHAT MOVED.</strong> The same <code>--commit</code> spans 1.09 s to 5.43 s, and a figure once quoted without its case was read as wrong by a factor of 2.7 when it was simply measuring another one.</p>
   </div>
 
   <div class="tablewrap">
@@ -2051,22 +2052,22 @@
         <tr><th>The commit touches…</th><th>What that wakes on top</th><th>Wall clock</th></tr>
       </thead>
       <tbody>
-        <tr><td class="w">nothing (clean tree)</td><td>—</td><td class="t"><strong>1,13 s</strong></td></tr>
-        <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>2,80 s</strong></td></tr>
-        <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1,09 s</strong></td></tr>
-        <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>4,09 s</strong></td></tr>
-        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>2,88 s</strong></td></tr>
-        <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>5,43 s</strong></td></tr>
-        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5,63 s</strong></td></tr>
+        <tr><td class="w">nothing (clean tree)</td><td>—</td><td class="t"><strong>1.13 s</strong></td></tr>
+        <tr><td class="w">a workflow</td><td><code>actionlint</code> · <code>zizmor</code></td><td class="t"><strong>2.80 s</strong></td></tr>
+        <tr><td class="w">a <code>.md</code></td><td><code>verify-echo</code> · <code>verify-growth</code></td><td class="t"><strong>1.09 s</strong></td></tr>
+        <tr><td class="w">a <code>.sh</code></td><td><code>verify-comment-drift</code> · <code>shellcheck</code> (whole tree)</td><td class="t"><strong>4.09 s</strong></td></tr>
+        <tr><td class="w"><code>templates/</code></td><td><code>verify-travel</code> (it generates <strong>four</strong> projects) + both <code>.md</code> ones</td><td class="t"><strong>2.88 s</strong></td></tr>
+        <tr><td class="w"><code>.md</code> + <code>.sh</code> + a workflow</td><td>everything above</td><td class="t"><strong>5.43 s</strong></td></tr>
+        <tr><td class="w"><code>./check.sh</code> in full</td><td><code>osv-scanner</code> + <code>semgrep</code>, both over the network</td><td class="t"><strong>5.63 s</strong></td></tr>
       </tbody>
     </table>
   </div>
 
-  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the sixteen timed house checks add up to <strong>3,89 s</strong> of their own time, and the gate that runs them takes <strong>2,82 s</strong>. The slowest by far is <code>verify-travel</code> (1,76 s), which generates four projects in series, then <code>verify-comment-drift</code> (0,53 s), <code>verify-version</code> (0,34 s) and <code>verify-echo</code> (0,26 s); every other one sits at or under 0,18 s.</p>
+  <p><strong>Parallelism absorbs, and the numbers say so</strong>: the sixteen timed house checks add up to <strong>3.89 s</strong> of their own time, and the gate that runs them takes <strong>2.82 s</strong>. The slowest by far is <code>verify-travel</code> (1.76 s), which generates four projects in series, then <code>verify-comment-drift</code> (0.53 s), <code>verify-version</code> (0.34 s) and <code>verify-echo</code> (0.26 s); every other one sits at or under 0.18 s.</p>
 
   <div class="note">
     <h3>⚠️ Why <code>verify-travel</code> costs a second and a half</h3>
-    <p>It covers <strong>four toolchain/capability combinations instead of one</strong> — <code>static</code>, <code>node</code>, <code>generic</code>, <code>static+all</code>, which is what the check itself names as it passes (0,46 s → 1,77 s). It only starts when <code>templates/</code>, <code>checks/</code>, <code>check.sh</code> or <code>init-project.sh</code> moved, so it is paid on four file paths and nowhere else.</p>
+    <p>It covers <strong>four toolchain/capability combinations instead of one</strong> — <code>static</code>, <code>node</code>, <code>generic</code>, <code>static+all</code>, which is what the check itself names as it passes (0.46 s → 1.77 s). It only starts when <code>templates/</code>, <code>checks/</code>, <code>check.sh</code> or <code>init-project.sh</code> moved, so it is paid on four file paths and nowhere else.</p>
     <p><strong>The generations run in series on purpose</strong>: parallelising them would save about a second, at the price of no longer being able to say WHICH variant failed to generate — and a check that fails without saying why is a defect this repo has already fixed once.</p>
   </div>
 

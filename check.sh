@@ -180,8 +180,12 @@ journal() {   # <control> <rc|skip> <reason> [milliseconds]
 skipped() { journal "$1" skip "$2"; }
 note() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 LAST_MS=""
-ok()   { printf '  \033[32m✓ %s\033[0m\n' "$1"; journal "$1" 0 "" "$LAST_MS"; LAST_MS=""; }
-ko()   { printf '  \033[31m✗ %s\033[0m\n' "$1"; fail=1; journal "$1" 1 "$1" "$LAST_MS"; LAST_MS=""; }
+# The journal records one line per CONTROL, and a control carrying several rules said nothing about
+# WHICH one bit. A check writes its tags to $CHECK_TAGS; falling back to the control's own name is
+# what keeps a single-rule check correct without touching it (why: docs/code/check.md).
+LAST_TAGS=""
+ok()   { printf '  \033[32m✓ %s\033[0m\n' "$1"; journal "$1" 0 "" "$LAST_MS"; LAST_MS=""; LAST_TAGS=""; }
+ko()   { printf '  \033[31m✗ %s\033[0m\n' "$1"; fail=1; journal "$1" 1 "${LAST_TAGS:-$1}" "$LAST_MS"; LAST_MS=""; LAST_TAGS=""; }
 
 # Replays one house check's captured output and returns its exit code. A missing capture is an
 # ERROR, never a pass: a check that did not run must not read like a check that found nothing.
@@ -189,6 +193,8 @@ PAR="$CACHE/par"
 reap() {
   [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
   LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
+  # The redirection is the shell's, so a `2>/dev/null` on `tr` never silences a missing file.
+  LAST_TAGS=$(cat "$PAR/$1.tags" 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')
   cat "$PAR/$1.out"
   local rc; rc=$(cat "$PAR/$1.rc")
   if [ "$rc" != 0 ] && grep -qE '^# blocking: no\b' "checks/$1.sh" 2>/dev/null; then
@@ -334,7 +340,7 @@ for s in checks/verify-*.sh; do
   # stayed in the .out and was never printed, making every failure look alike.
   ( set +e
     _t0=${EPOCHREALTIME/./}
-    "./$s" >"$PAR/$n.out" 2>&1; _rc=$?
+    CHECK_TAGS="$PAR/$n.tags" "./$s" >"$PAR/$n.out" 2>&1; _rc=$?
     _t1=${EPOCHREALTIME/./}
     echo $_rc >"$PAR/$n.rc"
     if [ -n "$_t0" ] && [ -n "$_t1" ]; then echo $(( (_t1 - _t0) / 1000 )) >"$PAR/$n.ms"; fi ) &

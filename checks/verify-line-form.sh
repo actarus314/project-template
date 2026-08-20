@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # A sentence cut across two lines: a width frozen into the file, which the renderer undoes anyway.
 # The rule is METHODE's — one sentence per line. Why a width threshold was rejected instead, and
 # what this ignores and why: docs/code/verify-line-form.md.

@@ -64,7 +64,7 @@ The roles below are **stable**; the files that carry them are not *(see "The tra
 > **Everything the script LEARNS must FLOW BACK to the doc.** A fact living **only** in the script leaves the doc no longer enough to do the work by hand — wrong by omission.
 > ⚠️ **What this does NOT mean**: "the doc must say everything". That would be the door to bloat — exactly what this fights against. The **standard** states the conventions, the **runbook** states the actions, the **script** keeps its technical constraints.
 
-> 🔴 **Where the comment stops and its note starts — both claimed "the constraint", with nothing arbitrating**: **32 pairs** of a script and its note scored as restating each other, up to 0,97.
+> 🔴 **Where the comment stops and its note starts — both claimed "the constraint", with nothing arbitrating**: **32 pairs** of a script and its note scored as restating each other, up to 0.97.
 > **The test is what the sentence CARRIES: a figure, an alternative ruled out, or an incident belongs to the note.** The comment keeps the constraint bare — enough not to break the line while editing it; the note keeps what it took to get there — enough to challenge the design. Neither is a summary of the other.
 
 A comment worth keeping states a constraint that would recur if ignored; one worth deleting recounts the incident, with its date and its evidence. **That narrative goes to the archive** — one line in the code, the story there — so deleting it loses nothing, it puts it in the right place. Both worked through on a real pair: [`docs/code/verify-narrative.md`](code/verify-narrative.md).
@@ -80,6 +80,8 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 
 `SUIVI.md` is what the generator sets up **by default**, in `workspace/docs/` *(never pushed)*: **one single living doc** carrying the cold-resume state **and "what's left to do"**. A heavy undertaking moves into a **plan** *(`workspace/plans/`)*. Not wanting them at all: `init-project.sh --no-lifecycle-docs`.
 
+**The FORM it takes is [`tracking-doc.md`](tracking-doc.md)'s** — armed there, and stated nowhere else.
+
 **The two rows above are a matter of SCALE, not a second system.** A new project keeps ONE file — three near-empty ones cost more to keep in step. The split comes when the doc stops answering *"what do I do next"* at a glance, measured here at **160 of 263 lines**.
 
 > ⚠️ **BEFORE creating anything to drive a project** — tracking, backlog, planning, resumption — the rule below applies in full: **check what already exists, build custom only as a last resort, and say so.**
@@ -93,6 +95,8 @@ A comment worth keeping states a constraint that would recur if ignored; one wor
 - **Concise.** One idea per sentence, one sentence per line. Nothing said twice, no sentence that survives only because deleting it would take a decision.
   🔴 **The test is a DELETION, and it holds in every register** — code, prose, comment, terminal output: remove the word, the sentence, the line, and **if nothing breaks, it stays removed.** What makes it usable is that it asks about the EFFECT of the removal, never about the worth of the text. *(Anthropic states it for a rules file: "would removing this cause Claude to make mistakes? If not, cut it.")*
 - **Plain.** No jargon that a plainer word replaces, no emphasis carrying no meaning. A reader who knows the subject and a reader who does not must reach the same understanding.
+
+🔴 **Announcing a breakdown is promising to maintain it — so a living document states the total, never the split.** *"26 rules: 14 armed, 8 written with no guard, 2 out of reach, 2 withdrawn"* went stale in a day, and the sum still added up, which is what let two wrong columns stand: a reader checks the total, never the parts. **Where the split is the point, it is recounted at the moment of writing, or it is left out.** Not armed, deliberately: the shape appears too rarely for a guard to earn its keep, and one whose pattern almost never fires costs its upkeep for nothing.
 
 > 🔴 **A size CEILING was considered and RULED OUT**, and the reason matters: capping a file pushes the overflow into sub-files, which moves the problem and risks losing what gets moved. **Concision is written in, never enforced by a wall.**
 

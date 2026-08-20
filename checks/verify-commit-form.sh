@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: METHODE.md   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The commit subject is the sentence that lands in the history and is read years later. It has TWO
 # entry points — the `commit-msg` hook passes the message being written, the lot passes nothing and
 # the branch's commits are read — so that one instrument answers both and they cannot disagree.

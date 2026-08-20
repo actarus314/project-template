@@ -408,7 +408,7 @@ cat <<EOF
         description, topics, and CODEQL ACTIVATION (default setup).
       ⚠ The description and topics REQUIRE Administration: write — the assistant gets a 403.
         ONLY this script can set them. Without a description, community health caps
-        at 85%; without a topic, the repo doesn't surface in ANY topic search.
+        at 85 %; without a topic, the repo doesn't surface in ANY topic search.
       Asks for an EPHEMERAL admin PAT via masked input — REVOKE it as soon as done.
       Permissions: EXACT recipe in docs/RUNBOOK.md, step 7a
       (a missing permission fails SILENTLY).

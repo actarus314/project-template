@@ -14,6 +14,7 @@
 | **keep up to date** — the bump channels, Renovate, the PR checks | [`security-and-updates.md`](security-and-updates.md) *(+ its `.html` view)* |
 | **deploy** a self-hosted service | [`docker-hardening.md`](docker-hardening.md) |
 | **write** — where a fact lives, the tracking doc, archives, code comments | [`METHODE.md`](METHODE.md) |
+| **keep the tracking doc in FORM** — its rows, its tasks, its stage folders | [`tracking-doc.md`](tracking-doc.md) |
 | **act** — the gestures, in order, and who performs each | [`RUNBOOK.md`](RUNBOOK.md) |
 
 > 🔴 **The section NUMBERS below are stable.** A section that moved keeps its number here as a one-line pointer, so *"standard §12"* written in an archive, a memory or a merged pull request **still resolves**. Renumbering would have silently falsified every archive — and an archive is immutable.
@@ -41,6 +42,7 @@ Three things to distinguish clearly:
 > **Remaining exceptions**: the local file templates stay in French — `templates/repo/.envrc`, `templates/workspace/*`. *(`templates/repo/CLAUDE.md` left that list the day it stopped being a local file: it is committed in every generated project.)*
 > They are gitignored in the generated project and never reach GitHub.
 > **The bilingual `README.md` is a different kind of exception — deliberate, not a leftover**: it is the one **versioned** file allowed to carry French, in every project *(`README.md` here, `templates/repo/README.md` in each one generated)* — detail in §15.
+> **Numbers**: the decimal marker is the **point**, and a space separates a value from `%`. SI brochure §5.4.4 leaves the marker to the language — its English text uses the point where its French text uses the comma — while NIST's SI checklist §15 puts a space before a unit symbol and §16 groups digits with a space, **never a comma**. `verify-language.sh` refuses the other three forms.
 > **Tone**: never **2nd person** (`you/your`, `vous/tu/ton`) in versioned content **or in the app UI** — write "the user" / "l'utilisateur" or impersonal phrasing.
 
 ---

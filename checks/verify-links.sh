@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
 # Relative markdown links that resolve nowhere, and their anchors — in BOTH repos.
 #
 # A dead link is invisible: the reader lands nowhere and stops following pointers, hardest right
@@ -17,6 +17,16 @@ command -v python3 >/dev/null 2>&1 || { echo "  (python3 absent — links not ch
 
 python3 - . ../workspace <<'PY'
 import re, sys, pathlib
+import os
+
+# Each rule carries a TAG, and it is what reaches the journal: one control name for several rules
+# left no way to know which of them ever bit. Absent CHECK_TAGS, the tag goes nowhere.
+def tag(name):
+    p = os.environ.get("CHECK_TAGS")
+    if p:
+        with open(p, "a") as fh:
+            fh.write(name + "\n")
+
 
 # http(s) targets stay out of scope: that uptime belongs to someone else, not this repo.
 LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)\s]+)\)")
@@ -115,5 +125,7 @@ if absent:
     scope += f" — NOT read: {', '.join(absent)} (absent)"
 print(f"✓ every relative link resolves — {scope}" if not bad
       else f"✗ {len(bad)} dead link(s) — {scope}", file=sys.stderr)
+for _b in bad:
+    tag("false-attribution" if "credits" in _b else "dead-link")
 sys.exit(1 if bad else 0)
 PY

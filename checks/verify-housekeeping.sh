@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   (through `decision: block` on stdout — the exit stays 0, or the JSON is dropped)
+# blocking: yes   rule: AGENTS.md   (through `decision: block` on stdout — the exit stays 0, or the JSON is dropped)
 # hook: Stop, PreCompact, UserPromptSubmit — fired by the assistant, never by check.sh: it reads its payload from STDIN.
 # The development admin falling behind the work: commits piling up with nothing written down.
 # THREE events (Stop, PreCompact, UserPromptSubmit), threshold 6 commits since the last write.

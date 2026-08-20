@@ -17,7 +17,7 @@ Both are COUNTED, never judged. That is deliberate: a model asked to review a tu
 
 That is a weaker guarantee than the other two hooks carry. Those refuse a literal string, present or absent; these three signals read prose, which is where a guard is wrong. What makes blocking affordable here is the cap above, plus the journal below: every bite is recorded WITH the signal that produced it, so the rate is read off an indicator instead of being remembered. A signal that turns out to fire too often comes back to advisory by changing `decision` on one line.
 
-The patterns were tuned against 4463 real turns of this project's own transcripts: the obvious wordings fired on ~15% of turns, which is unreadable. Each narrowing below is what brought them under 1%. Anything loosened here must be re-measured the same way, not eyeballed.
+The patterns were tuned against 4463 real turns of this project's own transcripts: the obvious wordings fired on ~15 % of turns, which is unreadable. Each narrowing below is what brought them under 1 %. Anything loosened here must be re-measured the same way, not eyeballed.
 
 Wiring: see [`verify-housekeeping.md`](verify-housekeeping.md).
 
@@ -49,7 +49,7 @@ A PARTIAL read is a different case, and it splits the signals in two. What was s
 
 ---
 
-Signal 3 — a table of measurements rendered while nothing was written. Measuring is cheap and forgetting to record it is invisible: the numbers simply vanish with the turn. Vocabulary of measurement alone fired on 6% of turns and a table alone on 3.75%; requiring BOTH, with at least three numeric rows, brings it to 0.77%. A turn that wrote nothing at all is left alone — that is a conversation, not a lost measurement.
+Signal 3 — a table of measurements rendered while nothing was written. Measuring is cheap and forgetting to record it is invisible: the numbers simply vanish with the turn. Vocabulary of measurement alone fired on 6 % of turns and a table alone on 3.75 %; requiring BOTH, with at least three numeric rows, brings it to 0.77 %. A turn that wrote nothing at all is left alone — that is a conversation, not a lost measurement.
 
 ## A French thousands separator is a space
 
