@@ -26,7 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           for f in .github/renovate.json templates/repo/.github/renovate.json; do
-            npx --yes --package renovate@44.14.10 renovate-config-validator "$f"
+            npx --yes --package renovate@44.31.0 renovate-config-validator "$f"
           done
 
   lint-scripts:
