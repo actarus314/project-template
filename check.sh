@@ -193,7 +193,8 @@ PAR="$CACHE/par"
 reap() {
   [ -f "$PAR/$1.rc" ] || { echo "  (nothing captured for $1 — it never ran)"; return 1; }
   LAST_MS=$(cat "$PAR/$1.ms" 2>/dev/null || echo "")
-  LAST_TAGS=$(tr '\n' ' ' < "$PAR/$1.tags" 2>/dev/null | sed 's/ *$//' || echo "")
+  # The redirection is the shell's, so a `2>/dev/null` on `tr` never silences a missing file.
+  LAST_TAGS=$(cat "$PAR/$1.tags" 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')
   cat "$PAR/$1.out"
   local rc; rc=$(cat "$PAR/$1.rc")
   if [ "$rc" != 0 ] && grep -qE '^# blocking: no\b' "checks/$1.sh" 2>/dev/null; then
