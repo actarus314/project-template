@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a plan document kept in the neighbouring workspace**: a plan belongs to the session running it, and kept there it holds an execution state the tracking doc owns. The tasks it carves out rise into the tracking doc instead; an archive is exempt.
 - **Validate `renovate.json` against Renovate 44.31.0**, up from 44.14.10: the local check pulls the validator at that version, so a config the current bot would refuse is caught before the bot sees it.
 - **Give the tracking doc's FORM its own subject file** (`docs/tracking-doc.md`): thirteen armed rules — the row, the numbered task, the stage folders — lived in no rule document, so a refusal named a rule nobody could read. The role stays `METHODE.md`'s.
 - **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.

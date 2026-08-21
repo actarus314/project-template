@@ -37,6 +37,14 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 A per-line exemption marker was built here — writing what a form rule looks for is enough to trip it — then **removed the same day, and the reason is worth keeping**: the rules that would honour it read only the tracking table and the `DETAILS.md` headings, neither of which documents its own rules. Zero lines ever used it.
 ➡️ **The one file that does hold marks — a stage file quoting the tracking doc — is where no exemption belongs**: it carries no task, quoted or not, and one there reopens the second backlog. **Naming a mark instead of showing it** costs nothing.
 
+## A plan, recognised by its header rather than by its name or its boxes
+
+The plan skill stamps the same header on every plan it writes, so a literal identifies one. **A file name would identify nothing**: no convention here fixes what a plan is called, and naming one would invent the very perimeter the literal makes unnecessary.
+
+🔴 **The checkbox was measured and ruled out, because it points backwards.** The pattern reading open work looks for an EMPTY box; replayed over the three states one real plan went through, it returns **11** hits on what the plan stage renders, **4** mid-execution, and **none** once every box is ticked. Armed on a plan, it would bite at birth and stay silent through the drift.
+
+📏 **Measured across both repositories before arming: the header sits in exactly one file**, a plan already archived — hence the same archive exemption as the rule above, and for the same reason.
+
 ## The chantier number given twice
 
 A number identifies a chantier for good: an archive written today must still resolve in six months, and nothing enforced it — the tracking doc holds the OPEN ones, archives the CLOSED ones.

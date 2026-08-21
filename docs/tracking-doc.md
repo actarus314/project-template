@@ -29,3 +29,4 @@
 - A stage folder is **never empty** — an empty one reads as something that disappeared from the tracking doc.
 - A stage folder **holds a `DETAILS.md`**: its tasks otherwise have nowhere to be reasoned about.
 - A `DETAILS.md` **never reasons a task the tracking doc does not carry**. That is a second backlog, and the second one is always the stale one that gets read first.
+- **A plan does not live here.** It prescribes one stage and belongs to the session running it; kept, it holds an execution state the tracking doc owns and a rationale the stage's `DETAILS.md` owns. **The tasks a plan carves out rise into the tracking doc** — the task, never its steps. What identifies a plan is the header its skill stamps, read in a file's head block, and an archive is exempt.

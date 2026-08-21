@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: tracking-doc.md   tags: 20   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: tracking-doc.md   tags: 21   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place no other control can see (why: verify-workspace.md).
 # Verifiable only: git repo, no remote, no secret-named file tracked, one tracking system.
 # NOT verifiable, and never to be promised: whether the tracking document's CONTENT is true.
@@ -286,7 +286,21 @@ $unprefixed"
 $open_work"
     read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
   fi
+
+  # A PLAN prescribes one stage and belongs to the session that runs it: kept here it carries a state
+  # the tracking doc already owns, and a why the stage's detail file already owns. Recognised by the
+  # header the plan skill stamps on every plan it writes — a literal, so nothing here judges what a
+  # plan is. HEAD block only: further down, those same words are prose ABOUT a plan. Archives are
+  # excluded as above — one already holds the pattern, and an archive is immutable.
+  plans=$(cd "$ws" && git ls-files -- '*.md' | grep -v '^archives/' || true)
+  planned=$(cd "$ws" && printf '%s\n' "$plans" | sed '/^$/d' | while read -r f; do
+    head -12 "$f" 2>/dev/null | grep -qF -- 'REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development' \
+      && printf '  %s\n' "$f"
+  done || true)
+  [ -n "$planned" ] && say "plan-in-workspace" "a plan document sits in the workspace — it lives with the session that runs it, and its tasks belong in $(basename "${track:-the tracking doc}"):
+$planned"
+  read_plans=", $(printf '%s\n' "$plans" | sed '/^$/d' | wc -l | tr -d ' ') file(s) read for a plan header"
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-}${read_plans:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"
