@@ -79,7 +79,7 @@ The `pre-commit` hook **reruns it on its own, at every commit, and BLOCKS on a g
 
 - **A comment** does not outgrow its code since the last release, cross the matrix's share of its file, or hold a block past its line limit. **One that goes says where** — its `docs/code/` note, or a `drop:` declaration naming that file.
 - **A paragraph** does not restate another: a link to the original exempts nothing, and a file's header is never the comparison. **A curated document** does not only grow, and a closed stage prunes the hot side.
-- **A relative link and its anchor** resolve, and a pointer crediting a document with a quoted formula is checked against it. **An `.html` view** names an `.md` that exists, and follows it whenever it changes.
+- **A relative link and its anchor** resolve, and a pointer crediting a document with a quoted formula is checked against it. **An `.html` view** names an `.md` that exists, and follows it whenever it changes — **wherever the pair lives**, the neighbouring workspace included.
 - **A turn asserts nothing it did not run**: no defect stated and left untouched, no total absent from a tool output, no measurement rendered and never written down.
 - **The rule documents are read before writing**, the runbook before a lifecycle gesture, and **the development admin keeps pace with the work**.
 - **No private name** — project, host, person — reaches versioned content. **No file named like a secret** is tracked, no credential helper holds a literal token, and no machine path is published.

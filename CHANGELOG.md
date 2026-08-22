@@ -11,6 +11,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Watch the `.md`/`.html` pairs of the neighbouring workspace too**: a view kept outside this repository drifted in silence, since the guard only ever looked at `docs/`. The rule was already stated for any pair; only its reach was short.
+- **State that nothing operational is looked up in an archive**: an archive is the history of the work, never its documentation, and a living document pointing at one to say what to do names a gap to fill in the documentation.
 - **Name where a process specification lives** (`workspace/process/`): the roles table had no row for it, so a permanent-role document ended up filed in an archive — frozen, while the channel meant to amend it had nowhere to write.
 - **State that a stage's detail file explains rather than records**: a measurement or a proof of execution goes in a file of its own beside it, which becomes the archive where evidence belongs. The rule was the maintainer's, and lived only in an archive.
 - **Refuse a plan document kept in the neighbouring workspace**: a plan belongs to the session running it, and kept there it holds an execution state the tracking doc owns. The tasks it carves out rise into the tracking doc instead; an archive is exempt.
