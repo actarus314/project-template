@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **State the five form rules that lived only in an archive**: the mark a task opens on, the chantier title, the single link in the detail column, the closed-stage line, and a `DETAILS.md` that never empties. No guard reads any of them, and each says so where it stands.
 - **Refuse a rule document the process names and its recall omits**: a process specification recalls what it applies and points at each rule's home. It watches named documents, never rules — reading a rule out of a text is a judgement.
 - **Watch the `.md`/`.html` pairs of the neighbouring workspace too**: a view kept outside this repository drifted in silence, since the guard only ever looked at `docs/`. The rule was already stated for any pair; only its reach was short.
 - **State that nothing operational is looked up in an archive**: an archive is the history of the work, never its documentation, and a living document pointing at one to say what to do names a gap to fill in the documentation.

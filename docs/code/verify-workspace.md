@@ -57,6 +57,7 @@ A number identifies a chantier for good: an archive written today must still res
 
 A task opens on a mark and a `chantier.rank` number, then an **infinitive verb**; it holds **no link**, those living in the detail cell, and at most **72 characters** of bare text.
 🔴 **72 is the commit-subject limit, and that is the whole reason it is 72** — a subject and a task are the same object, and `verify-commit-form` already caps one there. **The infinitive is the only binary substitute for "no retelling"**, which is a judgement and stays unarmed; an owner prefix is stripped first, `**Name** :` not being the verb.
+⚠️ **The mark itself is a FILTER, never a rule read here**: a segment not opening on one is skipped whole, so a numbered task carrying no mark crosses everything above. Arming it keys on the `**N.M**` number, which a label never carries.
 
 - **A row has FOUR columns**: one missing pipe desynchronises every field, and the task sitting past it is judged by nothing — lived on one row whose last task escaped every rule here.
 - **An OPEN task holds no count.** "the 7 pitfalls" names a set that can be treated one at a time; "72 characters" is a threshold that cannot be split, and the definite article separates them. A ticked task keeps its count: what is done no longer goes stale.
