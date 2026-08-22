@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: tracking-doc.md   tags: 21   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: tracking-doc.md   tags: 22   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place no other control can see (why: verify-workspace.md).
 # Verifiable only: git repo, no remote, no secret-named file tracked, one tracking system.
 # NOT verifiable, and never to be promised: whether the tracking document's CONTENT is true.
@@ -300,7 +300,34 @@ $open_work"
   [ -n "$planned" ] && say "plan-in-workspace" "a plan document sits in the workspace — it lives with the session that runs it, and its tasks belong in $(basename "${track:-the tracking doc}"):
 $planned"
   read_plans=", $(printf '%s\n' "$plans" | sed '/^$/d' | wc -l | tr -d ' ') file(s) read for a plan header"
+
+  # The process recalls the rules it applies and points at where each one lives. A rule document
+  # NAMED there and absent from that recall leaves a reader with no way back to it. The list of rule
+  # documents is read from the repository, never held here: one written down goes stale on the day a
+  # document is added. Recognising a RULE would be a judgement — a named DOCUMENT is not.
+  recall=$ws/process/REGLES.md
+  if [ -f "$recall" ]; then
+    missing_rule_doc=""
+    for d in docs/*.md AGENTS.md; do
+      b=$(basename "$d")
+      case "$b" in README.md) continue;; esac
+      # The BARE name, extension or not: the corpus writes `METHODE` far more often than the file
+      # name, and a rule keyed on the extension would read a corpus nobody writes.
+      n=${b%.md}
+      grep -qF -- "$n" "$recall" && continue
+      named=0
+      for f in "$ws"/process/*.md; do
+        [ -f "$f" ] || continue
+        case "$f" in *REGLES.md) continue;; esac
+        grep -qF -- "$n" "$f" && { named=1; break; }
+      done
+      [ "$named" = 1 ] || continue
+      missing_rule_doc="$missing_rule_doc $b"
+    done
+    [ -n "$missing_rule_doc" ] && say "rule-doc-not-recalled" "a rule document the process names is missing from its recall ($(basename "$recall")) —$missing_rule_doc"
+    read_recall=", rule recall covers the document(s) the process names"
+  fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-}${read_plans:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-}${read_plans:-}${read_recall:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

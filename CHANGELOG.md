@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a rule document the process names and its recall omits**: a process specification recalls what it applies and points at each rule's home. It watches named documents, never rules — reading a rule out of a text is a judgement.
 - **Watch the `.md`/`.html` pairs of the neighbouring workspace too**: a view kept outside this repository drifted in silence, since the guard only ever looked at `docs/`. The rule was already stated for any pair; only its reach was short.
 - **State that nothing operational is looked up in an archive**: an archive is the history of the work, never its documentation, and a living document pointing at one to say what to do names a gap to fill in the documentation.
 - **Name where a process specification lives** (`workspace/process/`): the roles table had no row for it, so a permanent-role document ended up filed in an archive — frozen, while the channel meant to amend it had nowhere to write.
