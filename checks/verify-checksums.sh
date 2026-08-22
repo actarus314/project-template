@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # blocking: yes   rule: AGENTS.md   tags: 2   (what this does with a verdict; compared to the control table AND to its real exit code)
-# Anti-drift safeguard between a docs/*.md (source of truth) and its hand-crafted docs/*.html.
+# Anti-drift safeguard between a .md (source of truth) and its hand-crafted .html view, here and
+# in the neighbouring workspace/process/.
 #
 # A docs/*.html carrying a `checksum-source-md: sha256:<hash>` header comment declares "I am the
 # view of that .md at THIS hash". No such line -> silent, the case in every generated project.
@@ -64,7 +65,9 @@ shopt -s nullglob
 # The pairs are the observable: a project with none is the normal case (no generated project ships
 # one). Counted so the verdict can say what was actually read, not just "found nothing".
 pairs=0
-for html in docs/*.html; do
+# The neighbour is read too: a view lives beside the text it renders, wherever that pair sits, and
+# one kept outside this repository drifted in silence for want of being looked at.
+for html in docs/*.html ../workspace/process/*.html; do
   recorded=$(grep -o 'checksum-source-md: sha256:[0-9a-f]*' "$html" | awk -F: '{print $3}' || true)
   [ -n "$recorded" ] || continue   # no marker -> this .html is not concerned
   pairs=$((pairs + 1))

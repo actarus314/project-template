@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# blocking: yes   rule: tracking-doc.md   tags: 20   (what this does with a verdict; compared to the control table AND to its real exit code)
+# blocking: yes   rule: tracking-doc.md   tags: 24   (what this does with a verdict; compared to the control table AND to its real exit code)
 # The neighbouring workspace/ — the one place no other control can see (why: verify-workspace.md).
 # Verifiable only: git repo, no remote, no secret-named file tracked, one tracking system.
 # NOT verifiable, and never to be promised: whether the tracking document's CONTENT is true.
@@ -108,7 +108,7 @@ else
     # Marks only at the START of a cell — elsewhere it's prose quoting the rule, not a mark
     # (incident: verify-workspace.md).
     stale=$(awk '
-      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }
+      /^#+ / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }
       inside && /^\|/ && /\|[[:space:]]*(✅|✔|☑|~~|LIVRÉ|LIVRE|DONE|FAIT|TERMINÉ|TERMINE|CLOS)/ { print NR ": " substr($0, 1, 72) }   # fr-pattern: the doc it reads is French
     ' "$track" || true)
     if [ -n "$stale" ]; then
@@ -122,7 +122,7 @@ $stale"
     # existed. Read from the FIRST cell of a table row, never from prose: a number in a sentence is
     # a reference, not a claim to the number. Why only same-section duplicates: verify-workspace.md.
     nums=$(awk '
-      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      /^#+ / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         if (match($0, /\*\*[0-9]+(\.[0-9]+)?\*\*/)) print substr($0, RSTART + 2, RLENGTH - 4)
       }' "$track" || true)
@@ -146,18 +146,26 @@ $(printf '%s\n' "$reused" | sed 's/^/  /')"
 
     # The FORM of a row and of a task, each rule binary. A row has FOUR columns — one missing pipe
     # desynchronises every field, and the task past it is judged by nothing at all. A task opens on a
-    # mark and a number, then an infinitive verb; it holds no link, no more than 72 characters — the
+    # mark AND a number, then an infinitive verb — recognised on the NUMBER, or a missing mark could
+    # never be refused; it holds no link, no more than 72 characters — the
     # commit-subject limit, a subject and a task being the same object — and, while still OPEN, no
     # COUNT of what it has to treat. What is NOT here is "no retelling", a judgement. Why: verify-workspace.md.
     bad=$(awk -F'|' '
-      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      /^#+ / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         tail = $NF; gsub(/[[:space:]]/, "", tail)
         if (NF != 6 || tail != "") { print "  not four columns: " substr($2, 1, 20); next }
         n = split($4, seg, "<br>")
         for (i = 1; i <= n; i++) {
           s = seg[i]; gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
-          if (s !~ /^(✅|⬜)/) continue                      # not a task line: the cell may open on a label
+          if (s == "") continue                            # a stray <br>: nothing was written there
+          mark = (s ~ /^(✅|⬜)/)
+          num = (s ~ /^(✅|⬜)?[[:space:]]*\*\*[0-9]+\.[0-9]+\*\*/)
+          if (!mark && !num) {
+            if (i == 1) continue                           # only the FIRST segment may be a label
+            print "  not a task: " substr(s,1,60); continue
+          }
+          if (!mark) { print "  unmarked: " substr(s,1,60); continue }
           open = (s ~ /^⬜/)
           t = s; sub(/^(✅|⬜)[[:space:]]*/, "", t)
           if (t !~ /^\*\*[0-9]+\.[0-9]+\*\*/) { print "  unnumbered: " substr(s,1,60); continue }
@@ -175,15 +183,17 @@ $(printf '%s\n' "$reused" | sed 's/^/  /')"
         }
       }' "$track" || true)
     if [ -n "$bad" ]; then
-      # SIX rules answer under one message, and the journal would credit them all to one name.
+      # EIGHT rules answer under one message, and the journal would credit them all to one name.
       # The tag comes from what the awk above printed — the wording IS the discriminator.
       case "$bad" in *"not four columns"*)     tag four-columns;; esac
       case "$bad" in *"unnumbered"*)           tag task-unnumbered;; esac
+      case "$bad" in *"unmarked"*)             tag task-unmarked;; esac
+      case "$bad" in *"not a task"*)           tag segment-not-a-task;; esac
       case "$bad" in *"holds a link"*)         tag task-holds-link;; esac
       case "$bad" in *" char.:"*)              tag task-too-long;; esac
       case "$bad" in *"not an infinitive"*)    tag task-not-infinitive;; esac
       case "$bad" in *"holds a count"*)        tag task-holds-count;; esac
-      say "task-form" "a row or a task is out of form in $(basename "$track") — four columns; a task is numbered, opens on an infinitive, holds no link, no count, at most 72 characters:
+      say "task-form" "a row or a task is out of form in $(basename "$track") — four columns; a task carries its state mark and its number, opens on an infinitive, holds no link, no count, at most 72 characters; only a cell's first segment may be a label:
 $bad"
     fi
 
@@ -202,7 +212,7 @@ $missing"
     # The detail column carries a LINK, or the DASH that declares there is nothing to point at yet.
     # A frozen chantier has no folder, and an empty one invented for the rule reads as a lost folder.
     nodetail=$(awk -F'|' '
-      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      /^#+ / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         d = $5; gsub(/^[[:space:]]+|[[:space:]]+$/, "", d)
         if (d !~ /\]\(/ && d != "—") print "  " substr($2, 1, 20) " → " substr(d, 1, 40)
@@ -213,7 +223,7 @@ $nodetail"
     fi
 
     tasks=$(awk -F'|' '
-      /^## / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
+      /^#+ / { inside = ($0 ~ /Ce qui reste|What (is )?left|Remaining/) ? 1 : 0; next }   # fr-pattern: the doc it reads is French
       inside && /^\|[[:space:]]*(▶[[:space:]]*)?\*\*[0-9]/ {
         n = split($4, seg, "<br>")
         for (i = 1; i <= n; i++) if (match(seg[i], /\*\*[0-9]+\.[0-9]+\*\*/)) print substr(seg[i], RSTART + 2, RLENGTH - 4)
@@ -286,7 +296,48 @@ $unprefixed"
 $open_work"
     read_pledge=", $(printf '%s\n' "$watched" | wc -l | tr -d ' ') file(s) pledging no open work"
   fi
+
+  # A PLAN prescribes one stage and belongs to the session that runs it: kept here it carries a state
+  # the tracking doc already owns, and a why the stage's detail file already owns. Recognised by the
+  # header the plan skill stamps on every plan it writes — a literal, so nothing here judges what a
+  # plan is. HEAD block only: further down, those same words are prose ABOUT a plan. Archives are
+  # excluded as above — one already holds the pattern, and an archive is immutable.
+  plans=$(cd "$ws" && git ls-files -- '*.md' | grep -v '^archives/' || true)
+  planned=$(cd "$ws" && printf '%s\n' "$plans" | sed '/^$/d' | while read -r f; do
+    head -12 "$f" 2>/dev/null | grep -qF -- 'REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development' \
+      && printf '  %s\n' "$f"
+  done || true)
+  [ -n "$planned" ] && say "plan-in-workspace" "a plan document sits in the workspace — it lives with the session that runs it, and its tasks belong in $(basename "${track:-the tracking doc}"):
+$planned"
+  read_plans=", $(printf '%s\n' "$plans" | sed '/^$/d' | wc -l | tr -d ' ') file(s) read for a plan header"
+
+  # The process recalls the rules it applies and points at where each one lives. A rule document
+  # NAMED there and absent from that recall leaves a reader with no way back to it. The list of rule
+  # documents is read from the repository, never held here: one written down goes stale on the day a
+  # document is added. Recognising a RULE would be a judgement — a named DOCUMENT is not.
+  recall=$ws/process/REGLES.md
+  if [ -f "$recall" ]; then
+    missing_rule_doc=""
+    for d in docs/*.md AGENTS.md; do
+      b=$(basename "$d")
+      case "$b" in README.md) continue;; esac
+      # The BARE name, extension or not: the corpus writes `METHODE` far more often than the file
+      # name, and a rule keyed on the extension would read a corpus nobody writes.
+      n=${b%.md}
+      grep -qF -- "$n" "$recall" && continue
+      named=0
+      for f in "$ws"/process/*.md; do
+        [ -f "$f" ] || continue
+        case "$f" in *REGLES.md) continue;; esac
+        grep -qF -- "$n" "$f" && { named=1; break; }
+      done
+      [ "$named" = 1 ] || continue
+      missing_rule_doc="$missing_rule_doc $b"
+    done
+    [ -n "$missing_rule_doc" ] && say "rule-doc-not-recalled" "a rule document the process names is missing from its recall ($(basename "$recall")) —$missing_rule_doc"
+    read_recall=", rule recall covers the document(s) the process names"
+  fi
 fi
 
-[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
+[ "$fail" = 0 ] && echo "✓ workspace: git, no remote, no secret tracked${read_gate:-}, ${systems:-0} tracking system(s)${read_backlog:+,${read_backlog}}${read_numbers:-}${read_form:-}${read_folders:-}${read_pledge:-}${read_plans:-}${read_recall:-} — looked for SUIVI/TRACKING/PROGRESS.md and $(echo "${OTHERS:-}" | sed 's|\([^ ]*\)|\1/|g; s| |, |g')${unlisted:+; also tracked, unrecognised —$unlisted — name it above if it is a tracking tool}${not_read:+; NOT read:$not_read}"
 exit "$fail"

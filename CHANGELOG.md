@@ -11,6 +11,14 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a task carrying no state mark, and a stray segment in a chantier cell**: the check keyed on that mark to recognise a task at all, so one written without it crossed every other form rule in silence. A task is identified by its number now, and only a cell's first segment may be a label.
+- **State the five form rules that lived only in an archive**: the mark a task opens on, the chantier title, the single link in the detail column, the closed-stage line, and a `DETAILS.md` that never empties. Each says in place whether a guard reads it.
+- **Refuse a rule document the process names and its recall omits**: a process specification recalls what it applies and points at each rule's home. It watches named documents, never rules — reading a rule out of a text is a judgement.
+- **Watch the `.md`/`.html` pairs of the neighbouring workspace too**: a view kept outside this repository drifted in silence, since the guard only ever looked at `docs/`. The rule was already stated for any pair; only its reach was short.
+- **State that nothing operational is looked up in an archive**: an archive is the history of the work, never its documentation, and a living document pointing at one to say what to do names a gap to fill in the documentation.
+- **Name where a process specification lives** (`workspace/process/`): the roles table had no row for it, so a permanent-role document ended up filed in an archive — frozen, while the channel meant to amend it had nowhere to write.
+- **State that a stage's detail file explains rather than records**: a measurement or a proof of execution goes in a file of its own beside it, which becomes the archive where evidence belongs. The rule was the maintainer's, and lived only in an archive.
+- **Refuse a plan document kept in the neighbouring workspace**: a plan belongs to the session running it, and kept there it holds an execution state the tracking doc owns. The tasks it carves out rise into the tracking doc instead; an archive is exempt.
 - **Validate `renovate.json` against Renovate 44.31.0**, up from 44.14.10: the local check pulls the validator at that version, so a config the current bot would refuse is caught before the bot sees it.
 - **Give the tracking doc's FORM its own subject file** (`docs/tracking-doc.md`): thirteen armed rules — the row, the numbered task, the stage folders — lived in no rule document, so a refusal named a rule nobody could read. The role stays `METHODE.md`'s.
 - **State in `AGENTS.md` twenty-six rules armed checks enforce**, which lived only in their code: a check could refuse a commit for a rule no document stated, leaving the writer to infer it from the refusal. Every figure stays in the control matrix.
@@ -22,6 +30,9 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 
 ### Changed
 - **Bump the pinned CI tooling** — osv-scanner to v2.5.0, Trivy to v0.74.0, semgrep to 1.173.0, with their checksums: the template and every project it generates pin the same versions, and a stale pin scans against a stale database.
+
+### Fixed
+- **Stop reading a deeper sub-section as part of the open-work table**: the section boundary matched one heading depth, so a table under a `###` heading was still judged as chantier rows — refused for its column count and for pointing nowhere.
 
 ## [1.7.0](https://github.com/actarus314/project-template/releases/tag/v1.7.0) - 2026-08-18
 

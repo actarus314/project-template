@@ -37,6 +37,14 @@ Splitting the tracking doc into neighbours recreates the separate backlog METHOD
 A per-line exemption marker was built here — writing what a form rule looks for is enough to trip it — then **removed the same day, and the reason is worth keeping**: the rules that would honour it read only the tracking table and the `DETAILS.md` headings, neither of which documents its own rules. Zero lines ever used it.
 ➡️ **The one file that does hold marks — a stage file quoting the tracking doc — is where no exemption belongs**: it carries no task, quoted or not, and one there reopens the second backlog. **Naming a mark instead of showing it** costs nothing.
 
+## A plan, recognised by its header rather than by its name or its boxes
+
+The plan skill stamps the same header on every plan it writes, so a literal identifies one. **A file name would identify nothing**: no convention here fixes what a plan is called, and naming one would invent the very perimeter the literal makes unnecessary.
+
+🔴 **The checkbox was measured and ruled out, because it points backwards.** The pattern reading open work looks for an EMPTY box; replayed over the three states one real plan went through, it returns **11** hits on what the plan stage renders, **4** mid-execution, and **none** once every box is ticked. Armed on a plan, it would bite at birth and stay silent through the drift.
+
+📏 **Measured across both repositories before arming: the header sits in exactly one file**, a plan already archived — hence the same archive exemption as the rule above, and for the same reason.
+
 ## The chantier number given twice
 
 A number identifies a chantier for good: an archive written today must still resolve in six months, and nothing enforced it — the tracking doc holds the OPEN ones, archives the CLOSED ones.
@@ -47,13 +55,15 @@ A number identifies a chantier for good: an archive written today must still res
 
 ## The FORM of a row, and of a task
 
-A task opens on a mark and a `chantier.rank` number, then an **infinitive verb**; it holds **no link**, those living in the detail cell, and at most **72 characters** of bare text.
 🔴 **72 is the commit-subject limit, and that is the whole reason it is 72** — a subject and a task are the same object, and `verify-commit-form` already caps one there. **The infinitive is the only binary substitute for "no retelling"**, which is a judgement and stays unarmed; an owner prefix is stripped first, `**Name** :` not being the verb.
+🔴 **The NUMBER identifies a task, and that is the only way a missing mark can be refused.** Keyed on the mark, the check skipped whatever lacked one, so it could never object to its absence — measured on a bench, a numbered task without a mark crossed all six rules above in silence.
+⚠️ **The exemption rests on what a segment HOLDS, never on where it sits**: a first segment carrying a mark is a task attempt, and this check already refused it unnumbered. An adversarial review caught the positional form putting that behaviour back. **An empty segment is a stray `<br>`** and is ignored: refusing a rendering artefact blocks a commit for nothing.
+⚠️ **The section boundary matches any heading depth.** Anchored at two, a `###` sub-section never closed the open-work table, so a table below it was still read as chantier rows — refused twice over, for its column count and for pointing nowhere. It never bit on the real document, whose deadline rows open on words rather than a digit.
 
-- **A row has FOUR columns**: one missing pipe desynchronises every field, and the task sitting past it is judged by nothing — lived on one row whose last task escaped every rule here.
-- **An OPEN task holds no count.** "the 7 pitfalls" names a set that can be treated one at a time; "72 characters" is a threshold that cannot be split, and the definite article separates them. A ticked task keeps its count: what is done no longer goes stale.
-- **The detail column carries a link, or the DASH saying there is nothing to point at yet** — a frozen chantier has no folder, and one invented to satisfy the rule reads as a folder something was lost from.
-- **A stage folder is prefixed with its chantier number, three digits then `--`**, and holds at least one file. `000` where the number is impossible: the July archives predate the numbering, and a retroactive number would collide with one since reassigned.
+- **Four columns**: one missing pipe desynchronises every field, and the task past it is judged by nothing — lived on one row whose last task escaped every rule here.
+- **No count while open**: "the 7 pitfalls" names a set that can be treated one at a time; "72 characters" is a threshold that cannot be split, and the definite article separates them. A ticked task keeps its count: what is done no longer goes stale.
+- **The dash in the detail column**: a frozen chantier has no folder, and one invented to satisfy the rule reads as a folder something was lost from.
+- **`000` where the number is impossible**: the July archives predate the numbering, and a retroactive number would collide with one since reassigned.
 - **Emptiness is asked of git, not of the disk** — a `.DS_Store` is invisible to a commit, and made an emptied folder look inhabited.
-- **A `DETAILS.md` names only numbers the tracking doc still carries**, or a deleted task leaves a section reasoning nothing. Numbers are read from the START of a heading: further in, a number is a citation, `arXiv:2603.00539` having shown it.
-- **That rule names the file, never "a file"**: a stage folder holds several, and it applies only where the prefix names an OPEN chantier — a side channel, a dead chantier and a pre-numbering folder carry none.
+- **Numbers are read from the START of a `DETAILS.md` heading**, or a deleted task leaves a section reasoning nothing: further in, a number is a citation, `arXiv:2603.00539` having shown it.
+- **It names the file, never "a file"**: a stage folder holds several, and it applies only where the prefix names an OPEN chantier — a side channel, a dead chantier and a pre-numbering folder carry none.
