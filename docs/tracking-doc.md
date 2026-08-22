@@ -18,7 +18,8 @@
 ### A row, and the task it holds
 
 - A row carries **four columns**.
-- A task **opens on the mark that says done or still to do**, so a row's state is read without reading its tasks. *(No guard: the check takes that mark as its filter, so a numbered task carrying none crosses every other rule in silence.)*
+- A task **opens on the mark that says done or still to do**, so a row's state is read without reading its tasks. What identifies a task is its number, which is the only way a missing mark can be refused.
+- **Only a cell's first segment may be a label.** Past it, a segment carrying neither mark nor number is a task that lost its form, never a note.
 - A task is **numbered**, and **opens on an infinitive** — what is to be done, not what it is about.
 - It holds **no link** and **no count**: both age faster than the row around them, and a stale figure reads as current.
 - It fits in **72 characters**. What does not fit belongs to the stage's detail file.
