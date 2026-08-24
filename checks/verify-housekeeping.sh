@@ -53,13 +53,11 @@ case "$EVENT" in PreCompact) JOURNAL_NAME="housekeeping (before compaction)";; e
 if [ "$EVENT" = UserPromptSubmit ]; then
   JOURNAL_NAME="housekeeping (asked in words)"
   # A pass ALREADY under way is not re-announced: routing again restarts a checklist that is
-  # half-done, and the sequencer below is what finishes it (verify-housekeeping.md).
-  if [ -f "$ARMED" ]; then
-    echo "[housekeeping] The closing pass is already under way — continue it rather than starting" \
-         "over. The end-of-turn check states what its artefact still has to cover."
-    record 0 "already under way — not re-routed"
-    exit 0
-  fi
+  # half-done, and the sequencer below is what finishes it (verify-housekeeping.md). That state is
+  # read AFTER the patterns, never before them: read first, it answered every prompt of every
+  # session the pass outlived — including prompts about anything else. The drift route has a latch
+  # for exactly that reason, and this route had none.
+  if [ -f "$ARMED" ]; then export HOUSEKEEPING_ARMED=1; else unset HOUSEKEEPING_ARMED; fi
   field=$(printf '%s' "$payload" | python3 -c '
 import json, sys
 try: ev = json.load(sys.stdin)
@@ -71,7 +69,7 @@ cand = [k for k, v in ev.items() if k not in META and isinstance(v, str) and v.s
 print(",".join(cand) or "NONE")
 ' || true)
   printf '%s' "$payload" | python3 -c '
-import json, re, sys
+import json, os, re, sys
 try: ev = json.load(sys.stdin)
 except Exception: sys.exit(0)
 META = {"hook_event_name", "session_id", "transcript_path", "cwd", "trigger", "permission_mode"}
@@ -83,6 +81,10 @@ PAT = [
 ]
 if not any(re.search(p, txt, re.I) for p in PAT):
     sys.exit(0)
+if os.environ.get("HOUSEKEEPING_ARMED"):
+    print("[housekeeping] The closing pass is already under way — continue it rather than starting "
+          "over. The end-of-turn check states what its artefact still has to cover.")
+    sys.exit(8)                  # 8: matched WHILE armed — answered to the prompt that asked, alone
 # stdout on this event IS the context the model reads: state the instruction, not a hint.
 print("[housekeeping] The maintainer asked for the closing pass. The `housekeeping` skill carries "
       "the checklist and decides what actually needs writing. Read the WHOLE message FIRST, and "
@@ -94,6 +96,8 @@ sys.exit(7)                      # 7: matched, so the shell below records it
   if [ "${rc:-0}" = 7 ]; then
     record 1 "routed to the housekeeping skill (fields: ${field:-?})"
     arm
+  elif [ "${rc:-0}" = 8 ]; then
+    record 0 "already under way — not re-routed (fields: ${field:-?})"
   else
     # Silence on a non-match used to make "fired and did not match" identical to "never fired" —
     # which is what left a real gap unexplainable. It now records what it read.
@@ -170,8 +174,14 @@ if missing:
     print(f"{len(missing)} of {len(items) + len(sections)} entries uncovered:")
     for m in missing: print(f"  - {m}")
 ') || gap="the artefact could not be read"
+  # Covering the doc ENDS the pass, and the artefact goes with it. The write above was long its
+  # only exit, so a pass whose honest verdict is "nothing to write" could never close: it stayed
+  # armed into every later session, and the artefact it left is read by the NEXT pass as its own
+  # enumeration — what the ceiling branch below deletes both files to prevent. The drift latch is
+  # deliberately NOT cleared here: the pass has just run, so its silence is the point.
   if [ -z "$gap" ]; then
-    record 0 "artefact covers the tracking doc"
+    rm -f "$ARMED" "$PASS"
+    record 0 "pass closed — the artefact covers the tracking doc"
     exit 0
   fi
   used=$((used + 1))

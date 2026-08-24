@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:deacbdaa2b6cb58bce54b2bc251808d79fd43adece9878e49a785dd2dca81fc9
+  checksum-source-md: sha256:4953a1dd831db8b99637fe53c48aa9f1cc8ad10a3f45ba5aedbc91f2adf52957
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1455,7 +1455,7 @@
 
   <div class="note">
     <h3>Acquiring <code>--artefact</code> — third parties should be able to self-host the project</h3>
-    <p>The Pages-site-plus-Docker case: a Pages page later packaged as an image so third parties can deploy it and track updates. <strong>Pages stays</strong>, and there is <strong>no <code>develop</code> to create</strong> — no host exists that needs validation. <em>(Exact sequence — who does what, in what order: RUNBOOK §5.)</em></p>
+    <p>A Pages page later packaged as an image so third parties can deploy it and track updates. <strong>Pages stays</strong>, and there is <strong>no <code>develop</code> to create</strong> — the reason is the branch model above, "Without <code>staging</code> — GitHub Flow, two branches are enough". <em>(Exact sequence — who does what, in what order: RUNBOOK §5.)</em></p>
     <p><code>Dockerfile</code> and <code>docker-publish.yml</code> arrive <strong>via PR</strong>, before <code>build-check</code> becomes required — that is what avoids the ordering trap above.</p>
     <p>A static page uses <strong><code>FROM nginx:alpine</code></strong>, followed by <strong><code>RUN apk upgrade --no-cache</code></strong>. 🔴 <strong>This line is not cosmetic</strong>: <code>nginx:alpine</code> lags behind Alpine's own packages and can carry HIGH CVEs already fixed upstream. Trivy runs with <code>--ignore-unfixed</code>: it surfaces <strong>all</strong> of them, and <code>build-check</code> goes <strong>RED</strong> — the template's own scanner then rejects the image the template itself recommends, without this line.</p>
     <p>The base image is bumped automatically: Renovate auto-detects the <code>Dockerfile</code>'s <code>FROM</code> as soon as it lands — nothing to declare.</p>

@@ -677,7 +677,7 @@ The repo keeps everything else: the category doesn't change, a capability is **A
 
 ### Acquiring `--artefact` — "third parties should be able to self-host my project"
 
-*The Pages-site-plus-Docker case: a Pages page later packaged as an image so third parties can deploy it and track updates. **Pages stays**, and there is **no `develop` to create** — no host exists that needs validation.*
+*A Pages page later packaged as an image so third parties can deploy it and track updates. **Pages stays**, and there is **no `develop` to create** — the reason is the branch model above, "Without `staging` — GitHub Flow, two branches are enough".*
 
 *(Exact sequence — who does what, in what order: RUNBOOK §5.)*
 

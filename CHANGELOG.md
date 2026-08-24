@@ -33,6 +33,8 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Bump the pinned CI tooling** — osv-scanner to v2.5.0, Trivy to v0.74.0, semgrep to 1.173.0, with their checksums: the template and every project it generates pin the same versions, and a stale pin scans against a stale database.
 
 ### Fixed
+- **Close the closing pass when its artefact covers the tracking doc**, where only a write to that doc could: a pass whose honest verdict was "nothing to write" stayed armed into every later session, muted the route that asks for one, and left an artefact the next pass reads as its own enumeration.
+- **Stop answering every prompt with "the pass is already under way"**: that state was read before the patterns, so a session inheriting a pass got the line whatever it asked about. The route that watches drift latches for exactly that reason; this one had nothing.
 - **Ask the closing pass for a verdict on every heading of the tracking doc**, at any depth: a sub-section under the open-work one was never requested, and the key the refusal displays was refused by its own matcher, so no section could be covered as shown.
 - **Stop reading a deeper sub-section as part of the open-work table**: the section boundary matched one heading depth, so a table under a `###` heading was still judged as chantier rows — refused for its column count and for pointing nowhere.
 

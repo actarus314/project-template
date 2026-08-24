@@ -19,6 +19,8 @@ a clean/propre variant → the same 2 but narrower; and the bare word "clear" �
 
 ⚠ On PreCompact it blocks ONLY when compaction was asked for by hand. An `auto` compaction means the context window is full and Claude Code has to reclaim it; refusing that leaves the session with nowhere to go. A guard that can wedge the tool it protects is worse than the drift it watches, so `auto` gets the message and lets compaction through.
 
+⚠ It reads the armed state AFTER its patterns, never before them. Read first, "a pass is already under way" answered every prompt of every session that pass outlived — on any subject, no pattern having been tried yet. The drift route latches for exactly that reason; this one had nothing.
+
 This is the one thing no file-watching check can see. verify-growth.sh knows the tracking doc only ever grows; verify-stage-closure.sh knows a release left no archive. Neither knows that eleven commits have landed since anyone last wrote a line about what they were for.
 
 🔴 IT DOES NOT DO THE PASS — it asks for it. What it measures is COUNTABLE (commits since the last write); what the pass itself requires is JUDGEMENT (does the tracking doc still reflect the work, is this stage closed, what should be pruned), and no counter settles that. So the verdict routes to the `housekeeping` skill, which carries the checklist and the writing. Code for what counts, a model only for what is judged.
@@ -44,7 +46,7 @@ So the turn does not end while a pass is under way and its artefact does not yet
 The fourth route — the model invoking the skill on its own reading — stays outside the mechanism.
 That is a limit, not an oversight: nothing arms a model's judgement.
 
-**Disarmed by a WRITE to the tracking doc**, never by the turn ending. Falling back on the drift threshold would disarm a pass asked for on a day with no drift at all — which is most of them.
+**Disarmed by a WRITE to the tracking doc, or by the artefact COVERING it** — never by the turn ending. Falling back on the drift threshold would disarm a pass asked for on a day with no drift at all, which is most of them. Coverage is not that fallback, and was never weighed against it: it is the sequencer's own finish line, and without it a pass whose honest verdict is "nothing to write" never closes. Measured 2026-08-24: covered at 13:50, still armed at 23:48 — muting the request route in a session nine hours later, and holding an artefact the next pass would have read as its own enumeration.
 
 🔴 **The 3-cycle ceiling is ours to write.** `Stop` has NO native loop protection: a hook that always returns `block` never lets Claude stop. So the count is kept in the state directory, and on the third send-back the turn is **released** — with what is still uncovered published, not swallowed. A guard that can wedge the session is worse than the gap it watches, and the same reasoning already governs `auto` compaction above.
 
