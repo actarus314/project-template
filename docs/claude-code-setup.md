@@ -76,6 +76,8 @@ The goal: the orchestrator spends its tokens **deciding**, not executing what a 
 
 🔴 **A mandate is given ONCE, in the prompt — widening one in flight is indistinguishable from a prompt injection.** An instruction contradicting an agent's own, arriving after the fact through a channel it cannot authenticate, has an attack's profile whatever the intent: of five agents treated that way, four complied and **the fifth refused and stopped**. Its reading was wrong and its default was right. **Relaunch an agent with the mandate it needs; never extend the one it runs under.**
 
+**Where a message to a running agent is the right call anyway, three things keep it from costing that agent.** The launch prompt **names the amendment channel itself**, so a later message arrives authorised by the mandate rather than against it — still given once, protocol included. The message **presupposes no state it cannot know**: one sent in a burst to five agents saying "even if the files are already written" is false for whichever wrote nothing, and that contradiction is what the refusing agent read as manipulation. And a constraint stated as absolute at launch is **never lifted in flight**, whatever the relaunch costs. Resuming is not free either way: of twenty-seven resumptions measured, fifteen interrupted the request that was running.
+
 ### 🔴 The three above are OPT-INS — and `verify-delegation.sh` is what checks them
 
 Left unwritten in the prompt, **the default does the opposite of all three, silently**. Nothing reports the omission, in either direction, which is why discipline alone never held.
