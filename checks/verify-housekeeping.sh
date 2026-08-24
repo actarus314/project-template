@@ -126,7 +126,8 @@ mkdir -p "$STATE_DIR"
 
 # ── The sequencer: a pass under way does not end the turn until its artefact COVERS the doc ──────
 # A skill is text, so a step skips itself and nothing sees it. What is counted is coverage, never
-# presence — every backlog item and every `##` section named, each with a verdict from a closed set.
+# presence — every backlog item and every HEADING named, each with a verdict from a closed set. Any
+# depth: a sub-section under the open-work one escaped the review while its parent was covered.
 # The 3-cycle ceiling, what is deliberately NOT implemented, and the artefact's shape:
 # docs/code/verify-housekeeping.md.
 if [ "$EVENT" = Stop ] && [ -f "$ARMED" ]; then
@@ -155,12 +156,14 @@ for l in doc:
     m = re.match(r"\s*(?:▶\s*)?\*\*([\d\s·.]+)\*\*", cells[1])   # fr-pattern: the doc it reads is French
     if m:
         items += re.findall(r"\d+(?:\.\d+)*", m.group(1))
-sections = [l[3:].strip() for l in doc if l.startswith("## ")]
+sections = [re.sub(r"^#+\s+", "", l).strip() for l in doc if re.match(r"^#{2,}\s", l)]
 try: art = open(os.environ["PASS"], encoding="utf-8").read()
 except OSError: art = ""
 V = r"\s*:\s*(open|closed|unchanged)\b"
 missing  = [f"item {n}"      for n in items    if not re.search(rf"item\s+{n}{V}", art, re.I)]
-missing += [f"section {s!r}" for s in sections if not re.search(re.escape(s) + V, art, re.I)]
+# The closing quote is optional because the message above DISPLAYS one: keyed strictly, this
+# refused the very form it taught, so no section key could ever be satisfied as shown.
+missing += [f"section {s!r}" for s in sections if not re.search(re.escape(s) + r"[\x27\"]?" + V, art, re.I)]
 # The denominator is published even when nothing is missing: a coverage figure with no total is
 # the shape of claim this whole check exists to refuse.
 if missing:

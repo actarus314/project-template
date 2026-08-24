@@ -11,6 +11,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 ## [Unreleased]
 
 ### Added
+- **Refuse a dead path written inside a memory**: a memory links to no file, so its pointers rot with nothing to show it — ten named archive folders by a prefix dropped weeks earlier while every other rule stayed green. A placeholder, a glob and a `file:line` are excluded.
 - **Refuse a task carrying no state mark, and a stray segment in a chantier cell**: the check keyed on that mark to recognise a task at all, so one written without it crossed every other form rule in silence. A task is identified by its number now, and only a cell's first segment may be a label.
 - **State the five form rules that lived only in an archive**: the mark a task opens on, the chantier title, the single link in the detail column, the closed-stage line, and a `DETAILS.md` that never empties. Each says in place whether a guard reads it.
 - **Refuse a rule document the process names and its recall omits**: a process specification recalls what it applies and points at each rule's home. It watches named documents, never rules — reading a rule out of a text is a judgement.
@@ -32,6 +33,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Bump the pinned CI tooling** — osv-scanner to v2.5.0, Trivy to v0.74.0, semgrep to 1.173.0, with their checksums: the template and every project it generates pin the same versions, and a stale pin scans against a stale database.
 
 ### Fixed
+- **Ask the closing pass for a verdict on every heading of the tracking doc**, at any depth: a sub-section under the open-work one was never requested, and the key the refusal displays was refused by its own matcher, so no section could be covered as shown.
 - **Stop reading a deeper sub-section as part of the open-work table**: the section boundary matched one heading depth, so a table under a `###` heading was still judged as chantier rows — refused for its column count and for pointing nowhere.
 
 ## [1.7.0](https://github.com/actarus314/project-template/releases/tag/v1.7.0) - 2026-08-18

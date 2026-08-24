@@ -38,7 +38,7 @@ Asking for the pass is not the same as the pass happening. **A skill is text**: 
 
 So the turn does not end while a pass is under way and its artefact does not yet **cover** the tracking doc.
 
-**Coverage, never presence.** Every backlog item number and every `##` section title is read **from the tracking doc itself** — the total is never a figure someone picked — and each must appear in the artefact with a verdict from a **closed set** (`open` / `closed` / `unchanged`). A closed set is what makes this mechanical: naming an entry without a verdict does not count it, and free prose could not be told apart from a list. That is the first of the four invariants taken from prior art: **the verdict lives IN the artefact**, not its existence — "the file is not empty" is the same shape of claim as the checksum that once hid 29 % of missing facts.
+**Coverage, never presence.** Every backlog item number and every heading title, **at any depth**, is read **from the tracking doc itself** — the total is never a figure someone picked — and each must appear in the artefact with a verdict from a **closed set** (`open` / `closed` / `unchanged`). A closed set is what makes this mechanical: naming an entry without a verdict does not count it, and free prose could not be told apart from a list. That is the first of the four invariants taken from prior art: **the verdict lives IN the artefact**, not its existence — "the file is not empty" is the same shape of claim as the checksum that once hid 29 % of missing facts.
 
 **Armed by all three routes.** The pass is reached by drift, by compaction, and by being asked for in words; arming on the last one alone would leave the most frequent path sequenced by nothing.
 The fourth route — the model invoking the skill on its own reading — stays outside the mechanism.
@@ -47,6 +47,10 @@ That is a limit, not an oversight: nothing arms a model's judgement.
 **Disarmed by a WRITE to the tracking doc**, never by the turn ending. Falling back on the drift threshold would disarm a pass asked for on a day with no drift at all — which is most of them.
 
 🔴 **The 3-cycle ceiling is ours to write.** `Stop` has NO native loop protection: a hook that always returns `block` never lets Claude stop. So the count is kept in the state directory, and on the third send-back the turn is **released** — with what is still uncovered published, not swallowed. A guard that can wedge the session is worse than the gap it watches, and the same reasoning already governs `auto` compaction above.
+
+🔴 **Two defects made the section half unreachable, and both were invisible while the item half worked.**
+**Depth**: keyed on `##` alone, a sub-section under the open-work one was never asked for — the deadline table went through a whole closing pass with no verdict, while its parent section had one.
+**Quoting**: the refusal DISPLAYS a key as `section 'X'`, and the matcher demanded the title immediately followed by its colon — so the very form it taught was refused, and no section key could ever be satisfied as shown. The closing quote is now optional. A guard that teaches a form it rejects is worse than one that says nothing.
 
 ⚠ **The artefact is scratch.** It lives in the state directory, outside both repositories, and goes when the pass is disarmed.
 
