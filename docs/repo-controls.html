@@ -13,7 +13,7 @@
   This file is only the LAYOUT of it. Any correction is made in the .md,
   then carried over here — otherwise the two diverge, and nobody knows which to trust.
 
-  checksum-source-md: sha256:4953a1dd831db8b99637fe53c48aa9f1cc8ad10a3f45ba5aedbc91f2adf52957
+  checksum-source-md: sha256:4c233e90deb81ae6b0b5ac7cf36d15f0e0d5c7820ff93cd31fde74402d0c8de2
   (filled in by docs/verify-checksums.sh --update; verified by ./check.sh and the CI)
 
   Light/dark theme: follows the system preference (prefers-color-scheme).
@@ -1888,9 +1888,9 @@
           <td class="h">local</td>
           <td>before the launch</td>
           <td class="p">✅</td>
-          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires. On a workflow it reads the SCRIPT, so the claim is script-wide, never per call <em>(and a workflow invoked by NAME is declared unread)</em></td>
+          <td><strong>needs watching</strong> — a hook, and a hook nothing declares simply never fires. On a workflow it reads the SCRIPT, so the claim is script-wide, never per call <em>(and one invoked by NAME is resolved where it is ours, asked where it is not)</em></td>
           <td class="t">instant</td>
-          <td>n/a — refuses the launch</td>
+          <td>n/a — refuses the launch, or asks</td>
         </tr>
         <tr>
           <td class="w"><code>checks/verify-rules-read.sh</code></td>

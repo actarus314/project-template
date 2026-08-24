@@ -16,10 +16,13 @@ Per-call attribution is not attempted. A workflow script builds prompts from var
 
 `model` is checked as a **literal in the script**, never as an event field: unset, an `agent()` call inherits the session model, which is the expensive one.
 
-## A named workflow is declared, never passed off as clean
+## A named workflow: ours is read, anyone else's is asked
 
-`Workflow({name: "…"})` runs a saved script whose text is not in the payload. The hook says so on stderr and returns 0. Refusing would block a legitimate call over a file it cannot see; staying silent would let it read as checked. This is the same shape as the neighbouring guards' `NOT read:`
-lines.
+`Workflow({name: "…"})` runs a saved script whose text is not in the payload. Where the name is **ours** it is still reachable before the launch: the runtime resolves a name to `.claude/workflows/<name>.js`, the project's directory first and the home one after, so the script is opened and read exactly like an inline one.
+
+Where it is not ours — a plugin's, or the harness's own, which lives inside the CLI binary and has no file to open — the hook returns `ask`, so the launch becomes a decision instead of a verdict. Which code the rule reaches, and why, is the rule's to state; this note only says that the earlier answer was a line on stderr and a 0, and that an announcement no one acts on is the most expensive failure a guard has.
+
+The cost was measured before the posture was chosen: three named launches against 137 ordinary ones over seventeen days of journal, so the question arrives about once a week and never on the path the rule actually governs.
 
 ## Measured in flight, both halves
 

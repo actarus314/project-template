@@ -11,6 +11,9 @@
 # A WORKFLOW spawns subagents WITHOUT going through that tool, so watching `Agent` alone left the
 # rule unenforced on every one of them: what to read there, and what stays unproven, is in
 # docs/code/verify-delegation.md.
+
+# Launched by NAME it carries no script: one of OURS resolves from .claude/workflows/ and is read
+# like any other, anyone else's becomes a question rather than a verdict.
 set -euo pipefail
 
 if [ "${1:-}" = "--version" ]; then
@@ -42,7 +45,7 @@ payload=$(cat)
 prog=$(mktemp)
 trap 'rm -f "$prog"' EXIT
 cat > "$prog" <<'PY'
-import json, re, sys, datetime
+import json, os, re, sys, datetime
 
 JOURNAL, NAME = (sys.argv[1] if len(sys.argv) > 1 else ""), (sys.argv[2] if len(sys.argv) > 2 else "")
 PROJECT = sys.argv[3] if len(sys.argv) > 3 else ""
@@ -90,11 +93,28 @@ else:
         except Exception:
             record("skip", "unreadable scriptPath")
             sys.exit(0)
+    name = str(ti.get("name") or "")
+    if not script and name:
+        # The runtime resolves a name to `.claude/workflows/<name>.js`, the project's before the
+        # home one — our text, so the three instructions apply to it like an inline script's.
+        for cand in (os.path.join(str(ev.get("cwd") or ""), ".claude", "workflows", name + ".js"),
+                     os.path.expanduser(os.path.join("~", ".claude", "workflows", name + ".js"))):
+            try:
+                script = open(cand, encoding="utf-8").read()
+                break
+            except OSError:
+                continue
     if not script:
-        record("skip", f"named workflow {ti.get('name') or ''} — its script is not in the payload")
-        print(json.dumps({"systemMessage":
-            "verify-delegation: this workflow is invoked by NAME, so its script is not in the event "
-            "— the three delegation instructions were NOT read. Check them yourself."}), file=sys.stderr)
+        # Anyone else's: not ours to judge by house wording, and not ours to wave through
+        # either (verify-delegation.md). It becomes a decision, about once a week.
+        record(1, f"asked: named workflow {name} — not ours to read")
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "permissionDecision": "ask",
+            "permissionDecisionReason": (
+                f"verify-delegation: '{name}' is a workflow this repository did not write, so its "
+                "script is not in the event and is not under the three delegation instructions "
+                "(they are house wording, and third-party scripts have no reason to carry them). "
+                "Nothing here is a defect: the launch is the maintainer's to allow.")}}))
         sys.exit(0)
     calls = len(re.findall(r"\bagent\s*\(", script))
     if calls == 0:

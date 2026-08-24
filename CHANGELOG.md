@@ -30,6 +30,7 @@ Each version links to its GitHub Release, which carries the auto-generated list 
 - **Record WHICH rule a check refused on**, where the journal held the control's name alone: one carrying nineteen rules said the same thing whatever bit, so no rule could be shown to have never fired. A single-rule check needs no change — its name is already the tag.
 
 ### Changed
+- **Read a named workflow's script where it is ours, and ask where it is not**: the three delegation instructions are house wording, and a plugin's script fails all three for having no reason to carry them. Announcing the blind spot instead let seven agents leave on it.
 - **Bump the pinned CI tooling** — osv-scanner to v2.5.0, Trivy to v0.74.0, semgrep to 1.173.0, with their checksums: the template and every project it generates pin the same versions, and a stale pin scans against a stale database.
 
 ### Fixed

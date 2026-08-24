@@ -82,6 +82,8 @@ Left unwritten in the prompt, **the default does the opposite of all three, sile
 
 `verify-delegation.sh` is a **`PreToolUse` hook** that refuses a subagent launch when the prompt omits *"does not re-delegate"* or *"does not call the advisor"*, or when the model is not a cheaper one. It **blocks** rather than warns, because nothing in it is a judgement: `model` is a field of the event, and the other two are strings that are present or absent.
 
+🔴 **The three instructions are house wording, so they bind OUR text and nothing else.** A workflow launched by its NAME carries no script in the event: one of ours resolves from `.claude/workflows/` and is read like an inline script, while a plugin's or the harness's own is put to the maintainer as a question rather than judged. Applying the wording to code written elsewhere refuses all of it — measured on the two ever launched here — and passing it mute is what let seven agents leave on a blind spot the guard had itself announced.
+
 **It ships inactive, and activating it is a deliberate choice.** A hook only acts once declared, so the file travels without doing anything until it is wired — appropriate, since it enforces a working method that not every project shares.
 
 - **For one machine, every project** — in `~/.claude/settings.json` *(local, never versioned)*:
