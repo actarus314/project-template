@@ -276,7 +276,7 @@ SEMGREP_SPEC=$(grep -m1 '^semgrep==' "$reqfile" 2>/dev/null || true)
 # whatever 43.x npm serves today instead of the version the CI pins — the one thing this file exists
 # to guarantee.
 RENOVATE_PKG=$(grep -m1 -oE 'renovate@[0-9][^[:space:]"'"'"']*' "$CI" | head -1 || true)
-[ -n "$RENOVATE_PKG" ] || RENOVATE_PKG=renovate@44.31.0
+[ -n "$RENOVATE_PKG" ] || RENOVATE_PKG=renovate@44.59.1
 
 if external; then
   note "Pinned tools (auto-detected from $CI)"
