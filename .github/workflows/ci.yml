@@ -85,8 +85,8 @@ jobs:
       # osv is not used to lint THIS repo (no application manifest) — it serves the regression GUARD
       # further below (replaying the osv step of a generated project). Tracked by Renovate on the same
       # footing as actionlint (custom.regex also targets `.github/workflows/` — see .github/renovate.json).
-      OSV_VERSION: v2.5.0
-      OSV_SHA256: edcfc41d257db36148f065055655fe3fcfc434b0b423ea67468a84c207524e0c
+      OSV_VERSION: v2.6.0
+      OSV_SHA256: ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108
     steps:
       - uses: actions/checkout@v7
         with:
